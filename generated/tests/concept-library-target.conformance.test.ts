@@ -26,7 +26,7 @@ describe('ConceptLibraryTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptLibraryTargetHandler.generate({ config: 'test-config' });
+      const program = conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConceptLibraryTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptLibraryTargetHandler.generate({ config: 'test-config' });
+      const program = conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptLibraryTargetHandler.generate({ config: 'test-config' });
+      const program = conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptLibraryTargetHandler.generate({ config: 'test-config' });
+      const program = conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConceptLibraryTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptLibraryTargetHandler.generate({ config: 'test-config' });
+      const program = conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConceptLibraryTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(conceptLibraryTargetHandler.generate({ config: 'test-config' }), storage);
+        const result = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ConceptLibraryTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_output_path" -> ok', async () => {
+      if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_custom_root" -> ok', async () => {
+      if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_config" -> error', async () => {
+      if (typeof conceptLibraryTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptLibraryTargetHandler.generate({ config: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptLibraryTargetHandler.validate({ document: 'test' });
+      const program = conceptLibraryTargetHandler.validate({ document: "concept-library-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ConceptLibraryTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptLibraryTargetHandler.validate({ document: 'test' });
+      const program = conceptLibraryTargetHandler.validate({ document: "concept-library-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptLibraryTargetHandler.validate({ document: 'test' });
+      const program = conceptLibraryTargetHandler.validate({ document: "concept-library-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptLibraryTargetHandler.validate({ document: 'test' });
+      const program = conceptLibraryTargetHandler.validate({ document: "concept-library-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ConceptLibraryTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptLibraryTargetHandler.validate({ document: 'test' });
+      const program = conceptLibraryTargetHandler.validate({ document: "concept-library-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ConceptLibraryTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptLibraryTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(conceptLibraryTargetHandler.validate({ document: 'test' }), storage);
+        const result = await interpret(conceptLibraryTargetHandler.validate({ document: "concept-library-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('ConceptLibraryTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_document" -> ok', async () => {
+      if (typeof conceptLibraryTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptLibraryTargetHandler.validate({ document: "concept-library-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_document" -> error', async () => {
+      if (typeof conceptLibraryTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptLibraryTargetHandler.validate({ document: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conceptLibraryTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conceptLibraryTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConceptLibraryTarget');
+    });
   });
 
   describe('invariant examples', () => {

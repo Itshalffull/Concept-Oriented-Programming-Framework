@@ -26,7 +26,7 @@ describe('CloudflareRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' });
+      const program = cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' });
+      const program = cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' });
+      const program = cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' });
+      const program = cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' });
+      const program = cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(cloudflareRuntimeHandler.provision({ concept: 'test-concept', accountId: 'test-accountId', routes: 'test' }), storage);
+        const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('CloudflareRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_worker" -> ok', async () => {
+      if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof cloudflareRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.provision({ concept: "", accountId: "acc-12345", routes: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' });
+      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' });
+      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' });
+      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' });
+      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' });
+      const program = cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: 'test', scriptContent: 'test-scriptContent' }), storage);
+        const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('CloudflareRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_script" -> ok', async () => {
+      if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_empty_worker" -> error', async () => {
+      if (typeof cloudflareRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.deploy({ worker: "", scriptContent: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 });
+      const program = cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: 'test', weight: 1 }), storage);
+        const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('CloudflareRuntime functional handler', () => {
       }
     });
 
+    it('fixture "set_weight_50" -> ok', async () => {
+      if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "50" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_weight_negative" -> error', async () => {
+      if (typeof cloudflareRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.setTrafficWeight({ worker: "wkr-001", weight: "-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' });
+      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' });
+      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' });
+      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' });
+      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' });
+      const program = cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: 'test', targetVersion: 'test-targetVersion' }), storage);
+        const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('CloudflareRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_to_v1" -> ok', async () => {
+      if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_version" -> error', async () => {
+      if (typeof cloudflareRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.rollback({ worker: "wkr-001", targetVersion: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: 'test' });
+      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: 'test' });
+      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: 'test' });
+      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: 'test' });
+      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('CloudflareRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudflareRuntimeHandler.destroy({ worker: 'test' });
+      const program = cloudflareRuntimeHandler.destroy({ worker: "wkr-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('CloudflareRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: 'test' }), storage);
+        const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "wkr-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('CloudflareRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_worker" -> ok', async () => {
+      if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "wkr-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_empty" -> error', async () => {
+      if (typeof cloudflareRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudflareRuntimeHandler.destroy({ worker: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof cloudflareRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = cloudflareRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CloudflareRuntime');
+    });
   });
 
   describe('invariant examples', () => {

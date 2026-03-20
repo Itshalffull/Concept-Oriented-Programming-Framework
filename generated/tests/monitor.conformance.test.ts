@@ -26,7 +26,7 @@ describe('Monitor functional handler', () => {
 
   describe('watch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' });
+      const program = monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Monitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' });
+      const program = monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' });
+      const program = monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' });
+      const program = monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Monitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' });
+      const program = monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Monitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof monitorHandler.watch !== 'function') return;
       try {
-        const result = await interpret(monitorHandler.watch({ subject: 'test-subject', ruleRef: 'test-ruleRef' }), storage);
+        const result = await interpret(monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Monitor functional handler', () => {
       }
     });
 
+    it('fixture "watch_user_compliance" -> ok', async () => {
+      if (typeof monitorHandler.watch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.watch({ subject: "user-42", policyRef: "policy-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "watch_missing_subject" -> error', async () => {
+      if (typeof monitorHandler.watch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.watch({ subject: "", policyRef: "policy-001" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('observe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' });
+      const program = monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Monitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' });
+      const program = monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' });
+      const program = monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' });
+      const program = monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Monitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' });
+      const program = monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Monitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof monitorHandler.observe !== 'function') return;
       try {
-        const result = await interpret(monitorHandler.observe({ observer: 'test', behavior: 'test-behavior' }), storage);
+        const result = await interpret(monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Monitor functional handler', () => {
       }
     });
 
+    it('fixture "observe_compliant_behavior" -> ok', async () => {
+      if (typeof monitorHandler.observe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.observe({ observer: "monitor-001", behavior: "submitted_report_on_time" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "observe_unknown_observer" -> violation', async () => {
+      if (typeof monitorHandler.observe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.observe({ observer: "nonexistent", behavior: "some_action" }), storage);
+      expect(result.variant).toBe('violation');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = monitorHandler.resolve({ observer: 'test' });
+      const program = monitorHandler.resolve({ observer: "monitor-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Monitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = monitorHandler.resolve({ observer: 'test' });
+      const program = monitorHandler.resolve({ observer: "monitor-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = monitorHandler.resolve({ observer: 'test' });
+      const program = monitorHandler.resolve({ observer: "monitor-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = monitorHandler.resolve({ observer: 'test' });
+      const program = monitorHandler.resolve({ observer: "monitor-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Monitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = monitorHandler.resolve({ observer: 'test' });
+      const program = monitorHandler.resolve({ observer: "monitor-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Monitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof monitorHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(monitorHandler.resolve({ observer: 'test' }), storage);
+        const result = await interpret(monitorHandler.resolve({ observer: "monitor-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,12 +224,44 @@ describe('Monitor functional handler', () => {
       }
     });
 
+    it('fixture "resolve_session" -> ok', async () => {
+      if (typeof monitorHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.resolve({ observer: "monitor-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown_observer" -> error', async () => {
+      if (typeof monitorHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(monitorHandler.resolve({ observer: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof monitorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = monitorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Monitor');
+    });
   });
 
   describe('invariant examples', () => {
     it("watch-then-observe", async () => {
       const storage = createInMemoryStorage();
-      const watchResult0 = await interpret(monitorHandler.watch({ subject: {"type":"variable","name":"_"}, ruleRef: {"type":"variable","name":"_"} }), storage);
+      const watchResult0 = await interpret(monitorHandler.watch({ subject: {"type":"variable","name":"_"}, policyRef: {"type":"variable","name":"_"} }), storage);
       expect(watchResult0.variant).toBe("watching");
       const observer = watchResult0.output["observer"];
       const thenResult0 = await interpret(monitorHandler.observe({ observer: {"type":"variable","name":"mn"}, behavior: {"type":"variable","name":"_"} }), storage);
@@ -216,7 +276,7 @@ describe('Monitor functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), ruleRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), policyRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ observer: fc.string() }) }),
             ),
@@ -240,12 +300,12 @@ describe('Monitor functional handler', () => {
       );
     });
 
-    it('never: orphaned-ruleRef', async () => {
+    it('never: orphaned-policyRef', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), ruleRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('watch'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), policyRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('observe'), input: fc.record({ observer: fc.string(), behavior: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ observer: fc.string() }) }),
             ),
@@ -260,7 +320,7 @@ describe('Monitor functional handler', () => {
                   const program = actionFn.call(monitorHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
-                  // Never: orphaned-ruleRef
+                  // Never: orphaned-policyRef
                 } catch { /* handler may throw on random inputs */ }
               }
             }
@@ -286,7 +346,7 @@ describe('Monitor functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), ruleRef: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), policyRef: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = monitorHandler.watch(input as Record<string, unknown>);

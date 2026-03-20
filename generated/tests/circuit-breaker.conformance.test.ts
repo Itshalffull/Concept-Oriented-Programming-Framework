@@ -19,7 +19,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.configure !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.configure({ endpoint: 'test-endpoint', failureThreshold: 1, successThreshold: 1, resetTimeoutMs: 1 }, storage);
+        const result = await circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('CircuitBreaker imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "api_breaker" -> ok', async () => {
+      if (typeof circuitBreakerHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.configure({ endpoint: "payments-api", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_endpoint" -> exists', async () => {
+      if (typeof circuitBreakerHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.configure({ endpoint: "", failureThreshold: "5", successThreshold: "2", resetTimeoutMs: "30000" }, storage);
+      expect(result.variant).toBe('exists');
     });
 
   });
@@ -35,7 +49,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.check !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.check({ endpoint: 'test-endpoint' }, storage);
+        const result = await circuitBreakerHandler.check({ endpoint: "payments-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('CircuitBreaker imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "healthy_endpoint" -> ok', async () => {
+      if (typeof circuitBreakerHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.check({ endpoint: "payments-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unconfigured_endpoint" -> notFound', async () => {
+      if (typeof circuitBreakerHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.check({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -51,7 +79,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.recordSuccess !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.recordSuccess({ endpoint: 'test-endpoint' }, storage);
+        const result = await circuitBreakerHandler.recordSuccess({ endpoint: "payments-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('CircuitBreaker imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "success_recorded" -> ok', async () => {
+      if (typeof circuitBreakerHandler.recordSuccess !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.recordSuccess({ endpoint: "payments-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "success_no_breaker" -> notFound', async () => {
+      if (typeof circuitBreakerHandler.recordSuccess !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.recordSuccess({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -67,7 +109,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.recordFailure !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.recordFailure({ endpoint: 'test-endpoint' }, storage);
+        const result = await circuitBreakerHandler.recordFailure({ endpoint: "payments-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('CircuitBreaker imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "failure_recorded" -> ok', async () => {
+      if (typeof circuitBreakerHandler.recordFailure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.recordFailure({ endpoint: "payments-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "failure_no_breaker" -> notFound', async () => {
+      if (typeof circuitBreakerHandler.recordFailure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.recordFailure({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -83,7 +139,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.reset !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.reset({ endpoint: 'test-endpoint' }, storage);
+        const result = await circuitBreakerHandler.reset({ endpoint: "payments-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('CircuitBreaker imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "reset_breaker" -> ok', async () => {
+      if (typeof circuitBreakerHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.reset({ endpoint: "payments-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reset_no_breaker" -> notFound', async () => {
+      if (typeof circuitBreakerHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.reset({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -99,7 +169,7 @@ describe('CircuitBreaker imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof circuitBreakerHandler.get !== 'function') return;
       try {
-        const result = await circuitBreakerHandler.get({ endpoint: 'test-endpoint' }, storage);
+        const result = await circuitBreakerHandler.get({ endpoint: "payments-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +179,37 @@ describe('CircuitBreaker imperative handler', () => {
       }
     });
 
+    it('fixture "get_status" -> ok', async () => {
+      if (typeof circuitBreakerHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.get({ endpoint: "payments-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_no_breaker" -> notFound', async () => {
+      if (typeof circuitBreakerHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await circuitBreakerHandler.get({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof circuitBreakerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = circuitBreakerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CircuitBreaker');
+    });
   });
 
   describe('invariant examples', () => {

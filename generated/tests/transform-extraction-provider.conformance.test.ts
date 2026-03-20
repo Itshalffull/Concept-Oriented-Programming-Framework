@@ -26,7 +26,7 @@ describe('TransformExtractionProvider functional handler', () => {
 
   describe('analyze', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transformExtractionProviderHandler.analyze({ program: 'test-program' });
+      const program = transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TransformExtractionProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transformExtractionProviderHandler.analyze({ program: 'test-program' });
+      const program = transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transformExtractionProviderHandler.analyze({ program: 'test-program' });
+      const program = transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transformExtractionProviderHandler.analyze({ program: 'test-program' });
+      const program = transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TransformExtractionProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transformExtractionProviderHandler.analyze({ program: 'test-program' });
+      const program = transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TransformExtractionProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
       try {
-        const result = await interpret(transformExtractionProviderHandler.analyze({ program: 'test-program' }), storage);
+        const result = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,45 @@ describe('TransformExtractionProvider functional handler', () => {
       }
     });
 
+    it('fixture "with_transforms" -> ok', async () => {
+      if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_transforms" -> ok', async () => {
+      if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformExtractionProviderHandler.analyze({ program: "{\"instructions\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof transformExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformExtractionProviderHandler.analyze({ program: "<<<not-json>>>" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transformExtractionProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = transformExtractionProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TransformExtractionProvider');
+    });
   });
 
   describe('invariant examples', () => {

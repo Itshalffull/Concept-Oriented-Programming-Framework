@@ -26,7 +26,7 @@ describe('Password functional handler', () => {
 
   describe('set', () => {
     it('builds a valid StorageProgram', () => {
-      const program = passwordHandler.set({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Password functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = passwordHandler.set({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = passwordHandler.set({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = passwordHandler.set({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Password functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = passwordHandler.set({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Password functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof passwordHandler.set !== 'function') return;
       try {
-        const result = await interpret(passwordHandler.set({ user: 'test', password: 'test-password' }), storage);
+        const result = await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Password functional handler', () => {
       }
     });
 
+    it('fixture "valid_password" -> ok', async () => {
+      if (typeof passwordHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "short_password" -> invalid', async () => {
+      if (typeof passwordHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.set({ user: "bob", password: "abc" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = passwordHandler.check({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Password functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = passwordHandler.check({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = passwordHandler.check({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = passwordHandler.check({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Password functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = passwordHandler.check({ user: 'test', password: 'test-password' });
+      const program = passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Password functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof passwordHandler.check !== 'function') return;
       try {
-        const result = await interpret(passwordHandler.check({ user: 'test', password: 'test-password' }), storage);
+        const result = await interpret(passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Password functional handler', () => {
       }
     });
 
+    it('fixture "existing_user" -> ok', async () => {
+      if (typeof passwordHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_user" -> notfound', async () => {
+      if (typeof passwordHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.check({ user: "nonexistent", password: "anypassword" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = passwordHandler.validate({ password: 'test-password' });
+      const program = passwordHandler.validate({ password: "MyS3cure!Pass" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Password functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = passwordHandler.validate({ password: 'test-password' });
+      const program = passwordHandler.validate({ password: "MyS3cure!Pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = passwordHandler.validate({ password: 'test-password' });
+      const program = passwordHandler.validate({ password: "MyS3cure!Pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = passwordHandler.validate({ password: 'test-password' });
+      const program = passwordHandler.validate({ password: "MyS3cure!Pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Password functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = passwordHandler.validate({ password: 'test-password' });
+      const program = passwordHandler.validate({ password: "MyS3cure!Pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Password functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof passwordHandler.validate !== 'function') return;
       try {
-        const result = await interpret(passwordHandler.validate({ password: 'test-password' }), storage);
+        const result = await interpret(passwordHandler.validate({ password: "MyS3cure!Pass" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Password functional handler', () => {
       }
     });
 
+    it('fixture "strong_password" -> ok', async () => {
+      if (typeof passwordHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.validate({ password: "MyS3cure!Pass" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "weak_password" -> ok', async () => {
+      if (typeof passwordHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(passwordHandler.validate({ password: "short" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof passwordHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = passwordHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Password');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('SpatialConnector imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialConnectorHandler.draw !== 'function') return;
       try {
-        const result = await spatialConnectorHandler.draw({ canvas: 'test-canvas', source: 'test-source', target: 'test-target', type: 'test-type' }, storage);
+        const result = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('SpatialConnector imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_draw" -> ok', async () => {
+      if (typeof spatialConnectorHandler.draw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-b", type: "visual" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "semantic_draw" -> ok', async () => {
+      if (typeof spatialConnectorHandler.draw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.draw({ canvas: "c1", source: "node-a", target: "node-c", type: "semantic" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +49,7 @@ describe('SpatialConnector imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialConnectorHandler.promote !== 'function') return;
       try {
-        const result = await spatialConnectorHandler.promote({ connector: 'test' }, storage);
+        const result = await spatialConnectorHandler.promote({ connector: "connector-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('SpatialConnector imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_promote" -> ok', async () => {
+      if (typeof spatialConnectorHandler.promote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.promote({ connector: "connector-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "already_promoted" -> already_semantic', async () => {
+      if (typeof spatialConnectorHandler.promote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.promote({ connector: "connector-1" }, storage);
+      expect(result.variant).toBe('already_semantic');
     });
 
   });
@@ -51,7 +79,7 @@ describe('SpatialConnector imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialConnectorHandler.demote !== 'function') return;
       try {
-        const result = await spatialConnectorHandler.demote({ connector: 'test' }, storage);
+        const result = await spatialConnectorHandler.demote({ connector: "connector-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('SpatialConnector imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_demote" -> ok', async () => {
+      if (typeof spatialConnectorHandler.demote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.demote({ connector: "connector-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "demote_visual" -> not_semantic', async () => {
+      if (typeof spatialConnectorHandler.demote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.demote({ connector: "connector-1" }, storage);
+      expect(result.variant).toBe('not_semantic');
     });
 
   });
@@ -67,7 +109,7 @@ describe('SpatialConnector imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialConnectorHandler.surface !== 'function') return;
       try {
-        const result = await spatialConnectorHandler.surface({ canvas: 'test-canvas', source: 'test-source', target: 'test-target' }, storage);
+        const result = await spatialConnectorHandler.surface({ canvas: "c1", source: "node-a", target: "node-b" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('SpatialConnector imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_surface" -> ok', async () => {
+      if (typeof spatialConnectorHandler.surface !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.surface({ canvas: "c1", source: "node-a", target: "node-b" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "surface_no_ref" -> no_reference', async () => {
+      if (typeof spatialConnectorHandler.surface !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.surface({ canvas: "c1", source: "orphan-x", target: "orphan-y" }, storage);
+      expect(result.variant).toBe('no_reference');
     });
 
   });
@@ -83,7 +139,7 @@ describe('SpatialConnector imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialConnectorHandler.hide !== 'function') return;
       try {
-        const result = await spatialConnectorHandler.hide({ connector: 'test' }, storage);
+        const result = await spatialConnectorHandler.hide({ connector: "connector-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('SpatialConnector imperative handler', () => {
       }
     });
 
+    it('fixture "valid_hide" -> ok', async () => {
+      if (typeof spatialConnectorHandler.hide !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.hide({ connector: "connector-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "hide_missing" -> notFound', async () => {
+      if (typeof spatialConnectorHandler.hide !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await spatialConnectorHandler.hide({ connector: "nonexistent" }, storage);
+      expect(result.variant).toBe('notFound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof spatialConnectorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = spatialConnectorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SpatialConnector');
+    });
   });
 
   describe('invariant examples', () => {

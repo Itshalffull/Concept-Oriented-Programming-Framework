@@ -26,7 +26,7 @@ describe('Follow functional handler', () => {
 
   describe('follow', () => {
     it('builds a valid StorageProgram', () => {
-      const program = followHandler.follow({ user: 'test', target: 'test-target' });
+      const program = followHandler.follow({ user: "user-alice", target: "user-bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Follow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = followHandler.follow({ user: 'test', target: 'test-target' });
+      const program = followHandler.follow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = followHandler.follow({ user: 'test', target: 'test-target' });
+      const program = followHandler.follow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = followHandler.follow({ user: 'test', target: 'test-target' });
+      const program = followHandler.follow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Follow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = followHandler.follow({ user: 'test', target: 'test-target' });
+      const program = followHandler.follow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Follow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof followHandler.follow !== 'function') return;
       try {
-        const result = await interpret(followHandler.follow({ user: 'test', target: 'test-target' }), storage);
+        const result = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Follow functional handler', () => {
       }
     });
 
+    it('fixture "follow_ok" -> ok', async () => {
+      if (typeof followHandler.follow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.follow({ user: "user-alice", target: "user-bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "follow_another" -> ok', async () => {
+      if (typeof followHandler.follow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.follow({ user: "user-carol", target: "user-dave" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('unfollow', () => {
     it('builds a valid StorageProgram', () => {
-      const program = followHandler.unfollow({ user: 'test', target: 'test-target' });
+      const program = followHandler.unfollow({ user: "user-alice", target: "user-bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Follow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = followHandler.unfollow({ user: 'test', target: 'test-target' });
+      const program = followHandler.unfollow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = followHandler.unfollow({ user: 'test', target: 'test-target' });
+      const program = followHandler.unfollow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = followHandler.unfollow({ user: 'test', target: 'test-target' });
+      const program = followHandler.unfollow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Follow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = followHandler.unfollow({ user: 'test', target: 'test-target' });
+      const program = followHandler.unfollow({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Follow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof followHandler.unfollow !== 'function') return;
       try {
-        const result = await interpret(followHandler.unfollow({ user: 'test', target: 'test-target' }), storage);
+        const result = await interpret(followHandler.unfollow({ user: "user-alice", target: "user-bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Follow functional handler', () => {
       }
     });
 
+    it('fixture "unfollow_ok" -> ok', async () => {
+      if (typeof followHandler.unfollow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.unfollow({ user: "user-alice", target: "user-bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unfollow_not_following" -> ok', async () => {
+      if (typeof followHandler.unfollow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.unfollow({ user: "user-carol", target: "user-unknown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('isFollowing', () => {
     it('builds a valid StorageProgram', () => {
-      const program = followHandler.isFollowing({ user: 'test', target: 'test-target' });
+      const program = followHandler.isFollowing({ user: "user-alice", target: "user-bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Follow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = followHandler.isFollowing({ user: 'test', target: 'test-target' });
+      const program = followHandler.isFollowing({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = followHandler.isFollowing({ user: 'test', target: 'test-target' });
+      const program = followHandler.isFollowing({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = followHandler.isFollowing({ user: 'test', target: 'test-target' });
+      const program = followHandler.isFollowing({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Follow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = followHandler.isFollowing({ user: 'test', target: 'test-target' });
+      const program = followHandler.isFollowing({ user: "user-alice", target: "user-bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Follow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof followHandler.isFollowing !== 'function') return;
       try {
-        const result = await interpret(followHandler.isFollowing({ user: 'test', target: 'test-target' }), storage);
+        const result = await interpret(followHandler.isFollowing({ user: "user-alice", target: "user-bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Follow functional handler', () => {
       }
     });
 
+    it('fixture "is_following_ok" -> ok', async () => {
+      if (typeof followHandler.isFollowing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.isFollowing({ user: "user-alice", target: "user-bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "is_following_unknown_user" -> ok', async () => {
+      if (typeof followHandler.isFollowing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(followHandler.isFollowing({ user: "user-unknown", target: "user-bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof followHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = followHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Follow');
+    });
   });
 
   describe('invariant examples', () => {

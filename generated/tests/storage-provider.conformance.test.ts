@@ -26,7 +26,7 @@ describe('StorageProvider functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' });
+      const program = storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' });
+      const program = storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' });
+      const program = storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' });
+      const program = storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' });
+      const program = storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('StorageProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
       try {
-        const result = await interpret(storageProviderHandler.provision({ store: 'test', storeName: 'test-storeName', storageType: 'test-storageType', conceptName: 'test-conceptName', config: 'test-config' }), storage);
+        const result = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('StorageProvider functional handler', () => {
       }
     });
 
+    it('fixture "provision_kv" -> ok', async () => {
+      if (typeof storageProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_dynamo" -> ok', async () => {
+      if (typeof storageProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_missing_name" -> error', async () => {
+      if (typeof storageProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.provision({ storeName: "", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageProviderHandler.configure({ store: 'test', settings: 'test-settings' });
+      const program = storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageProviderHandler.configure({ store: 'test', settings: 'test-settings' });
+      const program = storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageProviderHandler.configure({ store: 'test', settings: 'test-settings' });
+      const program = storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageProviderHandler.configure({ store: 'test', settings: 'test-settings' });
+      const program = storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageProviderHandler.configure({ store: 'test', settings: 'test-settings' });
+      const program = storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('StorageProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProviderHandler.configure !== 'function') return;
       try {
-        const result = await interpret(storageProviderHandler.configure({ store: 'test', settings: 'test-settings' }), storage);
+        const result = await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('StorageProvider functional handler', () => {
       }
     });
 
+    it('fixture "configure_ttl" -> ok', async () => {
+      if (typeof storageProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_missing" -> error', async () => {
+      if (typeof storageProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.configure({ store: "", settings: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getCredentials', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageProviderHandler.getCredentials({ store: 'test' });
+      const program = storageProviderHandler.getCredentials({ store: "session-kv" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageProviderHandler.getCredentials({ store: 'test' });
+      const program = storageProviderHandler.getCredentials({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageProviderHandler.getCredentials({ store: 'test' });
+      const program = storageProviderHandler.getCredentials({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageProviderHandler.getCredentials({ store: 'test' });
+      const program = storageProviderHandler.getCredentials({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageProviderHandler.getCredentials({ store: 'test' });
+      const program = storageProviderHandler.getCredentials({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('StorageProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
       try {
-        const result = await interpret(storageProviderHandler.getCredentials({ store: 'test' }), storage);
+        const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('StorageProvider functional handler', () => {
       }
     });
 
+    it('fixture "get_creds" -> ok', async () => {
+      if (typeof storageProviderHandler.getCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_creds_missing" -> error', async () => {
+      if (typeof storageProviderHandler.getCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.getCredentials({ store: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageProviderHandler.destroy({ store: 'test' });
+      const program = storageProviderHandler.destroy({ store: "session-kv" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageProviderHandler.destroy({ store: 'test' });
+      const program = storageProviderHandler.destroy({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageProviderHandler.destroy({ store: 'test' });
+      const program = storageProviderHandler.destroy({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageProviderHandler.destroy({ store: 'test' });
+      const program = storageProviderHandler.destroy({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('StorageProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageProviderHandler.destroy({ store: 'test' });
+      const program = storageProviderHandler.destroy({ store: "session-kv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('StorageProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(storageProviderHandler.destroy({ store: 'test' }), storage);
+        const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,14 +303,47 @@ describe('StorageProvider functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof storageProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof storageProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageProviderHandler.destroy({ store: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof storageProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = storageProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StorageProvider');
+    });
   });
 
   describe('invariant examples', () => {
     it("provision-then-getCredentials-2", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(storageProviderHandler.provision({ store: {"type":"variable","name":"s1"}, storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
+      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
       const store = provisionResult0.output["store"];
+      const storageType = provisionResult0.output["storageType"];
       const credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(storageProviderHandler.getCredentials({ store: {"type":"variable","name":"s1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
@@ -269,9 +351,10 @@ describe('StorageProvider functional handler', () => {
 
     it("provision-then-getCredentials", async () => {
       const storage = createInMemoryStorage();
-      const provisionResult0 = await interpret(storageProviderHandler.provision({ store: {"type":"variable","name":"s1"}, storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
+      const provisionResult0 = await interpret(storageProviderHandler.provision({ storeName: {"type":"literal","value":"test-kv"}, storageType: {"type":"literal","value":"vercel-kv"}, conceptName: {"type":"literal","value":"Session"}, config: {"type":"literal","value":"{}"} }), storage);
       expect(provisionResult0.variant).toBe("ok");
       const store = provisionResult0.output["store"];
+      const storageType = provisionResult0.output["storageType"];
       const credentials = provisionResult0.output["credentials"];
       const thenResult0 = await interpret(storageProviderHandler.destroy({ store: {"type":"variable","name":"s1"} }), storage);
       expect(thenResult0.variant).toBe("ok");
@@ -287,7 +370,7 @@ describe('StorageProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getCredentials'), input: fc.record({ store: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ store: fc.string() }) }),
@@ -317,7 +400,7 @@ describe('StorageProvider functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('provision'), input: fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('provision'), input: fc.record({ storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('configure'), input: fc.record({ store: fc.string(), settings: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getCredentials'), input: fc.record({ store: fc.string() }) }),
               fc.record({ action: fc.constant('destroy'), input: fc.record({ store: fc.string() }) }),
@@ -359,7 +442,7 @@ describe('StorageProvider functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ store: fc.string(), storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = storageProviderHandler.provision(input as Record<string, unknown>);

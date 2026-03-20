@@ -26,7 +26,7 @@ describe('Timelock functional handler', () => {
 
   describe('schedule', () => {
     it('builds a valid StorageProgram', () => {
-      const program = timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 });
+      const program = timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Timelock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 });
+      const program = timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 });
+      const program = timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 });
+      const program = timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Timelock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 });
+      const program = timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Timelock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof timelockHandler.schedule !== 'function') return;
       try {
-        const result = await interpret(timelockHandler.schedule({ operationHash: 'test-operationHash', payload: 'test-payload', delayHours: 1, gracePeriodHours: 1 }), storage);
+        const result = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Timelock functional handler', () => {
       }
     });
 
+    it('fixture "schedule_transfer" -> ok', async () => {
+      if (typeof timelockHandler.schedule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.schedule({ operationHash: "0xdeadbeef", payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", delayHours: "48.0", gracePeriodHours: "24.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "schedule_upgrade" -> ok', async () => {
+      if (typeof timelockHandler.schedule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.schedule({ operationHash: "0xcafebabe", payload: "{\"action\":\"upgrade\",\"version\":\"2.0\"}", delayHours: "72.0", gracePeriodHours: "12.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "schedule_missing_hash" -> error', async () => {
+      if (typeof timelockHandler.schedule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.schedule({ operationHash: "", payload: "{}", delayHours: "24.0", gracePeriodHours: "12.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = timelockHandler.execute({ lock: 'test' });
+      const program = timelockHandler.execute({ lock: "timelock-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Timelock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = timelockHandler.execute({ lock: 'test' });
+      const program = timelockHandler.execute({ lock: "timelock-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = timelockHandler.execute({ lock: 'test' });
+      const program = timelockHandler.execute({ lock: "timelock-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = timelockHandler.execute({ lock: 'test' });
+      const program = timelockHandler.execute({ lock: "timelock-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Timelock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = timelockHandler.execute({ lock: 'test' });
+      const program = timelockHandler.execute({ lock: "timelock-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Timelock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof timelockHandler.execute !== 'function') return;
       try {
-        const result = await interpret(timelockHandler.execute({ lock: 'test' }), storage);
+        const result = await interpret(timelockHandler.execute({ lock: "timelock-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Timelock functional handler', () => {
       }
     });
 
+    it('fixture "execute_ready" -> ok', async () => {
+      if (typeof timelockHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.execute({ lock: "timelock-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_not_found" -> error', async () => {
+      if (typeof timelockHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.execute({ lock: "timelock-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = timelockHandler.cancel({ lock: 'test' });
+      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Timelock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = timelockHandler.cancel({ lock: 'test' });
+      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = timelockHandler.cancel({ lock: 'test' });
+      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = timelockHandler.cancel({ lock: 'test' });
+      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Timelock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = timelockHandler.cancel({ lock: 'test' });
+      const program = timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Timelock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof timelockHandler.cancel !== 'function') return;
       try {
-        const result = await interpret(timelockHandler.cancel({ lock: 'test' }), storage);
+        const result = await interpret(timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Timelock functional handler', () => {
       }
     });
 
+    it('fixture "cancel_queued" -> ok', async () => {
+      if (typeof timelockHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.cancel({ lock: "timelock-001", reason: "Governance vote rejected proposal" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cancel_not_found" -> error', async () => {
+      if (typeof timelockHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(timelockHandler.cancel({ lock: "timelock-nonexistent", reason: "cleanup" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof timelockHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = timelockHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Timelock');
+    });
   });
 
   describe('invariant examples', () => {
@@ -218,7 +285,7 @@ describe('Timelock functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ lock: fc.string() }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -247,7 +314,7 @@ describe('Timelock functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('schedule'), input: fc.record({ operationHash: fc.string({ minLength: 1, maxLength: 50 }), payload: fc.string({ minLength: 1, maxLength: 50 }), delayHours: fc.string(), gracePeriodHours: fc.string() }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ lock: fc.string() }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ lock: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

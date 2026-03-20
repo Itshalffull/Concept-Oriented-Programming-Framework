@@ -26,7 +26,7 @@ describe('TestSelection functional handler', () => {
 
   describe('analyze', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' });
+      const program = testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' });
+      const program = testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' });
+      const program = testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' });
+      const program = testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' });
+      const program = testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TestSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testSelectionHandler.analyze !== 'function') return;
       try {
-        const result = await interpret(testSelectionHandler.analyze({ changedSources: 'test', testType: 'test' }), storage);
+        const result = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('TestSelection functional handler', () => {
       }
     });
 
+    it('fixture "analyze_concept_change" -> ok', async () => {
+      if (typeof testSelectionHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/password.concept"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "analyze_with_type" -> ok', async () => {
+      if (typeof testSelectionHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.analyze({ changedSources: ["./specs/auth.concept"], testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "analyze_empty" -> noMappings', async () => {
+      if (typeof testSelectionHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.analyze({ changedSources: [] }), storage);
+      expect(result.variant).toBe('noMappings');
+    });
+
   });
 
   describe('select', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testSelectionHandler.select({ affectedTests: 'test', budget: 'test' });
+      const program = testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testSelectionHandler.select({ affectedTests: 'test', budget: 'test' });
+      const program = testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testSelectionHandler.select({ affectedTests: 'test', budget: 'test' });
+      const program = testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testSelectionHandler.select({ affectedTests: 'test', budget: 'test' });
+      const program = testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testSelectionHandler.select({ affectedTests: 'test', budget: 'test' });
+      const program = testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('TestSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testSelectionHandler.select !== 'function') return;
       try {
-        const result = await interpret(testSelectionHandler.select({ affectedTests: 'test', budget: 'test' }), storage);
+        const result = await interpret(testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('TestSelection functional handler', () => {
       }
     });
 
+    it('fixture "select_no_budget" -> ok', async () => {
+      if (typeof testSelectionHandler.select !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "select_with_budget" -> ok', async () => {
+      if (typeof testSelectionHandler.select !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.select({ affectedTests: [{"testId":"test_hash","language":"typescript","testType":"unit","relevance":"1.0"}], budget: {"maxDuration":"5000","maxTests":"10"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "select_empty" -> ok', async () => {
+      if (typeof testSelectionHandler.select !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.select({ affectedTests: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true });
+      const program = testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true });
+      const program = testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true });
+      const program = testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true });
+      const program = testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('TestSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true });
+      const program = testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('TestSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testSelectionHandler.record !== 'function') return;
       try {
-        const result = await interpret(testSelectionHandler.record({ testId: 'test-testId', language: 'test-language', testType: 'test-testType', coveredSources: 'test', duration: 1, passed: true }), storage);
+        const result = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +236,20 @@ describe('TestSelection functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "record_unit" -> ok', async () => {
+      if (typeof testSelectionHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.record({ testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept","generated/ts/password.ts"], duration: "45", passed: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_failing" -> ok', async () => {
+      if (typeof testSelectionHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.record({ testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: "1200", passed: "false" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,6 +310,31 @@ describe('TestSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof testSelectionHandler.statistics !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testSelectionHandler.statistics({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof testSelectionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = testSelectionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TestSelection');
+    });
   });
 
   describe('invariant examples', () => {

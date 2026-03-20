@@ -26,7 +26,7 @@ describe('Authorization functional handler', () => {
 
   describe('grantPermission', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.grantPermission({ role: "admin", permission: "write" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Authorization functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.grantPermission({ role: "admin", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.grantPermission({ role: "admin", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.grantPermission({ role: "admin", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Authorization functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.grantPermission({ role: "admin", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Authorization functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authorizationHandler.grantPermission !== 'function') return;
       try {
-        const result = await interpret(authorizationHandler.grantPermission({ role: 'test-role', permission: 'test-permission' }), storage);
+        const result = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Authorization functional handler', () => {
       }
     });
 
+    it('fixture "grant_write_to_admin" -> ok', async () => {
+      if (typeof authorizationHandler.grantPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "grant_empty_role" -> error', async () => {
+      if (typeof authorizationHandler.grantPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.grantPermission({ role: "", permission: "write" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('revokePermission', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.revokePermission({ role: "editor", permission: "publish" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Authorization functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.revokePermission({ role: "editor", permission: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.revokePermission({ role: "editor", permission: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.revokePermission({ role: "editor", permission: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Authorization functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' });
+      const program = authorizationHandler.revokePermission({ role: "editor", permission: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Authorization functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authorizationHandler.revokePermission !== 'function') return;
       try {
-        const result = await interpret(authorizationHandler.revokePermission({ role: 'test-role', permission: 'test-permission' }), storage);
+        const result = await interpret(authorizationHandler.revokePermission({ role: "editor", permission: "publish" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Authorization functional handler', () => {
       }
     });
 
+    it('fixture "revoke_publish" -> ok', async () => {
+      if (typeof authorizationHandler.revokePermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.revokePermission({ role: "editor", permission: "publish" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "revoke_missing_role" -> error', async () => {
+      if (typeof authorizationHandler.revokePermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.revokePermission({ role: "nonexistent", permission: "write" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('assignRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authorizationHandler.assignRole({ user: 'test', role: 'test-role' });
+      const program = authorizationHandler.assignRole({ user: "alice", role: "admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Authorization functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authorizationHandler.assignRole({ user: 'test', role: 'test-role' });
+      const program = authorizationHandler.assignRole({ user: "alice", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authorizationHandler.assignRole({ user: 'test', role: 'test-role' });
+      const program = authorizationHandler.assignRole({ user: "alice", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authorizationHandler.assignRole({ user: 'test', role: 'test-role' });
+      const program = authorizationHandler.assignRole({ user: "alice", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Authorization functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authorizationHandler.assignRole({ user: 'test', role: 'test-role' });
+      const program = authorizationHandler.assignRole({ user: "alice", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Authorization functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authorizationHandler.assignRole !== 'function') return;
       try {
-        const result = await interpret(authorizationHandler.assignRole({ user: 'test', role: 'test-role' }), storage);
+        const result = await interpret(authorizationHandler.assignRole({ user: "alice", role: "admin" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Authorization functional handler', () => {
       }
     });
 
+    it('fixture "assign_admin" -> ok', async () => {
+      if (typeof authorizationHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.assignRole({ user: "alice", role: "admin" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_missing_role" -> error', async () => {
+      if (typeof authorizationHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.assignRole({ user: "alice", role: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkPermission', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' });
+      const program = authorizationHandler.checkPermission({ user: "alice", permission: "write" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Authorization functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' });
+      const program = authorizationHandler.checkPermission({ user: "alice", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' });
+      const program = authorizationHandler.checkPermission({ user: "alice", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' });
+      const program = authorizationHandler.checkPermission({ user: "alice", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Authorization functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' });
+      const program = authorizationHandler.checkPermission({ user: "alice", permission: "write" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Authorization functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authorizationHandler.checkPermission !== 'function') return;
       try {
-        const result = await interpret(authorizationHandler.checkPermission({ user: 'test', permission: 'test-permission' }), storage);
+        const result = await interpret(authorizationHandler.checkPermission({ user: "alice", permission: "write" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Authorization functional handler', () => {
       }
     });
 
+    it('fixture "check_granted" -> ok', async () => {
+      if (typeof authorizationHandler.checkPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.checkPermission({ user: "alice", permission: "write" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_ungranted" -> error', async () => {
+      if (typeof authorizationHandler.checkPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof authorizationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = authorizationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Authorization');
+    });
   });
 
   describe('invariant examples', () => {

@@ -29,13 +29,20 @@ describe('LocalProcess imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof localProcessHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.initialize({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('registerRuntime', () => {
     it('executes without crashing', async () => {
       if (typeof localProcessHandler.registerRuntime !== 'function') return;
       try {
-        const result = await localProcessHandler.registerRuntime({ runtime: 'test-runtime', providerName: 'test-providerName' }, storage);
+        const result = await localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('LocalProcess imperative handler', () => {
       }
     });
 
+    it('fixture "register_wasm" -> ok', async () => {
+      if (typeof localProcessHandler.registerRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> duplicate', async () => {
+      if (typeof localProcessHandler.registerRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "AnotherWasmProvider" }, storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('dispatch', () => {
     it('executes without crashing', async () => {
       if (typeof localProcessHandler.dispatch !== 'function') return;
       try {
-        const result = await localProcessHandler.dispatch({ runtime: 'test-runtime', operation: 'test-operation', moduleRef: 'test-moduleRef', input: 'test-input', config: 'test-config' }, storage);
+        const result = await localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,27 @@ describe('LocalProcess imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "wasm_inference" -> ok', async () => {
+      if (typeof localProcessHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_runtime" -> runtimeNotFound', async () => {
+      if (typeof localProcessHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.dispatch({ runtime: "cuda", operation: "compute", moduleRef: "model.bin", input: "{}", config: "{}" }, storage);
+      expect(result.variant).toBe('runtimeNotFound');
+    });
+
+    it('fixture "failed_execution" -> error', async () => {
+      if (typeof localProcessHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "broken-module.wasm", input: "{}", config: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -77,6 +119,30 @@ describe('LocalProcess imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof localProcessHandler.listRuntimes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localProcessHandler.listRuntimes({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof localProcessHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = localProcessHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LocalProcess');
+    });
   });
 
   describe('invariant examples', () => {

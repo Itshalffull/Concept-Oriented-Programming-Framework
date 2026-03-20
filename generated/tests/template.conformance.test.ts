@@ -26,7 +26,7 @@ describe('Template functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' });
+      const program = templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Template functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' });
+      const program = templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' });
+      const program = templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' });
+      const program = templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Template functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' });
+      const program = templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Template functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof templateHandler.define !== 'function') return;
       try {
-        const result = await interpret(templateHandler.define({ template: 'test', body: 'test-body', variables: 'test-variables' }), storage);
+        const result = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Template functional handler', () => {
       }
     });
 
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof templateHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.define({ template: "welcome-email", body: "Hello {{name}}", variables: "name" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_define" -> exists', async () => {
+      if (typeof templateHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.define({ template: "welcome-email", body: "Hi {{name}}", variables: "name" }), storage);
+      expect(result.variant).toBe('exists');
+    });
+
   });
 
   describe('instantiate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = templateHandler.instantiate({ template: 'test', values: 'test-values' });
+      const program = templateHandler.instantiate({ template: "welcome-email", values: "name=World" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Template functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = templateHandler.instantiate({ template: 'test', values: 'test-values' });
+      const program = templateHandler.instantiate({ template: "welcome-email", values: "name=World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = templateHandler.instantiate({ template: 'test', values: 'test-values' });
+      const program = templateHandler.instantiate({ template: "welcome-email", values: "name=World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = templateHandler.instantiate({ template: 'test', values: 'test-values' });
+      const program = templateHandler.instantiate({ template: "welcome-email", values: "name=World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Template functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = templateHandler.instantiate({ template: 'test', values: 'test-values' });
+      const program = templateHandler.instantiate({ template: "welcome-email", values: "name=World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Template functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof templateHandler.instantiate !== 'function') return;
       try {
-        const result = await interpret(templateHandler.instantiate({ template: 'test', values: 'test-values' }), storage);
+        const result = await interpret(templateHandler.instantiate({ template: "welcome-email", values: "name=World" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Template functional handler', () => {
       }
     });
 
+    it('fixture "valid_instantiate" -> ok', async () => {
+      if (typeof templateHandler.instantiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.instantiate({ template: "welcome-email", values: "name=World" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_template" -> notfound', async () => {
+      if (typeof templateHandler.instantiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.instantiate({ template: "nonexistent", values: "name=Test" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('registerTrigger', () => {
     it('builds a valid StorageProgram', () => {
-      const program = templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' });
+      const program = templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Template functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' });
+      const program = templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' });
+      const program = templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' });
+      const program = templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Template functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' });
+      const program = templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Template functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof templateHandler.registerTrigger !== 'function') return;
       try {
-        const result = await interpret(templateHandler.registerTrigger({ template: 'test', trigger: 'test-trigger' }), storage);
+        const result = await interpret(templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Template functional handler', () => {
       }
     });
 
+    it('fixture "valid_trigger" -> ok', async () => {
+      if (typeof templateHandler.registerTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.registerTrigger({ template: "welcome-email", trigger: "on-signup" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trigger_missing_template" -> notfound', async () => {
+      if (typeof templateHandler.registerTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.registerTrigger({ template: "nonexistent", trigger: "on-login" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('mergeProperties', () => {
     it('builds a valid StorageProgram', () => {
-      const program = templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' });
+      const program = templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Template functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' });
+      const program = templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' });
+      const program = templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' });
+      const program = templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Template functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' });
+      const program = templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Template functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof templateHandler.mergeProperties !== 'function') return;
       try {
-        const result = await interpret(templateHandler.mergeProperties({ template: 'test', properties: 'test-properties' }), storage);
+        const result = await interpret(templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Template functional handler', () => {
       }
     });
 
+    it('fixture "valid_merge" -> ok', async () => {
+      if (typeof templateHandler.mergeProperties !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.mergeProperties({ template: "welcome-email", properties: "greeting,signature" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "merge_missing_template" -> notfound', async () => {
+      if (typeof templateHandler.mergeProperties !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.mergeProperties({ template: "nonexistent", properties: "extra" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof templateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = templateHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Template');
+    });
   });
 
   describe('invariant examples', () => {

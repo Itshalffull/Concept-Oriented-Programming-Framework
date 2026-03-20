@@ -19,7 +19,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.generate !== 'function') return;
       try {
-        const result = await testGenHandler.generate({ concept_ref: 'test-concept_ref', language: 'test-language', invariant_version: 'test-invariant_version' }, storage);
+        const result = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,34 @@ describe('TestGen imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "generate_typescript" -> ok', async () => {
+      if (typeof testGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "typescript", invariant_version: "v1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_rust" -> ok', async () => {
+      if (typeof testGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.generate({ concept_ref: "clef/concept/Auth", language: "rust", invariant_version: "v2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_language" -> invalid', async () => {
+      if (typeof testGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.generate({ concept_ref: "clef/concept/Password", language: "python", invariant_version: "v1" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "missing_ref" -> invalid', async () => {
+      if (typeof testGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.generate({ concept_ref: "", language: "typescript", invariant_version: "v1" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +63,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.buildTestPlan !== 'function') return;
       try {
-        const result = await testGenHandler.buildTestPlan({ concept_ref: 'test-concept_ref', concept_data: 'test-concept_data' }, storage);
+        const result = await testGenHandler.buildTestPlan({ concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +71,20 @@ describe('TestGen imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "build_plan_basic" -> ok', async () => {
+      if (typeof testGenHandler.buildTestPlan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.buildTestPlan({ concept_ref: "clef/concept/User", concept_data: "{\"name\":\"User\",\"actions\":[],\"invariants\":[]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_plan_missing_ref" -> invalid', async () => {
+      if (typeof testGenHandler.buildTestPlan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.buildTestPlan({ concept_ref: "", concept_data: "{}" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -51,7 +93,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.regenerate !== 'function') return;
       try {
-        const result = await testGenHandler.regenerate({ generation: 'test' }, storage);
+        const result = await testGenHandler.regenerate({ generation: "tg-abc123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +101,20 @@ describe('TestGen imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "regenerate_existing" -> ok', async () => {
+      if (typeof testGenHandler.regenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.regenerate({ generation: "tg-abc123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "regenerate_missing" -> ok', async () => {
+      if (typeof testGenHandler.regenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.regenerate({ generation: "tg-nonexistent" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -67,7 +123,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.list !== 'function') return;
       try {
-        const result = await testGenHandler.list({ concept_ref: 'test', language: 'test' }, storage);
+        const result = await testGenHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +131,20 @@ describe('TestGen imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof testGenHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_concept" -> ok', async () => {
+      if (typeof testGenHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.list({ concept_ref: "clef/concept/Password" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -83,7 +153,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.configure !== 'function') return;
       try {
-        const result = await testGenHandler.configure({ generation: 'test', num_runs: 'test', fuzz_duration_s: 'test', shrink_enabled: 'test', stateful_test_depth: 'test' }, storage);
+        const result = await testGenHandler.configure({ generation: "tg-abc123", num_runs: "50000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +161,20 @@ describe('TestGen imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "configure_runs" -> ok', async () => {
+      if (typeof testGenHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.configure({ generation: "tg-abc123", num_runs: "50000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_fuzz" -> ok', async () => {
+      if (typeof testGenHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.configure({ generation: "tg-abc123", fuzz_duration_s: "120", shrink_enabled: "true" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -99,7 +183,7 @@ describe('TestGen imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenHandler.coverage !== 'function') return;
       try {
-        const result = await testGenHandler.coverage({ concept_ref: 'test-concept_ref' }, storage);
+        const result = await testGenHandler.coverage({ concept_ref: "clef/concept/Password" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +193,37 @@ describe('TestGen imperative handler', () => {
       }
     });
 
+    it('fixture "coverage_password" -> ok', async () => {
+      if (typeof testGenHandler.coverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.coverage({ concept_ref: "clef/concept/Password" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "coverage_missing" -> ok', async () => {
+      if (typeof testGenHandler.coverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenHandler.coverage({ concept_ref: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof testGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = testGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TestGen');
+    });
   });
 
   describe('invariant examples', () => {

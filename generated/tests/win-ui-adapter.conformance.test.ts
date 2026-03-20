@@ -26,7 +26,7 @@ describe('WinUIAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WinUIAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WinUIAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WinUIAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof winUIAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(winUIAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,59 @@ describe('WinUIAdapter functional handler', () => {
       }
     });
 
+    it('fixture "click_and_class" -> ok', async () => {
+      if (typeof winUIAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn-primary\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "grid_layout" -> ok', async () => {
+      if (typeof winUIAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"1*,2*\\\"}\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "aria_automation" -> ok', async () => {
+      if (typeof winUIAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-3", props: "{ \"aria-label\": \"Close\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof winUIAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "broken_json" -> error', async () => {
+      if (typeof winUIAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(winUIAdapterHandler.normalize({ adapter: "winui-1", props: "{bad" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof winUIAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = winUIAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WinUIAdapter');
+    });
   });
 
   describe('invariant examples', () => {

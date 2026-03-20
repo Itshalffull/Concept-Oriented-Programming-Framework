@@ -19,7 +19,7 @@ describe('ContentHash imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHashHandler.store !== 'function') return;
       try {
-        const result = await contentHashHandler.store({ content: 'test' }, storage);
+        const result = await contentHashHandler.store({ content: "Hello, world!" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ContentHash imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "store_content" -> ok', async () => {
+      if (typeof contentHashHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.store({ content: "Hello, world!" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "store_empty" -> error', async () => {
+      if (typeof contentHashHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.store({ content: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ContentHash imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHashHandler.retrieve !== 'function') return;
       try {
-        const result = await contentHashHandler.retrieve({ hash: 'test-hash' }, storage);
+        const result = await contentHashHandler.retrieve({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ContentHash imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "retrieve_existing" -> ok', async () => {
+      if (typeof contentHashHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.retrieve({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "retrieve_empty_hash" -> error', async () => {
+      if (typeof contentHashHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.retrieve({ hash: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ContentHash imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHashHandler.verify !== 'function') return;
       try {
-        const result = await contentHashHandler.verify({ hash: 'test-hash', content: 'test' }, storage);
+        const result = await contentHashHandler.verify({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('ContentHash imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "verify_matching" -> ok', async () => {
+      if (typeof contentHashHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.verify({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_empty_hash" -> error', async () => {
+      if (typeof contentHashHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.verify({ hash: "", content: "anything" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('ContentHash imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHashHandler.delete !== 'function') return;
       try {
-        const result = await contentHashHandler.delete({ hash: 'test-hash' }, storage);
+        const result = await contentHashHandler.delete({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('ContentHash imperative handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof contentHashHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.delete({ hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_empty_hash" -> error', async () => {
+      if (typeof contentHashHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentHashHandler.delete({ hash: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentHashHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentHashHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContentHash');
+    });
   });
 
   describe('invariant examples', () => {

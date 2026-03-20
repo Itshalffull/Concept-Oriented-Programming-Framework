@@ -26,7 +26,7 @@ describe('Layout functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' });
+      const program = layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Layout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' });
+      const program = layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' });
+      const program = layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' });
+      const program = layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Layout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' });
+      const program = layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Layout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof layoutHandler.create !== 'function') return;
       try {
-        const result = await interpret(layoutHandler.create({ layout: 'test', name: 'test-name', kind: 'test-kind' }), storage);
+        const result = await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Layout functional handler', () => {
       }
     });
 
+    it('fixture "sidebar_layout" -> ok', async () => {
+      if (typeof layoutHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "grid_layout" -> ok', async () => {
+      if (typeof layoutHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.create({ layout: "layout-2", name: "dashboard-grid", kind: "grid" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_kind" -> invalid', async () => {
+      if (typeof layoutHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.create({ layout: "layout-3", name: "bad-layout", kind: "carousel" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = layoutHandler.configure({ layout: 'test', config: 'test-config' });
+      const program = layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Layout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = layoutHandler.configure({ layout: 'test', config: 'test-config' });
+      const program = layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = layoutHandler.configure({ layout: 'test', config: 'test-config' });
+      const program = layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = layoutHandler.configure({ layout: 'test', config: 'test-config' });
+      const program = layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Layout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = layoutHandler.configure({ layout: 'test', config: 'test-config' });
+      const program = layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Layout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof layoutHandler.configure !== 'function') return;
       try {
-        const result = await interpret(layoutHandler.configure({ layout: 'test', config: 'test-config' }), storage);
+        const result = await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Layout functional handler', () => {
       }
     });
 
+    it('fixture "set_direction_and_gap" -> ok', async () => {
+      if (typeof layoutHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_nonexistent" -> notfound', async () => {
+      if (typeof layoutHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.configure({ layout: "layout-nonexistent", config: "{\"gap\":\"8px\"}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('nest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = layoutHandler.nest({ parent: 'test', child: 'test' });
+      const program = layoutHandler.nest({ parent: "layout-1", child: "layout-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Layout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = layoutHandler.nest({ parent: 'test', child: 'test' });
+      const program = layoutHandler.nest({ parent: "layout-1", child: "layout-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = layoutHandler.nest({ parent: 'test', child: 'test' });
+      const program = layoutHandler.nest({ parent: "layout-1", child: "layout-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = layoutHandler.nest({ parent: 'test', child: 'test' });
+      const program = layoutHandler.nest({ parent: "layout-1", child: "layout-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Layout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = layoutHandler.nest({ parent: 'test', child: 'test' });
+      const program = layoutHandler.nest({ parent: "layout-1", child: "layout-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Layout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof layoutHandler.nest !== 'function') return;
       try {
-        const result = await interpret(layoutHandler.nest({ parent: 'test', child: 'test' }), storage);
+        const result = await interpret(layoutHandler.nest({ parent: "layout-1", child: "layout-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Layout functional handler', () => {
       }
     });
 
+    it('fixture "nest_child" -> ok', async () => {
+      if (typeof layoutHandler.nest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.nest({ parent: "layout-1", child: "layout-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nest_missing_parent" -> cycle', async () => {
+      if (typeof layoutHandler.nest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.nest({ parent: "layout-nonexistent", child: "layout-2" }), storage);
+      expect(result.variant).toBe('cycle');
+    });
+
   });
 
   describe('setResponsive', () => {
     it('builds a valid StorageProgram', () => {
-      const program = layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' });
+      const program = layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Layout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' });
+      const program = layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' });
+      const program = layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' });
+      const program = layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Layout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' });
+      const program = layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Layout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof layoutHandler.setResponsive !== 'function') return;
       try {
-        const result = await interpret(layoutHandler.setResponsive({ layout: 'test', breakpoints: 'test-breakpoints' }), storage);
+        const result = await interpret(layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Layout functional handler', () => {
       }
     });
 
+    it('fixture "responsive_overrides" -> ok', async () => {
+      if (typeof layoutHandler.setResponsive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "responsive_nonexistent" -> notfound', async () => {
+      if (typeof layoutHandler.setResponsive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.setResponsive({ layout: "layout-nonexistent", breakpoints: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = layoutHandler.remove({ layout: 'test' });
+      const program = layoutHandler.remove({ layout: "layout-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Layout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = layoutHandler.remove({ layout: 'test' });
+      const program = layoutHandler.remove({ layout: "layout-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = layoutHandler.remove({ layout: 'test' });
+      const program = layoutHandler.remove({ layout: "layout-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = layoutHandler.remove({ layout: 'test' });
+      const program = layoutHandler.remove({ layout: "layout-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Layout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = layoutHandler.remove({ layout: 'test' });
+      const program = layoutHandler.remove({ layout: "layout-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Layout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof layoutHandler.remove !== 'function') return;
       try {
-        const result = await interpret(layoutHandler.remove({ layout: 'test' }), storage);
+        const result = await interpret(layoutHandler.remove({ layout: "layout-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Layout functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing" -> ok', async () => {
+      if (typeof layoutHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.remove({ layout: "layout-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent" -> notfound', async () => {
+      if (typeof layoutHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(layoutHandler.remove({ layout: "layout-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof layoutHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = layoutHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Layout');
+    });
   });
 
   describe('invariant examples', () => {

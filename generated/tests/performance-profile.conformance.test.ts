@@ -19,7 +19,7 @@ describe('PerformanceProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof performanceProfileHandler.aggregate !== 'function') return;
       try {
-        const result = await performanceProfileHandler.aggregate({ symbol: 'test-symbol', window: 'test-window' }, storage);
+        const result = await performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('PerformanceProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "aggregate_article_create" -> ok', async () => {
+      if (typeof performanceProfileHandler.aggregate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.aggregate({ symbol: "clef/action/Article/create", window: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "aggregate_empty_symbol" -> error', async () => {
+      if (typeof performanceProfileHandler.aggregate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.aggregate({ symbol: "", window: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('PerformanceProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof performanceProfileHandler.hotspots !== 'function') return;
       try {
-        const result = await performanceProfileHandler.hotspots({ kind: 'test-kind', metric: 'test-metric', topN: 1 }, storage);
+        const result = await performanceProfileHandler.hotspots({ kind: "action", metric: "p90", topN: "10" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('PerformanceProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "hotspots_actions_p90" -> ok', async () => {
+      if (typeof performanceProfileHandler.hotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.hotspots({ kind: "action", metric: "p90", topN: "10" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "hotspots_invalid_metric" -> error', async () => {
+      if (typeof performanceProfileHandler.hotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.hotspots({ kind: "action", metric: "", topN: "0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('PerformanceProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof performanceProfileHandler.slowChains !== 'function') return;
       try {
-        const result = await performanceProfileHandler.slowChains({ thresholdMs: 1 }, storage);
+        const result = await performanceProfileHandler.slowChains({ thresholdMs: "500" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('PerformanceProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "slow_chains_500ms" -> ok', async () => {
+      if (typeof performanceProfileHandler.slowChains !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.slowChains({ thresholdMs: "500" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "slow_chains_zero" -> error', async () => {
+      if (typeof performanceProfileHandler.slowChains !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.slowChains({ thresholdMs: "0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('PerformanceProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof performanceProfileHandler.compareWindows !== 'function') return;
       try {
-        const result = await performanceProfileHandler.compareWindows({ symbol: 'test-symbol', windowA: 'test-windowA', windowB: 'test-windowB' }, storage);
+        const result = await performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('PerformanceProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compare_weekly" -> ok', async () => {
+      if (typeof performanceProfileHandler.compareWindows !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.compareWindows({ symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_empty_symbol" -> error', async () => {
+      if (typeof performanceProfileHandler.compareWindows !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.compareWindows({ symbol: "", windowA: "{}", windowB: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('PerformanceProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof performanceProfileHandler.get !== 'function') return;
       try {
-        const result = await performanceProfileHandler.get({ profile: 'test' }, storage);
+        const result = await performanceProfileHandler.get({ profile: "performance-profile-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('PerformanceProfile imperative handler', () => {
       }
     });
 
+    it('fixture "get_existing_profile" -> ok', async () => {
+      if (typeof performanceProfileHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.get({ profile: "performance-profile-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof performanceProfileHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await performanceProfileHandler.get({ profile: "nonexistent-profile" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof performanceProfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = performanceProfileHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PerformanceProfile');
+    });
   });
 
   describe('invariant examples', () => {

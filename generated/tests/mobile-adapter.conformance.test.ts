@@ -26,7 +26,7 @@ describe('MobileAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('MobileAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('MobileAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('MobileAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mobileAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(mobileAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('MobileAdapter functional handler', () => {
       }
     });
 
+    it('fixture "normalize_touch_events" -> ok', async () => {
+      if (typeof mobileAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_a11y" -> ok', async () => {
+      if (typeof mobileAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "{ \"aria-label\": \"Submit\", \"data-testid\": \"btn-submit\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_empty_props" -> error', async () => {
+      if (typeof mobileAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "normalize_invalid_json" -> error', async () => {
+      if (typeof mobileAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mobileAdapterHandler.normalize({ adapter: "mobile-1", props: "not{json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof mobileAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = mobileAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('MobileAdapter');
+    });
   });
 
   describe('invariant examples', () => {

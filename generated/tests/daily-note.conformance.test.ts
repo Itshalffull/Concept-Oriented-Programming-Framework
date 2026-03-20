@@ -26,7 +26,7 @@ describe('DailyNote functional handler', () => {
 
   describe('getOrCreateToday', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dailyNoteHandler.getOrCreateToday({ note: 'test' });
+      const program = dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dailyNoteHandler.getOrCreateToday({ note: 'test' });
+      const program = dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dailyNoteHandler.getOrCreateToday({ note: 'test' });
+      const program = dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dailyNoteHandler.getOrCreateToday({ note: 'test' });
+      const program = dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dailyNoteHandler.getOrCreateToday({ note: 'test' });
+      const program = dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DailyNote functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dailyNoteHandler.getOrCreateToday !== 'function') return;
       try {
-        const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: 'test' }), storage);
+        const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('DailyNote functional handler', () => {
       }
     });
 
+    it('fixture "today_new" -> ok', async () => {
+      if (typeof dailyNoteHandler.getOrCreateToday !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "today_existing" -> ok', async () => {
+      if (typeof dailyNoteHandler.getOrCreateToday !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.getOrCreateToday({ note: "daily-2026-03-20" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('navigateToDate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dailyNoteHandler.navigateToDate({ date: 'test-date' });
+      const program = dailyNoteHandler.navigateToDate({ date: "2026-03-20" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dailyNoteHandler.navigateToDate({ date: 'test-date' });
+      const program = dailyNoteHandler.navigateToDate({ date: "2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dailyNoteHandler.navigateToDate({ date: 'test-date' });
+      const program = dailyNoteHandler.navigateToDate({ date: "2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dailyNoteHandler.navigateToDate({ date: 'test-date' });
+      const program = dailyNoteHandler.navigateToDate({ date: "2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dailyNoteHandler.navigateToDate({ date: 'test-date' });
+      const program = dailyNoteHandler.navigateToDate({ date: "2026-03-20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('DailyNote functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dailyNoteHandler.navigateToDate !== 'function') return;
       try {
-        const result = await interpret(dailyNoteHandler.navigateToDate({ date: 'test-date' }), storage);
+        const result = await interpret(dailyNoteHandler.navigateToDate({ date: "2026-03-20" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('DailyNote functional handler', () => {
       }
     });
 
+    it('fixture "navigate_existing" -> ok', async () => {
+      if (typeof dailyNoteHandler.navigateToDate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.navigateToDate({ date: "2026-03-20" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "navigate_missing" -> notfound', async () => {
+      if (typeof dailyNoteHandler.navigateToDate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.navigateToDate({ date: "1999-01-01" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('listRecent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dailyNoteHandler.listRecent({ count: 1 });
+      const program = dailyNoteHandler.listRecent({ count: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dailyNoteHandler.listRecent({ count: 1 });
+      const program = dailyNoteHandler.listRecent({ count: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dailyNoteHandler.listRecent({ count: 1 });
+      const program = dailyNoteHandler.listRecent({ count: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dailyNoteHandler.listRecent({ count: 1 });
+      const program = dailyNoteHandler.listRecent({ count: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('DailyNote functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dailyNoteHandler.listRecent({ count: 1 });
+      const program = dailyNoteHandler.listRecent({ count: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('DailyNote functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dailyNoteHandler.listRecent !== 'function') return;
       try {
-        const result = await interpret(dailyNoteHandler.listRecent({ count: 1 }), storage);
+        const result = await interpret(dailyNoteHandler.listRecent({ count: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('DailyNote functional handler', () => {
       }
     });
 
+    it('fixture "list_five" -> ok', async () => {
+      if (typeof dailyNoteHandler.listRecent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.listRecent({ count: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_one" -> ok', async () => {
+      if (typeof dailyNoteHandler.listRecent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dailyNoteHandler.listRecent({ count: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dailyNoteHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dailyNoteHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DailyNote');
+    });
   });
 
   describe('invariant examples', () => {

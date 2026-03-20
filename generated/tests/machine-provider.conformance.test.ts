@@ -26,7 +26,7 @@ describe('MachineProvider functional handler', () => {
 
   describe('initialize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.initialize({ provider: 'test', config: 'test-config' });
+      const program = machineProviderHandler.initialize({ config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.initialize({ provider: 'test', config: 'test-config' });
+      const program = machineProviderHandler.initialize({ config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.initialize({ provider: 'test', config: 'test-config' });
+      const program = machineProviderHandler.initialize({ config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.initialize({ provider: 'test', config: 'test-config' });
+      const program = machineProviderHandler.initialize({ config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.initialize({ provider: 'test', config: 'test-config' });
+      const program = machineProviderHandler.initialize({ config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('MachineProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof machineProviderHandler.initialize !== 'function') return;
       try {
-        const result = await interpret(machineProviderHandler.initialize({ provider: 'test', config: 'test-config' }), storage);
+        const result = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('MachineProvider functional handler', () => {
       }
     });
 
+    it('fixture "init_default" -> ok', async () => {
+      if (typeof machineProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "init_invalid_json" -> error', async () => {
+      if (typeof machineProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.initialize({ config: "{bad" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('spawn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' });
+      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' });
+      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' });
+      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' });
+      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' });
+      const program = machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('MachineProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       try {
-        const result = await interpret(machineProviderHandler.spawn({ provider: 'test', widget: 'test-widget', context: 'test-context' }), storage);
+        const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('MachineProvider functional handler', () => {
       }
     });
 
+    it('fixture "spawn_dialog" -> ok', async () => {
+      if (typeof machineProviderHandler.spawn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "spawn_empty_widget" -> error', async () => {
+      if (typeof machineProviderHandler.spawn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "", context: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('send', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' });
+      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' });
+      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' });
+      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' });
+      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' });
+      const program = machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('MachineProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       try {
-        const result = await interpret(machineProviderHandler.send({ provider: 'test', machine: 'test-machine', event: 'test-event' }), storage);
+        const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('MachineProvider functional handler', () => {
       }
     });
 
+    it('fixture "send_open" -> ok', async () => {
+      if (typeof machineProviderHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "send_missing_machine" -> error', async () => {
+      if (typeof machineProviderHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "nonexistent", event: "OPEN" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('connect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('MachineProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
       try {
-        const result = await interpret(machineProviderHandler.connect({ provider: 'test', machine: 'test-machine' }), storage);
+        const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('MachineProvider functional handler', () => {
       }
     });
 
+    it('fixture "connect_valid" -> ok', async () => {
+      if (typeof machineProviderHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "connect_missing" -> error', async () => {
+      if (typeof machineProviderHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('MachineProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' });
+      const program = machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('MachineProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(machineProviderHandler.destroy({ provider: 'test', machine: 'test-machine' }), storage);
+        const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('MachineProvider functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof machineProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof machineProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof machineProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = machineProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('MachineProvider');
+    });
   });
 
   describe('invariant examples', () => {

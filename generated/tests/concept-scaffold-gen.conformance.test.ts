@@ -26,7 +26,7 @@ describe('ConceptScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConceptScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(conceptScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' }), storage);
+        const result = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ConceptScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "user_concept" -> ok', async () => {
+      if (typeof conceptScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof conceptScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptScaffoldGenHandler.generate({ name: "", typeParam: "T", purpose: "Test concept", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ConceptScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' });
+      const program = conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(conceptScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', stateFields: 'test', actions: 'test', version: 'test', gate: 'test', capabilities: 'test' }), storage);
+        const result = await interpret(conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,20 @@ describe('ConceptScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "preview_payment" -> ok', async () => {
+      if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_no_name" -> error', async () => {
+      if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptScaffoldGenHandler.preview({ name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +224,31 @@ describe('ConceptScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof conceptScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conceptScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conceptScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conceptScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConceptScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

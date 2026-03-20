@@ -26,7 +26,7 @@ describe('Theme functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' });
+      const program = themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Theme functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' });
+      const program = themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' });
+      const program = themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' });
+      const program = themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Theme functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' });
+      const program = themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Theme functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeHandler.create !== 'function') return;
       try {
-        const result = await interpret(themeHandler.create({ theme: 'test', name: 'test-name', overrides: 'test-overrides' }), storage);
+        const result = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Theme functional handler', () => {
       }
     });
 
+    it('fixture "create_dark" -> ok', async () => {
+      if (typeof themeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_light" -> ok', async () => {
+      if (typeof themeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('extend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' });
+      const program = themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Theme functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' });
+      const program = themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' });
+      const program = themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' });
+      const program = themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Theme functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' });
+      const program = themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Theme functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeHandler.extend !== 'function') return;
       try {
-        const result = await interpret(themeHandler.extend({ theme: 'test', base: 'test', overrides: 'test-overrides' }), storage);
+        const result = await interpret(themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Theme functional handler', () => {
       }
     });
 
+    it('fixture "extend_dark_compact" -> ok', async () => {
+      if (typeof themeHandler.extend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extend_missing_base" -> notfound', async () => {
+      if (typeof themeHandler.extend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.extend({ theme: "H-4", base: "H-nonexistent", overrides: "{ \"color-bg\": \"#222\" }" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('activate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeHandler.activate({ theme: 'test', priority: 1 });
+      const program = themeHandler.activate({ theme: "H-1", priority: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Theme functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeHandler.activate({ theme: 'test', priority: 1 });
+      const program = themeHandler.activate({ theme: "H-1", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeHandler.activate({ theme: 'test', priority: 1 });
+      const program = themeHandler.activate({ theme: "H-1", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeHandler.activate({ theme: 'test', priority: 1 });
+      const program = themeHandler.activate({ theme: "H-1", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Theme functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeHandler.activate({ theme: 'test', priority: 1 });
+      const program = themeHandler.activate({ theme: "H-1", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Theme functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeHandler.activate !== 'function') return;
       try {
-        const result = await interpret(themeHandler.activate({ theme: 'test', priority: 1 }), storage);
+        const result = await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Theme functional handler', () => {
       }
     });
 
+    it('fixture "activate_dark" -> ok', async () => {
+      if (typeof themeHandler.activate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "activate_unknown" -> notfound', async () => {
+      if (typeof themeHandler.activate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.activate({ theme: "H-nonexistent", priority: "0" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('deactivate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeHandler.deactivate({ theme: 'test' });
+      const program = themeHandler.deactivate({ theme: "H-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Theme functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeHandler.deactivate({ theme: 'test' });
+      const program = themeHandler.deactivate({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeHandler.deactivate({ theme: 'test' });
+      const program = themeHandler.deactivate({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeHandler.deactivate({ theme: 'test' });
+      const program = themeHandler.deactivate({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Theme functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeHandler.deactivate({ theme: 'test' });
+      const program = themeHandler.deactivate({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Theme functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeHandler.deactivate !== 'function') return;
       try {
-        const result = await interpret(themeHandler.deactivate({ theme: 'test' }), storage);
+        const result = await interpret(themeHandler.deactivate({ theme: "H-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Theme functional handler', () => {
       }
     });
 
+    it('fixture "deactivate_dark" -> ok', async () => {
+      if (typeof themeHandler.deactivate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.deactivate({ theme: "H-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deactivate_unknown" -> notfound', async () => {
+      if (typeof themeHandler.deactivate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.deactivate({ theme: "H-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeHandler.resolve({ theme: 'test' });
+      const program = themeHandler.resolve({ theme: "H-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Theme functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeHandler.resolve({ theme: 'test' });
+      const program = themeHandler.resolve({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeHandler.resolve({ theme: 'test' });
+      const program = themeHandler.resolve({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeHandler.resolve({ theme: 'test' });
+      const program = themeHandler.resolve({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Theme functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeHandler.resolve({ theme: 'test' });
+      const program = themeHandler.resolve({ theme: "H-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Theme functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(themeHandler.resolve({ theme: 'test' }), storage);
+        const result = await interpret(themeHandler.resolve({ theme: "H-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Theme functional handler', () => {
       }
     });
 
+    it('fixture "resolve_dark" -> ok', async () => {
+      if (typeof themeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.resolve({ theme: "H-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> notfound', async () => {
+      if (typeof themeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeHandler.resolve({ theme: "H-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Theme');
+    });
   });
 
   describe('invariant examples', () => {

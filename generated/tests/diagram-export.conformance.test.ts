@@ -26,7 +26,7 @@ describe('DiagramExport functional handler', () => {
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' });
+      const program = diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' });
+      const program = diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' });
+      const program = diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' });
+      const program = diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' });
+      const program = diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DiagramExport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diagramExportHandler.export !== 'function') return;
       try {
-        const result = await interpret(diagramExportHandler.export({ canvas_id: 'test', format: 'test-format', options: 'test' }), storage);
+        const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DiagramExport functional handler', () => {
       }
     });
 
+    it('fixture "export_svg" -> ok', async () => {
+      if (typeof diagramExportHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "svg", options: {"width":"1920","height":"1080","embed_data":"true"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_json" -> ok', async () => {
+      if (typeof diagramExportHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-2", format: "json", options: {} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_unknown_format" -> error', async () => {
+      if (typeof diagramExportHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.export({ canvas_id: "canvas-1", format: "xyz", options: {} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('importDiagram', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' });
+      const program = diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DiagramExport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diagramExportHandler.importDiagram !== 'function') return;
       try {
-        const result = await interpret(diagramExportHandler.importDiagram({ data: 'test', format: 'test-format', target_canvas: 'test' }), storage);
+        const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('DiagramExport functional handler', () => {
       }
     });
 
+    it('fixture "import_json" -> ok', async () => {
+      if (typeof diagramExportHandler.importDiagram !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.importDiagram({ data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "import_unsupported" -> error', async () => {
+      if (typeof diagramExportHandler.importDiagram !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.importDiagram({ data: "binary-blob", format: "xyz", target_canvas: "canvas-5" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('detectFormat', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diagramExportHandler.detectFormat({ data: 'test' });
+      const program = diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diagramExportHandler.detectFormat({ data: 'test' });
+      const program = diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diagramExportHandler.detectFormat({ data: 'test' });
+      const program = diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diagramExportHandler.detectFormat({ data: 'test' });
+      const program = diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('DiagramExport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diagramExportHandler.detectFormat({ data: 'test' });
+      const program = diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('DiagramExport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diagramExportHandler.detectFormat !== 'function') return;
       try {
-        const result = await interpret(diagramExportHandler.detectFormat({ data: 'test' }), storage);
+        const result = await interpret(diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,45 @@ describe('DiagramExport functional handler', () => {
       }
     });
 
+    it('fixture "detect_json" -> ok', async () => {
+      if (typeof diagramExportHandler.detectFormat !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.detectFormat({ data: "{\"nodes\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_svg" -> ok', async () => {
+      if (typeof diagramExportHandler.detectFormat !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.detectFormat({ data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_empty" -> unknown', async () => {
+      if (typeof diagramExportHandler.detectFormat !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diagramExportHandler.detectFormat({  }), storage);
+      expect(result.variant).toBe('unknown');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof diagramExportHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = diagramExportHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DiagramExport');
+    });
   });
 
   describe('invariant examples', () => {

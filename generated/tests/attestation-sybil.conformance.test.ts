@@ -26,7 +26,7 @@ describe('AttestationSybil functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' });
+      const program = attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' });
+      const program = attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' });
+      const program = attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' });
+      const program = attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' });
+      const program = attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AttestationSybil functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attestationSybilHandler.configure !== 'function') return;
       try {
-        const result = await interpret(attestationSybilHandler.configure({ requiredSchemas: 'test', trustedAttesters: 'test' }), storage);
+        const result = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AttestationSybil functional handler', () => {
       }
     });
 
+    it('fixture "configure_kyc" -> ok', async () => {
+      if (typeof attestationSybilHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_empty_schema" -> error', async () => {
+      if (typeof attestationSybilHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.configure({ requiredSchema: "", requiredAttester: "civic-authority" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
-  describe('checkParticipant', () => {
+  describe('submitAttestation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' });
+      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' });
+      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' });
+      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' });
+      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,16 +133,16 @@ describe('AttestationSybil functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' });
+      const program = attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof attestationSybilHandler.checkParticipant !== 'function') return;
+      if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
       try {
-        const result = await interpret(attestationSybilHandler.checkParticipant({ config: 'test', participant: 'test-participant', attestationRef: 'test-attestationRef' }), storage);
+        const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,110 @@ describe('AttestationSybil functional handler', () => {
       }
     });
 
+    it('fixture "submit_valid_attestation" -> ok', async () => {
+      if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "submit_missing_candidate" -> error', async () => {
+      if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "", attestationRef: "att-ref-002", schema: "kyc-basic", attester: "civic-authority" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('verify', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('executes without crashing', async () => {
+      if (typeof attestationSybilHandler.verify !== 'function') return;
+      try {
+        const result = await interpret(attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" }), storage);
+        expect(result).toBeDefined();
+        expect(result.variant).toBeDefined();
+        expect(typeof result.variant).toBe('string');
+      } catch (e) {
+        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
+        expect(e).toBeDefined();
+      }
+    });
+
+    it('fixture "verify_alice" -> ok', async () => {
+      if (typeof attestationSybilHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_missing_config" -> error', async () => {
+      if (typeof attestationSybilHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationSybilHandler.verify({ config: "nonexistent", candidate: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof attestationSybilHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = attestationSybilHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AttestationSybil');
+    });
   });
 
   describe('invariant examples', () => {
@@ -158,8 +276,9 @@ describe('AttestationSybil functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchemas: fc.string(), trustedAttesters: fc.string() }) }),
-              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchema: fc.string({ minLength: 1, maxLength: 50 }), requiredAttester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('submitAttestation'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }), attester: fc.string({ minLength: 1, maxLength: 50 }), expiresAt: fc.string() }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -186,8 +305,9 @@ describe('AttestationSybil functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchemas: fc.string(), trustedAttesters: fc.string() }) }),
-              fc.record({ action: fc.constant('checkParticipant'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ requiredSchema: fc.string({ minLength: 1, maxLength: 50 }), requiredAttester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('submitAttestation'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), attestationRef: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }), attester: fc.string({ minLength: 1, maxLength: 50 }), expiresAt: fc.string() }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -226,7 +346,7 @@ describe('AttestationSybil functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ requiredSchemas: fc.string(), trustedAttesters: fc.string() }),
+          fc.record({ requiredSchema: fc.string({ minLength: 1, maxLength: 50 }), requiredAttester: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = attestationSybilHandler.configure(input as Record<string, unknown>);

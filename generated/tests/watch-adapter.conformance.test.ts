@@ -26,7 +26,7 @@ describe('WatchAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WatchAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WatchAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WatchAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof watchAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(watchAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,59 @@ describe('WatchAdapter functional handler', () => {
       }
     });
 
+    it('fixture "valid_navigation" -> ok', async () => {
+      if (typeof watchAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchAdapterHandler.normalize({ props: "{\"type\":\"navigation\",\"destination\":\"heartRate\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_aria" -> ok', async () => {
+      if (typeof watchAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchAdapterHandler.normalize({ props: "{\"aria-label\":\"Close\",\"onclick\":\"handleClose\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_events" -> ok', async () => {
+      if (typeof watchAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchAdapterHandler.normalize({ props: "{\"onclick\":\"tap\",\"onscroll\":\"scroll\",\"class\":\"primary\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof watchAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchAdapterHandler.normalize({ props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "bad_json" -> error', async () => {
+      if (typeof watchAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchAdapterHandler.normalize({ props: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof watchAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = watchAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WatchAdapter');
+    });
   });
 
   describe('invariant examples', () => {

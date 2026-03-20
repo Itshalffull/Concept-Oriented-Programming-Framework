@@ -26,7 +26,7 @@ describe('PlatformBindingCatalog functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' });
+      const program = platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' });
+      const program = platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' });
+      const program = platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' });
+      const program = platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' });
+      const program = platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformBindingCatalogHandler.register !== 'function') return;
       try {
-        const result = await interpret(platformBindingCatalogHandler.register({ binding: 'test', platform: 'test-platform', destinationPattern: 'test-destinationPattern', bindingKind: 'test-bindingKind', payload: 'test-payload' }), storage);
+        const result = await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('PlatformBindingCatalog functional handler', () => {
       }
     });
 
+    it('fixture "register_browser_nav" -> ok', async () => {
+      if (typeof platformBindingCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.register({ binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_mobile_gesture" -> ok', async () => {
+      if (typeof platformBindingCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.register({ binding: "gesture-mobile-1", platform: "mobile", destinationPattern: "*", bindingKind: "gesture", payload: "{ \"swipeBack\": true }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' });
+      const program = platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' });
+      const program = platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' });
+      const program = platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' });
+      const program = platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' });
+      const program = platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformBindingCatalogHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(platformBindingCatalogHandler.resolve({ platform: 'test-platform', destination: 'test-destination', bindingKind: 'test-bindingKind' }), storage);
+        const result = await interpret(platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('PlatformBindingCatalog functional handler', () => {
       }
     });
 
+    it('fixture "resolve_exact" -> ok', async () => {
+      if (typeof platformBindingCatalogHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.resolve({ platform: "browser", destination: "/articles/42", bindingKind: "navigation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> notfound', async () => {
+      if (typeof platformBindingCatalogHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.resolve({ platform: "watch", destination: "/settings", bindingKind: "navigation" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformBindingCatalogHandler.list({ platform: 'test' });
+      const program = platformBindingCatalogHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformBindingCatalogHandler.list({ platform: 'test' });
+      const program = platformBindingCatalogHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformBindingCatalogHandler.list({ platform: 'test' });
+      const program = platformBindingCatalogHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformBindingCatalogHandler.list({ platform: 'test' });
+      const program = platformBindingCatalogHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformBindingCatalogHandler.list({ platform: 'test' });
+      const program = platformBindingCatalogHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('PlatformBindingCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformBindingCatalogHandler.list !== 'function') return;
       try {
-        const result = await interpret(platformBindingCatalogHandler.list({ platform: 'test' }), storage);
+        const result = await interpret(platformBindingCatalogHandler.list({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('PlatformBindingCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof platformBindingCatalogHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_platform" -> ok', async () => {
+      if (typeof platformBindingCatalogHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformBindingCatalogHandler.list({ platform: "browser" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof platformBindingCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = platformBindingCatalogHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PlatformBindingCatalog');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

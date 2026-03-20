@@ -19,7 +19,7 @@ describe('TokenBalance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof tokenBalanceHandler.configure !== 'function') return;
       try {
-        const result = await tokenBalanceHandler.configure({ tokenAddress: 'test-tokenAddress' }, storage);
+        const result = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,15 +27,29 @@ describe('TokenBalance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "configure_gov_token" -> ok', async () => {
+      if (typeof tokenBalanceHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_no_contract" -> error', async () => {
+      if (typeof tokenBalanceHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.configure({ tokenContract: "", snapshotBlock: "18000000" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
 
-  describe('snapshot', () => {
+  describe('takeSnapshot', () => {
     it('executes without crashing', async () => {
-      if (typeof tokenBalanceHandler.snapshot !== 'function') return;
+      if (typeof tokenBalanceHandler.takeSnapshot !== 'function') return;
       try {
-        const result = await tokenBalanceHandler.snapshot({ config: 'test', blockRef: 'test-blockRef' }, storage);
+        const result = await tokenBalanceHandler.takeSnapshot({ config: "tb-cfg-001", blockRef: "18000000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,15 +57,29 @@ describe('TokenBalance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "snapshot_block" -> ok', async () => {
+      if (typeof tokenBalanceHandler.takeSnapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.takeSnapshot({ config: "tb-cfg-001", blockRef: "18000000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "snapshot_empty_ref" -> error', async () => {
+      if (typeof tokenBalanceHandler.takeSnapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.takeSnapshot({ config: "tb-cfg-001", blockRef: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
 
-  describe('getWeight', () => {
+  describe('setBalance', () => {
     it('executes without crashing', async () => {
-      if (typeof tokenBalanceHandler.getWeight !== 'function') return;
+      if (typeof tokenBalanceHandler.setBalance !== 'function') return;
       try {
-        const result = await tokenBalanceHandler.getWeight({ config: 'test', participant: 'test-participant' }, storage);
+        const result = await tokenBalanceHandler.setBalance({ config: "tb-cfg-001", participant: "alice", balance: "500.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,29 +89,95 @@ describe('TokenBalance imperative handler', () => {
       }
     });
 
+    it('fixture "set_balance_alice" -> ok', async () => {
+      if (typeof tokenBalanceHandler.setBalance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.setBalance({ config: "tb-cfg-001", participant: "alice", balance: "500.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_balance_zero" -> error', async () => {
+      if (typeof tokenBalanceHandler.setBalance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.setBalance({ config: "tb-cfg-001", participant: "alice", balance: "0.0" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('getBalance', () => {
+    it('executes without crashing', async () => {
+      if (typeof tokenBalanceHandler.getBalance !== 'function') return;
+      try {
+        const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice" }, storage);
+        expect(result).toBeDefined();
+        expect(result.variant).toBeDefined();
+        expect(typeof result.variant).toBe('string');
+      } catch (e) {
+        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
+        expect(e).toBeDefined();
+      }
+    });
+
+    it('fixture "get_live_balance" -> ok', async () => {
+      if (typeof tokenBalanceHandler.getBalance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_snapshot_balance" -> ok', async () => {
+      if (typeof tokenBalanceHandler.getBalance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice", snapshot: "tb-snap-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof tokenBalanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = tokenBalanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TokenBalance');
+    });
   });
 
   describe('invariant examples', () => {
-    it("configure-then-getWeight", async () => {
+    it("configure-then-getBalance", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await tokenBalanceHandler.configure({ tokenAddress: {"type":"variable","name":"_"} }, storage);
+      const configureResult0 = await tokenBalanceHandler.configure({ tokenContract: {"type":"literal","value":"0xGOV"} }, storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
-      const thenResult0 = await tokenBalanceHandler.getWeight({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"_"} }, storage);
-      expect(thenResult0.variant).toBe("weight");
+      const setBalanceResult1 = await tokenBalanceHandler.setBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":500} }, storage);
+      expect(setBalanceResult1.variant).toBe("updated");
+      const participant = setBalanceResult1.output["participant"];
+      const balance = setBalanceResult1.output["balance"];
+      const thenResult0 = await tokenBalanceHandler.getBalance({ config: {"type":"variable","name":"tb"}, participant: {"type":"variable","name":"p"} }, storage);
+      expect(thenResult0.variant).toBe("balance");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-tokenAddress', async () => {
+    it('always: valid-tokenContract', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenAddress: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ config: fc.string(), blockRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenContract: fc.string({ minLength: 1, maxLength: 50 }), snapshotBlock: fc.string() }) }),
+              fc.record({ action: fc.constant('takeSnapshot'), input: fc.record({ config: fc.string(), blockRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setBalance'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), balance: fc.string() }) }),
+              fc.record({ action: fc.constant('getBalance'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), snapshot: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -109,9 +203,10 @@ describe('TokenBalance imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenAddress: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ config: fc.string(), blockRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenContract: fc.string({ minLength: 1, maxLength: 50 }), snapshotBlock: fc.string() }) }),
+              fc.record({ action: fc.constant('takeSnapshot'), input: fc.record({ config: fc.string(), blockRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setBalance'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), balance: fc.string() }) }),
+              fc.record({ action: fc.constant('getBalance'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), snapshot: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -149,7 +244,7 @@ describe('TokenBalance imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ tokenAddress: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ tokenContract: fc.string({ minLength: 1, maxLength: 50 }), snapshotBlock: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await tokenBalanceHandler.configure(input as Record<string, unknown>, storage);

@@ -19,7 +19,7 @@ describe('LensStructuralDiffProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
       try {
-        const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: 'test-oldSchema', newSchema: 'test-newSchema' }, storage);
+        const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,51 @@ describe('LensStructuralDiffProvider imperative handler', () => {
       }
     });
 
+    it('fixture "renamed_field" -> ok', async () => {
+      if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "identical_schemas" -> ok', async () => {
+      if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "added_field" -> ok', async () => {
+      if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: "[{\"name\":\"name\",\"type\":\"String\"}]", newSchema: "[{\"name\":\"name\",\"type\":\"String\"},{\"name\":\"age\",\"type\":\"Int\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_schema" -> error', async () => {
+      if (typeof lensStructuralDiffProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensStructuralDiffProviderHandler.analyze({ oldSchema: "not json", newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lensStructuralDiffProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lensStructuralDiffProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LensStructuralDiffProvider');
+    });
   });
 
   describe('invariant examples', () => {

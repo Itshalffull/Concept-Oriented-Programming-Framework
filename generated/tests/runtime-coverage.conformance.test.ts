@@ -19,7 +19,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.record !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.record({ symbol: 'test-symbol', kind: 'test-kind', flowId: 'test-flowId' }, storage);
+        const result = await runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "record_action" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_variant" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_symbol" -> error', async () => {
+      if (typeof runtimeCoverageHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.record({ symbol: "", kind: "action", flowId: "flow-003" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.coverageReport({ kind: 'test-kind', since: 'test-since' }, storage);
+        const result = await runtimeCoverageHandler.coverageReport({ kind: "action", since: "" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,27 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "coverage_actions" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.coverageReport({ kind: "action", since: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "coverage_variants_since" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.coverageReport({ kind: "variant", since: "2026-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "coverage_empty_kind" -> error', async () => {
+      if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.coverageReport({ kind: "", since: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +93,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.variantCoverage !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.variantCoverage({ concept: 'test-concept' }, storage);
+        const result = await runtimeCoverageHandler.variantCoverage({ concept: "Article" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +101,20 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "variant_coverage_article" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.variantCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.variantCoverage({ concept: "Article" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "variant_coverage_empty" -> error', async () => {
+      if (typeof runtimeCoverageHandler.variantCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.variantCoverage({ concept: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +123,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.syncCoverage !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.syncCoverage({ since: 'test-since' }, storage);
+        const result = await runtimeCoverageHandler.syncCoverage({ since: "" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +131,20 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "sync_coverage_all" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.syncCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.syncCoverage({ since: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_coverage_recent" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.syncCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.syncCoverage({ since: "2026-03-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -83,7 +153,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.widgetStateCoverage !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.widgetStateCoverage({ widget: 'test-widget' }, storage);
+        const result = await runtimeCoverageHandler.widgetStateCoverage({ widget: "dialog" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +161,20 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "widget_state_coverage_dialog" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetStateCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetStateCoverage({ widget: "dialog" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "widget_state_coverage_empty" -> error', async () => {
+      if (typeof runtimeCoverageHandler.widgetStateCoverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetStateCoverage({ widget: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +183,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.widgetLifecycleReport({ widget: 'test-widget', since: 'test-since' }, storage);
+        const result = await runtimeCoverageHandler.widgetLifecycleReport({ widget: "dialog", since: "" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +191,27 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "lifecycle_dialog" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetLifecycleReport({ widget: "dialog", since: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lifecycle_since" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetLifecycleReport({ widget: "button", since: "2026-01-15T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lifecycle_empty_widget" -> error', async () => {
+      if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetLifecycleReport({ widget: "", since: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +220,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: 'test-widgetInstance' }, storage);
+        const result = await runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +228,20 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "render_trace_valid" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "render_trace_empty" -> error', async () => {
+      if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +250,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.widgetComparison !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.widgetComparison({ since: 'test-since', topN: 1 }, storage);
+        const result = await runtimeCoverageHandler.widgetComparison({ since: "", topN: "10" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -139,6 +258,20 @@ describe('RuntimeCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "comparison_top10" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetComparison !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetComparison({ since: "", topN: "10" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "comparison_recent" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.widgetComparison !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.widgetComparison({ since: "2026-02-01T00:00:00Z", topN: "5" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -147,7 +280,7 @@ describe('RuntimeCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
       try {
-        const result = await runtimeCoverageHandler.deadAtRuntime({ kind: 'test-kind' }, storage);
+        const result = await runtimeCoverageHandler.deadAtRuntime({ kind: "variant" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -157,6 +290,44 @@ describe('RuntimeCoverage imperative handler', () => {
       }
     });
 
+    it('fixture "dead_variants" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.deadAtRuntime({ kind: "variant" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dead_syncs" -> ok', async () => {
+      if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.deadAtRuntime({ kind: "sync" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dead_empty_kind" -> error', async () => {
+      if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeCoverageHandler.deadAtRuntime({ kind: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof runtimeCoverageHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = runtimeCoverageHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RuntimeCoverage');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('VaultProvider functional handler', () => {
 
   describe('fetch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vaultProviderHandler.fetch({ path: 'test-path' });
+      const program = vaultProviderHandler.fetch({ path: "secret/data/db-password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vaultProviderHandler.fetch({ path: 'test-path' });
+      const program = vaultProviderHandler.fetch({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vaultProviderHandler.fetch({ path: 'test-path' });
+      const program = vaultProviderHandler.fetch({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vaultProviderHandler.fetch({ path: 'test-path' });
+      const program = vaultProviderHandler.fetch({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vaultProviderHandler.fetch({ path: 'test-path' });
+      const program = vaultProviderHandler.fetch({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('VaultProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vaultProviderHandler.fetch !== 'function') return;
       try {
-        const result = await interpret(vaultProviderHandler.fetch({ path: 'test-path' }), storage);
+        const result = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('VaultProvider functional handler', () => {
       }
     });
 
+    it('fixture "fetch_db_password" -> ok', async () => {
+      if (typeof vaultProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.fetch({ path: "secret/data/db-password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_api_credentials" -> ok', async () => {
+      if (typeof vaultProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.fetch({ path: "secret/data/api/credentials" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_empty_path" -> error', async () => {
+      if (typeof vaultProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.fetch({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('renewLease', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' });
+      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' });
+      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' });
+      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' });
+      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' });
+      const program = vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('VaultProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vaultProviderHandler.renewLease !== 'function') return;
       try {
-        const result = await interpret(vaultProviderHandler.renewLease({ leaseId: 'test-leaseId' }), storage);
+        const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('VaultProvider functional handler', () => {
       }
     });
 
+    it('fixture "renew_active_lease" -> ok', async () => {
+      if (typeof vaultProviderHandler.renewLease !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "lease-abc-123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "renew_empty_lease" -> error', async () => {
+      if (typeof vaultProviderHandler.renewLease !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.renewLease({ leaseId: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rotate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vaultProviderHandler.rotate({ path: 'test-path' });
+      const program = vaultProviderHandler.rotate({ path: "secret/data/db-password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vaultProviderHandler.rotate({ path: 'test-path' });
+      const program = vaultProviderHandler.rotate({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vaultProviderHandler.rotate({ path: 'test-path' });
+      const program = vaultProviderHandler.rotate({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vaultProviderHandler.rotate({ path: 'test-path' });
+      const program = vaultProviderHandler.rotate({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('VaultProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vaultProviderHandler.rotate({ path: 'test-path' });
+      const program = vaultProviderHandler.rotate({ path: "secret/data/db-password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('VaultProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vaultProviderHandler.rotate !== 'function') return;
       try {
-        const result = await interpret(vaultProviderHandler.rotate({ path: 'test-path' }), storage);
+        const result = await interpret(vaultProviderHandler.rotate({ path: "secret/data/db-password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('VaultProvider functional handler', () => {
       }
     });
 
+    it('fixture "rotate_db_secret" -> ok', async () => {
+      if (typeof vaultProviderHandler.rotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.rotate({ path: "secret/data/db-password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rotate_empty_path" -> error', async () => {
+      if (typeof vaultProviderHandler.rotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vaultProviderHandler.rotate({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof vaultProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = vaultProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VaultProvider');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('Replica imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof replicaHandler.localUpdate !== 'function') return;
       try {
-        const result = await replicaHandler.localUpdate({ op: 'test' }, storage);
+        const result = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('Replica imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "update_insert_op" -> ok', async () => {
+      if (typeof replicaHandler.localUpdate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.localUpdate({ op: "insert:hello-world" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_empty_op" -> error', async () => {
+      if (typeof replicaHandler.localUpdate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.localUpdate({ op: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('Replica imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof replicaHandler.receiveRemote !== 'function') return;
       try {
-        const result = await replicaHandler.receiveRemote({ op: 'test', fromReplica: 'test-fromReplica' }, storage);
+        const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: "replica-2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +59,27 @@ describe('Replica imperative handler', () => {
       }
     });
 
+    it('fixture "receive_from_known_peer" -> ok', async () => {
+      if (typeof replicaHandler.receiveRemote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: "replica-2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "receive_from_unknown_peer" -> error', async () => {
+      if (typeof replicaHandler.receiveRemote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.receiveRemote({ op: "update:field=value", fromReplica: "unknown-replica-999" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('sync', () => {
     it('executes without crashing', async () => {
       if (typeof replicaHandler.sync !== 'function') return;
       try {
-        const result = await replicaHandler.sync({ peer: 'test-peer' }, storage);
+        const result = await replicaHandler.sync({ peer: "replica-2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('Replica imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "sync_known_peer" -> ok', async () => {
+      if (typeof replicaHandler.sync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.sync({ peer: "replica-2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_unknown_peer" -> error', async () => {
+      if (typeof replicaHandler.sync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.sync({ peer: "unknown-peer-999" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -77,6 +119,13 @@ describe('Replica imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof replicaHandler.getState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.getState({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('fork', () => {
@@ -93,13 +142,20 @@ describe('Replica imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof replicaHandler.fork !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.fork({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('addPeer', () => {
     it('executes without crashing', async () => {
       if (typeof replicaHandler.addPeer !== 'function') return;
       try {
-        const result = await replicaHandler.addPeer({ peerId: 'test-peerId' }, storage);
+        const result = await replicaHandler.addPeer({ peerId: "replica-3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +165,37 @@ describe('Replica imperative handler', () => {
       }
     });
 
+    it('fixture "add_new_peer" -> ok', async () => {
+      if (typeof replicaHandler.addPeer !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.addPeer({ peerId: "replica-3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_empty_peer" -> error', async () => {
+      if (typeof replicaHandler.addPeer !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await replicaHandler.addPeer({ peerId: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof replicaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = replicaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Replica');
+    });
   });
 
   describe('invariant examples', () => {

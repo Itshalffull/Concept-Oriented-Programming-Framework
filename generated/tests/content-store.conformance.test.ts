@@ -19,7 +19,7 @@ describe('ContentStore imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStoreHandler.store !== 'function') return;
       try {
-        const result = await contentStoreHandler.store({ data: 'test', media_type: 'test-media_type' }, storage);
+        const result = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ContentStore imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "store_tarball" -> ok', async () => {
+      if (typeof contentStoreHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "store_empty_media_type" -> error', async () => {
+      if (typeof contentStoreHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ContentStore imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStoreHandler.retrieve !== 'function') return;
       try {
-        const result = await contentStoreHandler.retrieve({ hash: 'test-hash' }, storage);
+        const result = await contentStoreHandler.retrieve({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ContentStore imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "retrieve_existing" -> ok', async () => {
+      if (typeof contentStoreHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.retrieve({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "retrieve_missing" -> error', async () => {
+      if (typeof contentStoreHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.retrieve({ hash: "0000000000000000000000000000000000000000000000000000000000000000" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ContentStore imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStoreHandler.verify !== 'function') return;
       try {
-        const result = await contentStoreHandler.verify({ hash: 'test-hash' }, storage);
+        const result = await contentStoreHandler.verify({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,13 +89,27 @@ describe('ContentStore imperative handler', () => {
       }
     });
 
+    it('fixture "verify_valid_hash" -> ok', async () => {
+      if (typeof contentStoreHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.verify({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_nonexistent" -> error', async () => {
+      if (typeof contentStoreHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.verify({ hash: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('gc', () => {
     it('executes without crashing', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       try {
-        const result = await contentStoreHandler.gc({ lockfile_hashes: 'test' }, storage);
+        const result = await contentStoreHandler.gc({ lockfile_hashes: ["hash1","hash2","hash3"] }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('ContentStore imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "gc_with_retained_hashes" -> ok', async () => {
+      if (typeof contentStoreHandler.gc !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.gc({ lockfile_hashes: ["hash1","hash2","hash3"] }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "gc_empty_lockfile" -> ok', async () => {
+      if (typeof contentStoreHandler.gc !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.gc({ lockfile_hashes: [] }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -93,6 +149,30 @@ describe('ContentStore imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof contentStoreHandler.stats !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentStoreHandler.stats({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentStoreHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentStoreHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContentStore');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Auditor functional handler', () => {
 
   describe('audit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditorHandler.audit({ lockfile_entries: 'test' });
+      const program = auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Auditor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditorHandler.audit({ lockfile_entries: 'test' });
+      const program = auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditorHandler.audit({ lockfile_entries: 'test' });
+      const program = auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditorHandler.audit({ lockfile_entries: 'test' });
+      const program = auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Auditor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditorHandler.audit({ lockfile_entries: 'test' });
+      const program = auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Auditor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditorHandler.audit !== 'function') return;
       try {
-        const result = await interpret(auditorHandler.audit({ lockfile_entries: 'test' }), storage);
+        const result = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Auditor functional handler', () => {
       }
     });
 
+    it('fixture "audit_clean_deps" -> ok', async () => {
+      if (typeof auditorHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.audit({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"},{"module_id":"express","version":"4.18.2"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "audit_empty_entries" -> error', async () => {
+      if (typeof auditorHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.audit({ lockfile_entries: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkPolicy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' });
+      const program = auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Auditor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' });
+      const program = auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' });
+      const program = auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' });
+      const program = auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Auditor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' });
+      const program = auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Auditor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditorHandler.checkPolicy !== 'function') return;
       try {
-        const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: 'test', policy: 'test' }), storage);
+        const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Auditor functional handler', () => {
       }
     });
 
+    it('fixture "check_permissive_policy" -> ok', async () => {
+      if (typeof auditorHandler.checkPolicy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"lodash","version":"4.17.21"}], policy: {"allowed_licenses":["MIT","Apache-2.0","ISC"],"denied_namespaces":[],"max_severity":"critical"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_restrictive_policy" -> error', async () => {
+      if (typeof auditorHandler.checkPolicy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.checkPolicy({ lockfile_entries: [{"module_id":"@evil/malware","version":"0.1.0"}], policy: {"allowed_licenses":["MIT"],"denied_namespaces":["@evil"],"max_severity":"low"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditorHandler.diff({ old_audit: 'test', new_audit: 'test' });
+      const program = auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Auditor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditorHandler.diff({ old_audit: 'test', new_audit: 'test' });
+      const program = auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditorHandler.diff({ old_audit: 'test', new_audit: 'test' });
+      const program = auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditorHandler.diff({ old_audit: 'test', new_audit: 'test' });
+      const program = auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Auditor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditorHandler.diff({ old_audit: 'test', new_audit: 'test' });
+      const program = auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Auditor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditorHandler.diff !== 'function') return;
       try {
-        const result = await interpret(auditorHandler.diff({ old_audit: 'test', new_audit: 'test' }), storage);
+        const result = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Auditor functional handler', () => {
       }
     });
 
+    it('fixture "diff_same_audit" -> ok', async () => {
+      if (typeof auditorHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.diff({ old_audit: "audit-1", new_audit: "audit-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing_old" -> error', async () => {
+      if (typeof auditorHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditorHandler.diff({ old_audit: "audit-nonexistent", new_audit: "audit-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof auditorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = auditorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Auditor');
+    });
   });
 
   describe('invariant examples', () => {

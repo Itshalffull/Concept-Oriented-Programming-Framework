@@ -26,7 +26,7 @@ describe('Snapshot functional handler', () => {
 
   describe('compare', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' });
+      const program = snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' });
+      const program = snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' });
+      const program = snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' });
+      const program = snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' });
+      const program = snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.compare !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.compare({ outputPath: 'test-outputPath', currentContent: 'test-currentContent' }), storage);
+        const result = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "compare_existing" -> ok', async () => {
+      if (typeof snapshotHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_new_file" -> ok', async () => {
+      if (typeof snapshotHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.compare({ outputPath: "generated/ts/brand-new.ts", currentContent: "export const x = 1;" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('approve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.approve({ path: 'test-path', approver: 'test' });
+      const program = snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.approve({ path: 'test-path', approver: 'test' });
+      const program = snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.approve({ path: 'test-path', approver: 'test' });
+      const program = snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.approve({ path: 'test-path', approver: 'test' });
+      const program = snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.approve({ path: 'test-path', approver: 'test' });
+      const program = snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.approve !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.approve({ path: 'test-path', approver: 'test' }), storage);
+        const result = await interpret(snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "approve_changed" -> ok', async () => {
+      if (typeof snapshotHandler.approve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.approve({ path: "generated/ts/password.ts", approver: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "approve_unchanged" -> noChange', async () => {
+      if (typeof snapshotHandler.approve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.approve({ path: "generated/ts/stable.ts" }), storage);
+      expect(result.variant).toBe('noChange');
+    });
+
   });
 
   describe('approveAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.approveAll({ paths: 'test' });
+      const program = snapshotHandler.approveAll({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.approveAll({ paths: 'test' });
+      const program = snapshotHandler.approveAll({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.approveAll({ paths: 'test' });
+      const program = snapshotHandler.approveAll({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.approveAll({ paths: 'test' });
+      const program = snapshotHandler.approveAll({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.approveAll({ paths: 'test' });
+      const program = snapshotHandler.approveAll({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.approveAll !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.approveAll({ paths: 'test' }), storage);
+        const result = await interpret(snapshotHandler.approveAll({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "approve_all" -> ok', async () => {
+      if (typeof snapshotHandler.approveAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.approveAll({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "approve_all_filtered" -> ok', async () => {
+      if (typeof snapshotHandler.approveAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.approveAll({ paths: ["generated/ts/"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('reject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.reject({ path: 'test-path' });
+      const program = snapshotHandler.reject({ path: "generated/ts/password.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.reject({ path: 'test-path' });
+      const program = snapshotHandler.reject({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.reject({ path: 'test-path' });
+      const program = snapshotHandler.reject({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.reject({ path: 'test-path' });
+      const program = snapshotHandler.reject({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.reject({ path: 'test-path' });
+      const program = snapshotHandler.reject({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.reject !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.reject({ path: 'test-path' }), storage);
+        const result = await interpret(snapshotHandler.reject({ path: "generated/ts/password.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "reject_changed" -> ok', async () => {
+      if (typeof snapshotHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.reject({ path: "generated/ts/password.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reject_unchanged" -> noChange', async () => {
+      if (typeof snapshotHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.reject({ path: "generated/ts/stable.ts" }), storage);
+      expect(result.variant).toBe('noChange');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.status({ paths: 'test' });
+      const program = snapshotHandler.status({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.status({ paths: 'test' });
+      const program = snapshotHandler.status({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.status({ paths: 'test' });
+      const program = snapshotHandler.status({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.status({ paths: 'test' });
+      const program = snapshotHandler.status({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.status({ paths: 'test' });
+      const program = snapshotHandler.status({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.status !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.status({ paths: 'test' }), storage);
+        const result = await interpret(snapshotHandler.status({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "status_all" -> ok', async () => {
+      if (typeof snapshotHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.status({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_filtered" -> ok', async () => {
+      if (typeof snapshotHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.status({ paths: ["generated/ts/"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.diff({ path: 'test-path' });
+      const program = snapshotHandler.diff({ path: "generated/ts/password.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.diff({ path: 'test-path' });
+      const program = snapshotHandler.diff({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.diff({ path: 'test-path' });
+      const program = snapshotHandler.diff({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.diff({ path: 'test-path' });
+      const program = snapshotHandler.diff({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.diff({ path: 'test-path' });
+      const program = snapshotHandler.diff({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.diff !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.diff({ path: 'test-path' }), storage);
+        const result = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "diff_changed" -> ok', async () => {
+      if (typeof snapshotHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.diff({ path: "generated/ts/password.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_no_baseline" -> noBaseline', async () => {
+      if (typeof snapshotHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.diff({ path: "generated/ts/nonexistent.ts" }), storage);
+      expect(result.variant).toBe('noBaseline');
+    });
+
   });
 
   describe('clean', () => {
     it('builds a valid StorageProgram', () => {
-      const program = snapshotHandler.clean({ outputDir: 'test-outputDir' });
+      const program = snapshotHandler.clean({ outputDir: "generated/ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = snapshotHandler.clean({ outputDir: 'test-outputDir' });
+      const program = snapshotHandler.clean({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = snapshotHandler.clean({ outputDir: 'test-outputDir' });
+      const program = snapshotHandler.clean({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = snapshotHandler.clean({ outputDir: 'test-outputDir' });
+      const program = snapshotHandler.clean({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Snapshot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = snapshotHandler.clean({ outputDir: 'test-outputDir' });
+      const program = snapshotHandler.clean({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Snapshot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof snapshotHandler.clean !== 'function') return;
       try {
-        const result = await interpret(snapshotHandler.clean({ outputDir: 'test-outputDir' }), storage);
+        const result = await interpret(snapshotHandler.clean({ outputDir: "generated/ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Snapshot functional handler', () => {
       }
     });
 
+    it('fixture "clean_generated" -> ok', async () => {
+      if (typeof snapshotHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.clean({ outputDir: "generated/ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clean_all" -> ok', async () => {
+      if (typeof snapshotHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(snapshotHandler.clean({ outputDir: "generated" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof snapshotHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = snapshotHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Snapshot');
+    });
   });
 
   describe('invariant examples', () => {

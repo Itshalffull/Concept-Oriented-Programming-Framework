@@ -26,7 +26,7 @@ describe('StakeWeight functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 });
+      const program = stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 });
+      const program = stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 });
+      const program = stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 });
+      const program = stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 });
+      const program = stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('StakeWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeWeightHandler.configure !== 'function') return;
       try {
-        const result = await interpret(stakeWeightHandler.configure({ minimumStake: 1, cooldownPeriod: 1 }), storage);
+        const result = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('StakeWeight functional handler', () => {
       }
     });
 
+    it('fixture "configure_gov" -> ok', async () => {
+      if (typeof stakeWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.configure({ token: "GOV", cooldownDays: "7.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_no_token" -> error', async () => {
+      if (typeof stakeWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.configure({ token: "", cooldownDays: "7.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('stake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 });
+      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 });
+      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 });
+      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 });
+      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 });
+      const program = stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('StakeWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeWeightHandler.stake !== 'function') return;
       try {
-        const result = await interpret(stakeWeightHandler.stake({ vault: 'test', participant: 'test-participant', amount: 1, lockDurationHours: 1 }), storage);
+        const result = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('StakeWeight functional handler', () => {
       }
     });
 
+    it('fixture "stake_hundred" -> ok', async () => {
+      if (typeof stakeWeightHandler.stake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stake_zero" -> error', async () => {
+      if (typeof stakeWeightHandler.stake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.stake({ config: "sw-cfg-001", staker: "alice", amount: "0.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unstake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.unstake({ stake: "stake-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('StakeWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeWeightHandler.unstake !== 'function') return;
       try {
-        const result = await interpret(stakeWeightHandler.unstake({ vault: 'test', participant: 'test-participant' }), storage);
+        const result = await interpret(stakeWeightHandler.unstake({ stake: "stake-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('StakeWeight functional handler', () => {
       }
     });
 
+    it('fixture "unstake_existing" -> ok', async () => {
+      if (typeof stakeWeightHandler.unstake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.unstake({ stake: "stake-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unstake_missing" -> error', async () => {
+      if (typeof stakeWeightHandler.unstake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.unstake({ stake: "stake-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('StakeWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' });
+      const program = stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('StakeWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeWeightHandler.getWeight !== 'function') return;
       try {
-        const result = await interpret(stakeWeightHandler.getWeight({ vault: 'test', participant: 'test-participant' }), storage);
+        const result = await interpret(stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,32 +296,64 @@ describe('StakeWeight functional handler', () => {
       }
     });
 
+    it('fixture "get_staked" -> ok', async () => {
+      if (typeof stakeWeightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_no_stake" -> error', async () => {
+      if (typeof stakeWeightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stakeWeightHandler.getWeight({ config: "sw-cfg-001", participant: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof stakeWeightHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = stakeWeightHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StakeWeight');
+    });
   });
 
   describe('invariant examples', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(stakeWeightHandler.configure({ minimumStake: {"type":"literal","value":10}, cooldownPeriod: {"type":"literal","value":24} }), storage);
+      const configureResult0 = await interpret(stakeWeightHandler.configure({ token: {"type":"literal","value":"GOV"}, cooldownDays: {"type":"literal","value":7} }), storage);
       expect(configureResult0.variant).toBe("configured");
-      const vault = configureResult0.output["vault"];
-      const thenResult0 = await interpret(stakeWeightHandler.stake({ vault: {"type":"variable","name":"sw"}, participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockDurationHours: {"type":"literal","value":720} }), storage);
+      const config = configureResult0.output["config"];
+      const thenResult0 = await interpret(stakeWeightHandler.stake({ config: {"type":"variable","name":"sw"}, staker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("staked");
-      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ vault: {"type":"variable","name":"sw"}, participant: {"type":"variable","name":"p"} }), storage);
+      const thenResult1 = await interpret(stakeWeightHandler.getWeight({ config: {"type":"variable","name":"sw"}, participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult1.variant).toBe("weight");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-participant', async () => {
+    it('always: valid-token', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), cooldownPeriod: fc.string() }) }),
-              fc.record({ action: fc.constant('stake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationHours: fc.string() }) }),
-              fc.record({ action: fc.constant('unstake'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ vault: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }), cooldownDays: fc.string() }) }),
+              fc.record({ action: fc.constant('stake'), input: fc.record({ config: fc.string(), staker: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('unstake'), input: fc.record({ stake: fc.string() }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -317,7 +391,7 @@ describe('StakeWeight functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ minimumStake: fc.string(), cooldownPeriod: fc.string() }),
+          fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }), cooldownDays: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = stakeWeightHandler.configure(input as Record<string, unknown>);

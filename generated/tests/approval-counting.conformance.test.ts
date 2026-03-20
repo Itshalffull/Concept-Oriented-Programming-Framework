@@ -26,7 +26,7 @@ describe('ApprovalCounting functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 });
+      const program = approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 });
+      const program = approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 });
+      const program = approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 });
+      const program = approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 });
+      const program = approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ApprovalCounting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof approvalCountingHandler.configure !== 'function') return;
       try {
-        const result = await interpret(approvalCountingHandler.configure({ maxApprovals: 'test', winnerCount: 1 }), storage);
+        const result = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ApprovalCounting functional handler', () => {
       }
     });
 
+    it('fixture "single_winner_unlimited" -> ok', async () => {
+      if (typeof approvalCountingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "multi_winner_capped" -> ok', async () => {
+      if (typeof approvalCountingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(approvalCountingHandler.configure({ maxApprovals: "3", winnerCount: "2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "zero_winners" -> error', async () => {
+      if (typeof approvalCountingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' });
+      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' });
+      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' });
+      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' });
+      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ApprovalCounting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' });
+      const program = approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ApprovalCounting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       try {
-        const result = await interpret(approvalCountingHandler.count({ config: 'test', approvalSets: 'test-approvalSets', weights: 'test-weights' }), storage);
+        const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('ApprovalCounting functional handler', () => {
       }
     });
 
+    it('fixture "count_approvals" -> ok', async () => {
+      if (typeof approvalCountingHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "count_no_ballots" -> error', async () => {
+      if (typeof approvalCountingHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof approvalCountingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = approvalCountingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ApprovalCounting');
+    });
   });
 
   describe('invariant examples', () => {

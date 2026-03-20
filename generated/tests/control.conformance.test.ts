@@ -26,7 +26,7 @@ describe('Control functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' });
+      const program = controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Control functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' });
+      const program = controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' });
+      const program = controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' });
+      const program = controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Control functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' });
+      const program = controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Control functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof controlHandler.create !== 'function') return;
       try {
-        const result = await interpret(controlHandler.create({ control: 'test', type: 'test-type', binding: 'test-binding' }), storage);
+        const result = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Control functional handler', () => {
       }
     });
 
+    it('fixture "create_slider" -> ok', async () => {
+      if (typeof controlHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_control" -> error', async () => {
+      if (typeof controlHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.create({ control: "", type: "slider", binding: "audio.volume" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('interact', () => {
     it('builds a valid StorageProgram', () => {
-      const program = controlHandler.interact({ control: 'test', input: 'test-input' });
+      const program = controlHandler.interact({ control: "volume-slider", input: "75" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Control functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = controlHandler.interact({ control: 'test', input: 'test-input' });
+      const program = controlHandler.interact({ control: "volume-slider", input: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = controlHandler.interact({ control: 'test', input: 'test-input' });
+      const program = controlHandler.interact({ control: "volume-slider", input: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = controlHandler.interact({ control: 'test', input: 'test-input' });
+      const program = controlHandler.interact({ control: "volume-slider", input: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Control functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = controlHandler.interact({ control: 'test', input: 'test-input' });
+      const program = controlHandler.interact({ control: "volume-slider", input: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Control functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof controlHandler.interact !== 'function') return;
       try {
-        const result = await interpret(controlHandler.interact({ control: 'test', input: 'test-input' }), storage);
+        const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Control functional handler', () => {
       }
     });
 
+    it('fixture "interact_slider" -> ok', async () => {
+      if (typeof controlHandler.interact !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "interact_nonexistent" -> notfound', async () => {
+      if (typeof controlHandler.interact !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.interact({ control: "nonexistent", input: "50" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getValue', () => {
     it('builds a valid StorageProgram', () => {
-      const program = controlHandler.getValue({ control: 'test' });
+      const program = controlHandler.getValue({ control: "volume-slider" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Control functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = controlHandler.getValue({ control: 'test' });
+      const program = controlHandler.getValue({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = controlHandler.getValue({ control: 'test' });
+      const program = controlHandler.getValue({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = controlHandler.getValue({ control: 'test' });
+      const program = controlHandler.getValue({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Control functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = controlHandler.getValue({ control: 'test' });
+      const program = controlHandler.getValue({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Control functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof controlHandler.getValue !== 'function') return;
       try {
-        const result = await interpret(controlHandler.getValue({ control: 'test' }), storage);
+        const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Control functional handler', () => {
       }
     });
 
+    it('fixture "get_value_existing" -> ok', async () => {
+      if (typeof controlHandler.getValue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_value_nonexistent" -> notfound', async () => {
+      if (typeof controlHandler.getValue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.getValue({ control: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('setValue', () => {
     it('builds a valid StorageProgram', () => {
-      const program = controlHandler.setValue({ control: 'test', value: 'test-value' });
+      const program = controlHandler.setValue({ control: "volume-slider", value: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Control functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = controlHandler.setValue({ control: 'test', value: 'test-value' });
+      const program = controlHandler.setValue({ control: "volume-slider", value: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = controlHandler.setValue({ control: 'test', value: 'test-value' });
+      const program = controlHandler.setValue({ control: "volume-slider", value: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = controlHandler.setValue({ control: 'test', value: 'test-value' });
+      const program = controlHandler.setValue({ control: "volume-slider", value: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Control functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = controlHandler.setValue({ control: 'test', value: 'test-value' });
+      const program = controlHandler.setValue({ control: "volume-slider", value: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Control functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof controlHandler.setValue !== 'function') return;
       try {
-        const result = await interpret(controlHandler.setValue({ control: 'test', value: 'test-value' }), storage);
+        const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Control functional handler', () => {
       }
     });
 
+    it('fixture "set_value_existing" -> ok', async () => {
+      if (typeof controlHandler.setValue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_value_nonexistent" -> notfound', async () => {
+      if (typeof controlHandler.setValue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.setValue({ control: "nonexistent", value: "50" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('triggerAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = controlHandler.triggerAction({ control: 'test' });
+      const program = controlHandler.triggerAction({ control: "volume-slider" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Control functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = controlHandler.triggerAction({ control: 'test' });
+      const program = controlHandler.triggerAction({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = controlHandler.triggerAction({ control: 'test' });
+      const program = controlHandler.triggerAction({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = controlHandler.triggerAction({ control: 'test' });
+      const program = controlHandler.triggerAction({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Control functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = controlHandler.triggerAction({ control: 'test' });
+      const program = controlHandler.triggerAction({ control: "volume-slider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Control functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
       try {
-        const result = await interpret(controlHandler.triggerAction({ control: 'test' }), storage);
+        const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Control functional handler', () => {
       }
     });
 
+    it('fixture "trigger_existing" -> ok', async () => {
+      if (typeof controlHandler.triggerAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trigger_nonexistent" -> notfound', async () => {
+      if (typeof controlHandler.triggerAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(controlHandler.triggerAction({ control: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof controlHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = controlHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Control');
+    });
   });
 
   describe('invariant examples', () => {

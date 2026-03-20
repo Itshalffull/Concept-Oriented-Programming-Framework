@@ -26,7 +26,7 @@ describe('ThemeEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' });
+      const program = themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' });
+      const program = themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' });
+      const program = themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' });
+      const program = themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' });
+      const program = themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' }), storage);
+        const result = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_light" -> ok', async () => {
+      if (typeof themeEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.register({ name: "light", source: "themes/light.theme", ast: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof themeEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.register({ name: "", source: "x.theme", ast: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.get({ name: 'test-name' });
+      const program = themeEntityHandler.get({ name: "light" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.get({ name: 'test-name' });
+      const program = themeEntityHandler.get({ name: "light" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.get({ name: 'test-name' });
+      const program = themeEntityHandler.get({ name: "light" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.get({ name: 'test-name' });
+      const program = themeEntityHandler.get({ name: "light" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.get({ name: 'test-name' });
+      const program = themeEntityHandler.get({ name: "light" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.get({ name: 'test-name' }), storage);
+        const result = await interpret(themeEntityHandler.get({ name: "light" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_light" -> ok', async () => {
+      if (typeof themeEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.get({ name: "light" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof themeEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.get({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveToken', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' });
+      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' });
+      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' });
+      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' });
+      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' });
+      const program = themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.resolveToken !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.resolveToken({ theme: 'test', tokenPath: 'test-tokenPath' }), storage);
+        const result = await interpret(themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "resolve_primary" -> ok', async () => {
+      if (typeof themeEntityHandler.resolveToken !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.resolveToken({ theme: "theme-entity-1", tokenPath: "palette.primary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof themeEntityHandler.resolveToken !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.resolveToken({ theme: "nonexistent", tokenPath: "palette.x" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('contrastAudit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: 'test' });
+      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: 'test' });
+      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: 'test' });
+      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: 'test' });
+      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.contrastAudit({ theme: 'test' });
+      const program = themeEntityHandler.contrastAudit({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.contrastAudit !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.contrastAudit({ theme: 'test' }), storage);
+        const result = await interpret(themeEntityHandler.contrastAudit({ theme: "theme-entity-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "audit_theme" -> ok', async () => {
+      if (typeof themeEntityHandler.contrastAudit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.contrastAudit({ theme: "theme-entity-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "audit_missing" -> error', async () => {
+      if (typeof themeEntityHandler.contrastAudit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.contrastAudit({ theme: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diffThemes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.diffThemes({ a: 'test', b: 'test' });
+      const program = themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.diffThemes({ a: 'test', b: 'test' });
+      const program = themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.diffThemes({ a: 'test', b: 'test' });
+      const program = themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.diffThemes({ a: 'test', b: 'test' });
+      const program = themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.diffThemes({ a: 'test', b: 'test' });
+      const program = themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.diffThemes !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.diffThemes({ a: 'test', b: 'test' }), storage);
+        const result = await interpret(themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "diff_light_dark" -> ok', async () => {
+      if (typeof themeEntityHandler.diffThemes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.diffThemes({ a: "theme-entity-1", b: "theme-entity-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing" -> error', async () => {
+      if (typeof themeEntityHandler.diffThemes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.diffThemes({ a: "nonexistent", b: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('affectedWidgets', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' });
+      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' });
+      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' });
+      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' });
+      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' });
+      const program = themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.affectedWidgets({ theme: 'test', changedToken: 'test-changedToken' }), storage);
+        const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "affected_primary" -> ok', async () => {
+      if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "theme-entity-1", changedToken: "color.primary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "affected_missing" -> error', async () => {
+      if (typeof themeEntityHandler.affectedWidgets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.affectedWidgets({ theme: "nonexistent", changedToken: "x" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('generatedOutputs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: 'test' });
+      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: 'test' });
+      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: 'test' });
+      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: 'test' });
+      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('ThemeEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeEntityHandler.generatedOutputs({ theme: 'test' });
+      const program = themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('ThemeEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
       try {
-        const result = await interpret(themeEntityHandler.generatedOutputs({ theme: 'test' }), storage);
+        const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('ThemeEntity functional handler', () => {
       }
     });
 
+    it('fixture "outputs_theme" -> ok', async () => {
+      if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "theme-entity-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "outputs_missing" -> error', async () => {
+      if (typeof themeEntityHandler.generatedOutputs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeEntityHandler.generatedOutputs({ theme: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThemeEntity');
+    });
   });
 
   describe('invariant examples', () => {

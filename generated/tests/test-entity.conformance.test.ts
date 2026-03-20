@@ -26,7 +26,7 @@ describe('TestEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' });
+      const program = testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' });
+      const program = testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' });
+      const program = testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' });
+      const program = testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' });
+      const program = testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.register({ name: 'test-name', sourceFile: 'test-sourceFile', kind: 'test-kind', targetEntity: 'test-targetEntity' }), storage);
+        const result = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_conformance_test" -> ok', async () => {
+      if (typeof testEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof testEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.register({ name: "", sourceFile: "tests/empty.test.ts", kind: "unit", targetEntity: "User" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.get({ name: 'test-name' });
+      const program = testEntityHandler.get({ name: "User/create conformance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.get({ name: 'test-name' });
+      const program = testEntityHandler.get({ name: "User/create conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.get({ name: 'test-name' });
+      const program = testEntityHandler.get({ name: "User/create conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.get({ name: 'test-name' });
+      const program = testEntityHandler.get({ name: "User/create conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.get({ name: 'test-name' });
+      const program = testEntityHandler.get({ name: "User/create conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.get({ name: 'test-name' }), storage);
+        const result = await interpret(testEntityHandler.get({ name: "User/create conformance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_existing_test" -> ok', async () => {
+      if (typeof testEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.get({ name: "User/create conformance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof testEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.get({ name: "Nonexistent/test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.findByEntity({ entity: 'test-entity' });
+      const program = testEntityHandler.findByEntity({ entity: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.findByEntity({ entity: 'test-entity' });
+      const program = testEntityHandler.findByEntity({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.findByEntity({ entity: 'test-entity' });
+      const program = testEntityHandler.findByEntity({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.findByEntity({ entity: 'test-entity' });
+      const program = testEntityHandler.findByEntity({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.findByEntity({ entity: 'test-entity' });
+      const program = testEntityHandler.findByEntity({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.findByEntity !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.findByEntity({ entity: 'test-entity' }), storage);
+        const result = await interpret(testEntityHandler.findByEntity({ entity: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user_tests" -> ok', async () => {
+      if (typeof testEntityHandler.findByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByEntity({ entity: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_untested_entity" -> error', async () => {
+      if (typeof testEntityHandler.findByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByEntity({ entity: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = testEntityHandler.findByAction({ concept: "User", action: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = testEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = testEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = testEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = testEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.findByAction !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' }), storage);
+        const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user_create_tests" -> ok', async () => {
+      if (typeof testEntityHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_untested_action" -> error', async () => {
+      if (typeof testEntityHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "nonexistentAction" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByKind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.findByKind({ kind: 'test-kind' });
+      const program = testEntityHandler.findByKind({ kind: "conformance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.findByKind({ kind: 'test-kind' });
+      const program = testEntityHandler.findByKind({ kind: "conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.findByKind({ kind: 'test-kind' });
+      const program = testEntityHandler.findByKind({ kind: "conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.findByKind({ kind: 'test-kind' });
+      const program = testEntityHandler.findByKind({ kind: "conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.findByKind({ kind: 'test-kind' });
+      const program = testEntityHandler.findByKind({ kind: "conformance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.findByKind !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.findByKind({ kind: 'test-kind' }), storage);
+        const result = await interpret(testEntityHandler.findByKind({ kind: "conformance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -310,6 +366,20 @@ describe('TestEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_conformance_tests" -> ok', async () => {
+      if (typeof testEntityHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByKind({ kind: "conformance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_kind" -> error', async () => {
+      if (typeof testEntityHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findByKind({ kind: "nonexistent-kind" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -370,11 +440,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof testEntityHandler.findFailing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findFailing({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "failing_check_error" -> error', async () => {
+      if (typeof testEntityHandler.findFailing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.findFailing({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('coverageReport', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.coverageReport({ entity: 'test-entity' });
+      const program = testEntityHandler.coverageReport({ entity: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.coverageReport({ entity: 'test-entity' });
+      const program = testEntityHandler.coverageReport({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.coverageReport({ entity: 'test-entity' });
+      const program = testEntityHandler.coverageReport({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.coverageReport({ entity: 'test-entity' });
+      const program = testEntityHandler.coverageReport({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.coverageReport({ entity: 'test-entity' });
+      const program = testEntityHandler.coverageReport({ entity: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.coverageReport !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.coverageReport({ entity: 'test-entity' }), storage);
+        const result = await interpret(testEntityHandler.coverageReport({ entity: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -426,6 +510,20 @@ describe('TestEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "coverage_user" -> ok', async () => {
+      if (typeof testEntityHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.coverageReport({ entity: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "coverage_nonexistent" -> error', async () => {
+      if (typeof testEntityHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.coverageReport({ entity: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -486,6 +584,20 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof testEntityHandler.untestedActions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.untestedActions({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "untested_check_error" -> error', async () => {
+      if (typeof testEntityHandler.untestedActions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.untestedActions({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('untestedInvariants', () => {
@@ -544,11 +656,25 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof testEntityHandler.untestedInvariants !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.untestedInvariants({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "untested_invariants_error" -> error', async () => {
+      if (typeof testEntityHandler.untestedInvariants !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.untestedInvariants({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('recordResult', () => {
     it('builds a valid StorageProgram', () => {
-      const program = testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 });
+      const program = testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +682,21 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 });
+      const program = testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 });
+      const program = testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 });
+      const program = testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +709,7 @@ describe('TestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 });
+      const program = testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +718,7 @@ describe('TestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof testEntityHandler.recordResult !== 'function') return;
       try {
-        const result = await interpret(testEntityHandler.recordResult({ test: 'test', result: 'test-result', duration: 1 }), storage);
+        const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,6 +728,38 @@ describe('TestEntity functional handler', () => {
       }
     });
 
+    it('fixture "record_pass" -> ok', async () => {
+      if (typeof testEntityHandler.recordResult !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_result" -> error', async () => {
+      if (typeof testEntityHandler.recordResult !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "", duration: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof testEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = testEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TestEntity');
+    });
   });
 
   describe('invariant examples', () => {

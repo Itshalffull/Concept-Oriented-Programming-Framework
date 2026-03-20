@@ -26,7 +26,7 @@ describe('RageQuit functional handler', () => {
 
   describe('initiate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 });
+      const program = rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 });
+      const program = rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 });
+      const program = rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 });
+      const program = rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 });
+      const program = rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RageQuit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rageQuitHandler.initiate !== 'function') return;
       try {
-        const result = await interpret(rageQuitHandler.initiate({ member: 'test-member', sharesToBurn: 1 }), storage);
+        const result = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('RageQuit functional handler', () => {
       }
     });
 
+    it('fixture "initiate_exit" -> ok', async () => {
+      if (typeof rageQuitHandler.initiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.initiate({ member: "0xAliceDaoMember", shares: "150.0", loot: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "initiate_whale" -> ok', async () => {
+      if (typeof rageQuitHandler.initiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.initiate({ member: "0xBobWhale", shares: "5000.0", loot: "200.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "initiate_empty_member" -> error', async () => {
+      if (typeof rageQuitHandler.initiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.initiate({ member: "", shares: "100.0", loot: "0.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('calculateClaim', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' });
+      const program = rageQuitHandler.calculateClaim({ exit: "rq-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' });
+      const program = rageQuitHandler.calculateClaim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' });
+      const program = rageQuitHandler.calculateClaim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' });
+      const program = rageQuitHandler.calculateClaim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' });
+      const program = rageQuitHandler.calculateClaim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('RageQuit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rageQuitHandler.calculateClaim !== 'function') return;
       try {
-        const result = await interpret(rageQuitHandler.calculateClaim({ exit: 'test', treasuryBalances: 'test-treasuryBalances' }), storage);
+        const result = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('RageQuit functional handler', () => {
       }
     });
 
+    it('fixture "calculate_claim" -> ok', async () => {
+      if (typeof rageQuitHandler.calculateClaim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "calculate_not_found" -> error', async () => {
+      if (typeof rageQuitHandler.calculateClaim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.calculateClaim({ exit: "rq-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('claim', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rageQuitHandler.claim({ exit: 'test' });
+      const program = rageQuitHandler.claim({ exit: "rq-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rageQuitHandler.claim({ exit: 'test' });
+      const program = rageQuitHandler.claim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rageQuitHandler.claim({ exit: 'test' });
+      const program = rageQuitHandler.claim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rageQuitHandler.claim({ exit: 'test' });
+      const program = rageQuitHandler.claim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('RageQuit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rageQuitHandler.claim({ exit: 'test' });
+      const program = rageQuitHandler.claim({ exit: "rq-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('RageQuit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rageQuitHandler.claim !== 'function') return;
       try {
-        const result = await interpret(rageQuitHandler.claim({ exit: 'test' }), storage);
+        const result = await interpret(rageQuitHandler.claim({ exit: "rq-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('RageQuit functional handler', () => {
       }
     });
 
+    it('fixture "claim_calculated" -> ok', async () => {
+      if (typeof rageQuitHandler.claim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.claim({ exit: "rq-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "claim_not_found" -> error', async () => {
+      if (typeof rageQuitHandler.claim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rageQuitHandler.claim({ exit: "rq-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rageQuitHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rageQuitHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RageQuit');
+    });
   });
 
   describe('invariant examples', () => {
@@ -218,8 +285,8 @@ describe('RageQuit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), sharesToBurn: fc.string() }) }),
-              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), shares: fc.string(), loot: fc.string() }) }),
+              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string() }) }),
               fc.record({ action: fc.constant('claim'), input: fc.record({ exit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -247,8 +314,8 @@ describe('RageQuit functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), sharesToBurn: fc.string() }) }),
-              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string(), treasuryBalances: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('initiate'), input: fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), shares: fc.string(), loot: fc.string() }) }),
+              fc.record({ action: fc.constant('calculateClaim'), input: fc.record({ exit: fc.string() }) }),
               fc.record({ action: fc.constant('claim'), input: fc.record({ exit: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -288,7 +355,7 @@ describe('RageQuit functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), sharesToBurn: fc.string() }),
+          fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), shares: fc.string(), loot: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = rageQuitHandler.initiate(input as Record<string, unknown>);

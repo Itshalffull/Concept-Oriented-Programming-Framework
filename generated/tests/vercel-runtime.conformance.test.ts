@@ -26,7 +26,7 @@ describe('VercelRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' });
+      const program = vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' });
+      const program = vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' });
+      const program = vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' });
+      const program = vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' });
+      const program = vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.provision({ concept: 'test-concept', teamId: 'test-teamId', framework: 'test-framework' }), storage);
+        const result = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_nextjs" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_remix" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof vercelRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.provision({ concept: "", teamId: "team_1", framework: "nextjs" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' });
+      const program = vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' });
+      const program = vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' });
+      const program = vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' });
+      const program = vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' });
+      const program = vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.deploy({ project: 'test', sourceDirectory: 'test-sourceDirectory' }), storage);
+        const result = await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_dist" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_src" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_project" -> error', async () => {
+      if (typeof vercelRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.deploy({ project: "", sourceDirectory: "./dist" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 });
+      const program = vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 });
+      const program = vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 });
+      const program = vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 });
+      const program = vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 });
+      const program = vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: 'test', weight: 1 }), storage);
+        const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_50" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_negative" -> error', async () => {
+      if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' });
+      const program = vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' });
+      const program = vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' });
+      const program = vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' });
+      const program = vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' });
+      const program = vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.rollback({ project: 'test', targetDeploymentId: 'test-targetDeploymentId' }), storage);
+        const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_valid" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing_deployment" -> error', async () => {
+      if (typeof vercelRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('configureEnv', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' });
+      const program = vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' });
+      const program = vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' });
+      const program = vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' });
+      const program = vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' });
+      const program = vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.configureEnv({ project: 'test', envVars: 'test-envVars' }), storage);
+        const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "env_vars_valid" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "env_vars_empty_project" -> error', async () => {
+      if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "", envVars: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vercelRuntimeHandler.destroy({ project: 'test' });
+      const program = vercelRuntimeHandler.destroy({ project: "prj_userservice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vercelRuntimeHandler.destroy({ project: 'test' });
+      const program = vercelRuntimeHandler.destroy({ project: "prj_userservice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vercelRuntimeHandler.destroy({ project: 'test' });
+      const program = vercelRuntimeHandler.destroy({ project: "prj_userservice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vercelRuntimeHandler.destroy({ project: 'test' });
+      const program = vercelRuntimeHandler.destroy({ project: "prj_userservice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('VercelRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vercelRuntimeHandler.destroy({ project: 'test' });
+      const program = vercelRuntimeHandler.destroy({ project: "prj_userservice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('VercelRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(vercelRuntimeHandler.destroy({ project: 'test' }), storage);
+        const result = await interpret(vercelRuntimeHandler.destroy({ project: "prj_userservice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +454,38 @@ describe('VercelRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof vercelRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.destroy({ project: "prj_userservice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof vercelRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vercelRuntimeHandler.destroy({ project: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof vercelRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = vercelRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VercelRuntime');
+    });
   });
 
   describe('invariant examples', () => {

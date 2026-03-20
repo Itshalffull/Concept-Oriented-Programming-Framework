@@ -19,7 +19,7 @@ describe('RenderInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderInterpreterHandler.register !== 'function') return;
       try {
-        const result = await renderInterpreterHandler.register({ interpreter: 'test', target: 'test-target', template: 'test-template' }, storage);
+        const result = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('RenderInterpreter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "react_interpreter" -> ok', async () => {
+      if (typeof renderInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "svelte_interpreter" -> ok', async () => {
+      if (typeof renderInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.register({ interpreter: "interp-svelte", target: "svelte", template: "tmpl" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +49,7 @@ describe('RenderInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderInterpreterHandler.execute !== 'function') return;
       try {
-        const result = await renderInterpreterHandler.execute({ interpreter: 'test', program: 'test-program', snapshot: 'test-snapshot' }, storage);
+        const result = await renderInterpreterHandler.execute({ interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +59,27 @@ describe('RenderInterpreter imperative handler', () => {
       }
     });
 
+    it('fixture "execute_react" -> ok', async () => {
+      if (typeof renderInterpreterHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.execute({ interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_unknown" -> notfound', async () => {
+      if (typeof renderInterpreterHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.execute({ interpreter: "nonexistent", program: "{}", snapshot: "current" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('dryRun', () => {
     it('executes without crashing', async () => {
       if (typeof renderInterpreterHandler.dryRun !== 'function') return;
       try {
-        const result = await renderInterpreterHandler.dryRun({ interpreter: 'test', program: 'test-program' }, storage);
+        const result = await renderInterpreterHandler.dryRun({ interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('RenderInterpreter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "dry_run_svelte" -> ok', async () => {
+      if (typeof renderInterpreterHandler.dryRun !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.dryRun({ interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dry_run_unknown" -> notfound', async () => {
+      if (typeof renderInterpreterHandler.dryRun !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.dryRun({ interpreter: "nonexistent", program: "{}" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -77,6 +119,30 @@ describe('RenderInterpreter imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof renderInterpreterHandler.listTargets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderInterpreterHandler.listTargets({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof renderInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = renderInterpreterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RenderInterpreter');
+    });
   });
 
   describe('invariant examples', () => {

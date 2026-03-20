@@ -19,7 +19,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.record !== 'function') return;
       try {
-        const result = await evidenceHandler.record({ artifact_type: 'test-artifact_type', content: 'test', solver_metadata: 'test', property_ref: 'test-property_ref', confidence_score: 'test' }, storage);
+        const result = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('Evidence imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_record" -> ok', async () => {
+      if (typeof evidenceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_type" -> invalid', async () => {
+      if (typeof evidenceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "bogus", content: "data" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "empty_content" -> invalid', async () => {
+      if (typeof evidenceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +56,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.validate !== 'function') return;
       try {
-        const result = await evidenceHandler.validate({ evidence: 'test' }, storage);
+        const result = await evidenceHandler.validate({ id: "ev-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('Evidence imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof evidenceHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.validate({ id: "ev-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> notfound', async () => {
+      if (typeof evidenceHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.validate({ id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +86,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.retrieve !== 'function') return;
       try {
-        const result = await evidenceHandler.retrieve({ evidence: 'test' }, storage);
+        const result = await evidenceHandler.retrieve({ id: "ev-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('Evidence imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_retrieve" -> ok', async () => {
+      if (typeof evidenceHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.retrieve({ id: "ev-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "retrieve_missing" -> notfound', async () => {
+      if (typeof evidenceHandler.retrieve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.retrieve({ id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -67,7 +116,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.compare !== 'function') return;
       try {
-        const result = await evidenceHandler.compare({ evidence1: 'test', evidence2: 'test' }, storage);
+        const result = await evidenceHandler.compare({ id_a: "ev-001", id_b: "ev-002" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('Evidence imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_compare" -> ok', async () => {
+      if (typeof evidenceHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.compare({ id_a: "ev-001", id_b: "ev-002" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_missing" -> notfound', async () => {
+      if (typeof evidenceHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.compare({ id_a: "ev-001", id_b: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +146,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.minimize !== 'function') return;
       try {
-        const result = await evidenceHandler.minimize({ evidence: 'test' }, storage);
+        const result = await evidenceHandler.minimize({ id: "ev-counter-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +154,27 @@ describe('Evidence imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_minimize" -> ok', async () => {
+      if (typeof evidenceHandler.minimize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.minimize({ id: "ev-counter-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimize_non_counter" -> not_applicable', async () => {
+      if (typeof evidenceHandler.minimize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.minimize({ id: "ev-proof-001" }, storage);
+      expect(result.variant).toBe('not_applicable');
+    });
+
+    it('fixture "minimize_missing" -> notfound', async () => {
+      if (typeof evidenceHandler.minimize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.minimize({ id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -99,7 +183,7 @@ describe('Evidence imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof evidenceHandler.list !== 'function') return;
       try {
-        const result = await evidenceHandler.list({ property_ref: 'test', artifact_type: 'test' }, storage);
+        const result = await evidenceHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +193,37 @@ describe('Evidence imperative handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof evidenceHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_type" -> ok', async () => {
+      if (typeof evidenceHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await evidenceHandler.list({ artifact_type: "proof_certificate" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof evidenceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = evidenceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Evidence');
+    });
   });
 
   describe('invariant examples', () => {
@@ -130,11 +245,11 @@ describe('Evidence imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 50 }), confidence_score: fc.string() }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ evidence: fc.string() }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ evidence: fc.string() }) }),
-              fc.record({ action: fc.constant('compare'), input: fc.record({ evidence1: fc.string(), evidence2: fc.string() }) }),
-              fc.record({ action: fc.constant('minimize'), input: fc.record({ evidence: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), solver: fc.string(), run_ref: fc.string() }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ id_a: fc.string({ minLength: 1, maxLength: 50 }), id_b: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('minimize'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ property_ref: fc.string(), artifact_type: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -161,11 +276,11 @@ describe('Evidence imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('record'), input: fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 50 }), confidence_score: fc.string() }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ evidence: fc.string() }) }),
-              fc.record({ action: fc.constant('retrieve'), input: fc.record({ evidence: fc.string() }) }),
-              fc.record({ action: fc.constant('compare'), input: fc.record({ evidence1: fc.string(), evidence2: fc.string() }) }),
-              fc.record({ action: fc.constant('minimize'), input: fc.record({ evidence: fc.string() }) }),
+              fc.record({ action: fc.constant('record'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), solver: fc.string(), run_ref: fc.string() }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('retrieve'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compare'), input: fc.record({ id_a: fc.string({ minLength: 1, maxLength: 50 }), id_b: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('minimize'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ property_ref: fc.string(), artifact_type: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -204,7 +319,7 @@ describe('Evidence imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string(), solver_metadata: fc.string(), property_ref: fc.string({ minLength: 1, maxLength: 50 }), confidence_score: fc.string() }),
+          fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), artifact_type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), solver: fc.string(), run_ref: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await evidenceHandler.record(input as Record<string, unknown>, storage);

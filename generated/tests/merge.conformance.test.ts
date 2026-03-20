@@ -26,7 +26,7 @@ describe('Merge functional handler', () => {
 
   describe('registerStrategy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' });
+      const program = mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' });
+      const program = mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' });
+      const program = mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' });
+      const program = mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' });
+      const program = mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Merge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mergeHandler.registerStrategy !== 'function') return;
       try {
-        const result = await interpret(mergeHandler.registerStrategy({ name: 'test-name', contentTypes: 'test' }), storage);
+        const result = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Merge functional handler', () => {
       }
     });
 
+    it('fixture "register_three_way" -> ok', async () => {
+      if (typeof mergeHandler.registerStrategy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.registerStrategy({ name: "three-way", contentTypes: ["text/plain"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_strategy_name" -> error', async () => {
+      if (typeof mergeHandler.registerStrategy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.registerStrategy({ name: "", contentTypes: ["text/plain"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('merge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' });
+      const program = mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' });
+      const program = mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' });
+      const program = mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' });
+      const program = mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' });
+      const program = mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Merge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mergeHandler.merge !== 'function') return;
       try {
-        const result = await interpret(mergeHandler.merge({ base: 'test', ours: 'test', theirs: 'test', strategy: 'test' }), storage);
+        const result = await interpret(mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('Merge functional handler', () => {
       }
     });
 
+    it('fixture "clean_merge" -> ok', async () => {
+      if (typeof mergeHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.merge({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3", strategy: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "conflicting_merge" -> ok', async () => {
+      if (typeof mergeHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.merge({ base: "line1", ours: "lineA", theirs: "lineB", strategy: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_strategy" -> error', async () => {
+      if (typeof mergeHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.merge({ base: "a", ours: "b", theirs: "c", strategy: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveConflict', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' });
+      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' });
+      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' });
+      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' });
+      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' });
+      const program = mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Merge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mergeHandler.resolveConflict !== 'function') return;
       try {
-        const result = await interpret(mergeHandler.resolveConflict({ mergeId: 'test', conflictIndex: 1, resolution: 'test' }), storage);
+        const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Merge functional handler', () => {
       }
     });
 
+    it('fixture "resolve_first" -> ok', async () => {
+      if (typeof mergeHandler.resolveConflict !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "0", resolution: "resolved line" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_index" -> error', async () => {
+      if (typeof mergeHandler.resolveConflict !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.resolveConflict({ mergeId: "merge-1", conflictIndex: "999", resolution: "text" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('finalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mergeHandler.finalize({ mergeId: 'test' });
+      const program = mergeHandler.finalize({ mergeId: "merge-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Merge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mergeHandler.finalize({ mergeId: 'test' });
+      const program = mergeHandler.finalize({ mergeId: "merge-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mergeHandler.finalize({ mergeId: 'test' });
+      const program = mergeHandler.finalize({ mergeId: "merge-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mergeHandler.finalize({ mergeId: 'test' });
+      const program = mergeHandler.finalize({ mergeId: "merge-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Merge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mergeHandler.finalize({ mergeId: 'test' });
+      const program = mergeHandler.finalize({ mergeId: "merge-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Merge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mergeHandler.finalize !== 'function') return;
       try {
-        const result = await interpret(mergeHandler.finalize({ mergeId: 'test' }), storage);
+        const result = await interpret(mergeHandler.finalize({ mergeId: "merge-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('Merge functional handler', () => {
       }
     });
 
+    it('fixture "finalize_resolved" -> ok', async () => {
+      if (typeof mergeHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.finalize({ mergeId: "merge-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "finalize_unresolved" -> error', async () => {
+      if (typeof mergeHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mergeHandler.finalize({ mergeId: "merge-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof mergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = mergeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Merge');
+    });
   });
 
   describe('invariant examples', () => {

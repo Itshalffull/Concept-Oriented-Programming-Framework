@@ -26,7 +26,7 @@ describe('FlowTrace functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flowTraceHandler.build({ flowId: 'test-flowId' });
+      const program = flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FlowTrace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flowTraceHandler.build({ flowId: 'test-flowId' });
+      const program = flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flowTraceHandler.build({ flowId: 'test-flowId' });
+      const program = flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flowTraceHandler.build({ flowId: 'test-flowId' });
+      const program = flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FlowTrace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flowTraceHandler.build({ flowId: 'test-flowId' });
+      const program = flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FlowTrace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flowTraceHandler.build !== 'function') return;
       try {
-        const result = await interpret(flowTraceHandler.build({ flowId: 'test-flowId' }), storage);
+        const result = await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('FlowTrace functional handler', () => {
       }
     });
 
+    it('fixture "valid_build" -> ok', async () => {
+      if (typeof flowTraceHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_flow" -> error', async () => {
+      if (typeof flowTraceHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flowTraceHandler.build({ flowId: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flowTraceHandler.render({ trace: 'test', options: 'test' });
+      const program = flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('FlowTrace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flowTraceHandler.render({ trace: 'test', options: 'test' });
+      const program = flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flowTraceHandler.render({ trace: 'test', options: 'test' });
+      const program = flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flowTraceHandler.render({ trace: 'test', options: 'test' });
+      const program = flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('FlowTrace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flowTraceHandler.render({ trace: 'test', options: 'test' });
+      const program = flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('FlowTrace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flowTraceHandler.render !== 'function') return;
       try {
-        const result = await interpret(flowTraceHandler.render({ trace: 'test', options: 'test' }), storage);
+        const result = await interpret(flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,45 @@ describe('FlowTrace functional handler', () => {
       }
     });
 
+    it('fixture "valid_render" -> ok', async () => {
+      if (typeof flowTraceHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_trace" -> ok', async () => {
+      if (typeof flowTraceHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flowTraceHandler.render({ trace: {}, options: {} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "json_render" -> ok', async () => {
+      if (typeof flowTraceHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flowTraceHandler.render({ trace: {"flowId":"f2","status":"failed","durationMs":"200","root":{"action":"Auth/login","variant":"error","durationMs":"80","fields":{"message":"invalid credentials"},"children":[]}}, options: {"json":"true"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof flowTraceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = flowTraceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FlowTrace');
+    });
   });
 
   describe('invariant examples', () => {

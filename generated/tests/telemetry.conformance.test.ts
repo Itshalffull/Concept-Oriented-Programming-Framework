@@ -26,7 +26,7 @@ describe('Telemetry functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 });
+      const program = telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 });
+      const program = telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 });
+      const program = telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 });
+      const program = telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 });
+      const program = telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Telemetry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       try {
-        const result = await interpret(telemetryHandler.configure({ concept: 'test-concept', endpoint: 'test-endpoint', samplingRate: 1 }), storage);
+        const result = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Telemetry functional handler', () => {
       }
     });
 
+    it('fixture "configure_otel" -> ok', async () => {
+      if (typeof telemetryHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_full_sampling" -> ok', async () => {
+      if (typeof telemetryHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_empty_concept" -> error', async () => {
+      if (typeof telemetryHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deployMarker', () => {
     it('builds a valid StorageProgram', () => {
-      const program = telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' });
+      const program = telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' });
+      const program = telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' });
+      const program = telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' });
+      const program = telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' });
+      const program = telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Telemetry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       try {
-        const result = await interpret(telemetryHandler.deployMarker({ suite: 'test-suite', version: 'test-version', environment: 'test-environment', status: 'test-status' }), storage);
+        const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Telemetry functional handler', () => {
       }
     });
 
+    it('fixture "marker_staging" -> ok', async () => {
+      if (typeof telemetryHandler.deployMarker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "marker_production" -> ok', async () => {
+      if (typeof telemetryHandler.deployMarker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.deployMarker({ suite: "payments", version: "1.0.0", environment: "production", status: "completed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "marker_empty_suite" -> error', async () => {
+      if (typeof telemetryHandler.deployMarker !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.deployMarker({ suite: "", version: "1.0.0", environment: "staging", status: "started" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('analyze', () => {
     it('builds a valid StorageProgram', () => {
-      const program = telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' });
+      const program = telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' });
+      const program = telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' });
+      const program = telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' });
+      const program = telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Telemetry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' });
+      const program = telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Telemetry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       try {
-        const result = await interpret(telemetryHandler.analyze({ concept: 'test-concept', window: 1, criteria: 'test-criteria' }), storage);
+        const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,45 @@ describe('Telemetry functional handler', () => {
       }
     });
 
+    it('fixture "analyze_5min" -> ok', async () => {
+      if (typeof telemetryHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "analyze_1hr" -> ok', async () => {
+      if (typeof telemetryHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.analyze({ concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "analyze_empty_concept" -> error', async () => {
+      if (typeof telemetryHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(telemetryHandler.analyze({ concept: "", window: "60", criteria: "error_rate < 0.1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof telemetryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = telemetryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Telemetry');
+    });
   });
 
   describe('invariant examples', () => {

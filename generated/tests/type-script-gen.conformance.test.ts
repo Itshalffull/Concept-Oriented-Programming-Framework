@@ -26,7 +26,7 @@ describe('TypeScriptGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TypeScriptGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TypeScriptGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TypeScriptGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeScriptGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(typeScriptGenHandler.generate({ spec: 'test', manifest: 'test' }), storage);
+        const result = await interpret(typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -78,6 +78,20 @@ describe('TypeScriptGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_manifest" -> ok', async () => {
+      if (typeof typeScriptGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptGenHandler.generate({ manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof typeScriptGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptGenHandler.generate({ manifest: "{\"name\":\"\"}" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -138,6 +152,31 @@ describe('TypeScriptGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof typeScriptGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof typeScriptGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = typeScriptGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TypeScriptGen');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Favorite functional handler', () => {
 
   describe('favorite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = favoriteHandler.favorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.favorite({ user: "user-alice", article: "art-101" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Favorite functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = favoriteHandler.favorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.favorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = favoriteHandler.favorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.favorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = favoriteHandler.favorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.favorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Favorite functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = favoriteHandler.favorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.favorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Favorite functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof favoriteHandler.favorite !== 'function') return;
       try {
-        const result = await interpret(favoriteHandler.favorite({ user: 'test', article: 'test-article' }), storage);
+        const result = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Favorite functional handler', () => {
       }
     });
 
+    it('fixture "favorite_ok" -> ok', async () => {
+      if (typeof favoriteHandler.favorite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.favorite({ user: "user-alice", article: "art-101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "favorite_another" -> ok', async () => {
+      if (typeof favoriteHandler.favorite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.favorite({ user: "user-bob", article: "art-202" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('unfavorite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = favoriteHandler.unfavorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Favorite functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = favoriteHandler.unfavorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = favoriteHandler.unfavorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = favoriteHandler.unfavorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Favorite functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = favoriteHandler.unfavorite({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Favorite functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof favoriteHandler.unfavorite !== 'function') return;
       try {
-        const result = await interpret(favoriteHandler.unfavorite({ user: 'test', article: 'test-article' }), storage);
+        const result = await interpret(favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Favorite functional handler', () => {
       }
     });
 
+    it('fixture "unfavorite_ok" -> ok', async () => {
+      if (typeof favoriteHandler.unfavorite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.unfavorite({ user: "user-alice", article: "art-101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unfavorite_not_in_set" -> ok', async () => {
+      if (typeof favoriteHandler.unfavorite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.unfavorite({ user: "user-carol", article: "art-999" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('isFavorited', () => {
     it('builds a valid StorageProgram', () => {
-      const program = favoriteHandler.isFavorited({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Favorite functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = favoriteHandler.isFavorited({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = favoriteHandler.isFavorited({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = favoriteHandler.isFavorited({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Favorite functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = favoriteHandler.isFavorited({ user: 'test', article: 'test-article' });
+      const program = favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Favorite functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof favoriteHandler.isFavorited !== 'function') return;
       try {
-        const result = await interpret(favoriteHandler.isFavorited({ user: 'test', article: 'test-article' }), storage);
+        const result = await interpret(favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Favorite functional handler', () => {
       }
     });
 
+    it('fixture "is_favorited_ok" -> ok', async () => {
+      if (typeof favoriteHandler.isFavorited !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.isFavorited({ user: "user-alice", article: "art-101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "is_favorited_unknown_user" -> ok', async () => {
+      if (typeof favoriteHandler.isFavorited !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.isFavorited({ user: "user-unknown", article: "art-101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = favoriteHandler.count({ article: 'test-article' });
+      const program = favoriteHandler.count({ article: "art-101" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Favorite functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = favoriteHandler.count({ article: 'test-article' });
+      const program = favoriteHandler.count({ article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = favoriteHandler.count({ article: 'test-article' });
+      const program = favoriteHandler.count({ article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = favoriteHandler.count({ article: 'test-article' });
+      const program = favoriteHandler.count({ article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Favorite functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = favoriteHandler.count({ article: 'test-article' });
+      const program = favoriteHandler.count({ article: "art-101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Favorite functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof favoriteHandler.count !== 'function') return;
       try {
-        const result = await interpret(favoriteHandler.count({ article: 'test-article' }), storage);
+        const result = await interpret(favoriteHandler.count({ article: "art-101" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Favorite functional handler', () => {
       }
     });
 
+    it('fixture "count_ok" -> ok', async () => {
+      if (typeof favoriteHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.count({ article: "art-101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "count_no_favorites" -> ok', async () => {
+      if (typeof favoriteHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(favoriteHandler.count({ article: "art-unfavorited" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof favoriteHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = favoriteHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Favorite');
+    });
   });
 
   describe('invariant examples', () => {

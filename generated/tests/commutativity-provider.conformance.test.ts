@@ -19,7 +19,7 @@ describe('CommutativityProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof commutativityProviderHandler.check !== 'function') return;
       try {
-        const result = await commutativityProviderHandler.check({ programA: 'test-programA', programB: 'test-programB', readWriteSetsA: 'test-readWriteSetsA', readWriteSetsB: 'test-readWriteSetsB' }, storage);
+        const result = await commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "put(orders, o1, data)", readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}", readWriteSetsB: "{\"r\":[],\"w\":[\"orders\"]}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('CommutativityProvider imperative handler', () => {
       }
     });
 
+    it('fixture "disjoint_sets" -> ok', async () => {
+      if (typeof commutativityProviderHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "put(orders, o1, data)", readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}", readWriteSetsB: "{\"r\":[],\"w\":[\"orders\"]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "overlapping_sets" -> ok', async () => {
+      if (typeof commutativityProviderHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await commutativityProviderHandler.check({ programA: "put(users, u1, data)", programB: "get(users, u1)", readWriteSetsA: "{\"r\":[],\"w\":[\"users\"]}", readWriteSetsB: "{\"r\":[\"users\"],\"w\":[]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_sets" -> error', async () => {
+      if (typeof commutativityProviderHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await commutativityProviderHandler.check({ programA: "", programB: "", readWriteSetsA: "", readWriteSetsB: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof commutativityProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = commutativityProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CommutativityProvider');
+    });
   });
 
   describe('invariant examples', () => {

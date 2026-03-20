@@ -26,7 +26,7 @@ describe('ConflictResolution functional handler', () => {
 
   describe('registerPolicy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 });
+      const program = conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 });
+      const program = conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 });
+      const program = conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 });
+      const program = conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 });
+      const program = conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConflictResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conflictResolutionHandler.registerPolicy !== 'function') return;
       try {
-        const result = await interpret(conflictResolutionHandler.registerPolicy({ name: 'test-name', priority: 1 }), storage);
+        const result = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ConflictResolution functional handler', () => {
       }
     });
 
+    it('fixture "register_lww" -> ok', async () => {
+      if (typeof conflictResolutionHandler.registerPolicy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.registerPolicy({ name: "last-writer-wins", priority: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof conflictResolutionHandler.registerPolicy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.registerPolicy({ name: "", priority: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('detect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' });
+      const program = conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' });
+      const program = conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' });
+      const program = conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' });
+      const program = conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' });
+      const program = conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ConflictResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conflictResolutionHandler.detect !== 'function') return;
       try {
-        const result = await interpret(conflictResolutionHandler.detect({ base: 'test', version1: 'test', version2: 'test', context: 'test-context' }), storage);
+        const result = await interpret(conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ConflictResolution functional handler', () => {
       }
     });
 
+    it('fixture "detect_conflict" -> ok', async () => {
+      if (typeof conflictResolutionHandler.detect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v2-def", context: "document-edit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_same_versions" -> ok', async () => {
+      if (typeof conflictResolutionHandler.detect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.detect({ version1: "v1-abc", version2: "v1-abc", context: "document-edit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' });
+      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' });
+      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' });
+      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' });
+      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' });
+      const program = conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ConflictResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conflictResolutionHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(conflictResolutionHandler.resolve({ conflictId: 'test', policyOverride: 'test' }), storage);
+        const result = await interpret(conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ConflictResolution functional handler', () => {
       }
     });
 
+    it('fixture "resolve_with_policy" -> ok', async () => {
+      if (typeof conflictResolutionHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: "conflict-1", policyOverride: "last-writer-wins" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing_conflict" -> error', async () => {
+      if (typeof conflictResolutionHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.resolve({ conflictId: "nonexistent", policyOverride: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('manualResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ConflictResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' });
+      const program = conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ConflictResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
       try {
-        const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: 'test', chosen: 'test' }), storage);
+        const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('ConflictResolution functional handler', () => {
       }
     });
 
+    it('fixture "manual_resolve_valid" -> ok', async () => {
+      if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: "conflict-1", chosen: "v1-abc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "manual_resolve_missing" -> error', async () => {
+      if (typeof conflictResolutionHandler.manualResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conflictResolutionHandler.manualResolve({ conflictId: "nonexistent", chosen: "v1-abc" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conflictResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conflictResolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConflictResolution');
+    });
   });
 
   describe('invariant examples', () => {

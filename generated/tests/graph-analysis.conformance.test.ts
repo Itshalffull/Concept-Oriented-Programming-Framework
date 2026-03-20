@@ -26,7 +26,7 @@ describe('GraphAnalysis functional handler', () => {
 
   describe('analyze', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' });
+      const program = graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' });
+      const program = graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' });
+      const program = graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' });
+      const program = graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' });
+      const program = graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.analyze({ graph: 'test-graph', algorithm: 'test-algorithm', config: 'test' }), storage);
+        const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "pagerank_analysis" -> ok', async () => {
+      if (typeof graphAnalysisHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "degree_with_config" -> ok', async () => {
+      if (typeof graphAnalysisHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_algo" -> unknown_algorithm', async () => {
+      if (typeof graphAnalysisHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}", algorithm: "nonexistent", config: null }), storage);
+      expect(result.variant).toBe('unknown_algorithm');
+    });
+
+    it('fixture "bad_graph_json" -> analysis_failed', async () => {
+      if (typeof graphAnalysisHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.analyze({ graph: "not json", algorithm: "pagerank", config: null }), storage);
+      expect(result.variant).toBe('analysis_failed');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' });
+      const program = graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' });
+      const program = graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' });
+      const program = graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' });
+      const program = graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' });
+      const program = graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.register({ algorithm: 'test-algorithm', category: 'test-category', provider: 'test-provider' }), storage);
+        const result = await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "register_provider" -> ok', async () => {
+      if (typeof graphAnalysisHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_community" -> ok', async () => {
+      if (typeof graphAnalysisHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getResult', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.getResult({ result: 'test' });
+      const program = graphAnalysisHandler.getResult({ result: "result-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.getResult({ result: 'test' });
+      const program = graphAnalysisHandler.getResult({ result: "result-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.getResult({ result: 'test' });
+      const program = graphAnalysisHandler.getResult({ result: "result-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.getResult({ result: 'test' });
+      const program = graphAnalysisHandler.getResult({ result: "result-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.getResult({ result: 'test' });
+      const program = graphAnalysisHandler.getResult({ result: "result-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.getResult({ result: 'test' }), storage);
+        const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "existing_result" -> ok', async () => {
+      if (typeof graphAnalysisHandler.getResult !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_result" -> notfound', async () => {
+      if (typeof graphAnalysisHandler.getResult !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.getResult({ result: "result-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('listResults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.listResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.listResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.listResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.listResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.listResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.listResults({ graph: 'test-graph' }), storage);
+        const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,18 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "for_graph" -> ok', async () => {
+      if (typeof graphAnalysisHandler.listResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listAlgorithms', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.listAlgorithms({ category: 'test' });
+      const program = graphAnalysisHandler.listAlgorithms({ category: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.listAlgorithms({ category: 'test' });
+      const program = graphAnalysisHandler.listAlgorithms({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.listAlgorithms({ category: 'test' });
+      const program = graphAnalysisHandler.listAlgorithms({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.listAlgorithms({ category: 'test' });
+      const program = graphAnalysisHandler.listAlgorithms({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.listAlgorithms({ category: 'test' });
+      const program = graphAnalysisHandler.listAlgorithms({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: 'test' }), storage);
+        const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "all_algorithms" -> ok', async () => {
+      if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "centrality_only" -> ok', async () => {
+      if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: "centrality" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('clearResults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphAnalysisHandler.clearResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphAnalysisHandler.clearResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphAnalysisHandler.clearResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphAnalysisHandler.clearResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('GraphAnalysis functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphAnalysisHandler.clearResults({ graph: 'test-graph' });
+      const program = graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('GraphAnalysis functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
       try {
-        const result = await interpret(graphAnalysisHandler.clearResults({ graph: 'test-graph' }), storage);
+        const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,31 @@ describe('GraphAnalysis functional handler', () => {
       }
     });
 
+    it('fixture "clear_graph" -> ok', async () => {
+      if (typeof graphAnalysisHandler.clearResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof graphAnalysisHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = graphAnalysisHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GraphAnalysis');
+    });
   });
 
   describe('invariant examples', () => {

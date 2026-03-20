@@ -26,7 +26,7 @@ describe('DotenvProvider functional handler', () => {
 
   describe('fetch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' });
+      const program = dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DotenvProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' });
+      const program = dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' });
+      const program = dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' });
+      const program = dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DotenvProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' });
+      const program = dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DotenvProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dotenvProviderHandler.fetch !== 'function') return;
       try {
-        const result = await interpret(dotenvProviderHandler.fetch({ name: 'test-name', filePath: 'test-filePath' }), storage);
+        const result = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('DotenvProvider functional handler', () => {
       }
     });
 
+    it('fixture "fetch_db_host" -> ok', async () => {
+      if (typeof dotenvProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: ".env" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_api_key" -> ok', async () => {
+      if (typeof dotenvProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dotenvProviderHandler.fetch({ name: "API_KEY", filePath: ".env.production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_empty_name" -> error', async () => {
+      if (typeof dotenvProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dotenvProviderHandler.fetch({ name: "", filePath: ".env" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "fetch_empty_path" -> error', async () => {
+      if (typeof dotenvProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dotenvProviderHandler.fetch({ name: "DB_HOST", filePath: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dotenvProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dotenvProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DotenvProvider');
+    });
   });
 
   describe('invariant examples', () => {

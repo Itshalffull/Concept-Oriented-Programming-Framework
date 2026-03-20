@@ -26,7 +26,7 @@ describe('ContentDigest functional handler', () => {
 
   describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' });
+      const program = contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' });
+      const program = contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' });
+      const program = contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' });
+      const program = contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' });
+      const program = contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ContentDigest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentDigestHandler.compute !== 'function') return;
       try {
-        const result = await interpret(contentDigestHandler.compute({ unit: 'test-unit', algorithm: 'test-algorithm' }), storage);
+        const result = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ContentDigest functional handler', () => {
       }
     });
 
+    it('fixture "compute_sha" -> ok', async () => {
+      if (typeof contentDigestHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.compute({ unit: "def-unit-1", algorithm: "structural-normalized" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compute_empty_unit" -> error', async () => {
+      if (typeof contentDigestHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.compute({ unit: "", algorithm: "sha256" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('lookup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentDigestHandler.lookup({ hash: 'test-hash' });
+      const program = contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentDigestHandler.lookup({ hash: 'test-hash' });
+      const program = contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentDigestHandler.lookup({ hash: 'test-hash' });
+      const program = contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentDigestHandler.lookup({ hash: 'test-hash' });
+      const program = contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentDigestHandler.lookup({ hash: 'test-hash' });
+      const program = contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ContentDigest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentDigestHandler.lookup !== 'function') return;
       try {
-        const result = await interpret(contentDigestHandler.lookup({ hash: 'test-hash' }), storage);
+        const result = await interpret(contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ContentDigest functional handler', () => {
       }
     });
 
+    it('fixture "lookup_hash" -> ok', async () => {
+      if (typeof contentDigestHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.lookup({ hash: "a1b2c3d4e5f6" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lookup_empty" -> error', async () => {
+      if (typeof contentDigestHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.lookup({ hash: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('equivalent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' });
+      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' });
+      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' });
+      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' });
+      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ContentDigest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' });
+      const program = contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ContentDigest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentDigestHandler.equivalent !== 'function') return;
       try {
-        const result = await interpret(contentDigestHandler.equivalent({ a: 'test-a', b: 'test-b' }), storage);
+        const result = await interpret(contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('ContentDigest functional handler', () => {
       }
     });
 
+    it('fixture "equiv_check" -> ok', async () => {
+      if (typeof contentDigestHandler.equivalent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.equivalent({ a: "def-unit-1", b: "def-unit-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "equiv_empty" -> error', async () => {
+      if (typeof contentDigestHandler.equivalent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentDigestHandler.equivalent({ a: "", b: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentDigestHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentDigestHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContentDigest');
+    });
   });
 
   describe('invariant examples', () => {

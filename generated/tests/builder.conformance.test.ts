@@ -26,7 +26,7 @@ describe('Builder functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' });
+      const program = builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Builder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' });
+      const program = builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' });
+      const program = builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' });
+      const program = builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Builder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' });
+      const program = builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Builder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof builderHandler.build !== 'function') return;
       try {
-        const result = await interpret(builderHandler.build({ concept: 'test-concept', source: 'test-source', language: 'test-language', platform: 'test-platform', config: 'test' }), storage);
+        const result = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Builder functional handler', () => {
       }
     });
 
+    it('fixture "build_swift_release" -> ok', async () => {
+      if (typeof builderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.build({ concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_ts_debug" -> ok', async () => {
+      if (typeof builderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.build({ concept: "session", source: "./generated/ts/session", language: "typescript", platform: "linux-x86_64", config: {"mode":"debug","features":["logging"]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_concept" -> error', async () => {
+      if (typeof builderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.build({ concept: "", source: "./src", language: "swift", platform: "linux-arm64", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('buildAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' });
+      const program = builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Builder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' });
+      const program = builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' });
+      const program = builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' });
+      const program = builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Builder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' });
+      const program = builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Builder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof builderHandler.buildAll !== 'function') return;
       try {
-        const result = await interpret(builderHandler.buildAll({ concepts: 'test', source: 'test-source', targets: 'test', config: 'test' }), storage);
+        const result = await interpret(builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Builder functional handler', () => {
       }
     });
 
+    it('fixture "buildall_multi" -> ok', async () => {
+      if (typeof builderHandler.buildAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.buildAll({ concepts: ["password","session"], source: "./generated", targets: [{"language":"swift","platform":"linux-arm64"}], config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "buildall_empty_concepts" -> error', async () => {
+      if (typeof builderHandler.buildAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.buildAll({ concepts: [], source: "./src", targets: [{"language":"typescript","platform":"linux-x86_64"}], config: {"mode":"debug"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' });
+      const program = builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Builder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' });
+      const program = builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' });
+      const program = builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' });
+      const program = builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Builder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' });
+      const program = builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Builder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof builderHandler.test !== 'function') return;
       try {
-        const result = await interpret(builderHandler.test({ concept: 'test-concept', language: 'test-language', platform: 'test-platform', testFilter: 'test', testType: 'test', toolName: 'test' }), storage);
+        const result = await interpret(builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,32 @@ describe('Builder functional handler', () => {
       }
     });
 
+    it('fixture "test_unit" -> ok', async () => {
+      if (typeof builderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.test({ concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_e2e_with_tool" -> ok', async () => {
+      if (typeof builderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.test({ concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_not_built" -> error', async () => {
+      if (typeof builderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.test({ concept: "nonexistent", language: "swift", platform: "linux-arm64" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = builderHandler.status({ build: 'test' });
+      const program = builderHandler.status({ build: "bld-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Builder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = builderHandler.status({ build: 'test' });
+      const program = builderHandler.status({ build: "bld-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = builderHandler.status({ build: 'test' });
+      const program = builderHandler.status({ build: "bld-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = builderHandler.status({ build: 'test' });
+      const program = builderHandler.status({ build: "bld-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Builder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = builderHandler.status({ build: 'test' });
+      const program = builderHandler.status({ build: "bld-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Builder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof builderHandler.status !== 'function') return;
       try {
-        const result = await interpret(builderHandler.status({ build: 'test' }), storage);
+        const result = await interpret(builderHandler.status({ build: "bld-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('Builder functional handler', () => {
       }
     });
 
+    it('fixture "status_existing" -> ok', async () => {
+      if (typeof builderHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.status({ build: "bld-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_missing" -> error', async () => {
+      if (typeof builderHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.status({ build: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('history', () => {
     it('builds a valid StorageProgram', () => {
-      const program = builderHandler.history({ concept: 'test-concept', language: 'test' });
+      const program = builderHandler.history({ concept: "password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('Builder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = builderHandler.history({ concept: 'test-concept', language: 'test' });
+      const program = builderHandler.history({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = builderHandler.history({ concept: 'test-concept', language: 'test' });
+      const program = builderHandler.history({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = builderHandler.history({ concept: 'test-concept', language: 'test' });
+      const program = builderHandler.history({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('Builder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = builderHandler.history({ concept: 'test-concept', language: 'test' });
+      const program = builderHandler.history({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('Builder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof builderHandler.history !== 'function') return;
       try {
-        const result = await interpret(builderHandler.history({ concept: 'test-concept', language: 'test' }), storage);
+        const result = await interpret(builderHandler.history({ concept: "password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,45 @@ describe('Builder functional handler', () => {
       }
     });
 
+    it('fixture "history_all" -> ok', async () => {
+      if (typeof builderHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.history({ concept: "password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "history_by_lang" -> ok', async () => {
+      if (typeof builderHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.history({ concept: "password", language: "swift" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "history_empty_concept" -> error', async () => {
+      if (typeof builderHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(builderHandler.history({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof builderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = builderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Builder');
+    });
   });
 
   describe('invariant examples', () => {

@@ -80,11 +80,18 @@ describe('GenerationPlan functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof generationPlanHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.begin({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('recordStep', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true });
+      const program = generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true });
+      const program = generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true });
+      const program = generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true });
+      const program = generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true });
+      const program = generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('GenerationPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationPlanHandler.recordStep !== 'function') return;
       try {
-        const result = await interpret(generationPlanHandler.recordStep({ stepKey: 'test-stepKey', status: 'test-status', filesProduced: 'test', duration: 'test', cached: true }), storage);
+        const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +143,27 @@ describe('GenerationPlan functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "record_done" -> ok', async () => {
+      if (typeof generationPlanHandler.recordStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: "3", duration: "150", cached: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_cached" -> ok', async () => {
+      if (typeof generationPlanHandler.recordStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_failed" -> ok', async () => {
+      if (typeof generationPlanHandler.recordStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.recordStep({ stepKey: "framework:RustGen:password", status: "failed", duration: "5000", cached: "false" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,11 +224,18 @@ describe('GenerationPlan functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof generationPlanHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.complete({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generationPlanHandler.status({ run: 'test' });
+      const program = generationPlanHandler.status({ run: "run-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +243,21 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generationPlanHandler.status({ run: 'test' });
+      const program = generationPlanHandler.status({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generationPlanHandler.status({ run: 'test' });
+      const program = generationPlanHandler.status({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generationPlanHandler.status({ run: 'test' });
+      const program = generationPlanHandler.status({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +270,7 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generationPlanHandler.status({ run: 'test' });
+      const program = generationPlanHandler.status({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +279,7 @@ describe('GenerationPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationPlanHandler.status !== 'function') return;
       try {
-        const result = await interpret(generationPlanHandler.status({ run: 'test' }), storage);
+        const result = await interpret(generationPlanHandler.status({ run: "run-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +289,25 @@ describe('GenerationPlan functional handler', () => {
       }
     });
 
+    it('fixture "status_existing" -> ok', async () => {
+      if (typeof generationPlanHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.status({ run: "run-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_missing" -> ok', async () => {
+      if (typeof generationPlanHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.status({ run: "run-nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('summary', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generationPlanHandler.summary({ run: 'test' });
+      const program = generationPlanHandler.summary({ run: "run-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +315,21 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generationPlanHandler.summary({ run: 'test' });
+      const program = generationPlanHandler.summary({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generationPlanHandler.summary({ run: 'test' });
+      const program = generationPlanHandler.summary({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generationPlanHandler.summary({ run: 'test' });
+      const program = generationPlanHandler.summary({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +342,7 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generationPlanHandler.summary({ run: 'test' });
+      const program = generationPlanHandler.summary({ run: "run-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +351,7 @@ describe('GenerationPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationPlanHandler.summary !== 'function') return;
       try {
-        const result = await interpret(generationPlanHandler.summary({ run: 'test' }), storage);
+        const result = await interpret(generationPlanHandler.summary({ run: "run-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +361,25 @@ describe('GenerationPlan functional handler', () => {
       }
     });
 
+    it('fixture "summary_existing" -> ok', async () => {
+      if (typeof generationPlanHandler.summary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.summary({ run: "run-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "summary_missing" -> ok', async () => {
+      if (typeof generationPlanHandler.summary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.summary({ run: "run-nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('history', () => {
     it('builds a valid StorageProgram', () => {
-      const program = generationPlanHandler.history({ limit: 'test' });
+      const program = generationPlanHandler.history({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +387,21 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = generationPlanHandler.history({ limit: 'test' });
+      const program = generationPlanHandler.history({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = generationPlanHandler.history({ limit: 'test' });
+      const program = generationPlanHandler.history({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = generationPlanHandler.history({ limit: 'test' });
+      const program = generationPlanHandler.history({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +414,7 @@ describe('GenerationPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = generationPlanHandler.history({ limit: 'test' });
+      const program = generationPlanHandler.history({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +423,7 @@ describe('GenerationPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationPlanHandler.history !== 'function') return;
       try {
-        const result = await interpret(generationPlanHandler.history({ limit: 'test' }), storage);
+        const result = await interpret(generationPlanHandler.history({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +433,38 @@ describe('GenerationPlan functional handler', () => {
       }
     });
 
+    it('fixture "history_default" -> ok', async () => {
+      if (typeof generationPlanHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.history({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "history_limited" -> ok', async () => {
+      if (typeof generationPlanHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(generationPlanHandler.history({ limit: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof generationPlanHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = generationPlanHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GenerationPlan');
+    });
   });
 
   describe('invariant examples', () => {

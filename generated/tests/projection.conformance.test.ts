@@ -26,7 +26,7 @@ describe('Projection functional handler', () => {
 
   describe('project', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' });
+      const program = projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Projection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' });
+      const program = projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' });
+      const program = projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' });
+      const program = projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Projection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' });
+      const program = projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Projection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectionHandler.project !== 'function') return;
       try {
-        const result = await interpret(projectionHandler.project({ manifest: 'test-manifest', annotations: 'test-annotations' }), storage);
+        const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Projection functional handler', () => {
       }
     });
 
+    it('fixture "valid_projection" -> ok', async () => {
+      if (typeof projectionHandler.project !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_manifest_json" -> annotationError', async () => {
+      if (typeof projectionHandler.project !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.project({ manifest: "not-valid-json", annotations: "{}" }), storage);
+      expect(result.variant).toBe('annotationError');
+    });
+
+    it('fixture "bad_annotation_json" -> annotationError', async () => {
+      if (typeof projectionHandler.project !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[],\"relations\":[],\"actions\":[]}", annotations: "not-valid-json" }), storage);
+      expect(result.variant).toBe('annotationError');
+    });
+
+    it('fixture "conflicting_traits" -> traitConflict', async () => {
+      if (typeof projectionHandler.project !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.project({ manifest: "{\"name\":\"Stream\",\"uri\":\"core/Stream\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"list\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}", annotations: "{\"traits\":[{\"name\":\"paginated\",\"scope\":\"*\"},{\"name\":\"streaming\",\"scope\":\"*\"}]}" }), storage);
+      expect(result.variant).toBe('traitConflict');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectionHandler.validate({ projection: 'test' });
+      const program = projectionHandler.validate({ projection: "proj-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Projection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectionHandler.validate({ projection: 'test' });
+      const program = projectionHandler.validate({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectionHandler.validate({ projection: 'test' });
+      const program = projectionHandler.validate({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectionHandler.validate({ projection: 'test' });
+      const program = projectionHandler.validate({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Projection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectionHandler.validate({ projection: 'test' });
+      const program = projectionHandler.validate({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Projection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectionHandler.validate !== 'function') return;
       try {
-        const result = await interpret(projectionHandler.validate({ projection: 'test' }), storage);
+        const result = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('Projection functional handler', () => {
       }
     });
 
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof projectionHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.validate({ projection: "proj-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_projection" -> incompleteAnnotation', async () => {
+      if (typeof projectionHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.validate({ projection: "proj-nonexistent" }), storage);
+      expect(result.variant).toBe('incompleteAnnotation');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectionHandler.diff({ projection: 'test', previous: 'test' });
+      const program = projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Projection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectionHandler.diff({ projection: 'test', previous: 'test' });
+      const program = projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectionHandler.diff({ projection: 'test', previous: 'test' });
+      const program = projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectionHandler.diff({ projection: 'test', previous: 'test' });
+      const program = projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Projection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectionHandler.diff({ projection: 'test', previous: 'test' });
+      const program = projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Projection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectionHandler.diff !== 'function') return;
       try {
-        const result = await interpret(projectionHandler.diff({ projection: 'test', previous: 'test' }), storage);
+        const result = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('Projection functional handler', () => {
       }
     });
 
+    it('fixture "valid_diff" -> ok', async () => {
+      if (typeof projectionHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-previous" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_previous" -> incompatible', async () => {
+      if (typeof projectionHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.diff({ projection: "proj-current", previous: "proj-nonexistent" }), storage);
+      expect(result.variant).toBe('incompatible');
+    });
+
   });
 
   describe('inferResources', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectionHandler.inferResources({ projection: 'test' });
+      const program = projectionHandler.inferResources({ projection: "proj-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Projection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectionHandler.inferResources({ projection: 'test' });
+      const program = projectionHandler.inferResources({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectionHandler.inferResources({ projection: 'test' });
+      const program = projectionHandler.inferResources({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectionHandler.inferResources({ projection: 'test' });
+      const program = projectionHandler.inferResources({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Projection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectionHandler.inferResources({ projection: 'test' });
+      const program = projectionHandler.inferResources({ projection: "proj-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Projection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectionHandler.inferResources !== 'function') return;
       try {
-        const result = await interpret(projectionHandler.inferResources({ projection: 'test' }), storage);
+        const result = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('Projection functional handler', () => {
       }
     });
 
+    it('fixture "valid_infer" -> ok', async () => {
+      if (typeof projectionHandler.inferResources !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.inferResources({ projection: "proj-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_projection_infer" -> ok', async () => {
+      if (typeof projectionHandler.inferResources !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectionHandler.inferResources({ projection: "proj-nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof projectionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = projectionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Projection');
+    });
   });
 
   describe('invariant examples', () => {

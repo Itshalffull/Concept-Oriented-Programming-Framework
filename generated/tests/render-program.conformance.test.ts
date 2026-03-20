@@ -19,7 +19,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.create !== 'function') return;
       try {
-        const result = await renderProgramHandler.create({ program: 'test' }, storage);
+        const result = await renderProgramHandler.create({ program: "card-widget" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "new_program" -> ok', async () => {
+      if (typeof renderProgramHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_program" -> exists', async () => {
+      if (typeof renderProgramHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.create({ program: "card-widget" }, storage);
+      expect(result.variant).toBe('exists');
     });
 
   });
@@ -35,7 +49,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.element !== 'function') return;
       try {
-        const result = await renderProgramHandler.element({ program: 'test', part: 'test-part', role: 'test-role' }, storage);
+        const result = await renderProgramHandler.element({ program: "card-widget", part: "root", role: "container" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_root_element" -> ok', async () => {
+      if (typeof renderProgramHandler.element !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.element({ program: "card-widget", part: "root", role: "container" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "element_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.element !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.element({ program: "nonexistent", part: "root", role: "container" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +79,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.text !== 'function') return;
       try {
-        const result = await renderProgramHandler.text({ program: 'test', part: 'test-part', content: 'test-content' }, storage);
+        const result = await renderProgramHandler.text({ program: "card-widget", part: "root", content: "Hello World" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_text" -> ok', async () => {
+      if (typeof renderProgramHandler.text !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.text({ program: "card-widget", part: "root", content: "Hello World" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "text_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.text !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.text({ program: "nonexistent", part: "root", content: "text" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -67,7 +109,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.prop !== 'function') return;
       try {
-        const result = await renderProgramHandler.prop({ program: 'test', name: 'test-name', propType: 'test-propType', defaultValue: 'test-defaultValue' }, storage);
+        const result = await renderProgramHandler.prop({ program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_label_prop" -> ok', async () => {
+      if (typeof renderProgramHandler.prop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.prop({ program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "prop_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.prop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.prop({ program: "nonexistent", name: "label", propType: "string", defaultValue: "" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +139,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.bind !== 'function') return;
       try {
-        const result = await renderProgramHandler.bind({ program: 'test', part: 'test-part', attr: 'test-attr', expr: 'test-expr' }, storage);
+        const result = await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "bind_data_value" -> ok', async () => {
+      if (typeof renderProgramHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bind_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.bind({ program: "nonexistent", part: "root", attr: "text", expr: "x" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -99,7 +169,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.stateDef !== 'function') return;
       try {
-        const result = await renderProgramHandler.stateDef({ program: 'test', name: 'test-name', initial: true }, storage);
+        const result = await renderProgramHandler.stateDef({ program: "card-widget", name: "idle", initial: "true" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "define_idle_state" -> ok', async () => {
+      if (typeof renderProgramHandler.stateDef !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.stateDef({ program: "card-widget", name: "idle", initial: "true" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stateDef_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.stateDef !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.stateDef({ program: "nonexistent", name: "idle", initial: "true" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -115,7 +199,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.transition !== 'function') return;
       try {
-        const result = await renderProgramHandler.transition({ program: 'test', fromState: 'test-fromState', event: 'test-event', toState: 'test-toState' }, storage);
+        const result = await renderProgramHandler.transition({ program: "card-widget", fromState: "idle", event: "click", toState: "active" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_click_transition" -> ok', async () => {
+      if (typeof renderProgramHandler.transition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.transition({ program: "card-widget", fromState: "idle", event: "click", toState: "active" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transition_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.transition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.transition({ program: "nonexistent", fromState: "idle", event: "click", toState: "active" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -131,7 +229,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.aria !== 'function') return;
       try {
-        const result = await renderProgramHandler.aria({ program: 'test', part: 'test-part', attr: 'test-attr', value: 'test-value' }, storage);
+        const result = await renderProgramHandler.aria({ program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -139,6 +237,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_aria_label" -> ok', async () => {
+      if (typeof renderProgramHandler.aria !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.aria({ program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "aria_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.aria !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.aria({ program: "nonexistent", part: "root", attr: "aria-label", value: "x" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -147,7 +259,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.keyboard !== 'function') return;
       try {
-        const result = await renderProgramHandler.keyboard({ program: 'test', key: 'test-key', event: 'test-event' }, storage);
+        const result = await renderProgramHandler.keyboard({ program: "card-widget", key: "Enter", event: "activate" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -155,6 +267,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "map_enter_key" -> ok', async () => {
+      if (typeof renderProgramHandler.keyboard !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.keyboard({ program: "card-widget", key: "Enter", event: "activate" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "keyboard_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.keyboard !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.keyboard({ program: "nonexistent", key: "Escape", event: "close" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -163,7 +289,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.focus !== 'function') return;
       try {
-        const result = await renderProgramHandler.focus({ program: 'test', strategy: 'test-strategy', initialPart: 'test-initialPart' }, storage);
+        const result = await renderProgramHandler.focus({ program: "card-widget", strategy: "trap", initialPart: "root" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -171,6 +297,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "set_focus_trap" -> ok', async () => {
+      if (typeof renderProgramHandler.focus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.focus({ program: "card-widget", strategy: "trap", initialPart: "root" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "focus_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.focus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.focus({ program: "nonexistent", strategy: "trap", initialPart: "root" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -179,7 +319,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.compose !== 'function') return;
       try {
-        const result = await renderProgramHandler.compose({ program: 'test', widget: 'test-widget', slot: 'test-slot' }, storage);
+        const result = await renderProgramHandler.compose({ program: "card-widget", widget: "Badge", slot: "header" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -187,6 +327,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compose_badge" -> ok', async () => {
+      if (typeof renderProgramHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.compose({ program: "card-widget", widget: "Badge", slot: "header" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.compose({ program: "nonexistent", widget: "Badge", slot: "header" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -195,7 +349,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.token !== 'function') return;
       try {
-        const result = await renderProgramHandler.token({ program: 'test', path: 'test-path', fallback: 'test-fallback' }, storage);
+        const result = await renderProgramHandler.token({ program: "card-widget", path: "palette.primary", fallback: "#000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -203,6 +357,20 @@ describe('RenderProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "add_primary_token" -> ok', async () => {
+      if (typeof renderProgramHandler.token !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.token({ program: "card-widget", path: "palette.primary", fallback: "#000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "token_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.token !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.token({ program: "nonexistent", path: "palette.primary", fallback: "#000" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -211,7 +379,7 @@ describe('RenderProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderProgramHandler.pure !== 'function') return;
       try {
-        const result = await renderProgramHandler.pure({ program: 'test', output: 'test-output' }, storage);
+        const result = await renderProgramHandler.pure({ program: "card-widget", output: "CardWidget" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -221,6 +389,37 @@ describe('RenderProgram imperative handler', () => {
       }
     });
 
+    it('fixture "seal_program" -> ok', async () => {
+      if (typeof renderProgramHandler.pure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.pure({ program: "card-widget", output: "CardWidget" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pure_unknown_program" -> notfound', async () => {
+      if (typeof renderProgramHandler.pure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await renderProgramHandler.pure({ program: "nonexistent", output: "done" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof renderProgramHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = renderProgramHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RenderProgram');
+    });
   });
 
   describe('invariant examples', () => {

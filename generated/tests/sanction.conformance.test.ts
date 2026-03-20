@@ -26,7 +26,7 @@ describe('Sanction functional handler', () => {
 
   describe('impose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' });
+      const program = sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Sanction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' });
+      const program = sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' });
+      const program = sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' });
+      const program = sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Sanction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' });
+      const program = sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Sanction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sanctionHandler.impose !== 'function') return;
       try {
-        const result = await interpret(sanctionHandler.impose({ subject: 'test-subject', severity: 'test-severity', consequence: 'test-consequence', reason: 'test-reason' }), storage);
+        const result = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Sanction functional handler', () => {
       }
     });
 
+    it('fixture "impose_warning" -> ok', async () => {
+      if (typeof sanctionHandler.impose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.impose({ subject: "user-42", severity: "Warning", consequence: "Verbal warning issued", reason: "First-time policy violation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "impose_missing_subject" -> error', async () => {
+      if (typeof sanctionHandler.impose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.impose({ subject: "", severity: "Warning", consequence: "Warning", reason: "Violation" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('escalate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sanctionHandler.escalate({ sanction: 'test' });
+      const program = sanctionHandler.escalate({ sanction: "sanction-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Sanction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sanctionHandler.escalate({ sanction: 'test' });
+      const program = sanctionHandler.escalate({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sanctionHandler.escalate({ sanction: 'test' });
+      const program = sanctionHandler.escalate({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sanctionHandler.escalate({ sanction: 'test' });
+      const program = sanctionHandler.escalate({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Sanction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sanctionHandler.escalate({ sanction: 'test' });
+      const program = sanctionHandler.escalate({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Sanction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sanctionHandler.escalate !== 'function') return;
       try {
-        const result = await interpret(sanctionHandler.escalate({ sanction: 'test' }), storage);
+        const result = await interpret(sanctionHandler.escalate({ sanction: "sanction-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Sanction functional handler', () => {
       }
     });
 
+    it('fixture "escalate_warning" -> ok', async () => {
+      if (typeof sanctionHandler.escalate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.escalate({ sanction: "sanction-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "escalate_nonexistent" -> error', async () => {
+      if (typeof sanctionHandler.escalate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.escalate({ sanction: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('appeal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sanctionHandler.appeal({ sanction: 'test' });
+      const program = sanctionHandler.appeal({ sanction: "sanction-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Sanction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sanctionHandler.appeal({ sanction: 'test' });
+      const program = sanctionHandler.appeal({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sanctionHandler.appeal({ sanction: 'test' });
+      const program = sanctionHandler.appeal({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sanctionHandler.appeal({ sanction: 'test' });
+      const program = sanctionHandler.appeal({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Sanction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sanctionHandler.appeal({ sanction: 'test' });
+      const program = sanctionHandler.appeal({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Sanction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sanctionHandler.appeal !== 'function') return;
       try {
-        const result = await interpret(sanctionHandler.appeal({ sanction: 'test' }), storage);
+        const result = await interpret(sanctionHandler.appeal({ sanction: "sanction-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Sanction functional handler', () => {
       }
     });
 
+    it('fixture "appeal_existing" -> ok', async () => {
+      if (typeof sanctionHandler.appeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.appeal({ sanction: "sanction-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "appeal_nonexistent" -> error', async () => {
+      if (typeof sanctionHandler.appeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.appeal({ sanction: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('pardon', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sanctionHandler.pardon({ sanction: 'test' });
+      const program = sanctionHandler.pardon({ sanction: "sanction-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Sanction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sanctionHandler.pardon({ sanction: 'test' });
+      const program = sanctionHandler.pardon({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sanctionHandler.pardon({ sanction: 'test' });
+      const program = sanctionHandler.pardon({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sanctionHandler.pardon({ sanction: 'test' });
+      const program = sanctionHandler.pardon({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Sanction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sanctionHandler.pardon({ sanction: 'test' });
+      const program = sanctionHandler.pardon({ sanction: "sanction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Sanction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sanctionHandler.pardon !== 'function') return;
       try {
-        const result = await interpret(sanctionHandler.pardon({ sanction: 'test' }), storage);
+        const result = await interpret(sanctionHandler.pardon({ sanction: "sanction-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Sanction functional handler', () => {
       }
     });
 
+    it('fixture "pardon_existing" -> ok', async () => {
+      if (typeof sanctionHandler.pardon !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.pardon({ sanction: "sanction-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pardon_nonexistent" -> error', async () => {
+      if (typeof sanctionHandler.pardon !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.pardon({ sanction: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reward', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' });
+      const program = sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Sanction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' });
+      const program = sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' });
+      const program = sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' });
+      const program = sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Sanction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' });
+      const program = sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Sanction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sanctionHandler.reward !== 'function') return;
       try {
-        const result = await interpret(sanctionHandler.reward({ recipient: 'test-recipient', rewardType: 'test-rewardType', amount: 1, reason: 'test-reason' }), storage);
+        const result = await interpret(sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Sanction functional handler', () => {
       }
     });
 
+    it('fixture "reward_contributor" -> ok', async () => {
+      if (typeof sanctionHandler.reward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.reward({ subject: "alice", type: "contribution_bonus", amount: "50.0", reason: "Outstanding code review participation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reward_missing_subject" -> error', async () => {
+      if (typeof sanctionHandler.reward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sanctionHandler.reward({ subject: "", type: "contribution_bonus", amount: "10.0", reason: "Participation" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof sanctionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = sanctionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Sanction');
+    });
   });
 
   describe('invariant examples', () => {
@@ -338,7 +426,7 @@ describe('Sanction functional handler', () => {
               fc.record({ action: fc.constant('escalate'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('appeal'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('pardon'), input: fc.record({ sanction: fc.string() }) }),
-              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 50 }), rewardType: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reward'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), type: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -369,7 +457,7 @@ describe('Sanction functional handler', () => {
               fc.record({ action: fc.constant('escalate'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('appeal'), input: fc.record({ sanction: fc.string() }) }),
               fc.record({ action: fc.constant('pardon'), input: fc.record({ sanction: fc.string() }) }),
-              fc.record({ action: fc.constant('reward'), input: fc.record({ recipient: fc.string({ minLength: 1, maxLength: 50 }), rewardType: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reward'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), type: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

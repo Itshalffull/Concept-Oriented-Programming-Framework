@@ -26,7 +26,7 @@ describe('SyncEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' });
+      const program = syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' });
+      const program = syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' });
+      const program = syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' });
+      const program = syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' });
+      const program = syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SyncEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(syncEntityHandler.register({ name: 'test-name', source: 'test-source', compiled: 'test-compiled' }), storage);
+        const result = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_publish_sync" -> ok', async () => {
+      if (typeof syncEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_minimal" -> ok', async () => {
+      if (typeof syncEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof syncEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.register({ name: "", source: "syncs/empty.sync", compiled: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = syncEntityHandler.findByConcept({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = syncEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = syncEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = syncEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = syncEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('SyncEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(syncEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_article" -> ok', async () => {
+      if (typeof syncEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_nonexistent" -> ok', async () => {
+      if (typeof syncEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findByConcept({ concept: "NonexistentConcept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('findTriggerableBy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' });
+      const program = syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' });
+      const program = syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' });
+      const program = syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' });
+      const program = syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' });
+      const program = syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('SyncEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       try {
-        const result = await interpret(syncEntityHandler.findTriggerableBy({ action: 'test-action', variant: 'test-variant' }), storage);
+        const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_publish_ok" -> ok', async () => {
+      if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_create_any" -> ok', async () => {
+      if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "create", variant: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('chainFrom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 });
+      const program = syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 });
+      const program = syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 });
+      const program = syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 });
+      const program = syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 });
+      const program = syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('SyncEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       try {
-        const result = await interpret(syncEntityHandler.chainFrom({ action: 'test-action', variant: 'test-variant', depth: 1 }), storage);
+        const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -252,6 +301,20 @@ describe('SyncEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "chain_publish" -> ok', async () => {
+      if (typeof syncEntityHandler.chainFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "chain_no_match" -> error', async () => {
+      if (typeof syncEntityHandler.chainFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.chainFrom({ action: "nonexistent", variant: "ok", depth: "1" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -312,6 +375,13 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_dead_ends_valid" -> ok', async () => {
+      if (typeof syncEntityHandler.findDeadEnds !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('findOrphanVariants', () => {
@@ -370,11 +440,18 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_orphans_valid" -> ok', async () => {
+      if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEntityHandler.get({ sync: 'test' });
+      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +459,21 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEntityHandler.get({ sync: 'test' });
+      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEntityHandler.get({ sync: 'test' });
+      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEntityHandler.get({ sync: 'test' });
+      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +486,7 @@ describe('SyncEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEntityHandler.get({ sync: 'test' });
+      const program = syncEntityHandler.get({ sync: "sync-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +495,7 @@ describe('SyncEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(syncEntityHandler.get({ sync: 'test' }), storage);
+        const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +505,38 @@ describe('SyncEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof syncEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof syncEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncEntity');
+    });
   });
 
   describe('invariant examples', () => {

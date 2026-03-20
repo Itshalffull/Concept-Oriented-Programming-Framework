@@ -19,7 +19,7 @@ describe('SpecParser imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specParserHandler.parse !== 'function') return;
       try {
-        const result = await specParserHandler.parse({ source: 'test-source' }, storage);
+        const result = await specParserHandler.parse({ source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('SpecParser imperative handler', () => {
       }
     });
 
+    it('fixture "valid_source" -> ok', async () => {
+      if (typeof specParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specParserHandler.parse({ source: "concept Tiny [X] { purpose { A test. } state { items: set X } actions { action get(x: X) { -> ok(item: X) { Return. } } } }" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_source" -> error', async () => {
+      if (typeof specParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specParserHandler.parse({ source: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_syntax" -> error', async () => {
+      if (typeof specParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specParserHandler.parse({ source: "not a valid concept file {{{}}" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof specParserHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = specParserHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SpecParser');
+    });
   });
 
   describe('invariant examples', () => {

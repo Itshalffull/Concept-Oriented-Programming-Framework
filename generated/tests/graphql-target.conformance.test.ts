@@ -26,7 +26,7 @@ describe('GraphqlTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GraphqlTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphqlTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(graphqlTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('GraphqlTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_default_config" -> ok', async () => {
+      if (typeof graphqlTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_relay_and_federation" -> ok', async () => {
+      if (typeof graphqlTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.generate({ projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_projection" -> error', async () => {
+      if (typeof graphqlTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "federation_conflict" -> ok', async () => {
+      if (typeof graphqlTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.generate({ projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphqlTargetHandler.validate({ type: 'test' });
+      const program = graphqlTargetHandler.validate({ type: "graphql-order-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphqlTargetHandler.validate({ type: 'test' });
+      const program = graphqlTargetHandler.validate({ type: "graphql-order-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphqlTargetHandler.validate({ type: 'test' });
+      const program = graphqlTargetHandler.validate({ type: "graphql-order-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphqlTargetHandler.validate({ type: 'test' });
+      const program = graphqlTargetHandler.validate({ type: "graphql-order-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphqlTargetHandler.validate({ type: 'test' });
+      const program = graphqlTargetHandler.validate({ type: "graphql-order-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('GraphqlTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphqlTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(graphqlTargetHandler.validate({ type: 'test' }), storage);
+        const result = await interpret(graphqlTargetHandler.validate({ type: "graphql-order-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('GraphqlTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_type" -> ok', async () => {
+      if (typeof graphqlTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.validate({ type: "graphql-order-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_type" -> error', async () => {
+      if (typeof graphqlTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.validate({ type: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listOperations', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphqlTargetHandler.listOperations({ concept: 'test-concept' });
+      const program = graphqlTargetHandler.listOperations({ concept: "Order" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphqlTargetHandler.listOperations({ concept: 'test-concept' });
+      const program = graphqlTargetHandler.listOperations({ concept: "Order" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphqlTargetHandler.listOperations({ concept: 'test-concept' });
+      const program = graphqlTargetHandler.listOperations({ concept: "Order" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphqlTargetHandler.listOperations({ concept: 'test-concept' });
+      const program = graphqlTargetHandler.listOperations({ concept: "Order" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('GraphqlTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphqlTargetHandler.listOperations({ concept: 'test-concept' });
+      const program = graphqlTargetHandler.listOperations({ concept: "Order" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('GraphqlTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphqlTargetHandler.listOperations !== 'function') return;
       try {
-        const result = await interpret(graphqlTargetHandler.listOperations({ concept: 'test-concept' }), storage);
+        const result = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('GraphqlTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_order_operations" -> ok', async () => {
+      if (typeof graphqlTargetHandler.listOperations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_concept" -> error', async () => {
+      if (typeof graphqlTargetHandler.listOperations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphqlTargetHandler.listOperations({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof graphqlTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = graphqlTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GraphqlTarget');
+    });
   });
 
   describe('invariant examples', () => {

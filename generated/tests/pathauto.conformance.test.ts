@@ -26,7 +26,7 @@ describe('Pathauto functional handler', () => {
 
   describe('generateAlias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' });
+      const program = pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' });
+      const program = pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' });
+      const program = pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' });
+      const program = pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' });
+      const program = pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Pathauto functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pathautoHandler.generateAlias !== 'function') return;
       try {
-        const result = await interpret(pathautoHandler.generateAlias({ pattern: 'test', entity: 'test-entity' }), storage);
+        const result = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Pathauto functional handler', () => {
       }
     });
 
+    it('fixture "valid_page" -> ok', async () => {
+      if (typeof pathautoHandler.generateAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.generateAlias({ pattern: "blog", entity: "My Example Page" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "special_chars" -> ok', async () => {
+      if (typeof pathautoHandler.generateAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.generateAlias({ pattern: "products", entity: "Héllo & Wörld!" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_entity" -> error', async () => {
+      if (typeof pathautoHandler.generateAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.generateAlias({ entity: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('bulkGenerate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' });
+      const program = pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' });
+      const program = pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' });
+      const program = pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' });
+      const program = pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' });
+      const program = pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Pathauto functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pathautoHandler.bulkGenerate !== 'function') return;
       try {
-        const result = await interpret(pathautoHandler.bulkGenerate({ pattern: 'test', entities: 'test-entities' }), storage);
+        const result = await interpret(pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Pathauto functional handler', () => {
       }
     });
 
+    it('fixture "bulk_two" -> ok', async () => {
+      if (typeof pathautoHandler.bulkGenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.bulkGenerate({ pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof pathautoHandler.bulkGenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.bulkGenerate({ pattern: "docs", entities: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('cleanString', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pathautoHandler.cleanString({ input: 'test-input' });
+      const program = pathautoHandler.cleanString({ input: "Hello World Test" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pathautoHandler.cleanString({ input: 'test-input' });
+      const program = pathautoHandler.cleanString({ input: "Hello World Test" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pathautoHandler.cleanString({ input: 'test-input' });
+      const program = pathautoHandler.cleanString({ input: "Hello World Test" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pathautoHandler.cleanString({ input: 'test-input' });
+      const program = pathautoHandler.cleanString({ input: "Hello World Test" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Pathauto functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pathautoHandler.cleanString({ input: 'test-input' });
+      const program = pathautoHandler.cleanString({ input: "Hello World Test" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Pathauto functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pathautoHandler.cleanString !== 'function') return;
       try {
-        const result = await interpret(pathautoHandler.cleanString({ input: 'test-input' }), storage);
+        const result = await interpret(pathautoHandler.cleanString({ input: "Hello World Test" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Pathauto functional handler', () => {
       }
     });
 
+    it('fixture "clean_spaces" -> ok', async () => {
+      if (typeof pathautoHandler.cleanString !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.cleanString({ input: "Hello World Test" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clean_empty" -> error', async () => {
+      if (typeof pathautoHandler.cleanString !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pathautoHandler.cleanString({ input: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof pathautoHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = pathautoHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Pathauto');
+    });
   });
 
   describe('invariant examples', () => {

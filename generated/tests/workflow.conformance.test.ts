@@ -26,7 +26,7 @@ describe('Workflow functional handler', () => {
 
   describe('defineState', () => {
     it('builds a valid StorageProgram', () => {
-      const program = workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' });
+      const program = workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Workflow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' });
+      const program = workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' });
+      const program = workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' });
+      const program = workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Workflow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' });
+      const program = workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Workflow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof workflowHandler.defineState !== 'function') return;
       try {
-        const result = await interpret(workflowHandler.defineState({ workflow: 'test', name: 'test-name', flags: 'test-flags' }), storage);
+        const result = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Workflow functional handler', () => {
       }
     });
 
+    it('fixture "define_draft_state" -> ok', async () => {
+      if (typeof workflowHandler.defineState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.defineState({ workflow: "content-lifecycle", name: "draft", flags: "initial" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_empty_workflow" -> error', async () => {
+      if (typeof workflowHandler.defineState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.defineState({ workflow: "", name: "draft", flags: "initial" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('defineTransition', () => {
     it('builds a valid StorageProgram', () => {
-      const program = workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' });
+      const program = workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Workflow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' });
+      const program = workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' });
+      const program = workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' });
+      const program = workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Workflow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' });
+      const program = workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Workflow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof workflowHandler.defineTransition !== 'function') return;
       try {
-        const result = await interpret(workflowHandler.defineTransition({ workflow: 'test', from: 'test-from', to: 'test-to', label: 'test-label', guard: 'test-guard' }), storage);
+        const result = await interpret(workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Workflow functional handler', () => {
       }
     });
 
+    it('fixture "define_publish_transition" -> ok', async () => {
+      if (typeof workflowHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.defineTransition({ workflow: "content-lifecycle", from: "draft", to: "published", label: "publish", guard: "approved" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_transition_no_workflow" -> error', async () => {
+      if (typeof workflowHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.defineTransition({ workflow: "nonexistent", from: "draft", to: "published", label: "publish", guard: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('transition', () => {
     it('builds a valid StorageProgram', () => {
-      const program = workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' });
+      const program = workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Workflow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' });
+      const program = workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' });
+      const program = workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' });
+      const program = workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Workflow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' });
+      const program = workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Workflow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof workflowHandler.transition !== 'function') return;
       try {
-        const result = await interpret(workflowHandler.transition({ workflow: 'test', entity: 'test-entity', transition: 'test-transition' }), storage);
+        const result = await interpret(workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Workflow functional handler', () => {
       }
     });
 
+    it('fixture "transition_publish" -> ok', async () => {
+      if (typeof workflowHandler.transition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.transition({ workflow: "content-lifecycle", entity: "doc-42", transition: "publish" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transition_unknown_workflow" -> notfound', async () => {
+      if (typeof workflowHandler.transition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.transition({ workflow: "nonexistent", entity: "doc-42", transition: "publish" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getCurrentState', () => {
     it('builds a valid StorageProgram', () => {
-      const program = workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' });
+      const program = workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Workflow functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' });
+      const program = workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' });
+      const program = workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' });
+      const program = workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Workflow functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' });
+      const program = workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Workflow functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof workflowHandler.getCurrentState !== 'function') return;
       try {
-        const result = await interpret(workflowHandler.getCurrentState({ workflow: 'test', entity: 'test-entity' }), storage);
+        const result = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Workflow functional handler', () => {
       }
     });
 
+    it('fixture "get_current_state" -> ok', async () => {
+      if (typeof workflowHandler.getCurrentState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.getCurrentState({ workflow: "content-lifecycle", entity: "doc-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_state_unknown_workflow" -> notfound', async () => {
+      if (typeof workflowHandler.getCurrentState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(workflowHandler.getCurrentState({ workflow: "nonexistent", entity: "doc-42" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof workflowHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = workflowHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Workflow');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Branch functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' });
+      const program = branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' });
+      const program = branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' });
+      const program = branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' });
+      const program = branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' });
+      const program = branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.create !== 'function') return;
       try {
-        const result = await interpret(branchHandler.create({ name: 'test-name', fromNode: 'test-fromNode' }), storage);
+        const result = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "create_feature" -> ok', async () => {
+      if (typeof branchHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_branch_name" -> error', async () => {
+      if (typeof branchHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('advance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.advance({ branch: 'test', newNode: 'test-newNode' });
+      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.advance({ branch: 'test', newNode: 'test-newNode' });
+      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.advance({ branch: 'test', newNode: 'test-newNode' });
+      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.advance({ branch: 'test', newNode: 'test-newNode' });
+      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.advance({ branch: 'test', newNode: 'test-newNode' });
+      const program = branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.advance !== 'function') return;
       try {
-        const result = await interpret(branchHandler.advance({ branch: 'test', newNode: 'test-newNode' }), storage);
+        const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "advance_head" -> ok', async () => {
+      if (typeof branchHandler.advance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "advance_empty_node" -> error', async () => {
+      if (typeof branchHandler.advance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.delete({ branch: 'test' });
+      const program = branchHandler.delete({ branch: "branch-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.delete({ branch: 'test' });
+      const program = branchHandler.delete({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.delete({ branch: 'test' });
+      const program = branchHandler.delete({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.delete({ branch: 'test' });
+      const program = branchHandler.delete({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.delete({ branch: 'test' });
+      const program = branchHandler.delete({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.delete !== 'function') return;
       try {
-        const result = await interpret(branchHandler.delete({ branch: 'test' }), storage);
+        const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof branchHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> error', async () => {
+      if (typeof branchHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.delete({ branch: "branch-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('protect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.protect({ branch: 'test' });
+      const program = branchHandler.protect({ branch: "branch-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.protect({ branch: 'test' });
+      const program = branchHandler.protect({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.protect({ branch: 'test' });
+      const program = branchHandler.protect({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.protect({ branch: 'test' });
+      const program = branchHandler.protect({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.protect({ branch: 'test' });
+      const program = branchHandler.protect({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.protect !== 'function') return;
       try {
-        const result = await interpret(branchHandler.protect({ branch: 'test' }), storage);
+        const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "protect_main" -> ok', async () => {
+      if (typeof branchHandler.protect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "protect_missing" -> error', async () => {
+      if (typeof branchHandler.protect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.protect({ branch: "branch-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setUpstream', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.setUpstream({ branch: 'test', upstream: 'test' });
+      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.setUpstream({ branch: 'test', upstream: 'test' });
+      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.setUpstream({ branch: 'test', upstream: 'test' });
+      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.setUpstream({ branch: 'test', upstream: 'test' });
+      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.setUpstream({ branch: 'test', upstream: 'test' });
+      const program = branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       try {
-        const result = await interpret(branchHandler.setUpstream({ branch: 'test', upstream: 'test' }), storage);
+        const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "set_upstream_main" -> ok', async () => {
+      if (typeof branchHandler.setUpstream !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upstream_missing" -> error', async () => {
+      if (typeof branchHandler.setUpstream !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('divergencePoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.divergencePoint({ b1: 'test', b2: 'test' });
+      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.divergencePoint({ b1: 'test', b2: 'test' });
+      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.divergencePoint({ b1: 'test', b2: 'test' });
+      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.divergencePoint({ b1: 'test', b2: 'test' });
+      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.divergencePoint({ b1: 'test', b2: 'test' });
+      const program = branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       try {
-        const result = await interpret(branchHandler.divergencePoint({ b1: 'test', b2: 'test' }), storage);
+        const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "find_divergence" -> ok', async () => {
+      if (typeof branchHandler.divergencePoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "divergence_missing" -> error', async () => {
+      if (typeof branchHandler.divergencePoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.divergencePoint({ b1: "branch-nonexistent", b2: "branch-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('archive', () => {
     it('builds a valid StorageProgram', () => {
-      const program = branchHandler.archive({ branch: 'test' });
+      const program = branchHandler.archive({ branch: "branch-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Branch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = branchHandler.archive({ branch: 'test' });
+      const program = branchHandler.archive({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = branchHandler.archive({ branch: 'test' });
+      const program = branchHandler.archive({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = branchHandler.archive({ branch: 'test' });
+      const program = branchHandler.archive({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Branch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = branchHandler.archive({ branch: 'test' });
+      const program = branchHandler.archive({ branch: "branch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Branch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof branchHandler.archive !== 'function') return;
       try {
-        const result = await interpret(branchHandler.archive({ branch: 'test' }), storage);
+        const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Branch functional handler', () => {
       }
     });
 
+    it('fixture "archive_old" -> ok', async () => {
+      if (typeof branchHandler.archive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "archive_missing" -> error', async () => {
+      if (typeof branchHandler.archive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(branchHandler.archive({ branch: "branch-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof branchHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = branchHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Branch');
+    });
   });
 
   describe('invariant examples', () => {

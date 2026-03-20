@@ -19,7 +19,7 @@ describe('Reputation imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationHandler.earn !== 'function') return;
       try {
-        const result = await reputationHandler.earn({ participant: 'test-participant', amount: 1, reason: 'test-reason' }, storage);
+        const result = await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('Reputation imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "earn_contribution" -> ok', async () => {
+      if (typeof reputationHandler.earn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.earn({ participant: "alice", amount: "10.0", reason: "code-review" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "earn_zero" -> error', async () => {
+      if (typeof reputationHandler.earn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.earn({ participant: "alice", amount: "0.0", reason: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('Reputation imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationHandler.burn !== 'function') return;
       try {
-        const result = await reputationHandler.burn({ participant: 'test-participant', amount: 1, reason: 'test-reason' }, storage);
+        const result = await reputationHandler.burn({ participant: "alice", amount: "5.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('Reputation imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "burn_penalty" -> ok', async () => {
+      if (typeof reputationHandler.burn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.burn({ participant: "alice", amount: "5.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "burn_excessive" -> error', async () => {
+      if (typeof reputationHandler.burn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.burn({ participant: "alice", amount: "999999.0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('Reputation imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationHandler.decay !== 'function') return;
       try {
-        const result = await reputationHandler.decay({  }, storage);
+        const result = await reputationHandler.decay({ participant: "alice", decayFactor: "0.1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('Reputation imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "decay_alice" -> ok', async () => {
+      if (typeof reputationHandler.decay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.decay({ participant: "alice", decayFactor: "0.1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "decay_invalid_factor" -> error', async () => {
+      if (typeof reputationHandler.decay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.decay({ participant: "alice", decayFactor: "-1.0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('Reputation imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationHandler.getScore !== 'function') return;
       try {
-        const result = await reputationHandler.getScore({ participant: 'test-participant' }, storage);
+        const result = await reputationHandler.getScore({ participant: "alice" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('Reputation imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_alice_score" -> ok', async () => {
+      if (typeof reputationHandler.getScore !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.getScore({ participant: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown_score" -> error', async () => {
+      if (typeof reputationHandler.getScore !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.getScore({ participant: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('Reputation imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationHandler.recalculate !== 'function') return;
       try {
-        const result = await reputationHandler.recalculate({ participant: 'test-participant' }, storage);
+        const result = await reputationHandler.recalculate({ participant: "alice" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('Reputation imperative handler', () => {
       }
     });
 
+    it('fixture "recalculate_alice" -> ok', async () => {
+      if (typeof reputationHandler.recalculate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.recalculate({ participant: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "recalculate_unknown" -> error', async () => {
+      if (typeof reputationHandler.recalculate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await reputationHandler.recalculate({ participant: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof reputationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = reputationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Reputation');
+    });
   });
 
   describe('invariant examples', () => {
@@ -114,8 +201,8 @@ describe('Reputation imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('decay'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('decay'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), decayFactor: fc.string() }) }),
               fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -144,8 +231,8 @@ describe('Reputation imperative handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('earn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('decay'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('burn'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('decay'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), decayFactor: fc.string() }) }),
               fc.record({ action: fc.constant('getScore'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('recalculate'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),

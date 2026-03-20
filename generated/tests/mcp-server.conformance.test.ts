@@ -26,7 +26,7 @@ describe('McpServer functional handler', () => {
 
   describe('start', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' });
+      const program = mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('McpServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' });
+      const program = mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' });
+      const program = mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' });
+      const program = mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('McpServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' });
+      const program = mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('McpServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpServerHandler.start !== 'function') return;
       try {
-        const result = await interpret(mcpServerHandler.start({ manifestPath: 'test-manifestPath', transport: 'test-transport' }), storage);
+        const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('McpServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_start" -> ok', async () => {
+      if (typeof mcpServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sse_start" -> ok', async () => {
+      if (typeof mcpServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "sse" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_transport" -> error', async () => {
+      if (typeof mcpServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.start({ manifestPath: "examples/devtools/devtools.interface.yaml", transport: "websocket" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerTool', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' });
+      const program = mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('McpServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' });
+      const program = mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' });
+      const program = mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' });
+      const program = mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('McpServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' });
+      const program = mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('McpServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpServerHandler.registerTool !== 'function') return;
       try {
-        const result = await interpret(mcpServerHandler.registerTool({ name: 'test-name', concept: 'test-concept', action: 'test-action', description: 'test-description', schema: 'test-schema' }), storage);
+        const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('McpServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_register_tool" -> ok', async () => {
+      if (typeof mcpServerHandler.registerTool !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_tool" -> duplicate', async () => {
+      if (typeof mcpServerHandler.registerTool !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.registerTool({ name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('handleCall', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' });
+      const program = mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('McpServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' });
+      const program = mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' });
+      const program = mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' });
+      const program = mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('McpServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' });
+      const program = mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('McpServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpServerHandler.handleCall !== 'function') return;
       try {
-        const result = await interpret(mcpServerHandler.handleCall({ toolName: 'test-toolName', arguments: 'test-arguments' }), storage);
+        const result = await interpret(mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +229,20 @@ describe('McpServer functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_call" -> ok', async () => {
+      if (typeof mcpServerHandler.handleCall !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.handleCall({ toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_tool" -> notfound', async () => {
+      if (typeof mcpServerHandler.handleCall !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.handleCall({ toolName: "nonexistent_tool", arguments: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -254,6 +303,13 @@ describe('McpServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_stop" -> ok', async () => {
+      if (typeof mcpServerHandler.stop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.stop({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listTools', () => {
@@ -312,6 +368,31 @@ describe('McpServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_list_tools" -> ok', async () => {
+      if (typeof mcpServerHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpServerHandler.listTools({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof mcpServerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = mcpServerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('McpServer');
+    });
   });
 
   describe('invariant examples', () => {

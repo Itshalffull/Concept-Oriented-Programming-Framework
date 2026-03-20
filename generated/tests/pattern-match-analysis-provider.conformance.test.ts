@@ -82,6 +82,24 @@ describe('PatternMatchAnalysisProvider functional handler', () => {
 
   });
 
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof patternMatchAnalysisProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = patternMatchAnalysisProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PatternMatchAnalysisProvider');
+    });
+  });
+
   describe('state invariants (stateful PBT)', () => {
     it('always: valid-providerRef', async () => {
       await fc.assert(

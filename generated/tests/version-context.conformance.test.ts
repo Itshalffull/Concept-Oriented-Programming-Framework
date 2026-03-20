@@ -19,7 +19,7 @@ describe('VersionContext imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionContextHandler.push !== 'function') return;
       try {
-        const result = await versionContextHandler.push({ user: 'test-user', space_id: 'test-space_id' }, storage);
+        const result = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('VersionContext imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "push_first" -> ok', async () => {
+      if (typeof versionContextHandler.push !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.push({ user: "alice", space_id: "space-redesign" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "push_nested" -> ok', async () => {
+      if (typeof versionContextHandler.push !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.push({ user: "alice", space_id: "space-redesign-sub" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +49,7 @@ describe('VersionContext imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionContextHandler.pop !== 'function') return;
       try {
-        const result = await versionContextHandler.pop({ user: 'test-user', space_id: 'test-space_id' }, storage);
+        const result = await versionContextHandler.pop({ user: "alice", space_id: "space-redesign" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('VersionContext imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "pop_existing" -> ok', async () => {
+      if (typeof versionContextHandler.pop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.pop({ user: "alice", space_id: "space-redesign" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pop_not_on_stack" -> ok', async () => {
+      if (typeof versionContextHandler.pop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.pop({ user: "alice", space_id: "space-nonexistent" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -51,7 +79,7 @@ describe('VersionContext imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionContextHandler.get !== 'function') return;
       try {
-        const result = await versionContextHandler.get({ user: 'test-user' }, storage);
+        const result = await versionContextHandler.get({ user: "alice" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('VersionContext imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_active" -> ok', async () => {
+      if (typeof versionContextHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.get({ user: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_no_context" -> no_context', async () => {
+      if (typeof versionContextHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.get({ user: "unknown-user" }, storage);
+      expect(result.variant).toBe('no_context');
     });
 
   });
@@ -67,7 +109,7 @@ describe('VersionContext imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionContextHandler.resolve_for !== 'function') return;
       try {
-        const result = await versionContextHandler.resolve_for({ user: 'test-user', entity_id: 'test-entity_id' }, storage);
+        const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: "article-42" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('VersionContext imperative handler', () => {
       }
     });
 
+    it('fixture "resolve_with_context" -> ok', async () => {
+      if (typeof versionContextHandler.resolve_for !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.resolve_for({ user: "alice", entity_id: "article-42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_base_user" -> ok', async () => {
+      if (typeof versionContextHandler.resolve_for !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await versionContextHandler.resolve_for({ user: "unknown-user", entity_id: "article-42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof versionContextHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = versionContextHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VersionContext');
+    });
   });
 
   describe('invariant examples', () => {

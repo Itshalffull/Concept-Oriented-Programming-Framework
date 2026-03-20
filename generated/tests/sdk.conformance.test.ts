@@ -26,7 +26,7 @@ describe('Sdk functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' });
+      const program = sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Sdk functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' });
+      const program = sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' });
+      const program = sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' });
+      const program = sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Sdk functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' });
+      const program = sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Sdk functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sdkHandler.generate !== 'function') return;
       try {
-        const result = await interpret(sdkHandler.generate({ projection: 'test-projection', language: 'test-language', config: 'test-config' }), storage);
+        const result = await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Sdk functional handler', () => {
       }
     });
 
+    it('fixture "typescript_sdk" -> ok', async () => {
+      if (typeof sdkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sdkHandler.generate({ projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "python_sdk" -> ok', async () => {
+      if (typeof sdkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sdkHandler.generate({ projection: "order-projection", language: "python", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported_language" -> error', async () => {
+      if (typeof sdkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sdkHandler.generate({ projection: "item-projection", language: "cobol", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('publish', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sdkHandler.publish({ package: 'test', registry: 'test-registry' });
+      const program = sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Sdk functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sdkHandler.publish({ package: 'test', registry: 'test-registry' });
+      const program = sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sdkHandler.publish({ package: 'test', registry: 'test-registry' });
+      const program = sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sdkHandler.publish({ package: 'test', registry: 'test-registry' });
+      const program = sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Sdk functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sdkHandler.publish({ package: 'test', registry: 'test-registry' });
+      const program = sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Sdk functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sdkHandler.publish !== 'function') return;
       try {
-        const result = await interpret(sdkHandler.publish({ package: 'test', registry: 'test-registry' }), storage);
+        const result = await interpret(sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('Sdk functional handler', () => {
       }
     });
 
+    it('fixture "publish_to_npm" -> ok', async () => {
+      if (typeof sdkHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sdkHandler.publish({ package: "sdk-typescript-12345", registry: "npm" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_registry" -> error', async () => {
+      if (typeof sdkHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sdkHandler.publish({ package: "sdk-go-12345", registry: "unknown-registry" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof sdkHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = sdkHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Sdk');
+    });
   });
 
   describe('invariant examples', () => {

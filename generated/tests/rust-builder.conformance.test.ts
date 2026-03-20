@@ -26,7 +26,7 @@ describe('RustBuilder functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RustBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rustBuilderHandler.build !== 'function') return;
       try {
-        const result = await interpret(rustBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' }), storage);
+        const result = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('RustBuilder functional handler', () => {
       }
     });
 
+    it('fixture "build_crate" -> ok', async () => {
+      if (typeof rustBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_source" -> error', async () => {
+      if (typeof rustBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.build({ source: "", toolchainPath: "", platform: "linux-x86_64", config: {"mode":"debug"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('RustBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rustBuilderHandler.test !== 'function') return;
       try {
-        const result = await interpret(rustBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' }), storage);
+        const result = await interpret(rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('RustBuilder functional handler', () => {
       }
     });
 
+    it('fixture "test_crate" -> ok', async () => {
+      if (typeof rustBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing_build" -> error', async () => {
+      if (typeof rustBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.test({ build: "nonexistent", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('RustBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = rustBuilderHandler.package({ build: "rsb-001", format: "binary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('RustBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rustBuilderHandler.package !== 'function') return;
       try {
-        const result = await interpret(rustBuilderHandler.package({ build: 'test', format: 'test-format' }), storage);
+        const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "binary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,20 @@ describe('RustBuilder functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "package_binary" -> ok', async () => {
+      if (typeof rustBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "binary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_unsupported" -> error', async () => {
+      if (typeof rustBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "invalid-format" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +296,31 @@ describe('RustBuilder functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof rustBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustBuilderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rustBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rustBuilderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RustBuilder');
+    });
   });
 
   describe('invariant examples', () => {

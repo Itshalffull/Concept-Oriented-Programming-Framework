@@ -26,7 +26,7 @@ describe('ActionLog functional handler', () => {
 
   describe('append', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionLogHandler.append({ record: 'test' });
+      const program = actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionLogHandler.append({ record: 'test' });
+      const program = actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionLogHandler.append({ record: 'test' });
+      const program = actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionLogHandler.append({ record: 'test' });
+      const program = actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionLogHandler.append({ record: 'test' });
+      const program = actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ActionLog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionLogHandler.append !== 'function') return;
       try {
-        const result = await interpret(actionLogHandler.append({ record: 'test' }), storage);
+        const result = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ActionLog functional handler', () => {
       }
     });
 
+    it('fixture "completion_record" -> ok', async () => {
+      if (typeof actionLogHandler.append !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invocation_record" -> ok', async () => {
+      if (typeof actionLogHandler.append !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('addEdge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' });
+      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' });
+      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' });
+      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' });
+      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' });
+      const program = actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ActionLog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       try {
-        const result = await interpret(actionLogHandler.addEdge({ from: 'test', to: 'test', sync: 'test-sync' }), storage);
+        const result = await interpret(actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ActionLog functional handler', () => {
       }
     });
 
+    it('fixture "link_records" -> ok', async () => {
+      if (typeof actionLogHandler.addEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "link_with_different_sync" -> ok', async () => {
+      if (typeof actionLogHandler.addEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.addEdge({ from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionLogHandler.query({ flow: 'test-flow' });
+      const program = actionLogHandler.query({ flow: "flow-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionLogHandler.query({ flow: 'test-flow' });
+      const program = actionLogHandler.query({ flow: "flow-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionLogHandler.query({ flow: 'test-flow' });
+      const program = actionLogHandler.query({ flow: "flow-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionLogHandler.query({ flow: 'test-flow' });
+      const program = actionLogHandler.query({ flow: "flow-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ActionLog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionLogHandler.query({ flow: 'test-flow' });
+      const program = actionLogHandler.query({ flow: "flow-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ActionLog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
       try {
-        const result = await interpret(actionLogHandler.query({ flow: 'test-flow' }), storage);
+        const result = await interpret(actionLogHandler.query({ flow: "flow-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('ActionLog functional handler', () => {
       }
     });
 
+    it('fixture "existing_flow" -> ok', async () => {
+      if (typeof actionLogHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.query({ flow: "flow-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_flow" -> ok', async () => {
+      if (typeof actionLogHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionLogHandler.query({ flow: "nonexistent-flow" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof actionLogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = actionLogHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ActionLog');
+    });
   });
 
   describe('invariant examples', () => {

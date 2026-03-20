@@ -26,7 +26,7 @@ describe('Motion functional handler', () => {
 
   describe('defineDuration', () => {
     it('builds a valid StorageProgram', () => {
-      const program = motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 });
+      const program = motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Motion functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 });
+      const program = motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 });
+      const program = motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 });
+      const program = motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Motion functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 });
+      const program = motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Motion functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof motionHandler.defineDuration !== 'function') return;
       try {
-        const result = await interpret(motionHandler.defineDuration({ motion: 'test', name: 'test-name', ms: 1 }), storage);
+        const result = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Motion functional handler', () => {
       }
     });
 
+    it('fixture "duration_fast" -> ok', async () => {
+      if (typeof motionHandler.defineDuration !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineDuration({ motion: "O-1", name: "fast", ms: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duration_normal" -> ok', async () => {
+      if (typeof motionHandler.defineDuration !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineDuration({ motion: "O-2", name: "normal", ms: "200" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duration_instant" -> ok', async () => {
+      if (typeof motionHandler.defineDuration !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineDuration({ motion: "O-3", name: "instant", ms: "0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duration_negative" -> invalid', async () => {
+      if (typeof motionHandler.defineDuration !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineDuration({ motion: "O-4", name: "bad", ms: "-1" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('defineEasing', () => {
     it('builds a valid StorageProgram', () => {
-      const program = motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' });
+      const program = motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Motion functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' });
+      const program = motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' });
+      const program = motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' });
+      const program = motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Motion functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' });
+      const program = motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Motion functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof motionHandler.defineEasing !== 'function') return;
       try {
-        const result = await interpret(motionHandler.defineEasing({ motion: 'test', name: 'test-name', value: 'test-value' }), storage);
+        const result = await interpret(motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,32 @@ describe('Motion functional handler', () => {
       }
     });
 
+    it('fixture "easing_ease_in_out" -> ok', async () => {
+      if (typeof motionHandler.defineEasing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineEasing({ motion: "O-5", name: "standard", value: "ease-in-out" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "easing_cubic_bezier" -> ok', async () => {
+      if (typeof motionHandler.defineEasing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineEasing({ motion: "O-6", name: "decelerate", value: "cubic-bezier(0.0, 0.0, 0.2, 1)" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "easing_empty_value" -> invalid', async () => {
+      if (typeof motionHandler.defineEasing !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineEasing({ motion: "O-7", name: "missing", value: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('defineTransition', () => {
     it('builds a valid StorageProgram', () => {
-      const program = motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' });
+      const program = motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('Motion functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' });
+      const program = motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' });
+      const program = motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' });
+      const program = motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('Motion functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' });
+      const program = motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('Motion functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof motionHandler.defineTransition !== 'function') return;
       try {
-        const result = await interpret(motionHandler.defineTransition({ motion: 'test', name: 'test-name', config: 'test-config' }), storage);
+        const result = await interpret(motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +245,52 @@ describe('Motion functional handler', () => {
       }
     });
 
+    it('fixture "transition_fade" -> ok', async () => {
+      if (typeof motionHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineTransition({ motion: "O-8", name: "fade", config: "{ \"property\": \"opacity\", \"duration\": 200, \"easing\": \"ease-out\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transition_slide" -> ok', async () => {
+      if (typeof motionHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineTransition({ motion: "O-9", name: "slide", config: "{ \"property\": \"transform\", \"duration\": 300, \"easing\": \"ease-in-out\", \"delay\": 50 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transition_invalid_json" -> invalid', async () => {
+      if (typeof motionHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineTransition({ motion: "O-10", name: "broken", config: "not-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "transition_missing_property" -> invalid', async () => {
+      if (typeof motionHandler.defineTransition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(motionHandler.defineTransition({ motion: "O-11", name: "incomplete", config: "{ \"duration\": 200 }" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof motionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = motionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Motion');
+    });
   });
 
   describe('invariant examples', () => {

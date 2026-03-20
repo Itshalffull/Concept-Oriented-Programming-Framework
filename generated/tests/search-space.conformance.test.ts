@@ -19,7 +19,7 @@ describe('SearchSpace imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchSpaceHandler.index !== 'function') return;
       try {
-        const result = await searchSpaceHandler.index({ scope_id: 'test-scope_id', provider: 'test-provider', entity_id: 'test-entity_id', data: 'test-data' }, storage);
+        const result = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('SearchSpace imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "index_text" -> ok', async () => {
+      if (typeof searchSpaceHandler.index !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "index_semantic" -> ok', async () => {
+      if (typeof searchSpaceHandler.index !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +49,7 @@ describe('SearchSpace imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchSpaceHandler.tombstone !== 'function') return;
       try {
-        const result = await searchSpaceHandler.tombstone({ scope_id: 'test-scope_id', provider: 'test-provider', entity_id: 'test-entity_id' }, storage);
+        const result = await searchSpaceHandler.tombstone({ scope_id: "vs-1", provider: "text", entity_id: "article-42" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('SearchSpace imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "tombstone_existing" -> ok', async () => {
+      if (typeof searchSpaceHandler.tombstone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.tombstone({ scope_id: "vs-1", provider: "text", entity_id: "article-42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tombstone_new" -> ok', async () => {
+      if (typeof searchSpaceHandler.tombstone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.tombstone({ scope_id: "vs-2", provider: "text", entity_id: "article-99" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -51,7 +79,7 @@ describe('SearchSpace imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchSpaceHandler.query !== 'function') return;
       try {
-        const result = await searchSpaceHandler.query({ scope_id: 'test-scope_id', provider: 'test-provider', query_expr: 'test-query_expr' }, storage);
+        const result = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "concept" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('SearchSpace imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "query_text" -> ok', async () => {
+      if (typeof searchSpaceHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "concept" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_missing_scope" -> no_scope', async () => {
+      if (typeof searchSpaceHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.query({ scope_id: "vs-nonexistent", provider: "text", query_expr: "hello" }, storage);
+      expect(result.variant).toBe('no_scope');
     });
 
   });
@@ -67,7 +109,7 @@ describe('SearchSpace imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       try {
-        const result = await searchSpaceHandler.clear({ scope_id: 'test-scope_id' }, storage);
+        const result = await searchSpaceHandler.clear({ scope_id: "vs-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('SearchSpace imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "clear_scope" -> ok', async () => {
+      if (typeof searchSpaceHandler.clear !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.clear({ scope_id: "vs-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_empty" -> ok', async () => {
+      if (typeof searchSpaceHandler.clear !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.clear({ scope_id: "vs-empty" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -83,7 +139,7 @@ describe('SearchSpace imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       try {
-        const result = await searchSpaceHandler.materialize({ scope_id: 'test-scope_id' }, storage);
+        const result = await searchSpaceHandler.materialize({ scope_id: "vs-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('SearchSpace imperative handler', () => {
       }
     });
 
+    it('fixture "materialize_scope" -> ok', async () => {
+      if (typeof searchSpaceHandler.materialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.materialize({ scope_id: "vs-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "materialize_empty" -> ok', async () => {
+      if (typeof searchSpaceHandler.materialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await searchSpaceHandler.materialize({ scope_id: "vs-empty" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof searchSpaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = searchSpaceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SearchSpace');
+    });
   });
 
   describe('invariant examples', () => {

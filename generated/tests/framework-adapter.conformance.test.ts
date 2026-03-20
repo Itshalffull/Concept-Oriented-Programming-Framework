@@ -26,7 +26,7 @@ describe('FrameworkAdapter functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' });
+      const program = frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' });
+      const program = frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' });
+      const program = frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' });
+      const program = frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' });
+      const program = frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
       try {
-        const result = await interpret(frameworkAdapterHandler.register({ renderer: 'test', framework: 'test-framework', version: 'test-version', normalizer: 'test-normalizer', mountFn: 'test-mountFn' }), storage);
+        const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('FrameworkAdapter functional handler', () => {
       }
     });
 
+    it('fixture "register_react" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_registration" -> duplicate', async () => {
+      if (typeof frameworkAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(frameworkAdapterHandler.normalize({ renderer: 'test', props: 'test-props' }), storage);
+        const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,39 @@ describe('FrameworkAdapter functional handler', () => {
       }
     });
 
+    it('fixture "react_delegation" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_framework_passthrough" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof frameworkAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_json_props" -> error', async () => {
+      if (typeof frameworkAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "vue", props: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('mount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' });
+      const program = frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' });
+      const program = frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' });
+      const program = frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' });
+      const program = frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' });
+      const program = frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
       try {
-        const result = await interpret(frameworkAdapterHandler.mount({ renderer: 'test', machine: 'test-machine', target: 'test-target' }), storage);
+        const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('FrameworkAdapter functional handler', () => {
       }
     });
 
+    it('fixture "mount_component" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mount_unregistered" -> error', async () => {
+      if (typeof frameworkAdapterHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.mount({ renderer: "unknown-adapter", machine: "todo-machine", target: "#app" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' });
+      const program = frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
       try {
-        const result = await interpret(frameworkAdapterHandler.render({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('FrameworkAdapter functional handler', () => {
       }
     });
 
+    it('fixture "render_valid" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "render_failure" -> error', async () => {
+      if (typeof frameworkAdapterHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.render({ adapter: "unregistered-adapter", props: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unmount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' });
+      const program = frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' });
+      const program = frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' });
+      const program = frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' });
+      const program = frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('FrameworkAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' });
+      const program = frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
       try {
-        const result = await interpret(frameworkAdapterHandler.unmount({ renderer: 'test', target: 'test-target' }), storage);
+        const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,38 @@ describe('FrameworkAdapter functional handler', () => {
       }
     });
 
+    it('fixture "unmount_existing" -> ok', async () => {
+      if (typeof frameworkAdapterHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unmount_nothing" -> notfound', async () => {
+      if (typeof frameworkAdapterHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof frameworkAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = frameworkAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FrameworkAdapter');
+    });
   });
 
   describe('invariant examples', () => {
@@ -333,7 +435,7 @@ describe('FrameworkAdapter functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), normalizer: fc.string({ minLength: 1, maxLength: 50 }), mountFn: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('normalize'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -364,7 +466,7 @@ describe('FrameworkAdapter functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({ renderer: fc.string(), framework: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), normalizer: fc.string({ minLength: 1, maxLength: 50 }), mountFn: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('normalize'), input: fc.record({ renderer: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('normalize'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('mount'), input: fc.record({ renderer: fc.string(), machine: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('render'), input: fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unmount'), input: fc.record({ renderer: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),

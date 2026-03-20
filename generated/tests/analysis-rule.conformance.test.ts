@@ -26,7 +26,7 @@ describe('AnalysisRule functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' });
+      const program = analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' });
+      const program = analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' });
+      const program = analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' });
+      const program = analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' });
+      const program = analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AnalysisRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisRuleHandler.create !== 'function') return;
       try {
-        const result = await interpret(analysisRuleHandler.create({ name: 'test-name', engine: 'test-engine', source: 'test-source', severity: 'test-severity', category: 'test-category' }), storage);
+        const result = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('AnalysisRule functional handler', () => {
       }
     });
 
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof analysisRuleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pattern_match" -> ok', async () => {
+      if (typeof analysisRuleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_engine" -> invalidSyntax', async () => {
+      if (typeof analysisRuleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.create({ name: "test-rule", engine: "unknown-engine", source: "[]", severity: "info", category: "security" }), storage);
+      expect(result.variant).toBe('invalidSyntax');
+    });
+
+    it('fixture "bad_source" -> invalidSyntax', async () => {
+      if (typeof analysisRuleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.create({ name: "test-rule", engine: "datalog", source: "not-valid-json", severity: "info", category: "security" }), storage);
+      expect(result.variant).toBe('invalidSyntax');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisRuleHandler.evaluate({ rule: 'test' });
+      const program = analysisRuleHandler.evaluate({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisRuleHandler.evaluate({ rule: 'test' });
+      const program = analysisRuleHandler.evaluate({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisRuleHandler.evaluate({ rule: 'test' });
+      const program = analysisRuleHandler.evaluate({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisRuleHandler.evaluate({ rule: 'test' });
+      const program = analysisRuleHandler.evaluate({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisRuleHandler.evaluate({ rule: 'test' });
+      const program = analysisRuleHandler.evaluate({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('AnalysisRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisRuleHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(analysisRuleHandler.evaluate({ rule: 'test' }), storage);
+        const result = await interpret(analysisRuleHandler.evaluate({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('AnalysisRule functional handler', () => {
       }
     });
 
+    it('fixture "valid_evaluate" -> ok', async () => {
+      if (typeof analysisRuleHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.evaluate({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_rule" -> evaluationError', async () => {
+      if (typeof analysisRuleHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.evaluate({ rule: "analysis-rule-nonexistent" }), storage);
+      expect(result.variant).toBe('evaluationError');
+    });
+
   });
 
   describe('evaluateAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisRuleHandler.evaluateAll({ category: 'test-category' });
+      const program = analysisRuleHandler.evaluateAll({ category: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisRuleHandler.evaluateAll({ category: 'test-category' });
+      const program = analysisRuleHandler.evaluateAll({ category: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisRuleHandler.evaluateAll({ category: 'test-category' });
+      const program = analysisRuleHandler.evaluateAll({ category: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisRuleHandler.evaluateAll({ category: 'test-category' });
+      const program = analysisRuleHandler.evaluateAll({ category: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisRuleHandler.evaluateAll({ category: 'test-category' });
+      const program = analysisRuleHandler.evaluateAll({ category: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('AnalysisRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
       try {
-        const result = await interpret(analysisRuleHandler.evaluateAll({ category: 'test-category' }), storage);
+        const result = await interpret(analysisRuleHandler.evaluateAll({ category: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('AnalysisRule functional handler', () => {
       }
     });
 
+    it('fixture "all_rules" -> ok', async () => {
+      if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.evaluateAll({ category: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "by_category" -> ok', async () => {
+      if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.evaluateAll({ category: "dead-code" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisRuleHandler.get({ rule: 'test' });
+      const program = analysisRuleHandler.get({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisRuleHandler.get({ rule: 'test' });
+      const program = analysisRuleHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisRuleHandler.get({ rule: 'test' });
+      const program = analysisRuleHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisRuleHandler.get({ rule: 'test' });
+      const program = analysisRuleHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('AnalysisRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisRuleHandler.get({ rule: 'test' });
+      const program = analysisRuleHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('AnalysisRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisRuleHandler.get !== 'function') return;
       try {
-        const result = await interpret(analysisRuleHandler.get({ rule: 'test' }), storage);
+        const result = await interpret(analysisRuleHandler.get({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('AnalysisRule functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof analysisRuleHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.get({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_get" -> notfound', async () => {
+      if (typeof analysisRuleHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisRuleHandler.get({ rule: "analysis-rule-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof analysisRuleHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = analysisRuleHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AnalysisRule');
+    });
   });
 
   describe('invariant examples', () => {

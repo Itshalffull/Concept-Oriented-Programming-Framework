@@ -26,7 +26,7 @@ describe('Enricher functional handler', () => {
 
   describe('enrich', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' });
+      const program = enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' });
+      const program = enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' });
+      const program = enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' });
+      const program = enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' });
+      const program = enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Enricher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enricherHandler.enrich !== 'function') return;
       try {
-        const result = await interpret(enricherHandler.enrich({ itemId: 'test-itemId', enricherId: 'test-enricherId' }), storage);
+        const result = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Enricher functional handler', () => {
       }
     });
 
+    it('fixture "enrich_auto_tag" -> ok', async () => {
+      if (typeof enricherHandler.enrich !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "auto_tag" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enrich_ocr" -> ok', async () => {
+      if (typeof enricherHandler.enrich !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.enrich({ itemId: "item-2", enricherId: "ocr_extract" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enrich_missing" -> notfound', async () => {
+      if (typeof enricherHandler.enrich !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.enrich({ itemId: "item-1", enricherId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('suggest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.suggest({ itemId: 'test-itemId' });
+      const program = enricherHandler.suggest({ itemId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.suggest({ itemId: 'test-itemId' });
+      const program = enricherHandler.suggest({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.suggest({ itemId: 'test-itemId' });
+      const program = enricherHandler.suggest({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.suggest({ itemId: 'test-itemId' });
+      const program = enricherHandler.suggest({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.suggest({ itemId: 'test-itemId' });
+      const program = enricherHandler.suggest({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Enricher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enricherHandler.suggest !== 'function') return;
       try {
-        const result = await interpret(enricherHandler.suggest({ itemId: 'test-itemId' }), storage);
+        const result = await interpret(enricherHandler.suggest({ itemId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Enricher functional handler', () => {
       }
     });
 
+    it('fixture "suggest_for_item" -> ok', async () => {
+      if (typeof enricherHandler.suggest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.suggest({ itemId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suggest_missing" -> notfound', async () => {
+      if (typeof enricherHandler.suggest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.suggest({ itemId: "item-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('accept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Enricher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enricherHandler.accept !== 'function') return;
       try {
-        const result = await interpret(enricherHandler.accept({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' }), storage);
+        const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Enricher functional handler', () => {
       }
     });
 
+    it('fixture "accept_enrichment" -> ok', async () => {
+      if (typeof enricherHandler.accept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "accept_missing" -> notfound', async () => {
+      if (typeof enricherHandler.accept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.accept({ itemId: "item-1", enrichmentId: "enr-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('reject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' });
+      const program = enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Enricher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enricherHandler.reject !== 'function') return;
       try {
-        const result = await interpret(enricherHandler.reject({ itemId: 'test-itemId', enrichmentId: 'test-enrichmentId' }), storage);
+        const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Enricher functional handler', () => {
       }
     });
 
+    it('fixture "reject_enrichment" -> ok', async () => {
+      if (typeof enricherHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reject_missing" -> notfound', async () => {
+      if (typeof enricherHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.reject({ itemId: "item-1", enrichmentId: "enr-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('refreshStale', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enricherHandler.refreshStale({ olderThan: 'test-olderThan' });
+      const program = enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Enricher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enricherHandler.refreshStale({ olderThan: 'test-olderThan' });
+      const program = enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enricherHandler.refreshStale({ olderThan: 'test-olderThan' });
+      const program = enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enricherHandler.refreshStale({ olderThan: 'test-olderThan' });
+      const program = enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Enricher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enricherHandler.refreshStale({ olderThan: 'test-olderThan' });
+      const program = enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Enricher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enricherHandler.refreshStale !== 'function') return;
       try {
-        const result = await interpret(enricherHandler.refreshStale({ olderThan: 'test-olderThan' }), storage);
+        const result = await interpret(enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,31 @@ describe('Enricher functional handler', () => {
       }
     });
 
+    it('fixture "refresh_30d" -> ok', async () => {
+      if (typeof enricherHandler.refreshStale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enricherHandler.refreshStale({ olderThan: "2026-02-18T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof enricherHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = enricherHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Enricher');
+    });
   });
 
   describe('invariant examples', () => {

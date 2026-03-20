@@ -26,7 +26,7 @@ describe('ActionGuide functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' });
+      const program = actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ActionGuide functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' });
+      const program = actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' });
+      const program = actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' });
+      const program = actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ActionGuide functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' });
+      const program = actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ActionGuide functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionGuideHandler.define !== 'function') return;
       try {
-        const result = await interpret(actionGuideHandler.define({ concept: 'test-concept', steps: 'test', content: 'test-content' }), storage);
+        const result = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ActionGuide functional handler', () => {
       }
     });
 
+    it('fixture "with_content" -> ok', async () => {
+      if (typeof actionGuideHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal" -> ok', async () => {
+      if (typeof actionGuideHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.define({ concept: "Widget", steps: ["create"], content: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_steps" -> emptySteps', async () => {
+      if (typeof actionGuideHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: [], content: "{}" }), storage);
+      expect(result.variant).toBe('emptySteps');
+    });
+
   });
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = actionGuideHandler.render({ workflow: 'test', format: 'test-format' });
+      const program = actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ActionGuide functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = actionGuideHandler.render({ workflow: 'test', format: 'test-format' });
+      const program = actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = actionGuideHandler.render({ workflow: 'test', format: 'test-format' });
+      const program = actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = actionGuideHandler.render({ workflow: 'test', format: 'test-format' });
+      const program = actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ActionGuide functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = actionGuideHandler.render({ workflow: 'test', format: 'test-format' });
+      const program = actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ActionGuide functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionGuideHandler.render !== 'function') return;
       try {
-        const result = await interpret(actionGuideHandler.render({ workflow: 'test', format: 'test-format' }), storage);
+        const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,45 @@ describe('ActionGuide functional handler', () => {
       }
     });
 
+    it('fixture "skill_md_format" -> ok', async () => {
+      if (typeof actionGuideHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cli_help_format" -> ok', async () => {
+      if (typeof actionGuideHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "cli-help" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported_format" -> unknownFormat', async () => {
+      if (typeof actionGuideHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "yaml-doc" }), storage);
+      expect(result.variant).toBe('unknownFormat');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof actionGuideHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = actionGuideHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ActionGuide');
+    });
   });
 
   describe('invariant examples', () => {

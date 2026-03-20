@@ -19,7 +19,7 @@ describe('EffectHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof effectHandlerHandler.register !== 'function') return;
       try {
-        const result = await effectHandlerHandler.register({ protocol: 'test-protocol', operation: 'test-operation' }, storage);
+        const result = await effectHandlerHandler.register({ protocol: "http", operation: "GET" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('EffectHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_http_get" -> ok', async () => {
+      if (typeof effectHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.register({ protocol: "http", operation: "GET" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_protocol" -> error', async () => {
+      if (typeof effectHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.register({ protocol: "", operation: "GET" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('EffectHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof effectHandlerHandler.resolve !== 'function') return;
       try {
-        const result = await effectHandlerHandler.resolve({ protocol: 'test-protocol', operation: 'test-operation' }, storage);
+        const result = await effectHandlerHandler.resolve({ protocol: "http", operation: "GET" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('EffectHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_http_get" -> ok', async () => {
+      if (typeof effectHandlerHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.resolve({ protocol: "http", operation: "GET" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> error', async () => {
+      if (typeof effectHandlerHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.resolve({ protocol: "grpc", operation: "invoke" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('EffectHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof effectHandlerHandler.listByProtocol !== 'function') return;
       try {
-        const result = await effectHandlerHandler.listByProtocol({ protocol: 'test-protocol' }, storage);
+        const result = await effectHandlerHandler.listByProtocol({ protocol: "http" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('EffectHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_http" -> ok', async () => {
+      if (typeof effectHandlerHandler.listByProtocol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.listByProtocol({ protocol: "http" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> error', async () => {
+      if (typeof effectHandlerHandler.listByProtocol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.listByProtocol({ protocol: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('EffectHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof effectHandlerHandler.deregister !== 'function') return;
       try {
-        const result = await effectHandlerHandler.deregister({ protocol: 'test-protocol', operation: 'test-operation' }, storage);
+        const result = await effectHandlerHandler.deregister({ protocol: "http", operation: "GET" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('EffectHandler imperative handler', () => {
       }
     });
 
+    it('fixture "deregister_http_get" -> ok', async () => {
+      if (typeof effectHandlerHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.deregister({ protocol: "http", operation: "GET" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deregister_empty" -> error', async () => {
+      if (typeof effectHandlerHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await effectHandlerHandler.deregister({ protocol: "", operation: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof effectHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = effectHandlerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EffectHandler');
+    });
   });
 
   describe('invariant examples', () => {

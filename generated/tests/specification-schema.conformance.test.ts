@@ -19,7 +19,7 @@ describe('SpecificationSchema imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specificationSchemaHandler.define !== 'function') return;
       try {
-        const result = await specificationSchemaHandler.define({ name: 'test-name', category: 'test-category', pattern_type: 'test-pattern_type', template_text: 'test-template_text', formal_language: 'test-formal_language', parameters: 'test' }, storage);
+        const result = await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('SpecificationSchema imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof specificationSchemaHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_category" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.define({ name: "test-schema", category: "unknown_category", pattern_type: "absence", template_text: "G(p)", formal_language: "ltl", parameters: "[]" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "missing_name" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.define({ name: "", category: "dwyer_pattern", pattern_type: "absence", template_text: "G(p)", formal_language: "ltl", parameters: "[]" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +56,7 @@ describe('SpecificationSchema imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specificationSchemaHandler.instantiate !== 'function') return;
       try {
-        const result = await specificationSchemaHandler.instantiate({ schema: 'test', parameter_values: 'test', target_symbol: 'test-target_symbol' }, storage);
+        const result = await specificationSchemaHandler.instantiate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,27 @@ describe('SpecificationSchema imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_instantiate" -> ok', async () => {
+      if (typeof specificationSchemaHandler.instantiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.instantiate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_param" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.instantiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.instantiate({ schema_id: "ss-abc123", param_values: "{}" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "bad_json" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.instantiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.instantiate({ schema_id: "ss-abc123", param_values: "not-json" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -51,7 +93,7 @@ describe('SpecificationSchema imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specificationSchemaHandler.validate !== 'function') return;
       try {
-        const result = await specificationSchemaHandler.validate({ schema: 'test', parameter_values: 'test' }, storage);
+        const result = await specificationSchemaHandler.validate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +101,20 @@ describe('SpecificationSchema imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof specificationSchemaHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.validate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_param_values" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.validate({ schema_id: "ss-abc123", param_values: "not-json" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -67,7 +123,7 @@ describe('SpecificationSchema imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
       try {
-        const result = await specificationSchemaHandler.list_by_category({ category: 'test-category' }, storage);
+        const result = await specificationSchemaHandler.list_by_category({ category: "smart_contract" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +131,20 @@ describe('SpecificationSchema imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_list" -> ok', async () => {
+      if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.list_by_category({ category: "smart_contract" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_category" -> ok', async () => {
+      if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.list_by_category({ category: "nonexistent_category" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -83,7 +153,7 @@ describe('SpecificationSchema imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof specificationSchemaHandler.search !== 'function') return;
       try {
-        const result = await specificationSchemaHandler.search({ query: 'test-query' }, storage);
+        const result = await specificationSchemaHandler.search({ query: "reentrancy" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +163,37 @@ describe('SpecificationSchema imperative handler', () => {
       }
     });
 
+    it('fixture "valid_search" -> ok', async () => {
+      if (typeof specificationSchemaHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.search({ query: "reentrancy" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_query" -> invalid', async () => {
+      if (typeof specificationSchemaHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await specificationSchemaHandler.search({ query: "" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof specificationSchemaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = specificationSchemaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SpecificationSchema');
+    });
   });
 
   describe('invariant examples', () => {

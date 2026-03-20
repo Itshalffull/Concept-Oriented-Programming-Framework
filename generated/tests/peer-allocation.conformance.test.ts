@@ -26,7 +26,7 @@ describe('PeerAllocation functional handler', () => {
 
   describe('openRound', () => {
     it('builds a valid StorageProgram', () => {
-      const program = peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 });
+      const program = peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 });
+      const program = peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 });
+      const program = peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 });
+      const program = peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 });
+      const program = peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PeerAllocation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof peerAllocationHandler.openRound !== 'function') return;
       try {
-        const result = await interpret(peerAllocationHandler.openRound({ budget: 1, deadlineDays: 1 }), storage);
+        const result = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('PeerAllocation functional handler', () => {
       }
     });
 
+    it('fixture "open_weekly_round" -> ok', async () => {
+      if (typeof peerAllocationHandler.openRound !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.openRound({ budget: "100", deadlineDays: "7.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "open_zero_budget" -> error', async () => {
+      if (typeof peerAllocationHandler.openRound !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.openRound({ budget: "0", deadlineDays: "7.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('allocate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' });
+      const program = peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' });
+      const program = peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' });
+      const program = peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' });
+      const program = peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' });
+      const program = peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('PeerAllocation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof peerAllocationHandler.allocate !== 'function') return;
       try {
-        const result = await interpret(peerAllocationHandler.allocate({ round: 'test', allocator: 'test-allocator', recipient: 'test-recipient', amount: 1, note: 'test' }), storage);
+        const result = await interpret(peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('PeerAllocation functional handler', () => {
       }
     });
 
+    it('fixture "allocate_to_peer" -> ok', async () => {
+      if (typeof peerAllocationHandler.allocate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "bob", amount: "30", note: "Great code review" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "allocate_to_self" -> error', async () => {
+      if (typeof peerAllocationHandler.allocate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.allocate({ round: "peer-alloc-001", allocator: "alice", recipient: "alice", amount: "10" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('finalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = peerAllocationHandler.finalize({ round: 'test' });
+      const program = peerAllocationHandler.finalize({ round: "peer-alloc-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = peerAllocationHandler.finalize({ round: 'test' });
+      const program = peerAllocationHandler.finalize({ round: "peer-alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = peerAllocationHandler.finalize({ round: 'test' });
+      const program = peerAllocationHandler.finalize({ round: "peer-alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = peerAllocationHandler.finalize({ round: 'test' });
+      const program = peerAllocationHandler.finalize({ round: "peer-alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('PeerAllocation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = peerAllocationHandler.finalize({ round: 'test' });
+      const program = peerAllocationHandler.finalize({ round: "peer-alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('PeerAllocation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof peerAllocationHandler.finalize !== 'function') return;
       try {
-        const result = await interpret(peerAllocationHandler.finalize({ round: 'test' }), storage);
+        const result = await interpret(peerAllocationHandler.finalize({ round: "peer-alloc-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('PeerAllocation functional handler', () => {
       }
     });
 
+    it('fixture "finalize_round" -> ok', async () => {
+      if (typeof peerAllocationHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.finalize({ round: "peer-alloc-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "finalize_nonexistent" -> error', async () => {
+      if (typeof peerAllocationHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(peerAllocationHandler.finalize({ round: "peer-alloc-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof peerAllocationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = peerAllocationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PeerAllocation');
+    });
   });
 
   describe('invariant examples', () => {

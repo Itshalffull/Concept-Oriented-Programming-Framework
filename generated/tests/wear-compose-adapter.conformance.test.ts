@@ -26,7 +26,7 @@ describe('WearComposeAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WearComposeAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WearComposeAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WearComposeAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('WearComposeAdapter functional handler', () => {
       }
     });
 
+    it('fixture "button_with_click" -> ok', async () => {
+      if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_scroll_and_aria" -> ok', async () => {
+      if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-list", props: "{ \"onscroll\": \"handleRotary\", \"aria-label\": \"Items\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof wearComposeAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(wearComposeAdapterHandler.normalize({ adapter: "wear-main", props: "bad json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof wearComposeAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = wearComposeAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WearComposeAdapter');
+    });
   });
 
   describe('invariant examples', () => {

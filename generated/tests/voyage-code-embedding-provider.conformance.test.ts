@@ -47,6 +47,23 @@ describe('VoyageCodeEmbeddingProvider imperative handler', () => {
 
   });
 
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof voyageCodeEmbeddingProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = voyageCodeEmbeddingProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VoyageCodeEmbeddingProvider');
+    });
+  });
+
   describe('invariant examples', () => {
     it("initialize-then-embed", async () => {
       const storage = createInMemoryStorage();

@@ -26,7 +26,7 @@ describe('ExposedFilter functional handler', () => {
 
   describe('expose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' });
+      const program = exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' });
+      const program = exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' });
+      const program = exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' });
+      const program = exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' });
+      const program = exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ExposedFilter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof exposedFilterHandler.expose !== 'function') return;
       try {
-        const result = await interpret(exposedFilterHandler.expose({ filter: 'test', fieldName: 'test-fieldName', operator: 'test-operator', defaultValue: 'test-defaultValue' }), storage);
+        const result = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ExposedFilter functional handler', () => {
       }
     });
 
+    it('fixture "valid_expose" -> ok', async () => {
+      if (typeof exposedFilterHandler.expose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.expose({ filter: "status-filter", fieldName: "status", operator: "eq", defaultValue: "active" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_field_name" -> error', async () => {
+      if (typeof exposedFilterHandler.expose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.expose({ filter: "bad-filter", fieldName: "", operator: "eq", defaultValue: "draft" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('collectInput', () => {
     it('builds a valid StorageProgram', () => {
-      const program = exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' });
+      const program = exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' });
+      const program = exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' });
+      const program = exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' });
+      const program = exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' });
+      const program = exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ExposedFilter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof exposedFilterHandler.collectInput !== 'function') return;
       try {
-        const result = await interpret(exposedFilterHandler.collectInput({ filter: 'test', value: 'test-value' }), storage);
+        const result = await interpret(exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ExposedFilter functional handler', () => {
       }
     });
 
+    it('fixture "valid_input" -> ok', async () => {
+      if (typeof exposedFilterHandler.collectInput !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.collectInput({ filter: "status-filter", value: "archived" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_value" -> error', async () => {
+      if (typeof exposedFilterHandler.collectInput !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.collectInput({ filter: "status-filter", value: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('applyToQuery', () => {
     it('builds a valid StorageProgram', () => {
-      const program = exposedFilterHandler.applyToQuery({ filter: 'test' });
+      const program = exposedFilterHandler.applyToQuery({ filter: "status-filter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = exposedFilterHandler.applyToQuery({ filter: 'test' });
+      const program = exposedFilterHandler.applyToQuery({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = exposedFilterHandler.applyToQuery({ filter: 'test' });
+      const program = exposedFilterHandler.applyToQuery({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = exposedFilterHandler.applyToQuery({ filter: 'test' });
+      const program = exposedFilterHandler.applyToQuery({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = exposedFilterHandler.applyToQuery({ filter: 'test' });
+      const program = exposedFilterHandler.applyToQuery({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ExposedFilter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof exposedFilterHandler.applyToQuery !== 'function') return;
       try {
-        const result = await interpret(exposedFilterHandler.applyToQuery({ filter: 'test' }), storage);
+        const result = await interpret(exposedFilterHandler.applyToQuery({ filter: "status-filter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ExposedFilter functional handler', () => {
       }
     });
 
+    it('fixture "apply_existing" -> ok', async () => {
+      if (typeof exposedFilterHandler.applyToQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.applyToQuery({ filter: "status-filter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_nonexistent" -> error', async () => {
+      if (typeof exposedFilterHandler.applyToQuery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.applyToQuery({ filter: "no-such-filter" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resetToDefaults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = exposedFilterHandler.resetToDefaults({ filter: 'test' });
+      const program = exposedFilterHandler.resetToDefaults({ filter: "status-filter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = exposedFilterHandler.resetToDefaults({ filter: 'test' });
+      const program = exposedFilterHandler.resetToDefaults({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = exposedFilterHandler.resetToDefaults({ filter: 'test' });
+      const program = exposedFilterHandler.resetToDefaults({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = exposedFilterHandler.resetToDefaults({ filter: 'test' });
+      const program = exposedFilterHandler.resetToDefaults({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ExposedFilter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = exposedFilterHandler.resetToDefaults({ filter: 'test' });
+      const program = exposedFilterHandler.resetToDefaults({ filter: "status-filter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ExposedFilter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof exposedFilterHandler.resetToDefaults !== 'function') return;
       try {
-        const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: 'test' }), storage);
+        const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: "status-filter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('ExposedFilter functional handler', () => {
       }
     });
 
+    it('fixture "reset_existing" -> ok', async () => {
+      if (typeof exposedFilterHandler.resetToDefaults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: "status-filter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reset_nonexistent" -> error', async () => {
+      if (typeof exposedFilterHandler.resetToDefaults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(exposedFilterHandler.resetToDefaults({ filter: "ghost-filter" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof exposedFilterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = exposedFilterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ExposedFilter');
+    });
   });
 
   describe('invariant examples', () => {

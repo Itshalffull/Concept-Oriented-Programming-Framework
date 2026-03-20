@@ -26,7 +26,7 @@ describe('DeploymentHealth functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' });
+      const program = deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' });
+      const program = deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' });
+      const program = deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' });
+      const program = deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' });
+      const program = deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.record !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.record({ deployment: 'test-deployment', snapshot: 'test-snapshot' }), storage);
+        const result = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "record_healthy" -> ok', async () => {
+      if (typeof deploymentHealthHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.record({ deployment: "conduit-prod", snapshot: "{\"runtimeStatuses\":[{\"name\":\"api\",\"status\":\"healthy\"}],\"alerts\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_minimal" -> ok', async () => {
+      if (typeof deploymentHealthHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.record({ deployment: "conduit-staging", snapshot: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_deployment" -> error', async () => {
+      if (typeof deploymentHealthHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.record({ deployment: "", snapshot: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('runtimeHealth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.runtimeHealth !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "runtime_health_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.runtimeHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "runtime_health_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.runtimeHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.runtimeHealth({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('transportHealth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.transportHealth !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.transportHealth({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "transport_health_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.transportHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.transportHealth({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transport_health_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.transportHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.transportHealth({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('storageHealth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.storageHealth !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.storageHealth({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "storage_health_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.storageHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.storageHealth({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "storage_health_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.storageHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.storageHealth({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('syncDelivery', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.syncDelivery !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.syncDelivery({ deployment: 'test-deployment', since: 'test-since' }), storage);
+        const result = await interpret(deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "sync_delivery_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.syncDelivery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.syncDelivery({ deployment: "conduit-prod", since: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_delivery_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.syncDelivery !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.syncDelivery({ deployment: "", since: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('conceptInstances', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.conceptInstances !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.conceptInstances({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +447,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "instances_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.conceptInstances !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.conceptInstances({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "instances_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.conceptInstances !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.conceptInstances({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('crossRuntimeLatency', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +473,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +500,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +509,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.crossRuntimeLatency !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +519,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "latency_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.crossRuntimeLatency !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "latency_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.crossRuntimeLatency !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.crossRuntimeLatency({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('hotspots', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 });
+      const program = deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +545,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 });
+      const program = deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 });
+      const program = deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 });
+      const program = deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +572,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 });
+      const program = deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +581,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.hotspots !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.hotspots({ deployment: 'test-deployment', since: 'test-since', topN: 1 }), storage);
+        const result = await interpret(deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +591,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "hotspots_top5" -> ok', async () => {
+      if (typeof deploymentHealthHandler.hotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.hotspots({ deployment: "conduit-prod", since: "", topN: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "hotspots_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.hotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.hotspots({ deployment: "", since: "", topN: "10" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('correlateWithErrors', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +617,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +644,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' });
+      const program = deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +653,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.correlateWithErrors !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.correlateWithErrors({ deployment: 'test-deployment', since: 'test-since' }), storage);
+        const result = await interpret(deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +663,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "correlate_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.correlateWithErrors !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.correlateWithErrors({ deployment: "conduit-prod", since: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "correlate_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.correlateWithErrors !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.correlateWithErrors({ deployment: "", since: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('compareWindows', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' });
+      const program = deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +689,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' });
+      const program = deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' });
+      const program = deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' });
+      const program = deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +716,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' });
+      const program = deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +725,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.compareWindows !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.compareWindows({ deployment: 'test-deployment', windowA: 'test-windowA', windowB: 'test-windowB' }), storage);
+        const result = await interpret(deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +735,25 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "compare_windows" -> ok', async () => {
+      if (typeof deploymentHealthHandler.compareWindows !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.compareWindows({ deployment: "conduit-prod", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_empty_deploy" -> error', async () => {
+      if (typeof deploymentHealthHandler.compareWindows !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.compareWindows({ deployment: "", windowA: "2026-03-01T00:00:00Z/2026-03-07T23:59:59Z", windowB: "2026-03-08T00:00:00Z/2026-03-14T23:59:59Z" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('sloStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +761,21 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +788,7 @@ describe('DeploymentHealth functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' });
+      const program = deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +797,7 @@ describe('DeploymentHealth functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentHealthHandler.sloStatus !== 'function') return;
       try {
-        const result = await interpret(deploymentHealthHandler.sloStatus({ deployment: 'test-deployment' }), storage);
+        const result = await interpret(deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,6 +807,38 @@ describe('DeploymentHealth functional handler', () => {
       }
     });
 
+    it('fixture "slo_prod" -> ok', async () => {
+      if (typeof deploymentHealthHandler.sloStatus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.sloStatus({ deployment: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "slo_empty" -> error', async () => {
+      if (typeof deploymentHealthHandler.sloStatus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentHealthHandler.sloStatus({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deploymentHealthHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deploymentHealthHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeploymentHealth');
+    });
   });
 
   describe('invariant examples', () => {

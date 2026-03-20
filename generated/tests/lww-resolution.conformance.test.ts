@@ -80,11 +80,18 @@ describe('LWWResolution functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof lWWResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lWWResolutionHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('attemptResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('LWWResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('LWWResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('LWWResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
       try {
-        const result = await interpret(lWWResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' }), storage);
+        const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('LWWResolution functional handler', () => {
       }
     });
 
+    it('fixture "resolve_later_wins" -> ok', async () => {
+      if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\", \"value\": \"alice\"}", v2: "{\"_ts\": \"2026-01-15T11:00:00Z\", \"value\": \"bob\"}", context: "document-field" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_identical_timestamps" -> error', async () => {
+      if (typeof lWWResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lWWResolutionHandler.attemptResolve({ base: null, v1: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", v2: "{\"_ts\": \"2026-01-15T10:00:00Z\"}", context: "field" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lWWResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lWWResolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LWWResolution');
+    });
   });
 
   describe('invariant examples', () => {

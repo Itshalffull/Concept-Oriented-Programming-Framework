@@ -26,7 +26,7 @@ describe('ClaudeMdTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ClaudeMdTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof claudeMdTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(claudeMdTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ClaudeMdTarget functional handler', () => {
       }
     });
 
+    it('fixture "generate_project" -> ok', async () => {
+      if (typeof claudeMdTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_with_conventions" -> ok', async () => {
+      if (typeof claudeMdTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_empty_projection" -> error', async () => {
+      if (typeof claudeMdTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = claudeMdTargetHandler.validate({ document: 'test' });
+      const program = claudeMdTargetHandler.validate({ document: "claude-md-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = claudeMdTargetHandler.validate({ document: 'test' });
+      const program = claudeMdTargetHandler.validate({ document: "claude-md-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = claudeMdTargetHandler.validate({ document: 'test' });
+      const program = claudeMdTargetHandler.validate({ document: "claude-md-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = claudeMdTargetHandler.validate({ document: 'test' });
+      const program = claudeMdTargetHandler.validate({ document: "claude-md-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = claudeMdTargetHandler.validate({ document: 'test' });
+      const program = claudeMdTargetHandler.validate({ document: "claude-md-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ClaudeMdTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof claudeMdTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(claudeMdTargetHandler.validate({ document: 'test' }), storage);
+        const result = await interpret(claudeMdTargetHandler.validate({ document: "claude-md-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('ClaudeMdTarget functional handler', () => {
       }
     });
 
+    it('fixture "validate_valid" -> ok', async () => {
+      if (typeof claudeMdTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.validate({ document: "claude-md-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_not_found" -> error', async () => {
+      if (typeof claudeMdTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.validate({ document: "claude-md-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = claudeMdTargetHandler.preview({ config: 'test-config' });
+      const program = claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = claudeMdTargetHandler.preview({ config: 'test-config' });
+      const program = claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = claudeMdTargetHandler.preview({ config: 'test-config' });
+      const program = claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = claudeMdTargetHandler.preview({ config: 'test-config' });
+      const program = claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ClaudeMdTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = claudeMdTargetHandler.preview({ config: 'test-config' });
+      const program = claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ClaudeMdTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof claudeMdTargetHandler.preview !== 'function') return;
       try {
-        const result = await interpret(claudeMdTargetHandler.preview({ config: 'test-config' }), storage);
+        const result = await interpret(claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('ClaudeMdTarget functional handler', () => {
       }
     });
 
+    it('fixture "preview_full" -> ok', async () => {
+      if (typeof claudeMdTargetHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_empty" -> error', async () => {
+      if (typeof claudeMdTargetHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(claudeMdTargetHandler.preview({ config: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof claudeMdTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = claudeMdTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ClaudeMdTarget');
+    });
   });
 
   describe('invariant examples', () => {

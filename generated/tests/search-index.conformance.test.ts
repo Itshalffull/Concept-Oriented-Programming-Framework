@@ -26,7 +26,7 @@ describe('SearchIndex functional handler', () => {
 
   describe('createIndex', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.createIndex({ index: 'test', config: 'test-config' });
+      const program = searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.createIndex({ index: 'test', config: 'test-config' });
+      const program = searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.createIndex({ index: 'test', config: 'test-config' });
+      const program = searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.createIndex({ index: 'test', config: 'test-config' });
+      const program = searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.createIndex({ index: 'test', config: 'test-config' });
+      const program = searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.createIndex !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.createIndex({ index: 'test', config: 'test-config' }), storage);
+        const result = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "create_articles_index" -> ok', async () => {
+      if (typeof searchIndexHandler.createIndex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate_index" -> error', async () => {
+      if (typeof searchIndexHandler.createIndex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.createIndex({ index: "articles", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('indexItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' });
+      const program = searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' });
+      const program = searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' });
+      const program = searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' });
+      const program = searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' });
+      const program = searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.indexItem !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.indexItem({ index: 'test', item: 'test-item', data: 'test-data' }), storage);
+        const result = await interpret(searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "index_article" -> ok', async () => {
+      if (typeof searchIndexHandler.indexItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.indexItem({ index: "articles", item: "doc-1", data: "Introduction to functional programming" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "index_missing_index" -> error', async () => {
+      if (typeof searchIndexHandler.indexItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.indexItem({ index: "nonexistent", item: "doc-1", data: "Test data" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.removeItem({ index: 'test', item: 'test-item' });
+      const program = searchIndexHandler.removeItem({ index: "articles", item: "doc-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.removeItem({ index: 'test', item: 'test-item' });
+      const program = searchIndexHandler.removeItem({ index: "articles", item: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.removeItem({ index: 'test', item: 'test-item' });
+      const program = searchIndexHandler.removeItem({ index: "articles", item: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.removeItem({ index: 'test', item: 'test-item' });
+      const program = searchIndexHandler.removeItem({ index: "articles", item: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.removeItem({ index: 'test', item: 'test-item' });
+      const program = searchIndexHandler.removeItem({ index: "articles", item: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.removeItem !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.removeItem({ index: 'test', item: 'test-item' }), storage);
+        const result = await interpret(searchIndexHandler.removeItem({ index: "articles", item: "doc-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing_item" -> ok', async () => {
+      if (typeof searchIndexHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.removeItem({ index: "articles", item: "doc-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_from_missing_index" -> error', async () => {
+      if (typeof searchIndexHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.removeItem({ index: "nonexistent", item: "doc-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('search', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.search({ index: 'test', query: 'test-query' });
+      const program = searchIndexHandler.search({ index: "articles", query: "functional programming" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.search({ index: 'test', query: 'test-query' });
+      const program = searchIndexHandler.search({ index: "articles", query: "functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.search({ index: 'test', query: 'test-query' });
+      const program = searchIndexHandler.search({ index: "articles", query: "functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.search({ index: 'test', query: 'test-query' });
+      const program = searchIndexHandler.search({ index: "articles", query: "functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.search({ index: 'test', query: 'test-query' });
+      const program = searchIndexHandler.search({ index: "articles", query: "functional programming" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.search !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.search({ index: 'test', query: 'test-query' }), storage);
+        const result = await interpret(searchIndexHandler.search({ index: "articles", query: "functional programming" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "search_functional" -> ok', async () => {
+      if (typeof searchIndexHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.search({ index: "articles", query: "functional programming" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "search_missing_index" -> error', async () => {
+      if (typeof searchIndexHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.search({ index: "nonexistent", query: "test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addProcessor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' });
+      const program = searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' });
+      const program = searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' });
+      const program = searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' });
+      const program = searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' });
+      const program = searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.addProcessor !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.addProcessor({ index: 'test', processor: 'test-processor' }), storage);
+        const result = await interpret(searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "add_lowercase_processor" -> ok', async () => {
+      if (typeof searchIndexHandler.addProcessor !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.addProcessor({ index: "articles", processor: "lowercase" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_processor_missing_index" -> error', async () => {
+      if (typeof searchIndexHandler.addProcessor !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.addProcessor({ index: "nonexistent", processor: "trim" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reindex', () => {
     it('builds a valid StorageProgram', () => {
-      const program = searchIndexHandler.reindex({ index: 'test' });
+      const program = searchIndexHandler.reindex({ index: "articles" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = searchIndexHandler.reindex({ index: 'test' });
+      const program = searchIndexHandler.reindex({ index: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = searchIndexHandler.reindex({ index: 'test' });
+      const program = searchIndexHandler.reindex({ index: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = searchIndexHandler.reindex({ index: 'test' });
+      const program = searchIndexHandler.reindex({ index: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('SearchIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = searchIndexHandler.reindex({ index: 'test' });
+      const program = searchIndexHandler.reindex({ index: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('SearchIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof searchIndexHandler.reindex !== 'function') return;
       try {
-        const result = await interpret(searchIndexHandler.reindex({ index: 'test' }), storage);
+        const result = await interpret(searchIndexHandler.reindex({ index: "articles" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('SearchIndex functional handler', () => {
       }
     });
 
+    it('fixture "reindex_existing" -> ok', async () => {
+      if (typeof searchIndexHandler.reindex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.reindex({ index: "articles" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reindex_missing" -> error', async () => {
+      if (typeof searchIndexHandler.reindex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(searchIndexHandler.reindex({ index: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof searchIndexHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = searchIndexHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SearchIndex');
+    });
   });
 
   describe('invariant examples', () => {

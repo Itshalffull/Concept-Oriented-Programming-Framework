@@ -19,7 +19,7 @@ describe('VoyageEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voyageEndpointHandler.register !== 'function') return;
       try {
-        const result = await voyageEndpointHandler.register({ name: 'test-name', apiKey: 'test-apiKey', model: 'test-model', inputType: 'test-inputType' }, storage);
+        const result = await voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-prod-abc123", model: "voyage-code-3", inputType: "document" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('VoyageEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "voyage_document" -> ok', async () => {
+      if (typeof voyageEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-prod-abc123", model: "voyage-code-3", inputType: "document" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "voyage_query" -> ok', async () => {
+      if (typeof voyageEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.register({ name: "code-query", apiKey: "vk-dev-xyz789", model: "voyage-code-3", inputType: "query" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof voyageEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.register({ name: "", apiKey: "vk-test", model: "voyage-code-3", inputType: "document" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof voyageEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await voyageEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await voyageEndpointHandler.resolve({ name: "code-search" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('VoyageEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof voyageEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.resolve({ name: "code-search" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof voyageEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('VoyageEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof voyageEndpointHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voyageEndpointHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof voyageEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = voyageEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VoyageEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

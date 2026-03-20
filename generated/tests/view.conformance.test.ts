@@ -26,7 +26,7 @@ describe('View functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' });
+      const program = viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' });
+      const program = viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' });
+      const program = viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' });
+      const program = viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' });
+      const program = viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.create !== 'function') return;
       try {
-        const result = await interpret(viewHandler.create({ view: 'test', dataSource: 'test-dataSource', layout: 'test-layout' }), storage);
+        const result = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "create_task_table" -> ok', async () => {
+      if (typeof viewHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_source" -> error', async () => {
+      if (typeof viewHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.get({ view: 'test' });
+      const program = viewHandler.get({ view: "tasks-table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.get({ view: 'test' });
+      const program = viewHandler.get({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.get({ view: 'test' });
+      const program = viewHandler.get({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.get({ view: 'test' });
+      const program = viewHandler.get({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.get({ view: 'test' });
+      const program = viewHandler.get({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.get !== 'function') return;
       try {
-        const result = await interpret(viewHandler.get({ view: 'test' }), storage);
+        const result = await interpret(viewHandler.get({ view: "tasks-table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "get_existing_view" -> ok', async () => {
+      if (typeof viewHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.get({ view: "tasks-table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof viewHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.get({ view: "no-such-view" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.resolve({ view: 'test' });
+      const program = viewHandler.resolve({ view: "tasks-table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.resolve({ view: 'test' });
+      const program = viewHandler.resolve({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.resolve({ view: 'test' });
+      const program = viewHandler.resolve({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.resolve({ view: 'test' });
+      const program = viewHandler.resolve({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.resolve({ view: 'test' });
+      const program = viewHandler.resolve({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(viewHandler.resolve({ view: 'test' }), storage);
+        const result = await interpret(viewHandler.resolve({ view: "tasks-table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof viewHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.resolve({ view: "tasks-table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof viewHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.resolve({ view: "no-such-view" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setControls', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.setControls({ view: 'test', controls: 'test-controls' });
+      const program = viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.setControls({ view: 'test', controls: 'test-controls' });
+      const program = viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.setControls({ view: 'test', controls: 'test-controls' });
+      const program = viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.setControls({ view: 'test', controls: 'test-controls' });
+      const program = viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.setControls({ view: 'test', controls: 'test-controls' });
+      const program = viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.setControls !== 'function') return;
       try {
-        const result = await interpret(viewHandler.setControls({ view: 'test', controls: 'test-controls' }), storage);
+        const result = await interpret(viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "set_controls" -> ok', async () => {
+      if (typeof viewHandler.setControls !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_controls_missing_view" -> error', async () => {
+      if (typeof viewHandler.setControls !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setControls({ view: "no-such-view", controls: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setFilter', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.setFilter({ view: 'test', filter: 'test-filter' });
+      const program = viewHandler.setFilter({ view: "tasks-table", filter: "status=active" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.setFilter({ view: 'test', filter: 'test-filter' });
+      const program = viewHandler.setFilter({ view: "tasks-table", filter: "status=active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.setFilter({ view: 'test', filter: 'test-filter' });
+      const program = viewHandler.setFilter({ view: "tasks-table", filter: "status=active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.setFilter({ view: 'test', filter: 'test-filter' });
+      const program = viewHandler.setFilter({ view: "tasks-table", filter: "status=active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.setFilter({ view: 'test', filter: 'test-filter' });
+      const program = viewHandler.setFilter({ view: "tasks-table", filter: "status=active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.setFilter !== 'function') return;
       try {
-        const result = await interpret(viewHandler.setFilter({ view: 'test', filter: 'test-filter' }), storage);
+        const result = await interpret(viewHandler.setFilter({ view: "tasks-table", filter: "status=active" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "set_filter_active" -> ok', async () => {
+      if (typeof viewHandler.setFilter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setFilter({ view: "tasks-table", filter: "status=active" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_filter_missing_view" -> error', async () => {
+      if (typeof viewHandler.setFilter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setFilter({ view: "no-such-view", filter: "status=active" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setSort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.setSort({ view: 'test', sort: 'test-sort' });
+      const program = viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.setSort({ view: 'test', sort: 'test-sort' });
+      const program = viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.setSort({ view: 'test', sort: 'test-sort' });
+      const program = viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.setSort({ view: 'test', sort: 'test-sort' });
+      const program = viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.setSort({ view: 'test', sort: 'test-sort' });
+      const program = viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.setSort !== 'function') return;
       try {
-        const result = await interpret(viewHandler.setSort({ view: 'test', sort: 'test-sort' }), storage);
+        const result = await interpret(viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "sort_by_date" -> ok', async () => {
+      if (typeof viewHandler.setSort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sort_missing_view" -> error', async () => {
+      if (typeof viewHandler.setSort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setSort({ view: "no-such-view", sort: "name:asc" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setGroup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.setGroup({ view: 'test', group: 'test-group' });
+      const program = viewHandler.setGroup({ view: "tasks-table", group: "status" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.setGroup({ view: 'test', group: 'test-group' });
+      const program = viewHandler.setGroup({ view: "tasks-table", group: "status" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.setGroup({ view: 'test', group: 'test-group' });
+      const program = viewHandler.setGroup({ view: "tasks-table", group: "status" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.setGroup({ view: 'test', group: 'test-group' });
+      const program = viewHandler.setGroup({ view: "tasks-table", group: "status" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.setGroup({ view: 'test', group: 'test-group' });
+      const program = viewHandler.setGroup({ view: "tasks-table", group: "status" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.setGroup !== 'function') return;
       try {
-        const result = await interpret(viewHandler.setGroup({ view: 'test', group: 'test-group' }), storage);
+        const result = await interpret(viewHandler.setGroup({ view: "tasks-table", group: "status" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +512,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "group_by_status" -> ok', async () => {
+      if (typeof viewHandler.setGroup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setGroup({ view: "tasks-table", group: "status" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "group_missing_view" -> error', async () => {
+      if (typeof viewHandler.setGroup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setGroup({ view: "no-such-view", group: "priority" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setVisibleFields', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' });
+      const program = viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +538,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' });
+      const program = viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' });
+      const program = viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' });
+      const program = viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +565,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' });
+      const program = viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +574,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.setVisibleFields !== 'function') return;
       try {
-        const result = await interpret(viewHandler.setVisibleFields({ view: 'test', fields: 'test-fields' }), storage);
+        const result = await interpret(viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +584,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "set_fields" -> ok', async () => {
+      if (typeof viewHandler.setVisibleFields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_fields_missing_view" -> error', async () => {
+      if (typeof viewHandler.setVisibleFields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.setVisibleFields({ view: "no-such-view", fields: "[\"title\"]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('changeLayout', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.changeLayout({ view: 'test', layout: 'test-layout' });
+      const program = viewHandler.changeLayout({ view: "tasks-table", layout: "board" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +610,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.changeLayout({ view: 'test', layout: 'test-layout' });
+      const program = viewHandler.changeLayout({ view: "tasks-table", layout: "board" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.changeLayout({ view: 'test', layout: 'test-layout' });
+      const program = viewHandler.changeLayout({ view: "tasks-table", layout: "board" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.changeLayout({ view: 'test', layout: 'test-layout' });
+      const program = viewHandler.changeLayout({ view: "tasks-table", layout: "board" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +637,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.changeLayout({ view: 'test', layout: 'test-layout' });
+      const program = viewHandler.changeLayout({ view: "tasks-table", layout: "board" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +646,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.changeLayout !== 'function') return;
       try {
-        const result = await interpret(viewHandler.changeLayout({ view: 'test', layout: 'test-layout' }), storage);
+        const result = await interpret(viewHandler.changeLayout({ view: "tasks-table", layout: "board" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +656,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "switch_to_board" -> ok', async () => {
+      if (typeof viewHandler.changeLayout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.changeLayout({ view: "tasks-table", layout: "board" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "change_layout_missing" -> error', async () => {
+      if (typeof viewHandler.changeLayout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.changeLayout({ view: "no-such-view", layout: "calendar" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('duplicate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.duplicate({ view: 'test' });
+      const program = viewHandler.duplicate({ view: "tasks-table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +682,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.duplicate({ view: 'test' });
+      const program = viewHandler.duplicate({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.duplicate({ view: 'test' });
+      const program = viewHandler.duplicate({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.duplicate({ view: 'test' });
+      const program = viewHandler.duplicate({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +709,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.duplicate({ view: 'test' });
+      const program = viewHandler.duplicate({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +718,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.duplicate !== 'function') return;
       try {
-        const result = await interpret(viewHandler.duplicate({ view: 'test' }), storage);
+        const result = await interpret(viewHandler.duplicate({ view: "tasks-table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +728,25 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "duplicate_existing" -> ok', async () => {
+      if (typeof viewHandler.duplicate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.duplicate({ view: "tasks-table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_missing" -> error', async () => {
+      if (typeof viewHandler.duplicate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.duplicate({ view: "no-such-view" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('embed', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewHandler.embed({ view: 'test' });
+      const program = viewHandler.embed({ view: "tasks-table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +754,21 @@ describe('View functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewHandler.embed({ view: 'test' });
+      const program = viewHandler.embed({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewHandler.embed({ view: 'test' });
+      const program = viewHandler.embed({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewHandler.embed({ view: 'test' });
+      const program = viewHandler.embed({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +781,7 @@ describe('View functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewHandler.embed({ view: 'test' });
+      const program = viewHandler.embed({ view: "tasks-table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +790,7 @@ describe('View functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewHandler.embed !== 'function') return;
       try {
-        const result = await interpret(viewHandler.embed({ view: 'test' }), storage);
+        const result = await interpret(viewHandler.embed({ view: "tasks-table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,6 +800,38 @@ describe('View functional handler', () => {
       }
     });
 
+    it('fixture "embed_existing" -> ok', async () => {
+      if (typeof viewHandler.embed !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.embed({ view: "tasks-table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "embed_missing" -> error', async () => {
+      if (typeof viewHandler.embed !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewHandler.embed({ view: "no-such-view" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof viewHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = viewHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('View');
+    });
   });
 
   describe('action contracts (PBT)', () => {

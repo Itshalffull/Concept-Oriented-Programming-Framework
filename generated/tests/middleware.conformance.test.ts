@@ -26,7 +26,7 @@ describe('Middleware functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = middlewareHandler.resolve({ traits: 'test', target: 'test-target' });
+      const program = middlewareHandler.resolve({ traits: ["auth"], target: "rest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Middleware functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = middlewareHandler.resolve({ traits: 'test', target: 'test-target' });
+      const program = middlewareHandler.resolve({ traits: ["auth"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = middlewareHandler.resolve({ traits: 'test', target: 'test-target' });
+      const program = middlewareHandler.resolve({ traits: ["auth"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = middlewareHandler.resolve({ traits: 'test', target: 'test-target' });
+      const program = middlewareHandler.resolve({ traits: ["auth"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Middleware functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = middlewareHandler.resolve({ traits: 'test', target: 'test-target' });
+      const program = middlewareHandler.resolve({ traits: ["auth"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Middleware functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof middlewareHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(middlewareHandler.resolve({ traits: 'test', target: 'test-target' }), storage);
+        const result = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Middleware functional handler', () => {
       }
     });
 
+    it('fixture "resolve_auth_rest" -> ok', async () => {
+      if (typeof middlewareHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_multi_traits" -> ok', async () => {
+      if (typeof middlewareHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.resolve({ traits: ["auth","validation"], target: "grpc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing_trait" -> error', async () => {
+      if (typeof middlewareHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.resolve({ traits: ["nonexistent-trait"], target: "rest" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('inject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' });
+      const program = middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Middleware functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' });
+      const program = middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' });
+      const program = middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' });
+      const program = middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Middleware functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' });
+      const program = middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Middleware functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       try {
-        const result = await interpret(middlewareHandler.inject({ output: 'test-output', middlewares: 'test', target: 'test-target' }), storage);
+        const result = await interpret(middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Middleware functional handler', () => {
       }
     });
 
+    it('fixture "inject_single" -> ok', async () => {
+      if (typeof middlewareHandler.inject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "inject_multiple" -> ok', async () => {
+      if (typeof middlewareHandler.inject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.inject({ output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "inject_empty" -> error', async () => {
+      if (typeof middlewareHandler.inject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.inject({ output: "", middlewares: [], target: "rest" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' });
+      const program = middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Middleware functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' });
+      const program = middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' });
+      const program = middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' });
+      const program = middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Middleware functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' });
+      const program = middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Middleware functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof middlewareHandler.register !== 'function') return;
       try {
-        const result = await interpret(middlewareHandler.register({ trait: 'test-trait', target: 'test-target', implementation: 'test-implementation', position: 'test-position' }), storage);
+        const result = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,45 @@ describe('Middleware functional handler', () => {
       }
     });
 
+    it('fixture "register_bearer" -> ok', async () => {
+      if (typeof middlewareHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_logging" -> ok', async () => {
+      if (typeof middlewareHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_trait" -> error', async () => {
+      if (typeof middlewareHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof middlewareHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = middlewareHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Middleware');
+    });
   });
 
   describe('invariant examples', () => {

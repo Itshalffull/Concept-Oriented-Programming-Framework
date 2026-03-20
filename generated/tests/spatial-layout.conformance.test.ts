@@ -26,7 +26,7 @@ describe('SpatialLayout functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' });
+      const program = spatialLayoutHandler.apply({ algorithm: "force-directed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SpatialLayout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' });
+      const program = spatialLayoutHandler.apply({ algorithm: "force-directed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' });
+      const program = spatialLayoutHandler.apply({ algorithm: "force-directed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' });
+      const program = spatialLayoutHandler.apply({ algorithm: "force-directed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SpatialLayout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' });
+      const program = spatialLayoutHandler.apply({ algorithm: "force-directed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SpatialLayout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialLayoutHandler.apply !== 'function') return;
       try {
-        const result = await interpret(spatialLayoutHandler.apply({ canvas: 'test-canvas', algorithm: 'test-algorithm' }), storage);
+        const result = await interpret(spatialLayoutHandler.apply({ algorithm: "force-directed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SpatialLayout functional handler', () => {
       }
     });
 
+    it('fixture "valid_apply" -> ok', async () => {
+      if (typeof spatialLayoutHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(spatialLayoutHandler.apply({ algorithm: "force-directed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_algorithm" -> unknown_algorithm', async () => {
+      if (typeof spatialLayoutHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(spatialLayoutHandler.apply({ algorithm: "nonexistent" }), storage);
+      expect(result.variant).toBe('unknown_algorithm');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' });
+      const program = spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SpatialLayout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' });
+      const program = spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' });
+      const program = spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' });
+      const program = spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SpatialLayout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' });
+      const program = spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SpatialLayout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof spatialLayoutHandler.register !== 'function') return;
       try {
-        const result = await interpret(spatialLayoutHandler.register({ algorithm: 'test-algorithm', provider: 'test-provider' }), storage);
+        const result = await interpret(spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,38 @@ describe('SpatialLayout functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof spatialLayoutHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(spatialLayoutHandler.register({ algorithm: "force-directed", provider: "ForceDirectedLayout" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_algorithm" -> unknown_algorithm', async () => {
+      if (typeof spatialLayoutHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(spatialLayoutHandler.register({ algorithm: "", provider: "SomeProvider" }), storage);
+      expect(result.variant).toBe('unknown_algorithm');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof spatialLayoutHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = spatialLayoutHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SpatialLayout');
+    });
   });
 
   describe('invariant examples', () => {
@@ -157,7 +203,7 @@ describe('SpatialLayout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -185,7 +231,7 @@ describe('SpatialLayout functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('apply'), input: fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('apply'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },

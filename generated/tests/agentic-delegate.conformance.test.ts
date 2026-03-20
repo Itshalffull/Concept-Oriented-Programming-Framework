@@ -26,7 +26,7 @@ describe('AgenticDelegate functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' });
+      const program = agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' });
+      const program = agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' });
+      const program = agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' });
+      const program = agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' });
+      const program = agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.register !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.register({ agentType: 'test-agentType', principal: 'test-principal', systemPrompt: 'test-systemPrompt', boundaries: 'test' }), storage);
+        const result = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "register_assistant" -> ok', async () => {
+      if (typeof agenticDelegateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.register({ name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote","propose"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof agenticDelegateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.register({ name: "", principal: "alice", autonomyLevel: "Supervised", allowedActions: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('assumeRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.assumeRole !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: 'test', roleId: 'test-roleId' }), storage);
+        const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "assume_voter_role" -> ok', async () => {
+      if (typeof agenticDelegateHandler.assumeRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: "delegate-1", role: "voter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assume_role_missing_delegate" -> error', async () => {
+      if (typeof agenticDelegateHandler.assumeRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.assumeRole({ delegate: "nonexistent", role: "voter" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('releaseRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.releaseRole({ delegate: "delegate-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.releaseRole({ delegate: "delegate-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.releaseRole({ delegate: "delegate-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.releaseRole({ delegate: "delegate-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' });
+      const program = agenticDelegateHandler.releaseRole({ delegate: "delegate-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.releaseRole !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: 'test', roleId: 'test-roleId' }), storage);
+        const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: "delegate-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "release_current_role" -> ok', async () => {
+      if (typeof agenticDelegateHandler.releaseRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: "delegate-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "release_missing_delegate" -> error', async () => {
+      if (typeof agenticDelegateHandler.releaseRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.releaseRole({ delegate: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('proposeAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' });
+      const program = agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' });
+      const program = agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' });
+      const program = agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' });
+      const program = agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' });
+      const program = agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.proposeAction !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: 'test', action: 'test-action', justification: 'test-justification' }), storage);
+        const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "propose_vote" -> ok', async () => {
+      if (typeof agenticDelegateHandler.proposeAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "vote", rationale: "Community consensus needed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "propose_unauthorized" -> error', async () => {
+      if (typeof agenticDelegateHandler.proposeAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.proposeAction({ delegate: "delegate-1", action: "delete-all", rationale: "Cleanup" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('escalate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' });
+      const program = agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' });
+      const program = agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' });
+      const program = agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' });
+      const program = agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' });
+      const program = agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.escalate !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.escalate({ delegate: 'test', reason: 'test-reason' }), storage);
+        const result = await interpret(agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "escalate_complex_decision" -> ok', async () => {
+      if (typeof agenticDelegateHandler.escalate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "budget-approval", reason: "Exceeds autonomy threshold" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "escalate_empty_reason" -> error', async () => {
+      if (typeof agenticDelegateHandler.escalate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.escalate({ delegate: "delegate-1", action: "vote", reason: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('updateAutonomy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' });
+      const program = agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' });
+      const program = agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' });
+      const program = agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' });
+      const program = agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('AgenticDelegate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' });
+      const program = agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('AgenticDelegate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof agenticDelegateHandler.updateAutonomy !== 'function') return;
       try {
-        const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: 'test', level: 'test-level' }), storage);
+        const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('AgenticDelegate functional handler', () => {
       }
     });
 
+    it('fixture "upgrade_to_autonomous" -> ok', async () => {
+      if (typeof agenticDelegateHandler.updateAutonomy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: "delegate-1", autonomyLevel: "Autonomous" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing_delegate" -> error', async () => {
+      if (typeof agenticDelegateHandler.updateAutonomy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agenticDelegateHandler.updateAutonomy({ delegate: "nonexistent", autonomyLevel: "Autonomous" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof agenticDelegateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = agenticDelegateHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AgenticDelegate');
+    });
   });
 
   describe('invariant examples', () => {
@@ -392,12 +494,12 @@ describe('AgenticDelegate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), systemPrompt: fc.string({ minLength: 1, maxLength: 50 }), boundaries: fc.string() }) }),
-              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), justification: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), autonomyLevel: fc.string({ minLength: 1, maxLength: 50 }), allowedActions: fc.string() }) }),
+              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string() }) }),
+              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), rationale: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), autonomyLevel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -424,12 +526,12 @@ describe('AgenticDelegate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ agentType: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), systemPrompt: fc.string({ minLength: 1, maxLength: 50 }), boundaries: fc.string() }) }),
-              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string(), roleId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), justification: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), autonomyLevel: fc.string({ minLength: 1, maxLength: 50 }), allowedActions: fc.string() }) }),
+              fc.record({ action: fc.constant('assumeRole'), input: fc.record({ delegate: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseRole'), input: fc.record({ delegate: fc.string() }) }),
+              fc.record({ action: fc.constant('proposeAction'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), rationale: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('escalate'), input: fc.record({ delegate: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateAutonomy'), input: fc.record({ delegate: fc.string(), autonomyLevel: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -468,7 +570,7 @@ describe('AgenticDelegate functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ agentType: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), systemPrompt: fc.string({ minLength: 1, maxLength: 50 }), boundaries: fc.string() }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), principal: fc.string({ minLength: 1, maxLength: 50 }), autonomyLevel: fc.string({ minLength: 1, maxLength: 50 }), allowedActions: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = agenticDelegateHandler.register(input as Record<string, unknown>);

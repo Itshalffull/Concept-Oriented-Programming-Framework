@@ -19,7 +19,7 @@ describe('GitHubApiEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof gitHubApiEndpointHandler.register !== 'function') return;
       try {
-        const result = await gitHubApiEndpointHandler.register({ name: 'test-name', token: 'test-token', repository: 'test-repository' }, storage);
+        const result = await gitHubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('GitHubApiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "github_primary" -> ok', async () => {
+      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "github_ci" -> ok', async () => {
+      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.register({ name: "", token: "ghp_test", repository: "owner/repo" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await gitHubApiEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await gitHubApiEndpointHandler.resolve({ name: "github-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('GitHubApiEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.resolve({ name: "github-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('GitHubApiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof gitHubApiEndpointHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await gitHubApiEndpointHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = gitHubApiEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GitHubApiEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

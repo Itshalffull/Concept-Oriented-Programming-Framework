@@ -26,7 +26,7 @@ describe('DerivedScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DerivedScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DerivedScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(derivedScaffoldGenHandler.generate({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' }), storage);
+        const result = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DerivedScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_generate" -> ok', async () => {
+      if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.generate({ name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof derivedScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.generate({ name: "", typeParams: ["T"], purpose: "Should fail", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DerivedScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DerivedScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' });
+      const program = derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(derivedScaffoldGenHandler.preview({ name: 'test-name', typeParam: 'test-typeParam', purpose: 'test-purpose', composes: 'test', syncs: 'test', surfaceActions: 'test', surfaceQueries: 'test', principle: 'test' }), storage);
+        const result = await interpret(derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('DerivedScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_preview" -> error', async () => {
+      if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.preview({ name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('DerivedScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof derivedScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(derivedScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof derivedScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = derivedScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DerivedScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {
@@ -215,8 +275,8 @@ describe('DerivedScaffoldGen functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParam: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
-              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParam: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
+              fc.record({ action: fc.constant('generate'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParams: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
+              fc.record({ action: fc.constant('preview'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParams: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -255,7 +315,7 @@ describe('DerivedScaffoldGen functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParam: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), typeParams: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }), composes: fc.string(), syncs: fc.string(), surfaceActions: fc.string(), surfaceQueries: fc.string(), principle: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = derivedScaffoldGenHandler.generate(input as Record<string, unknown>);

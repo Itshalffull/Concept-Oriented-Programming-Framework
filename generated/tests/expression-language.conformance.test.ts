@@ -26,7 +26,7 @@ describe('ExpressionLanguage functional handler', () => {
 
   describe('registerLanguage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' });
+      const program = expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' });
+      const program = expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' });
+      const program = expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' });
+      const program = expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' });
+      const program = expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.registerLanguage({ name: 'test-name', grammar: 'test-grammar' }), storage);
+        const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "register_math" -> ok', async () => {
+      if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "", grammar: "arithmetic" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerFunction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.registerFunction({ name: 'test-name', implementation: 'test-implementation' }), storage);
+        const result = await interpret(expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "register_abs" -> ok', async () => {
+      if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_impl" -> error', async () => {
+      if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerFunction({ name: "", implementation: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerOperator', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' });
+      const program = expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.registerOperator({ name: 'test-name', implementation: 'test-implementation' }), storage);
+        const result = await interpret(expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "register_plus" -> ok', async () => {
+      if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_op_name" -> error', async () => {
+      if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.registerOperator({ name: "", implementation: "a + b" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' });
+      const program = expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' });
+      const program = expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' });
+      const program = expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' });
+      const program = expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' });
+      const program = expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.parse !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.parse({ expression: 'test', text: 'test-text', language: 'test-language' }), storage);
+        const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "parse_addition" -> ok', async () => {
+      if (typeof expressionLanguageHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "parse_unknown_lang" -> error', async () => {
+      if (typeof expressionLanguageHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-2", text: "2 + 3", language: "unknown" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.evaluate({ expression: 'test' });
+      const program = expressionLanguageHandler.evaluate({ expression: "expr-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.evaluate({ expression: 'test' });
+      const program = expressionLanguageHandler.evaluate({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.evaluate({ expression: 'test' });
+      const program = expressionLanguageHandler.evaluate({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.evaluate({ expression: 'test' });
+      const program = expressionLanguageHandler.evaluate({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.evaluate({ expression: 'test' });
+      const program = expressionLanguageHandler.evaluate({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.evaluate({ expression: 'test' }), storage);
+        const result = await interpret(expressionLanguageHandler.evaluate({ expression: "expr-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "eval_existing" -> ok', async () => {
+      if (typeof expressionLanguageHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.evaluate({ expression: "expr-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "eval_missing" -> error', async () => {
+      if (typeof expressionLanguageHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.evaluate({ expression: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('typeCheck', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.typeCheck({ expression: 'test' });
+      const program = expressionLanguageHandler.typeCheck({ expression: "expr-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.typeCheck({ expression: 'test' });
+      const program = expressionLanguageHandler.typeCheck({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.typeCheck({ expression: 'test' });
+      const program = expressionLanguageHandler.typeCheck({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.typeCheck({ expression: 'test' });
+      const program = expressionLanguageHandler.typeCheck({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.typeCheck({ expression: 'test' });
+      const program = expressionLanguageHandler.typeCheck({ expression: "expr-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.typeCheck({ expression: 'test' }), storage);
+        const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "expr-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "typecheck_valid" -> ok', async () => {
+      if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "expr-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "typecheck_missing" -> error', async () => {
+      if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getCompletions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 });
+      const program = expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 });
+      const program = expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 });
+      const program = expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 });
+      const program = expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('ExpressionLanguage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 });
+      const program = expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('ExpressionLanguage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
       try {
-        const result = await interpret(expressionLanguageHandler.getCompletions({ expression: 'test', cursor: 1 }), storage);
+        const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('ExpressionLanguage functional handler', () => {
       }
     });
 
+    it('fixture "completions_at_cursor" -> ok', async () => {
+      if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "completions_missing" -> error', async () => {
+      if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "nonexistent", cursor: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof expressionLanguageHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = expressionLanguageHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ExpressionLanguage');
+    });
   });
 
   describe('invariant examples', () => {

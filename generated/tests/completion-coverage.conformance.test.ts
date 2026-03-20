@@ -19,7 +19,7 @@ describe('CompletionCoverage imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof completionCoverageHandler.check !== 'function') return;
       try {
-        const result = await completionCoverageHandler.check({ concept: 'test-concept', action: 'test-action', declaredVariants: 'test-declaredVariants', extractedVariants: 'test-extractedVariants', syncPatterns: 'test-syncPatterns' }, storage);
+        const result = await completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('CompletionCoverage imperative handler', () => {
       }
     });
 
+    it('fixture "full_coverage" -> ok', async () => {
+      if (typeof completionCoverageHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\",\"error\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_sync" -> ok', async () => {
+      if (typeof completionCoverageHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "[\"ok\",\"error\"]", extractedVariants: "[\"ok\"]", syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json_input" -> error', async () => {
+      if (typeof completionCoverageHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.check({ concept: "User", action: "register", declaredVariants: "not json", extractedVariants: "not json", syncPatterns: "not json" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('report', () => {
     it('executes without crashing', async () => {
       if (typeof completionCoverageHandler.report !== 'function') return;
       try {
-        const result = await completionCoverageHandler.report({ concept: 'test-concept' }, storage);
+        const result = await completionCoverageHandler.report({ concept: "User" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('CompletionCoverage imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "report_user" -> ok', async () => {
+      if (typeof completionCoverageHandler.report !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.report({ concept: "User" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "report_empty" -> error', async () => {
+      if (typeof completionCoverageHandler.report !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.report({ concept: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('CompletionCoverage imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof completionCoverageHandler.listUncovered !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await completionCoverageHandler.listUncovered({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof completionCoverageHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = completionCoverageHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CompletionCoverage');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('K8sRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 });
+      const program = k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 });
+      const program = k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 });
+      const program = k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 });
+      const program = k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 });
+      const program = k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('K8sRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof k8sRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(k8sRuntimeHandler.provision({ concept: 'test-concept', namespace: 'test-namespace', cluster: 'test-cluster', replicas: 1 }), storage);
+        const result = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('K8sRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_deployment" -> ok', async () => {
+      if (typeof k8sRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof k8sRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.provision({ concept: "", namespace: "default", cluster: "prod", replicas: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' });
+      const program = k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' });
+      const program = k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' });
+      const program = k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' });
+      const program = k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' });
+      const program = k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('K8sRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof k8sRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(k8sRuntimeHandler.deploy({ deployment: 'test', imageUri: 'test-imageUri' }), storage);
+        const result = await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('K8sRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_image" -> ok', async () => {
+      if (typeof k8sRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_empty_image" -> error', async () => {
+      if (typeof k8sRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 });
+      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 });
+      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 });
+      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 });
+      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 });
+      const program = k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('K8sRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: 'test', weight: 1 }), storage);
+        const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('K8sRuntime functional handler', () => {
       }
     });
 
+    it('fixture "set_canary_weight" -> ok', async () => {
+      if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_invalid_weight" -> error', async () => {
+      if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' });
+      const program = k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' });
+      const program = k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' });
+      const program = k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' });
+      const program = k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' });
+      const program = k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('K8sRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(k8sRuntimeHandler.rollback({ deployment: 'test', targetRevision: 'test-targetRevision' }), storage);
+        const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('K8sRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_to_rev1" -> ok', async () => {
+      if (typeof k8sRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_rev" -> error', async () => {
+      if (typeof k8sRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = k8sRuntimeHandler.destroy({ deployment: 'test' });
+      const program = k8sRuntimeHandler.destroy({ deployment: "dep-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = k8sRuntimeHandler.destroy({ deployment: 'test' });
+      const program = k8sRuntimeHandler.destroy({ deployment: "dep-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = k8sRuntimeHandler.destroy({ deployment: 'test' });
+      const program = k8sRuntimeHandler.destroy({ deployment: "dep-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = k8sRuntimeHandler.destroy({ deployment: 'test' });
+      const program = k8sRuntimeHandler.destroy({ deployment: "dep-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('K8sRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = k8sRuntimeHandler.destroy({ deployment: 'test' });
+      const program = k8sRuntimeHandler.destroy({ deployment: "dep-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('K8sRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof k8sRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(k8sRuntimeHandler.destroy({ deployment: 'test' }), storage);
+        const result = await interpret(k8sRuntimeHandler.destroy({ deployment: "dep-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('K8sRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_deployment" -> ok', async () => {
+      if (typeof k8sRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.destroy({ deployment: "dep-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_empty" -> error', async () => {
+      if (typeof k8sRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(k8sRuntimeHandler.destroy({ deployment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof k8sRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = k8sRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('K8sRuntime');
+    });
   });
 
   describe('invariant examples', () => {

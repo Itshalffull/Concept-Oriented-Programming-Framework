@@ -19,7 +19,7 @@ describe('KernelBoot imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof kernelBootHandler.boot !== 'function') return;
       try {
-        const result = await kernelBootHandler.boot({ projectRoot: 'test-projectRoot', manifestPath: 'test' }, storage);
+        const result = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('KernelBoot imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_boot" -> ok', async () => {
+      if (typeof kernelBootHandler.boot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.boot({ projectRoot: "./", manifestPath: "deploy.yaml" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "custom_root" -> ok', async () => {
+      if (typeof kernelBootHandler.boot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.boot({ projectRoot: "/app/clef-base", manifestPath: "examples/devtools/devtools.interface.yaml" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_root" -> noHandlers', async () => {
+      if (typeof kernelBootHandler.boot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.boot({ projectRoot: "", manifestPath: "" }, storage);
+      expect(result.variant).toBe('noHandlers');
     });
 
   });
@@ -35,7 +56,7 @@ describe('KernelBoot imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof kernelBootHandler.status !== 'function') return;
       try {
-        const result = await kernelBootHandler.status({ kernel: 'test' }, storage);
+        const result = await kernelBootHandler.status({ kernel: "kernel-20260301-abc123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('KernelBoot imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_status" -> ok', async () => {
+      if (typeof kernelBootHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.status({ kernel: "kernel-20260301-abc123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nonexistent_status" -> notfound', async () => {
+      if (typeof kernelBootHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.status({ kernel: "kernel-nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +86,7 @@ describe('KernelBoot imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof kernelBootHandler.shutdown !== 'function') return;
       try {
-        const result = await kernelBootHandler.shutdown({ kernel: 'test' }, storage);
+        const result = await kernelBootHandler.shutdown({ kernel: "kernel-20260301-abc123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +96,37 @@ describe('KernelBoot imperative handler', () => {
       }
     });
 
+    it('fixture "valid_shutdown" -> ok', async () => {
+      if (typeof kernelBootHandler.shutdown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.shutdown({ kernel: "kernel-20260301-abc123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nonexistent_shutdown" -> notfound', async () => {
+      if (typeof kernelBootHandler.shutdown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await kernelBootHandler.shutdown({ kernel: "kernel-nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof kernelBootHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = kernelBootHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('KernelBoot');
+    });
   });
 
   describe('invariant examples', () => {

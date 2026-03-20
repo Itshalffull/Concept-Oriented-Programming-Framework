@@ -26,7 +26,7 @@ describe('WidgetRegistry functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' });
+      const program = widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' });
+      const program = widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' });
+      const program = widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' });
+      const program = widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' });
+      const program = widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WidgetRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetRegistryHandler.register !== 'function') return;
       try {
-        const result = await interpret(widgetRegistryHandler.register({ entry: 'test', widget: 'test-widget', interactor: 'test-interactor', concept: 'test', suite: 'test', tags: 'test', specificity: 1, contractVersion: 1, contractSlots: 'test-contractSlots', contractActions: 'test-contractActions', secondaryRoles: 'test-secondaryRoles' }), storage);
+        const result = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('WidgetRegistry functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof widgetRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_register" -> ok', async () => {
+      if (typeof widgetRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.register({ widget: "generic-card", interactor: "entity-card", specificity: "5", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_entry" -> duplicate', async () => {
+      if (typeof widgetRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.register({ widget: "approval-detail", interactor: "entity-detail", concept: "Approval", suite: "governance", tags: "[]", specificity: "20", contractVersion: "1", contractSlots: "[]", contractActions: "[]", secondaryRoles: "[]" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' });
+      const program = widgetRegistryHandler.query({ concept: "Approval" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' });
+      const program = widgetRegistryHandler.query({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' });
+      const program = widgetRegistryHandler.query({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' });
+      const program = widgetRegistryHandler.query({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' });
+      const program = widgetRegistryHandler.query({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('WidgetRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetRegistryHandler.query !== 'function') return;
       try {
-        const result = await interpret(widgetRegistryHandler.query({ concept: 'test', suite: 'test', interactor: 'test' }), storage);
+        const result = await interpret(widgetRegistryHandler.query({ concept: "Approval" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('WidgetRegistry functional handler', () => {
       }
     });
 
+    it('fixture "query_by_concept" -> ok', async () => {
+      if (typeof widgetRegistryHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.query({ concept: "Approval" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_by_suite" -> ok', async () => {
+      if (typeof widgetRegistryHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.query({ suite: "governance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_no_match" -> none', async () => {
+      if (typeof widgetRegistryHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.query({ concept: "NonexistentConcept" }), storage);
+      expect(result.variant).toBe('none');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetRegistryHandler.remove({ entry: 'test' });
+      const program = widgetRegistryHandler.remove({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetRegistryHandler.remove({ entry: 'test' });
+      const program = widgetRegistryHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetRegistryHandler.remove({ entry: 'test' });
+      const program = widgetRegistryHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetRegistryHandler.remove({ entry: 'test' });
+      const program = widgetRegistryHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('WidgetRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetRegistryHandler.remove({ entry: 'test' });
+      const program = widgetRegistryHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('WidgetRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetRegistryHandler.remove !== 'function') return;
       try {
-        const result = await interpret(widgetRegistryHandler.remove({ entry: 'test' }), storage);
+        const result = await interpret(widgetRegistryHandler.remove({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('WidgetRegistry functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof widgetRegistryHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.remove({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_entry" -> notfound', async () => {
+      if (typeof widgetRegistryHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetRegistryHandler.remove({ entry: "nonexistent-entry" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetRegistryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetRegistry');
+    });
   });
 
   describe('invariant examples', () => {

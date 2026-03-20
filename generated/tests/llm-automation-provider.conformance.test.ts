@@ -80,11 +80,18 @@ describe('LLMAutomationProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof lLMAutomationProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' });
+      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' });
+      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' });
+      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' });
+      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' });
+      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('LLMAutomationProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
       try {
-        const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: 'test-action_payload', model_config: 'test-model_config' }), storage);
+        const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,59 @@ describe('LLMAutomationProvider functional handler', () => {
       }
     });
 
+    it('fixture "summarize_with_gpt4" -> ok', async () => {
+      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_payload" -> error', async () => {
+      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "", model_config: "{\"model\":\"gpt-4\"}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "missing_config" -> error', async () => {
+      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_config_json" -> error', async () => {
+      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "config_missing_model" -> error', async () => {
+      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lLMAutomationProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lLMAutomationProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LLMAutomationProvider');
+    });
   });
 
   describe('invariant examples', () => {

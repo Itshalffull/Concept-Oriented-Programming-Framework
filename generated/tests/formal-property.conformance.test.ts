@@ -19,7 +19,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.define !== 'function') return;
       try {
-        const result = await formalPropertyHandler.define({ target_symbol: 'test-target_symbol', kind: 'test-kind', property_text: 'test-property_text', formal_language: 'test-formal_language', scope: 'test-scope', priority: 'test-priority' }, storage);
+        const result = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof formalPropertyHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.define({ name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_kind" -> invalid', async () => {
+      if (typeof formalPropertyHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.define({ name: "bad-prop", target_symbol: "clef/concept/User", kind: "bogus", expression: "true", formal_language: "smtlib", scope: "local", priority: "optional" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +49,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.prove !== 'function') return;
       try {
-        const result = await formalPropertyHandler.prove({ property: 'test', evidence_ref: 'test-evidence_ref' }, storage);
+        const result = await formalPropertyHandler.prove({ id: "fp-001", evidence_ref: "ev-abc" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_prove" -> ok', async () => {
+      if (typeof formalPropertyHandler.prove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.prove({ id: "fp-001", evidence_ref: "ev-abc" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "prove_missing" -> notfound', async () => {
+      if (typeof formalPropertyHandler.prove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.prove({ id: "nonexistent", evidence_ref: "ev-abc" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +79,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.refute !== 'function') return;
       try {
-        const result = await formalPropertyHandler.refute({ property: 'test', evidence_ref: 'test-evidence_ref' }, storage);
+        const result = await formalPropertyHandler.refute({ id: "fp-001", evidence_ref: "ev-counter" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_refute" -> ok', async () => {
+      if (typeof formalPropertyHandler.refute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.refute({ id: "fp-001", evidence_ref: "ev-counter" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "refute_missing" -> notfound', async () => {
+      if (typeof formalPropertyHandler.refute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.refute({ id: "nonexistent", evidence_ref: "ev-counter" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -67,7 +109,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.check !== 'function') return;
       try {
-        const result = await formalPropertyHandler.check({ property: 'test', solver: 'test-solver', timeout_ms: 1 }, storage);
+        const result = await formalPropertyHandler.check({ id: "fp-001", solver: "z3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_check" -> ok', async () => {
+      if (typeof formalPropertyHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.check({ id: "fp-001", solver: "z3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_missing" -> notfound', async () => {
+      if (typeof formalPropertyHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.check({ id: "nonexistent", solver: "z3" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +139,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.synthesize !== 'function') return;
       try {
-        const result = await formalPropertyHandler.synthesize({ target_symbol: 'test-target_symbol', intent_ref: 'test-intent_ref' }, storage);
+        const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: "intent-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_synthesize" -> ok', async () => {
+      if (typeof formalPropertyHandler.synthesize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/Password", intent_ref: "intent-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "synthesize_with_lang" -> ok', async () => {
+      if (typeof formalPropertyHandler.synthesize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.synthesize({ target_symbol: "clef/concept/User", intent_ref: "intent-002", formal_language: "lean" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -99,7 +169,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.coverage !== 'function') return;
       try {
-        const result = await formalPropertyHandler.coverage({ target_symbol: 'test-target_symbol' }, storage);
+        const result = await formalPropertyHandler.coverage({ target_symbol: "clef/concept/Password" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_coverage" -> ok', async () => {
+      if (typeof formalPropertyHandler.coverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.coverage({ target_symbol: "clef/concept/Password" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "coverage_unknown" -> ok', async () => {
+      if (typeof formalPropertyHandler.coverage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.coverage({ target_symbol: "clef/concept/Unknown" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -115,7 +199,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.list !== 'function') return;
       try {
-        const result = await formalPropertyHandler.list({ target_symbol: 'test', kind: 'test', status: 'test' }, storage);
+        const result = await formalPropertyHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('FormalProperty imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof formalPropertyHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_kind" -> ok', async () => {
+      if (typeof formalPropertyHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.list({ kind: "invariant" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -131,7 +229,7 @@ describe('FormalProperty imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof formalPropertyHandler.invalidate !== 'function') return;
       try {
-        const result = await formalPropertyHandler.invalidate({ property: 'test' }, storage);
+        const result = await formalPropertyHandler.invalidate({ id: "fp-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -141,6 +239,37 @@ describe('FormalProperty imperative handler', () => {
       }
     });
 
+    it('fixture "valid_invalidate" -> ok', async () => {
+      if (typeof formalPropertyHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.invalidate({ id: "fp-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_missing" -> notfound', async () => {
+      if (typeof formalPropertyHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await formalPropertyHandler.invalidate({ id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof formalPropertyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = formalPropertyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FormalProperty');
+    });
   });
 
   describe('invariant examples', () => {
@@ -163,14 +292,14 @@ describe('FormalProperty imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), property_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), expression: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('prove'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refute'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), solver: fc.string() }) }),
+              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string() }) }),
               fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ target_symbol: fc.string(), kind: fc.string(), status: fc.string() }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ property: fc.string() }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -196,14 +325,14 @@ describe('FormalProperty imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), property_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('prove'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('refute'), input: fc.record({ property: fc.string(), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ property: fc.string(), solver: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), expression: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('prove'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('refute'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), solver: fc.string() }) }),
+              fc.record({ action: fc.constant('synthesize'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), intent_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string() }) }),
               fc.record({ action: fc.constant('coverage'), input: fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ target_symbol: fc.string(), kind: fc.string(), status: fc.string() }) }),
-              fc.record({ action: fc.constant('invalidate'), input: fc.record({ property: fc.string() }) }),
+              fc.record({ action: fc.constant('invalidate'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -241,7 +370,7 @@ describe('FormalProperty imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), property_text: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), target_symbol: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), expression: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await formalPropertyHandler.define(input as Record<string, unknown>, storage);

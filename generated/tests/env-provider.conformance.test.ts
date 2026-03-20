@@ -26,7 +26,7 @@ describe('EnvProvider functional handler', () => {
 
   describe('fetch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = envProviderHandler.fetch({ name: 'test-name' });
+      const program = envProviderHandler.fetch({ name: "DATABASE_URL" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EnvProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = envProviderHandler.fetch({ name: 'test-name' });
+      const program = envProviderHandler.fetch({ name: "DATABASE_URL" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = envProviderHandler.fetch({ name: 'test-name' });
+      const program = envProviderHandler.fetch({ name: "DATABASE_URL" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = envProviderHandler.fetch({ name: 'test-name' });
+      const program = envProviderHandler.fetch({ name: "DATABASE_URL" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EnvProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = envProviderHandler.fetch({ name: 'test-name' });
+      const program = envProviderHandler.fetch({ name: "DATABASE_URL" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EnvProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof envProviderHandler.fetch !== 'function') return;
       try {
-        const result = await interpret(envProviderHandler.fetch({ name: 'test-name' }), storage);
+        const result = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,38 @@ describe('EnvProvider functional handler', () => {
       }
     });
 
+    it('fixture "fetch_db_url" -> ok', async () => {
+      if (typeof envProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(envProviderHandler.fetch({ name: "DATABASE_URL" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_empty_name" -> error', async () => {
+      if (typeof envProviderHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(envProviderHandler.fetch({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof envProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = envProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EnvProvider');
+    });
   });
 
   describe('invariant examples', () => {

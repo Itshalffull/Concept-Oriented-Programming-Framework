@@ -26,7 +26,7 @@ describe('Toolchain functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' });
+      const program = toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' });
+      const program = toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' });
+      const program = toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' });
+      const program = toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' });
+      const program = toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Toolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(toolchainHandler.resolve({ language: 'test-language', platform: 'test-platform', versionConstraint: 'test', category: 'test', toolName: 'test' }), storage);
+        const result = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('Toolchain functional handler', () => {
       }
     });
 
+    it('fixture "resolve_swift_compiler" -> ok', async () => {
+      if (typeof toolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_ts_unit_runner" -> ok', async () => {
+      if (typeof toolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.resolve({ language: "typescript", platform: "linux-x86_64", category: "unit-runner" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_ts_jest" -> ok', async () => {
+      if (typeof toolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.resolve({ language: "typescript", platform: "linux-x86_64", category: "unit-runner", toolName: "jest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_rust" -> ok', async () => {
+      if (typeof toolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.resolve({ language: "rust", platform: "linux-x86_64", versionConstraint: "1.77.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unsupported_lang" -> error', async () => {
+      if (typeof toolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.resolve({ language: "cobol", platform: "linux-x86_64" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolchainHandler.validate({ tool: 'test' });
+      const program = toolchainHandler.validate({ tool: "tc-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolchainHandler.validate({ tool: 'test' });
+      const program = toolchainHandler.validate({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolchainHandler.validate({ tool: 'test' });
+      const program = toolchainHandler.validate({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolchainHandler.validate({ tool: 'test' });
+      const program = toolchainHandler.validate({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolchainHandler.validate({ tool: 'test' });
+      const program = toolchainHandler.validate({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('Toolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolchainHandler.validate !== 'function') return;
       try {
-        const result = await interpret(toolchainHandler.validate({ tool: 'test' }), storage);
+        const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,25 @@ describe('Toolchain functional handler', () => {
       }
     });
 
+    it('fixture "validate_existing" -> ok', async () => {
+      if (typeof toolchainHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> error', async () => {
+      if (typeof toolchainHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.validate({ tool: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolchainHandler.list({ language: 'test', category: 'test' });
+      const program = toolchainHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolchainHandler.list({ language: 'test', category: 'test' });
+      const program = toolchainHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolchainHandler.list({ language: 'test', category: 'test' });
+      const program = toolchainHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolchainHandler.list({ language: 'test', category: 'test' });
+      const program = toolchainHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolchainHandler.list({ language: 'test', category: 'test' });
+      const program = toolchainHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('Toolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
       try {
-        const result = await interpret(toolchainHandler.list({ language: 'test', category: 'test' }), storage);
+        const result = await interpret(toolchainHandler.list({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +245,32 @@ describe('Toolchain functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof toolchainHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_language" -> ok', async () => {
+      if (typeof toolchainHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.list({ language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_category" -> ok', async () => {
+      if (typeof toolchainHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.list({ category: "unit-runner" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('capabilities', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolchainHandler.capabilities({ tool: 'test' });
+      const program = toolchainHandler.capabilities({ tool: "tc-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +278,21 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolchainHandler.capabilities({ tool: 'test' });
+      const program = toolchainHandler.capabilities({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolchainHandler.capabilities({ tool: 'test' });
+      const program = toolchainHandler.capabilities({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolchainHandler.capabilities({ tool: 'test' });
+      const program = toolchainHandler.capabilities({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +305,7 @@ describe('Toolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolchainHandler.capabilities({ tool: 'test' });
+      const program = toolchainHandler.capabilities({ tool: "tc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +314,7 @@ describe('Toolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
       try {
-        const result = await interpret(toolchainHandler.capabilities({ tool: 'test' }), storage);
+        const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +324,38 @@ describe('Toolchain functional handler', () => {
       }
     });
 
+    it('fixture "capabilities_existing" -> ok', async () => {
+      if (typeof toolchainHandler.capabilities !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "capabilities_missing" -> error', async () => {
+      if (typeof toolchainHandler.capabilities !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolchainHandler.capabilities({ tool: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof toolchainHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = toolchainHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Toolchain');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Treasury functional handler', () => {
 
   describe('deposit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' });
+      const program = treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Treasury functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' });
+      const program = treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' });
+      const program = treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' });
+      const program = treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Treasury functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' });
+      const program = treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Treasury functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof treasuryHandler.deposit !== 'function') return;
       try {
-        const result = await interpret(treasuryHandler.deposit({ vault: 'test', token: 'test-token', amount: 1, depositor: 'test-depositor' }), storage);
+        const result = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Treasury functional handler', () => {
       }
     });
 
+    it('fixture "deposit_eth" -> ok', async () => {
+      if (typeof treasuryHandler.deposit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deposit_zero" -> error', async () => {
+      if (typeof treasuryHandler.deposit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "0.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('withdraw', () => {
     it('builds a valid StorageProgram', () => {
-      const program = treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' });
+      const program = treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Treasury functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' });
+      const program = treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' });
+      const program = treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' });
+      const program = treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Treasury functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' });
+      const program = treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Treasury functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof treasuryHandler.withdraw !== 'function') return;
       try {
-        const result = await interpret(treasuryHandler.withdraw({ vault: 'test', token: 'test-token', amount: 1, recipient: 'test-recipient', sourceRef: 'test-sourceRef' }), storage);
+        const result = await interpret(treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Treasury functional handler', () => {
       }
     });
 
+    it('fixture "withdraw_eth" -> ok', async () => {
+      if (typeof treasuryHandler.withdraw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "withdraw_too_much" -> error', async () => {
+      if (typeof treasuryHandler.withdraw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "999999.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('allocate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 });
+      const program = treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Treasury functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 });
+      const program = treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 });
+      const program = treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 });
+      const program = treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Treasury functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 });
+      const program = treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Treasury functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof treasuryHandler.allocate !== 'function') return;
       try {
-        const result = await interpret(treasuryHandler.allocate({ vault: 'test', proposalRef: 'test-proposalRef', token: 'test-token', amount: 1 }), storage);
+        const result = await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Treasury functional handler', () => {
       }
     });
 
+    it('fixture "allocate_grant" -> ok', async () => {
+      if (typeof treasuryHandler.allocate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "allocate_empty_purpose" -> error', async () => {
+      if (typeof treasuryHandler.allocate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "10.0", purpose: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('releaseAllocation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' });
+      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Treasury functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' });
+      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' });
+      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' });
+      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Treasury functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' });
+      const program = treasuryHandler.releaseAllocation({ allocation: "alloc-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Treasury functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof treasuryHandler.releaseAllocation !== 'function') return;
       try {
-        const result = await interpret(treasuryHandler.releaseAllocation({ vault: 'test', proposalRef: 'test-proposalRef' }), storage);
+        const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,16 +296,48 @@ describe('Treasury functional handler', () => {
       }
     });
 
+    it('fixture "release_existing" -> ok', async () => {
+      if (typeof treasuryHandler.releaseAllocation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "release_nonexistent" -> error', async () => {
+      if (typeof treasuryHandler.releaseAllocation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof treasuryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = treasuryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Treasury');
+    });
   });
 
   describe('invariant examples', () => {
     it("deposit-then-withdraw", async () => {
       const storage = createInMemoryStorage();
-      const depositResult0 = await interpret(treasuryHandler.deposit({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":100}, depositor: {"type":"variable","name":"_"} }), storage);
+      const depositResult0 = await interpret(treasuryHandler.deposit({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":100} }), storage);
       expect(depositResult0.variant).toBe("deposited");
       const vault = depositResult0.output["vault"];
       const newBalance = depositResult0.output["newBalance"];
-      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":50}, recipient: {"type":"variable","name":"_"}, sourceRef: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(treasuryHandler.withdraw({ vault: {"type":"variable","name":"v"}, token: {"type":"variable","name":"t"}, amount: {"type":"literal","value":50} }), storage);
       expect(thenResult0.variant).toBe("withdrawn");
     });
 
@@ -275,10 +349,10 @@ describe('Treasury functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ allocation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,10 +379,10 @@ describe('Treasury functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), recipient: fc.string({ minLength: 1, maxLength: 50 }), sourceRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ vault: fc.string(), proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('withdraw'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('allocate'), input: fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), purpose: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('releaseAllocation'), input: fc.record({ allocation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -347,7 +421,7 @@ describe('Treasury functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), depositor: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ vault: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = treasuryHandler.deposit(input as Record<string, unknown>);

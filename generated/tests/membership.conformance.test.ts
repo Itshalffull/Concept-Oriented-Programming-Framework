@@ -26,7 +26,7 @@ describe('Membership functional handler', () => {
 
   describe('join', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' });
+      const program = membershipHandler.join({ member: "alice", polity: "dao-governance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' });
+      const program = membershipHandler.join({ member: "alice", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' });
+      const program = membershipHandler.join({ member: "alice", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' });
+      const program = membershipHandler.join({ member: "alice", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' });
+      const program = membershipHandler.join({ member: "alice", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.join !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.join({ candidate: 'test', evidence: 'test-evidence' }), storage);
+        const result = await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "join_alice" -> ok', async () => {
+      if (typeof membershipHandler.join !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "join_empty_member" -> error', async () => {
+      if (typeof membershipHandler.join !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.join({ member: "", polity: "dao-governance" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('leave', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.leave({ member: 'test' });
+      const program = membershipHandler.leave({ member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.leave({ member: 'test' });
+      const program = membershipHandler.leave({ member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.leave({ member: 'test' });
+      const program = membershipHandler.leave({ member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.leave({ member: 'test' });
+      const program = membershipHandler.leave({ member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.leave({ member: 'test' });
+      const program = membershipHandler.leave({ member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.leave !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.leave({ member: 'test' }), storage);
+        const result = await interpret(membershipHandler.leave({ member: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "leave_alice" -> ok', async () => {
+      if (typeof membershipHandler.leave !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.leave({ member: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "leave_nonexistent" -> error', async () => {
+      if (typeof membershipHandler.leave !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.leave({ member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('suspend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.suspend({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.suspend({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.suspend({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.suspend({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.suspend({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.suspend !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.suspend({ member: 'test', reason: 'test-reason' }), storage);
+        const result = await interpret(membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "suspend_bob" -> ok', async () => {
+      if (typeof membershipHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suspend_nonexistent" -> error', async () => {
+      if (typeof membershipHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.suspend({ member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reinstate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.reinstate({ member: 'test' });
+      const program = membershipHandler.reinstate({ member: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.reinstate({ member: 'test' });
+      const program = membershipHandler.reinstate({ member: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.reinstate({ member: 'test' });
+      const program = membershipHandler.reinstate({ member: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.reinstate({ member: 'test' });
+      const program = membershipHandler.reinstate({ member: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.reinstate({ member: 'test' });
+      const program = membershipHandler.reinstate({ member: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.reinstate !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.reinstate({ member: 'test' }), storage);
+        const result = await interpret(membershipHandler.reinstate({ member: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "reinstate_bob" -> ok', async () => {
+      if (typeof membershipHandler.reinstate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.reinstate({ member: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reinstate_nonexistent" -> error', async () => {
+      if (typeof membershipHandler.reinstate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.reinstate({ member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('kick', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.kick({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.kick({ member: "charlie" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.kick({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.kick({ member: "charlie" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.kick({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.kick({ member: "charlie" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.kick({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.kick({ member: "charlie" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.kick({ member: 'test', reason: 'test-reason' });
+      const program = membershipHandler.kick({ member: "charlie" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.kick !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.kick({ member: 'test', reason: 'test-reason' }), storage);
+        const result = await interpret(membershipHandler.kick({ member: "charlie" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "kick_charlie" -> ok', async () => {
+      if (typeof membershipHandler.kick !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.kick({ member: "charlie" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "kick_nonexistent" -> error', async () => {
+      if (typeof membershipHandler.kick !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.kick({ member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('updateRules', () => {
     it('builds a valid StorageProgram', () => {
-      const program = membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' });
+      const program = membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Membership functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' });
+      const program = membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' });
+      const program = membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' });
+      const program = membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Membership functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' });
+      const program = membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Membership functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof membershipHandler.updateRules !== 'function') return;
       try {
-        const result = await interpret(membershipHandler.updateRules({ joinRules: 'test-joinRules', exitRules: 'test-exitRules' }), storage);
+        const result = await interpret(membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('Membership functional handler', () => {
       }
     });
 
+    it('fixture "update_rules" -> ok', async () => {
+      if (typeof membershipHandler.updateRules !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_empty_polity" -> error', async () => {
+      if (typeof membershipHandler.updateRules !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(membershipHandler.updateRules({ polity: "", joinConditions: "", exitConditions: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof membershipHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = membershipHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Membership');
+    });
   });
 
   describe('invariant examples', () => {
@@ -407,7 +509,7 @@ describe('Membership functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ candidate: fc.string(), evidence: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = membershipHandler.join(input as Record<string, unknown>);

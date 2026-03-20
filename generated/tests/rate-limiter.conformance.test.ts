@@ -19,7 +19,7 @@ describe('RateLimiter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof rateLimiterHandler.configure !== 'function') return;
       try {
-        const result = await rateLimiterHandler.configure({ endpoint: 'test-endpoint', maxTokens: 1, refillRate: 1, refillIntervalMs: 1 }, storage);
+        const result = await rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('RateLimiter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "api_limiter" -> ok', async () => {
+      if (typeof rateLimiterHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_limiter" -> exists', async () => {
+      if (typeof rateLimiterHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "50", refillRate: "5", refillIntervalMs: "2000" }, storage);
+      expect(result.variant).toBe('exists');
     });
 
   });
@@ -35,7 +49,7 @@ describe('RateLimiter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof rateLimiterHandler.acquire !== 'function') return;
       try {
-        const result = await rateLimiterHandler.acquire({ endpoint: 'test-endpoint', tokens: 1 }, storage);
+        const result = await rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,27 @@ describe('RateLimiter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "acquire_tokens" -> ok', async () => {
+      if (typeof rateLimiterHandler.acquire !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "acquire_exhausted" -> limited', async () => {
+      if (typeof rateLimiterHandler.acquire !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "999" }, storage);
+      expect(result.variant).toBe('limited');
+    });
+
+    it('fixture "acquire_no_limiter" -> notFound', async () => {
+      if (typeof rateLimiterHandler.acquire !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.acquire({ endpoint: "unknown-service", tokens: "1" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -51,7 +86,7 @@ describe('RateLimiter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof rateLimiterHandler.release !== 'function') return;
       try {
-        const result = await rateLimiterHandler.release({ endpoint: 'test-endpoint', tokens: 1 }, storage);
+        const result = await rateLimiterHandler.release({ endpoint: "openai-api", tokens: "3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('RateLimiter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "release_tokens" -> ok', async () => {
+      if (typeof rateLimiterHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.release({ endpoint: "openai-api", tokens: "3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "release_no_limiter" -> notFound', async () => {
+      if (typeof rateLimiterHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.release({ endpoint: "unknown-service", tokens: "1" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -67,7 +116,7 @@ describe('RateLimiter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof rateLimiterHandler.get !== 'function') return;
       try {
-        const result = await rateLimiterHandler.get({ endpoint: 'test-endpoint' }, storage);
+        const result = await rateLimiterHandler.get({ endpoint: "openai-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('RateLimiter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_status" -> ok', async () => {
+      if (typeof rateLimiterHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.get({ endpoint: "openai-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_no_limiter" -> notFound', async () => {
+      if (typeof rateLimiterHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.get({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -83,7 +146,7 @@ describe('RateLimiter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof rateLimiterHandler.reset !== 'function') return;
       try {
-        const result = await rateLimiterHandler.reset({ endpoint: 'test-endpoint' }, storage);
+        const result = await rateLimiterHandler.reset({ endpoint: "openai-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +156,37 @@ describe('RateLimiter imperative handler', () => {
       }
     });
 
+    it('fixture "reset_limiter" -> ok', async () => {
+      if (typeof rateLimiterHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.reset({ endpoint: "openai-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reset_no_limiter" -> notFound', async () => {
+      if (typeof rateLimiterHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await rateLimiterHandler.reset({ endpoint: "unknown-service" }, storage);
+      expect(result.variant).toBe('notFound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rateLimiterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rateLimiterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RateLimiter');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('GrpcTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GrpcTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof grpcTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(grpcTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('GrpcTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_default_config" -> ok', async () => {
+      if (typeof grpcTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_java_package" -> ok', async () => {
+      if (typeof grpcTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.generate({ projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_projection" -> error', async () => {
+      if (typeof grpcTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "proto_incompatible" -> ok', async () => {
+      if (typeof grpcTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.generate({ projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = grpcTargetHandler.validate({ service: 'test' });
+      const program = grpcTargetHandler.validate({ service: "grpc-payment-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = grpcTargetHandler.validate({ service: 'test' });
+      const program = grpcTargetHandler.validate({ service: "grpc-payment-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = grpcTargetHandler.validate({ service: 'test' });
+      const program = grpcTargetHandler.validate({ service: "grpc-payment-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = grpcTargetHandler.validate({ service: 'test' });
+      const program = grpcTargetHandler.validate({ service: "grpc-payment-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = grpcTargetHandler.validate({ service: 'test' });
+      const program = grpcTargetHandler.validate({ service: "grpc-payment-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('GrpcTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof grpcTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(grpcTargetHandler.validate({ service: 'test' }), storage);
+        const result = await interpret(grpcTargetHandler.validate({ service: "grpc-payment-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('GrpcTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_service" -> ok', async () => {
+      if (typeof grpcTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.validate({ service: "grpc-payment-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_service" -> error', async () => {
+      if (typeof grpcTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.validate({ service: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listRpcs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = grpcTargetHandler.listRpcs({ concept: 'test-concept' });
+      const program = grpcTargetHandler.listRpcs({ concept: "Payment" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = grpcTargetHandler.listRpcs({ concept: 'test-concept' });
+      const program = grpcTargetHandler.listRpcs({ concept: "Payment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = grpcTargetHandler.listRpcs({ concept: 'test-concept' });
+      const program = grpcTargetHandler.listRpcs({ concept: "Payment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = grpcTargetHandler.listRpcs({ concept: 'test-concept' });
+      const program = grpcTargetHandler.listRpcs({ concept: "Payment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('GrpcTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = grpcTargetHandler.listRpcs({ concept: 'test-concept' });
+      const program = grpcTargetHandler.listRpcs({ concept: "Payment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('GrpcTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof grpcTargetHandler.listRpcs !== 'function') return;
       try {
-        const result = await interpret(grpcTargetHandler.listRpcs({ concept: 'test-concept' }), storage);
+        const result = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('GrpcTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_payment_rpcs" -> ok', async () => {
+      if (typeof grpcTargetHandler.listRpcs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_concept" -> error', async () => {
+      if (typeof grpcTargetHandler.listRpcs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(grpcTargetHandler.listRpcs({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof grpcTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = grpcTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GrpcTarget');
+    });
   });
 
   describe('invariant examples', () => {

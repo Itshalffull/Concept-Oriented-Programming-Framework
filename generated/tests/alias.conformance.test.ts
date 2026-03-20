@@ -26,7 +26,7 @@ describe('Alias functional handler', () => {
 
   describe('addAlias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aliasHandler.addAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.addAlias({ entity: "page-123", name: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Alias functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aliasHandler.addAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.addAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aliasHandler.addAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.addAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aliasHandler.addAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.addAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Alias functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aliasHandler.addAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.addAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Alias functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof aliasHandler.addAlias !== 'function') return;
       try {
-        const result = await interpret(aliasHandler.addAlias({ entity: 'test', name: 'test-name' }), storage);
+        const result = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Alias functional handler', () => {
       }
     });
 
+    it('fixture "valid_add" -> ok', async () => {
+      if (typeof aliasHandler.addAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "another_alias" -> ok', async () => {
+      if (typeof aliasHandler.addAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.addAlias({ entity: "page-456", name: "about-us" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_alias" -> exists', async () => {
+      if (typeof aliasHandler.addAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.addAlias({ entity: "page-123", name: "homepage" }), storage);
+      expect(result.variant).toBe('exists');
+    });
+
   });
 
   describe('removeAlias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aliasHandler.removeAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Alias functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aliasHandler.removeAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aliasHandler.removeAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aliasHandler.removeAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Alias functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aliasHandler.removeAlias({ entity: 'test', name: 'test-name' });
+      const program = aliasHandler.removeAlias({ entity: "page-123", name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Alias functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof aliasHandler.removeAlias !== 'function') return;
       try {
-        const result = await interpret(aliasHandler.removeAlias({ entity: 'test', name: 'test-name' }), storage);
+        const result = await interpret(aliasHandler.removeAlias({ entity: "page-123", name: "homepage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Alias functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof aliasHandler.removeAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.removeAlias({ entity: "page-123", name: "homepage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_alias" -> notfound', async () => {
+      if (typeof aliasHandler.removeAlias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.removeAlias({ entity: "page-999", name: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aliasHandler.resolve({ name: 'test-name' });
+      const program = aliasHandler.resolve({ name: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Alias functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aliasHandler.resolve({ name: 'test-name' });
+      const program = aliasHandler.resolve({ name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aliasHandler.resolve({ name: 'test-name' });
+      const program = aliasHandler.resolve({ name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aliasHandler.resolve({ name: 'test-name' });
+      const program = aliasHandler.resolve({ name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Alias functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aliasHandler.resolve({ name: 'test-name' });
+      const program = aliasHandler.resolve({ name: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Alias functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof aliasHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(aliasHandler.resolve({ name: 'test-name' }), storage);
+        const result = await interpret(aliasHandler.resolve({ name: "homepage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Alias functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve" -> ok', async () => {
+      if (typeof aliasHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.resolve({ name: "homepage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_name" -> notfound', async () => {
+      if (typeof aliasHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aliasHandler.resolve({ name: "no-such-alias" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof aliasHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = aliasHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Alias');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('NextjsTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('NextjsTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof nextjsTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(nextjsTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('NextjsTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_valid_projection" -> ok', async () => {
+      if (typeof nextjsTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_custom_base_path" -> ok', async () => {
+      if (typeof nextjsTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_manifest" -> error', async () => {
+      if (typeof nextjsTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.generate({ projection: "{}", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = nextjsTargetHandler.validate({ route: 'test' });
+      const program = nextjsTargetHandler.validate({ route: "nextjs-user-route-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = nextjsTargetHandler.validate({ route: 'test' });
+      const program = nextjsTargetHandler.validate({ route: "nextjs-user-route-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = nextjsTargetHandler.validate({ route: 'test' });
+      const program = nextjsTargetHandler.validate({ route: "nextjs-user-route-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = nextjsTargetHandler.validate({ route: 'test' });
+      const program = nextjsTargetHandler.validate({ route: "nextjs-user-route-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = nextjsTargetHandler.validate({ route: 'test' });
+      const program = nextjsTargetHandler.validate({ route: "nextjs-user-route-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('NextjsTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof nextjsTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(nextjsTargetHandler.validate({ route: 'test' }), storage);
+        const result = await interpret(nextjsTargetHandler.validate({ route: "nextjs-user-route-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('NextjsTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_route" -> ok', async () => {
+      if (typeof nextjsTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.validate({ route: "nextjs-user-route-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_route" -> error', async () => {
+      if (typeof nextjsTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.validate({ route: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listRoutes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = nextjsTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = nextjsTargetHandler.listRoutes({ concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = nextjsTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = nextjsTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = nextjsTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = nextjsTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = nextjsTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = nextjsTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('NextjsTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = nextjsTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = nextjsTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('NextjsTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof nextjsTargetHandler.listRoutes !== 'function') return;
       try {
-        const result = await interpret(nextjsTargetHandler.listRoutes({ concept: 'test-concept' }), storage);
+        const result = await interpret(nextjsTargetHandler.listRoutes({ concept: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('NextjsTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_user_routes" -> ok', async () => {
+      if (typeof nextjsTargetHandler.listRoutes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.listRoutes({ concept: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_concept" -> error', async () => {
+      if (typeof nextjsTargetHandler.listRoutes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsTargetHandler.listRoutes({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof nextjsTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = nextjsTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('NextjsTarget');
+    });
   });
 
   describe('invariant examples', () => {

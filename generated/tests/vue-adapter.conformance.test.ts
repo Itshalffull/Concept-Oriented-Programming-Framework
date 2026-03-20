@@ -26,7 +26,7 @@ describe('VueAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('VueAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('VueAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('VueAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof vueAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(vueAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('VueAdapter functional handler', () => {
       }
     });
 
+    it('fixture "event_and_class" -> ok', async () => {
+      if (typeof vueAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vueAdapterHandler.normalize({ adapter: "vue-1", props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"disabled\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_layout_and_theme" -> ok', async () => {
+      if (typeof vueAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vueAdapterHandler.normalize({ adapter: "vue-2", props: "{\"layout\":\"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"1fr 1fr\\\",\\\"gap\\\":\\\"8px\\\"}\",\"theme\":\"{\\\"tokens\\\":{\\\"color-primary\\\":\\\"#3b82f6\\\"}}\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof vueAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vueAdapterHandler.normalize({ adapter: "vue-3", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_json_props" -> error', async () => {
+      if (typeof vueAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(vueAdapterHandler.normalize({ adapter: "vue-4", props: "not-json{{" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof vueAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = vueAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VueAdapter');
+    });
   });
 
   describe('invariant examples', () => {

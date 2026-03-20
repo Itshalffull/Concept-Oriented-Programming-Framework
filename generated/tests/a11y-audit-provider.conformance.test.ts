@@ -26,7 +26,7 @@ describe('A11yAuditProvider functional handler', () => {
 
   describe('audit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' });
+      const program = a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('A11yAuditProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' });
+      const program = a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' });
+      const program = a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' });
+      const program = a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('A11yAuditProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' });
+      const program = a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('A11yAuditProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof a11yAuditProviderHandler.audit !== 'function') return;
       try {
-        const result = await interpret(a11yAuditProviderHandler.audit({ audit: 'test', program: 'test-program', instructions: 'test', parts: 'test' }), storage);
+        const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('A11yAuditProvider functional handler', () => {
       }
     });
 
+    it('fixture "accessible_dialog" -> ok', async () => {
+      if (typeof a11yAuditProviderHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_aria" -> ok', async () => {
+      if (typeof a11yAuditProviderHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-2", program: "button-widget", instructions: "[{\"tag\":\"element\",\"part\":\"btn\",\"role\":\"interactive\"}]", parts: ["btn"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "malformed_instructions" -> error', async () => {
+      if (typeof a11yAuditProviderHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(a11yAuditProviderHandler.audit({ audit: "aud-3", program: "bad-widget", instructions: "not-valid-json", parts: ["root"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getFindings', () => {
     it('builds a valid StorageProgram', () => {
-      const program = a11yAuditProviderHandler.getFindings({ audit: 'test' });
+      const program = a11yAuditProviderHandler.getFindings({ audit: "aud-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('A11yAuditProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = a11yAuditProviderHandler.getFindings({ audit: 'test' });
+      const program = a11yAuditProviderHandler.getFindings({ audit: "aud-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = a11yAuditProviderHandler.getFindings({ audit: 'test' });
+      const program = a11yAuditProviderHandler.getFindings({ audit: "aud-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = a11yAuditProviderHandler.getFindings({ audit: 'test' });
+      const program = a11yAuditProviderHandler.getFindings({ audit: "aud-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('A11yAuditProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = a11yAuditProviderHandler.getFindings({ audit: 'test' });
+      const program = a11yAuditProviderHandler.getFindings({ audit: "aud-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('A11yAuditProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof a11yAuditProviderHandler.getFindings !== 'function') return;
       try {
-        const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: 'test' }), storage);
+        const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: "aud-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('A11yAuditProvider functional handler', () => {
       }
     });
 
+    it('fixture "existing_audit" -> ok', async () => {
+      if (typeof a11yAuditProviderHandler.getFindings !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: "aud-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_audit" -> notfound', async () => {
+      if (typeof a11yAuditProviderHandler.getFindings !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(a11yAuditProviderHandler.getFindings({ audit: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof a11yAuditProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = a11yAuditProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('A11yAuditProvider');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('HandlerScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' });
+      const program = handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('HandlerScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' });
+      const program = handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' });
+      const program = handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' });
+      const program = handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('HandlerScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' });
+      const program = handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: 'test-conceptName', actions: 'test', style: 'test-style' }), storage);
+        const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('HandlerScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "imperative_generate" -> ok', async () => {
+      if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Invoice", actions: [], style: "imperative" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "", actions: [], style: "functional" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' });
+      const program = handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('HandlerScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' });
+      const program = handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' });
+      const program = handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' });
+      const program = handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('HandlerScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' });
+      const program = handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: 'test-conceptName', actions: 'test' }), storage);
+        const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('HandlerScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_preview" -> error', async () => {
+      if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "", actions: [] }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('HandlerScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof handlerScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof handlerScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = handlerScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('HandlerScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

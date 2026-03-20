@@ -19,7 +19,7 @@ describe('TransportEffectProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportEffectProviderHandler.analyze !== 'function') return;
       try {
-        const result = await transportEffectProviderHandler.analyze({ program: 'test-program' }, storage);
+        const result = await transportEffectProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('TransportEffectProvider imperative handler', () => {
       }
     });
 
+    it('fixture "program_with_perform" -> ok', async () => {
+      if (typeof transportEffectProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await transportEffectProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"perform\",\"protocol\":\"http\",\"operation\":\"GET\",\"payload\":{},\"bindAs\":\"resp\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[\"http:GET\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_program" -> ok', async () => {
+      if (typeof transportEffectProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await transportEffectProviderHandler.analyze({ program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof transportEffectProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await transportEffectProviderHandler.analyze({ program: "not valid json{{{" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transportEffectProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = transportEffectProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TransportEffectProvider');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('InteractorEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorEntityHandler.register !== 'function') return;
       try {
-        const result = await interactorEntityHandler.register({ name: 'test-name', category: 'test-category', properties: 'test-properties' }, storage);
+        const result = await interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('InteractorEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_single_choice" -> ok', async () => {
+      if (typeof interactorEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.register({ name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_text_input" -> ok', async () => {
+      if (typeof interactorEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.register({ name: "text-input", category: "input", properties: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof interactorEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.register({ name: "", category: "selection", properties: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('InteractorEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorEntityHandler.findByCategory !== 'function') return;
       try {
-        const result = await interactorEntityHandler.findByCategory({ category: 'test-category' }, storage);
+        const result = await interactorEntityHandler.findByCategory({ category: "selection" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('InteractorEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_selection" -> ok', async () => {
+      if (typeof interactorEntityHandler.findByCategory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.findByCategory({ category: "selection" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_category" -> error', async () => {
+      if (typeof interactorEntityHandler.findByCategory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.findByCategory({ category: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('InteractorEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
       try {
-        const result = await interactorEntityHandler.matchingWidgets({ interactor: 'test', context: 'test-context' }, storage);
+        const result = await interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,13 +96,27 @@ describe('InteractorEntity imperative handler', () => {
       }
     });
 
+    it('fixture "matching_desktop" -> ok', async () => {
+      if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.matchingWidgets({ interactor: "interactor-entity-1", context: "desktop" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "matching_missing" -> error', async () => {
+      if (typeof interactorEntityHandler.matchingWidgets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.matchingWidgets({ interactor: "nonexistent-id", context: "mobile" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('classifiedFields', () => {
     it('executes without crashing', async () => {
       if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
       try {
-        const result = await interactorEntityHandler.classifiedFields({ interactor: 'test' }, storage);
+        const result = await interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('InteractorEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "classified_valid" -> ok', async () => {
+      if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.classifiedFields({ interactor: "interactor-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "classified_missing" -> error', async () => {
+      if (typeof interactorEntityHandler.classifiedFields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.classifiedFields({ interactor: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -93,13 +156,20 @@ describe('InteractorEntity imperative handler', () => {
       }
     });
 
+    it('fixture "coverage_report_valid" -> ok', async () => {
+      if (typeof interactorEntityHandler.coverageReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.coverageReport({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('executes without crashing', async () => {
       if (typeof interactorEntityHandler.get !== 'function') return;
       try {
-        const result = await interactorEntityHandler.get({ interactor: 'test' }, storage);
+        const result = await interactorEntityHandler.get({ interactor: "interactor-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +179,37 @@ describe('InteractorEntity imperative handler', () => {
       }
     });
 
+    it('fixture "get_interactor" -> ok', async () => {
+      if (typeof interactorEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.get({ interactor: "interactor-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof interactorEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interactorEntityHandler.get({ interactor: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof interactorEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = interactorEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InteractorEntity');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('ApiSurface functional handler', () => {
 
   describe('compose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' });
+      const program = apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' });
+      const program = apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' });
+      const program = apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' });
+      const program = apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' });
+      const program = apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ApiSurface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof apiSurfaceHandler.compose !== 'function') return;
       try {
-        const result = await interpret(apiSurfaceHandler.compose({ suite: 'test-suite', target: 'test-target', outputs: 'test' }), storage);
+        const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ApiSurface functional handler', () => {
       }
     });
 
+    it('fixture "rest_surface" -> ok', async () => {
+      if (typeof apiSurfaceHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: ["order-output","product-output"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "graphql_surface" -> ok', async () => {
+      if (typeof apiSurfaceHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "graphql", outputs: ["user-output"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_outputs" -> error', async () => {
+      if (typeof apiSurfaceHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(apiSurfaceHandler.compose({ suite: "commerce", target: "rest", outputs: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('entrypoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: 'test' });
+      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: 'test' });
+      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: 'test' });
+      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: 'test' });
+      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ApiSurface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = apiSurfaceHandler.entrypoint({ surface: 'test' });
+      const program = apiSurfaceHandler.entrypoint({ surface: "api-surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ApiSurface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
       try {
-        const result = await interpret(apiSurfaceHandler.entrypoint({ surface: 'test' }), storage);
+        const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "api-surface-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('ApiSurface functional handler', () => {
       }
     });
 
+    it('fixture "valid_surface" -> ok', async () => {
+      if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "api-surface-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_surface" -> error', async () => {
+      if (typeof apiSurfaceHandler.entrypoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(apiSurfaceHandler.entrypoint({ surface: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof apiSurfaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = apiSurfaceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ApiSurface');
+    });
   });
 
   describe('invariant examples', () => {

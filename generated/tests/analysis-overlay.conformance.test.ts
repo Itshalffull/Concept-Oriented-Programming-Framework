@@ -26,7 +26,7 @@ describe('AnalysisOverlay functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' });
+      const program = analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' });
+      const program = analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' });
+      const program = analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' });
+      const program = analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' });
+      const program = analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       try {
-        const result = await interpret(analysisOverlayHandler.apply({ canvas: 'test-canvas', result: 'test-result', kind: 'test-kind', config: 'test' }), storage);
+        const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('AnalysisOverlay functional handler', () => {
       }
     });
 
+    it('fixture "node_color_overlay" -> ok', async () => {
+      if (typeof analysisOverlayHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "node_size_overlay" -> ok', async () => {
+      if (typeof analysisOverlayHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "heat_map_overlay" -> ok', async () => {
+      if (typeof analysisOverlayHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported" -> unsupported_kind', async () => {
+      if (typeof analysisOverlayHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[]}", kind: "sparkline", config: null }), storage);
+      expect(result.variant).toBe('unsupported_kind');
+    });
+
+    it('fixture "bad_result" -> invalid_result', async () => {
+      if (typeof analysisOverlayHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "not json", kind: "node-color", config: null }), storage);
+      expect(result.variant).toBe('invalid_result');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisOverlayHandler.remove({ overlay: 'test' });
+      const program = analysisOverlayHandler.remove({ overlay: "overlay-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisOverlayHandler.remove({ overlay: 'test' });
+      const program = analysisOverlayHandler.remove({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisOverlayHandler.remove({ overlay: 'test' });
+      const program = analysisOverlayHandler.remove({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisOverlayHandler.remove({ overlay: 'test' });
+      const program = analysisOverlayHandler.remove({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisOverlayHandler.remove({ overlay: 'test' });
+      const program = analysisOverlayHandler.remove({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
       try {
-        const result = await interpret(analysisOverlayHandler.remove({ overlay: 'test' }), storage);
+        const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,25 @@ describe('AnalysisOverlay functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing" -> ok', async () => {
+      if (typeof analysisOverlayHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_missing" -> notfound', async () => {
+      if (typeof analysisOverlayHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('toggle', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisOverlayHandler.toggle({ overlay: 'test' });
+      const program = analysisOverlayHandler.toggle({ overlay: "overlay-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisOverlayHandler.toggle({ overlay: 'test' });
+      const program = analysisOverlayHandler.toggle({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisOverlayHandler.toggle({ overlay: 'test' });
+      const program = analysisOverlayHandler.toggle({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisOverlayHandler.toggle({ overlay: 'test' });
+      const program = analysisOverlayHandler.toggle({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisOverlayHandler.toggle({ overlay: 'test' });
+      const program = analysisOverlayHandler.toggle({ overlay: "overlay-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
       try {
-        const result = await interpret(analysisOverlayHandler.toggle({ overlay: 'test' }), storage);
+        const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +245,25 @@ describe('AnalysisOverlay functional handler', () => {
       }
     });
 
+    it('fixture "toggle_existing" -> ok', async () => {
+      if (typeof analysisOverlayHandler.toggle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "toggle_missing" -> notfound', async () => {
+      if (typeof analysisOverlayHandler.toggle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('listOverlays', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' });
+      const program = analysisOverlayHandler.listOverlays({ canvas: "canvas-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' });
+      const program = analysisOverlayHandler.listOverlays({ canvas: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' });
+      const program = analysisOverlayHandler.listOverlays({ canvas: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' });
+      const program = analysisOverlayHandler.listOverlays({ canvas: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' });
+      const program = analysisOverlayHandler.listOverlays({ canvas: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       try {
-        const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: 'test-canvas' }), storage);
+        const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('AnalysisOverlay functional handler', () => {
       }
     });
 
+    it('fixture "list_canvas" -> ok', async () => {
+      if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> ok', async () => {
+      if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('updateConfig', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' });
+      const program = analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' });
+      const program = analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' });
+      const program = analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' });
+      const program = analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('AnalysisOverlay functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' });
+      const program = analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('AnalysisOverlay functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       try {
-        const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: 'test', config: 'test-config' }), storage);
+        const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +389,45 @@ describe('AnalysisOverlay functional handler', () => {
       }
     });
 
+    it('fixture "update_scale" -> ok', async () => {
+      if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing" -> notfound', async () => {
+      if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-nonexistent", config: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "invalid_config" -> notfound', async () => {
+      if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "not json" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof analysisOverlayHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = analysisOverlayHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AnalysisOverlay');
+    });
   });
 
   describe('invariant examples', () => {

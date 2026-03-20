@@ -26,7 +26,7 @@ describe('LambdaRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' });
+      const program = lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' });
+      const program = lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' });
+      const program = lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' });
+      const program = lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' });
+      const program = lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('LambdaRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lambdaRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(lambdaRuntimeHandler.provision({ concept: 'test-concept', memory: 1, timeout: 1, region: 'test-region' }), storage);
+        const result = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('LambdaRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_standard" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_high_memory" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof lambdaRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.provision({ concept: "", memory: "128", timeout: "10", region: "us-east-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' });
+      const program = lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' });
+      const program = lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' });
+      const program = lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' });
+      const program = lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' });
+      const program = lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('LambdaRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(lambdaRuntimeHandler.deploy({ function: 'test', artifactLocation: 'test-artifactLocation' }), storage);
+        const result = await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('LambdaRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_s3" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_function" -> error', async () => {
+      if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.deploy({ function: "", artifactLocation: "s3://bucket/code.zip" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 });
+      const program = lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 });
+      const program = lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 });
+      const program = lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 });
+      const program = lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 });
+      const program = lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('LambdaRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: 'test', aliasWeight: 1 }), storage);
+        const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('LambdaRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_canary" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_invalid_weight" -> error', async () => {
+      if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "", aliasWeight: "-5" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('LambdaRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(lambdaRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' }), storage);
+        const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('LambdaRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_to_v2" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_version" -> error', async () => {
+      if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lambdaRuntimeHandler.destroy({ function: 'test' });
+      const program = lambdaRuntimeHandler.destroy({ function: "fn-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lambdaRuntimeHandler.destroy({ function: 'test' });
+      const program = lambdaRuntimeHandler.destroy({ function: "fn-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lambdaRuntimeHandler.destroy({ function: 'test' });
+      const program = lambdaRuntimeHandler.destroy({ function: "fn-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lambdaRuntimeHandler.destroy({ function: 'test' });
+      const program = lambdaRuntimeHandler.destroy({ function: "fn-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('LambdaRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lambdaRuntimeHandler.destroy({ function: 'test' });
+      const program = lambdaRuntimeHandler.destroy({ function: "fn-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('LambdaRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(lambdaRuntimeHandler.destroy({ function: 'test' }), storage);
+        const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('LambdaRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lambdaRuntimeHandler.destroy({ function: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lambdaRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lambdaRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LambdaRuntime');
+    });
   });
 
   describe('invariant examples', () => {

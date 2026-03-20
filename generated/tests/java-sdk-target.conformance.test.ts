@@ -26,7 +26,7 @@ describe('JavaSdkTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('JavaSdkTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('JavaSdkTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('JavaSdkTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof javaSdkTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(javaSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,45 @@ describe('JavaSdkTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_default_config" -> ok', async () => {
+      if (typeof javaSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(javaSdkTargetHandler.generate({ projection: "invoice-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_custom_group" -> ok', async () => {
+      if (typeof javaSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(javaSdkTargetHandler.generate({ projection: "payment-projection", config: "{\"groupId\":\"com.example.sdk\",\"artifactId\":\"payment-java-sdk\",\"javaVersion\":\"21\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_projection" -> error', async () => {
+      if (typeof javaSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(javaSdkTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof javaSdkTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = javaSdkTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('JavaSdkTarget');
+    });
   });
 
   describe('invariant examples', () => {

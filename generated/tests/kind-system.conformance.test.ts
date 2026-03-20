@@ -26,7 +26,7 @@ describe('KindSystem functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.define({ name: 'test-name', category: 'test-category' });
+      const program = kindSystemHandler.define({ name: "ConceptDSL", category: "source" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.define({ name: 'test-name', category: 'test-category' });
+      const program = kindSystemHandler.define({ name: "ConceptDSL", category: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.define({ name: 'test-name', category: 'test-category' });
+      const program = kindSystemHandler.define({ name: "ConceptDSL", category: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.define({ name: 'test-name', category: 'test-category' });
+      const program = kindSystemHandler.define({ name: "ConceptDSL", category: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.define({ name: 'test-name', category: 'test-category' });
+      const program = kindSystemHandler.define({ name: "ConceptDSL", category: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.define !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.define({ name: 'test-name', category: 'test-category' }), storage);
+        const result = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "define_source" -> ok', async () => {
+      if (typeof kindSystemHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.define({ name: "ConceptDSL", category: "source" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_model" -> ok', async () => {
+      if (typeof kindSystemHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.define({ name: "ConceptAST", category: "model" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_artifact" -> ok', async () => {
+      if (typeof kindSystemHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.define({ name: "TypeScriptFiles", category: "artifact" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('connect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' });
+      const program = kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' });
+      const program = kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' });
+      const program = kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' });
+      const program = kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' });
+      const program = kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.connect !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.connect({ from: 'test', to: 'test', relation: 'test-relation', transformName: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "connect_parse" -> ok', async () => {
+      if (typeof kindSystemHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.connect({ from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "connect_self_loop" -> invalid', async () => {
+      if (typeof kindSystemHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.connect({ from: "ConceptAST", to: "ConceptAST", relation: "normalizes_to" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "connect_missing_kind" -> invalid', async () => {
+      if (typeof kindSystemHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.connect({ from: "NonexistentKind", to: "ConceptAST", relation: "parses_to" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('route', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.route({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.route({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.route({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.route({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.route({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.route !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.route({ from: 'test', to: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "route_connected" -> ok', async () => {
+      if (typeof kindSystemHandler.route !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.route({ from: "ConceptDSL", to: "TypeScriptFiles" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "route_same" -> ok', async () => {
+      if (typeof kindSystemHandler.route !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.route({ from: "ConceptAST", to: "ConceptAST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.validate({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.validate({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.validate({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.validate({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.validate({ from: 'test', to: 'test' });
+      const program = kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.validate !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.validate({ from: 'test', to: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "validate_direct" -> ok', async () => {
+      if (typeof kindSystemHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.validate({ from: "ConceptDSL", to: "ConceptAST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_no_edge" -> invalid', async () => {
+      if (typeof kindSystemHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.validate({ from: "ConceptDSL", to: "RustFiles" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('dependents', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.dependents({ kind: 'test' });
+      const program = kindSystemHandler.dependents({ kind: "ConceptAST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.dependents({ kind: 'test' });
+      const program = kindSystemHandler.dependents({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.dependents({ kind: 'test' });
+      const program = kindSystemHandler.dependents({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.dependents({ kind: 'test' });
+      const program = kindSystemHandler.dependents({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.dependents({ kind: 'test' });
+      const program = kindSystemHandler.dependents({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.dependents !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.dependents({ kind: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.dependents({ kind: "ConceptAST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "dependents_ast" -> ok', async () => {
+      if (typeof kindSystemHandler.dependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.dependents({ kind: "ConceptAST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dependents_leaf" -> ok', async () => {
+      if (typeof kindSystemHandler.dependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.dependents({ kind: "TypeScriptFiles" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('producers', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.producers({ kind: 'test' });
+      const program = kindSystemHandler.producers({ kind: "ConceptAST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.producers({ kind: 'test' });
+      const program = kindSystemHandler.producers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.producers({ kind: 'test' });
+      const program = kindSystemHandler.producers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.producers({ kind: 'test' });
+      const program = kindSystemHandler.producers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.producers({ kind: 'test' });
+      const program = kindSystemHandler.producers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.producers !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.producers({ kind: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.producers({ kind: "ConceptAST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "producers_ast" -> ok', async () => {
+      if (typeof kindSystemHandler.producers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.producers({ kind: "ConceptAST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "producers_source" -> ok', async () => {
+      if (typeof kindSystemHandler.producers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.producers({ kind: "ConceptDSL" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('consumers', () => {
     it('builds a valid StorageProgram', () => {
-      const program = kindSystemHandler.consumers({ kind: 'test' });
+      const program = kindSystemHandler.consumers({ kind: "ConceptAST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = kindSystemHandler.consumers({ kind: 'test' });
+      const program = kindSystemHandler.consumers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = kindSystemHandler.consumers({ kind: 'test' });
+      const program = kindSystemHandler.consumers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = kindSystemHandler.consumers({ kind: 'test' });
+      const program = kindSystemHandler.consumers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('KindSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = kindSystemHandler.consumers({ kind: 'test' });
+      const program = kindSystemHandler.consumers({ kind: "ConceptAST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('KindSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof kindSystemHandler.consumers !== 'function') return;
       try {
-        const result = await interpret(kindSystemHandler.consumers({ kind: 'test' }), storage);
+        const result = await interpret(kindSystemHandler.consumers({ kind: "ConceptAST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -426,6 +524,20 @@ describe('KindSystem functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "consumers_ast" -> ok', async () => {
+      if (typeof kindSystemHandler.consumers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.consumers({ kind: "ConceptAST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "consumers_artifact" -> ok', async () => {
+      if (typeof kindSystemHandler.consumers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.consumers({ kind: "TypeScriptFiles" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -486,6 +598,31 @@ describe('KindSystem functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof kindSystemHandler.graph !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(kindSystemHandler.graph({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof kindSystemHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = kindSystemHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('KindSystem');
+    });
   });
 
   describe('invariant examples', () => {

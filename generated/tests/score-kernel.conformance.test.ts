@@ -19,7 +19,7 @@ describe('ScoreKernel imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreKernelHandler.boot !== 'function') return;
       try {
-        const result = await scoreKernelHandler.boot({ projectRoot: 'test-projectRoot' }, storage);
+        const result = await scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ScoreKernel imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "boot_project" -> ok', async () => {
+      if (typeof scoreKernelHandler.boot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.boot({ projectRoot: "/home/user/my-project" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "boot_empty" -> error', async () => {
+      if (typeof scoreKernelHandler.boot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.boot({ projectRoot: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ScoreKernel imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreKernelHandler.discover !== 'function') return;
       try {
-        const result = await scoreKernelHandler.discover({ kernel: 'test', basePaths: 'test-basePaths' }, storage);
+        const result = await scoreKernelHandler.discover({ kernel: "kernel-1", basePaths: "src,specs" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ScoreKernel imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "discover_src" -> ok', async () => {
+      if (typeof scoreKernelHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.discover({ kernel: "kernel-1", basePaths: "src,specs" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_not_booted" -> error', async () => {
+      if (typeof scoreKernelHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.discover({ kernel: "nonexistent", basePaths: "src" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ScoreKernel imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreKernelHandler.status !== 'function') return;
       try {
-        const result = await scoreKernelHandler.status({ kernel: 'test' }, storage);
+        const result = await scoreKernelHandler.status({ kernel: "kernel-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('ScoreKernel imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "status_valid" -> ok', async () => {
+      if (typeof scoreKernelHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.status({ kernel: "kernel-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_missing" -> error', async () => {
+      if (typeof scoreKernelHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.status({ kernel: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('ScoreKernel imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreKernelHandler.connectRuntime !== 'function') return;
       try {
-        const result = await scoreKernelHandler.connectRuntime({ kernel: 'test', endpoint: 'test-endpoint' }, storage);
+        const result = await scoreKernelHandler.connectRuntime({ kernel: "kernel-1", endpoint: "ws://localhost:8080/changes" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('ScoreKernel imperative handler', () => {
       }
     });
 
+    it('fixture "connect_local" -> ok', async () => {
+      if (typeof scoreKernelHandler.connectRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.connectRuntime({ kernel: "kernel-1", endpoint: "ws://localhost:8080/changes" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "connect_not_booted" -> error', async () => {
+      if (typeof scoreKernelHandler.connectRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await scoreKernelHandler.connectRuntime({ kernel: "nonexistent", endpoint: "ws://localhost:8080" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreKernelHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreKernelHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreKernel');
+    });
   });
 
   describe('invariant examples', () => {

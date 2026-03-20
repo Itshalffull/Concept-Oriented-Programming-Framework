@@ -80,11 +80,18 @@ describe('EntityReflector functional handler', () => {
       }
     });
 
+    it('fixture "valid_reflect" -> ok', async () => {
+      if (typeof entityReflectorHandler.reflect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.reflect({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('reflectProvider', () => {
     it('builds a valid StorageProgram', () => {
-      const program = entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.reflectProvider({ provider_name: "concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('EntityReflector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.reflectProvider({ provider_name: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.reflectProvider({ provider_name: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.reflectProvider({ provider_name: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('EntityReflector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.reflectProvider({ provider_name: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('EntityReflector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof entityReflectorHandler.reflectProvider !== 'function') return;
       try {
-        const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: 'test-provider_name' }), storage);
+        const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: "concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +145,25 @@ describe('EntityReflector functional handler', () => {
       }
     });
 
+    it('fixture "valid_reflect_provider" -> ok', async () => {
+      if (typeof entityReflectorHandler.reflectProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: "concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reflect_unknown_provider" -> error', async () => {
+      if (typeof entityReflectorHandler.reflectProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.reflectProvider({ provider_name: "nonexistent-provider" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerProvider', () => {
     it('builds a valid StorageProgram', () => {
-      const program = entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.registerProvider({ provider_name: "widget" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +171,21 @@ describe('EntityReflector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.registerProvider({ provider_name: "widget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.registerProvider({ provider_name: "widget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.registerProvider({ provider_name: "widget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +198,7 @@ describe('EntityReflector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' });
+      const program = entityReflectorHandler.registerProvider({ provider_name: "widget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +207,7 @@ describe('EntityReflector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof entityReflectorHandler.registerProvider !== 'function') return;
       try {
-        const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: 'test-provider_name' }), storage);
+        const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: "widget" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +215,20 @@ describe('EntityReflector functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof entityReflectorHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: "widget" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> error', async () => {
+      if (typeof entityReflectorHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.registerProvider({ provider_name: "concept" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +289,31 @@ describe('EntityReflector functional handler', () => {
       }
     });
 
+    it('fixture "valid_status" -> ok', async () => {
+      if (typeof entityReflectorHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(entityReflectorHandler.status({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof entityReflectorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = entityReflectorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EntityReflector');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Migration functional handler', () => {
 
   describe('plan', () => {
     it('builds a valid StorageProgram', () => {
-      const program = migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 });
+      const program = migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Migration functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 });
+      const program = migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 });
+      const program = migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 });
+      const program = migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Migration functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 });
+      const program = migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Migration functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof migrationHandler.plan !== 'function') return;
       try {
-        const result = await interpret(migrationHandler.plan({ concept: 'test-concept', fromVersion: 1, toVersion: 1 }), storage);
+        const result = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Migration functional handler', () => {
       }
     });
 
+    it('fixture "plan_upgrade" -> ok', async () => {
+      if (typeof migrationHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "plan_single_step" -> ok', async () => {
+      if (typeof migrationHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.plan({ concept: "Session", fromVersion: "2", toVersion: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "plan_same_version" -> error', async () => {
+      if (typeof migrationHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.plan({ concept: "Auth", fromVersion: "1", toVersion: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "plan_downgrade" -> error', async () => {
+      if (typeof migrationHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.plan({ concept: "Auth", fromVersion: "3", toVersion: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('expand', () => {
     it('builds a valid StorageProgram', () => {
-      const program = migrationHandler.expand({ migration: 'test' });
+      const program = migrationHandler.expand({ migration: "mig-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Migration functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = migrationHandler.expand({ migration: 'test' });
+      const program = migrationHandler.expand({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = migrationHandler.expand({ migration: 'test' });
+      const program = migrationHandler.expand({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = migrationHandler.expand({ migration: 'test' });
+      const program = migrationHandler.expand({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Migration functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = migrationHandler.expand({ migration: 'test' });
+      const program = migrationHandler.expand({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Migration functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof migrationHandler.expand !== 'function') return;
       try {
-        const result = await interpret(migrationHandler.expand({ migration: 'test' }), storage);
+        const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('Migration functional handler', () => {
       }
     });
 
+    it('fixture "expand_valid" -> ok', async () => {
+      if (typeof migrationHandler.expand !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "expand_missing" -> error', async () => {
+      if (typeof migrationHandler.expand !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.expand({ migration: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('migrate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = migrationHandler.migrate({ migration: 'test' });
+      const program = migrationHandler.migrate({ migration: "mig-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Migration functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = migrationHandler.migrate({ migration: 'test' });
+      const program = migrationHandler.migrate({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = migrationHandler.migrate({ migration: 'test' });
+      const program = migrationHandler.migrate({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = migrationHandler.migrate({ migration: 'test' });
+      const program = migrationHandler.migrate({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Migration functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = migrationHandler.migrate({ migration: 'test' });
+      const program = migrationHandler.migrate({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Migration functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof migrationHandler.migrate !== 'function') return;
       try {
-        const result = await interpret(migrationHandler.migrate({ migration: 'test' }), storage);
+        const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('Migration functional handler', () => {
       }
     });
 
+    it('fixture "migrate_valid" -> ok', async () => {
+      if (typeof migrationHandler.migrate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "migrate_missing" -> error', async () => {
+      if (typeof migrationHandler.migrate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.migrate({ migration: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('contract', () => {
     it('builds a valid StorageProgram', () => {
-      const program = migrationHandler.contract({ migration: 'test' });
+      const program = migrationHandler.contract({ migration: "mig-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Migration functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = migrationHandler.contract({ migration: 'test' });
+      const program = migrationHandler.contract({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = migrationHandler.contract({ migration: 'test' });
+      const program = migrationHandler.contract({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = migrationHandler.contract({ migration: 'test' });
+      const program = migrationHandler.contract({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Migration functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = migrationHandler.contract({ migration: 'test' });
+      const program = migrationHandler.contract({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Migration functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof migrationHandler.contract !== 'function') return;
       try {
-        const result = await interpret(migrationHandler.contract({ migration: 'test' }), storage);
+        const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('Migration functional handler', () => {
       }
     });
 
+    it('fixture "contract_valid" -> ok', async () => {
+      if (typeof migrationHandler.contract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "contract_missing" -> error', async () => {
+      if (typeof migrationHandler.contract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.contract({ migration: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = migrationHandler.status({ migration: 'test' });
+      const program = migrationHandler.status({ migration: "mig-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('Migration functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = migrationHandler.status({ migration: 'test' });
+      const program = migrationHandler.status({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = migrationHandler.status({ migration: 'test' });
+      const program = migrationHandler.status({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = migrationHandler.status({ migration: 'test' });
+      const program = migrationHandler.status({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('Migration functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = migrationHandler.status({ migration: 'test' });
+      const program = migrationHandler.status({ migration: "mig-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('Migration functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof migrationHandler.status !== 'function') return;
       try {
-        const result = await interpret(migrationHandler.status({ migration: 'test' }), storage);
+        const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,38 @@ describe('Migration functional handler', () => {
       }
     });
 
+    it('fixture "status_valid" -> ok', async () => {
+      if (typeof migrationHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_missing" -> error', async () => {
+      if (typeof migrationHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(migrationHandler.status({ migration: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof migrationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = migrationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Migration');
+    });
   });
 
   describe('invariant examples', () => {

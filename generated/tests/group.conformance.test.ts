@@ -26,7 +26,7 @@ describe('Group functional handler', () => {
 
   describe('createGroup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupHandler.createGroup({ group: 'test', name: 'test-name' });
+      const program = groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Group functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupHandler.createGroup({ group: 'test', name: 'test-name' });
+      const program = groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupHandler.createGroup({ group: 'test', name: 'test-name' });
+      const program = groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupHandler.createGroup({ group: 'test', name: 'test-name' });
+      const program = groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Group functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupHandler.createGroup({ group: 'test', name: 'test-name' });
+      const program = groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Group functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupHandler.createGroup !== 'function') return;
       try {
-        const result = await interpret(groupHandler.createGroup({ group: 'test', name: 'test-name' }), storage);
+        const result = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Group functional handler', () => {
       }
     });
 
+    it('fixture "create_team_group" -> ok', async () => {
+      if (typeof groupHandler.createGroup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.createGroup({ group: "team-engineering", name: "Engineering Team" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_group" -> error', async () => {
+      if (typeof groupHandler.createGroup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.createGroup({ group: "", name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Group functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Group functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Group functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupHandler.addMember !== 'function') return;
       try {
-        const result = await interpret(groupHandler.addMember({ group: 'test', user: 'test-user', role: 'test-role' }), storage);
+        const result = await interpret(groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Group functional handler', () => {
       }
     });
 
+    it('fixture "add_member_as_editor" -> ok', async () => {
+      if (typeof groupHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.addMember({ group: "team-engineering", user: "alice@example.com", role: "editor" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_member_missing_group" -> error', async () => {
+      if (typeof groupHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.addMember({ group: "nonexistent-group", user: "bob@example.com", role: "viewer" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('assignGroupRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Group functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Group functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' });
+      const program = groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Group functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupHandler.assignGroupRole !== 'function') return;
       try {
-        const result = await interpret(groupHandler.assignGroupRole({ group: 'test', user: 'test-user', role: 'test-role' }), storage);
+        const result = await interpret(groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Group functional handler', () => {
       }
     });
 
+    it('fixture "assign_admin_role" -> ok', async () => {
+      if (typeof groupHandler.assignGroupRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.assignGroupRole({ group: "team-engineering", user: "alice@example.com", role: "admin" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_to_missing_group" -> error', async () => {
+      if (typeof groupHandler.assignGroupRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.assignGroupRole({ group: "nonexistent-group", user: "alice@example.com", role: "admin" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addContent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupHandler.addContent({ group: 'test', content: 'test-content' });
+      const program = groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Group functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupHandler.addContent({ group: 'test', content: 'test-content' });
+      const program = groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupHandler.addContent({ group: 'test', content: 'test-content' });
+      const program = groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupHandler.addContent({ group: 'test', content: 'test-content' });
+      const program = groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Group functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupHandler.addContent({ group: 'test', content: 'test-content' });
+      const program = groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Group functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupHandler.addContent !== 'function') return;
       try {
-        const result = await interpret(groupHandler.addContent({ group: 'test', content: 'test-content' }), storage);
+        const result = await interpret(groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Group functional handler', () => {
       }
     });
 
+    it('fixture "add_document_content" -> ok', async () => {
+      if (typeof groupHandler.addContent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.addContent({ group: "team-engineering", content: "doc-design-spec-v2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_missing_group" -> error', async () => {
+      if (typeof groupHandler.addContent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.addContent({ group: "nonexistent-group", content: "doc-readme" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkGroupAccess', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' });
+      const program = groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Group functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' });
+      const program = groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' });
+      const program = groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' });
+      const program = groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Group functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' });
+      const program = groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Group functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupHandler.checkGroupAccess !== 'function') return;
       try {
-        const result = await interpret(groupHandler.checkGroupAccess({ group: 'test', user: 'test-user', permission: 'test-permission' }), storage);
+        const result = await interpret(groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Group functional handler', () => {
       }
     });
 
+    it('fixture "check_member_read" -> ok', async () => {
+      if (typeof groupHandler.checkGroupAccess !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.checkGroupAccess({ group: "team-engineering", user: "alice@example.com", permission: "read" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_access_missing_group" -> error', async () => {
+      if (typeof groupHandler.checkGroupAccess !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupHandler.checkGroupAccess({ group: "nonexistent-group", user: "alice@example.com", permission: "write" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof groupHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = groupHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Group');
+    });
   });
 
   describe('invariant examples', () => {

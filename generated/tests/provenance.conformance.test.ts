@@ -26,7 +26,7 @@ describe('Provenance functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' });
+      const program = provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' });
+      const program = provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' });
+      const program = provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' });
+      const program = provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' });
+      const program = provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.record !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.record({ entity: 'test-entity', activity: 'test-activity', agent: 'test-agent', inputs: 'test-inputs' }), storage);
+        const result = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "record_capture" -> ok', async () => {
+      if (typeof provenanceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.record({ entity: "item-1", activity: "capture", agent: "system", inputs: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_transform" -> ok', async () => {
+      if (typeof provenanceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.record({ entity: "item-2", activity: "transform", agent: "enricher-ocr", inputs: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('trace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.trace({ entityId: 'test-entityId' });
+      const program = provenanceHandler.trace({ entityId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.trace({ entityId: 'test-entityId' });
+      const program = provenanceHandler.trace({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.trace({ entityId: 'test-entityId' });
+      const program = provenanceHandler.trace({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.trace({ entityId: 'test-entityId' });
+      const program = provenanceHandler.trace({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.trace({ entityId: 'test-entityId' });
+      const program = provenanceHandler.trace({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.trace !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.trace({ entityId: 'test-entityId' }), storage);
+        const result = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "trace_existing" -> ok', async () => {
+      if (typeof provenanceHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.trace({ entityId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing" -> notfound', async () => {
+      if (typeof provenanceHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.trace({ entityId: "item-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('audit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.audit({ batchId: 'test-batchId' });
+      const program = provenanceHandler.audit({ batchId: "batch-2026-03-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.audit({ batchId: 'test-batchId' });
+      const program = provenanceHandler.audit({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.audit({ batchId: 'test-batchId' });
+      const program = provenanceHandler.audit({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.audit({ batchId: 'test-batchId' });
+      const program = provenanceHandler.audit({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.audit({ batchId: 'test-batchId' });
+      const program = provenanceHandler.audit({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.audit !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.audit({ batchId: 'test-batchId' }), storage);
+        const result = await interpret(provenanceHandler.audit({ batchId: "batch-2026-03-01" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "audit_batch" -> ok', async () => {
+      if (typeof provenanceHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.audit({ batchId: "batch-2026-03-01" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "audit_missing" -> notfound', async () => {
+      if (typeof provenanceHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.audit({ batchId: "batch-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.rollback({ batchId: 'test-batchId' });
+      const program = provenanceHandler.rollback({ batchId: "batch-2026-03-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.rollback({ batchId: 'test-batchId' });
+      const program = provenanceHandler.rollback({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.rollback({ batchId: 'test-batchId' });
+      const program = provenanceHandler.rollback({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.rollback({ batchId: 'test-batchId' });
+      const program = provenanceHandler.rollback({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.rollback({ batchId: 'test-batchId' });
+      const program = provenanceHandler.rollback({ batchId: "batch-2026-03-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.rollback({ batchId: 'test-batchId' }), storage);
+        const result = await interpret(provenanceHandler.rollback({ batchId: "batch-2026-03-01" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "rollback_batch" -> ok', async () => {
+      if (typeof provenanceHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.rollback({ batchId: "batch-2026-03-01" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing" -> notfound', async () => {
+      if (typeof provenanceHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.rollback({ batchId: "batch-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' });
+      const program = provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' });
+      const program = provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' });
+      const program = provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' });
+      const program = provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' });
+      const program = provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.diff !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.diff({ entityId: 'test-entityId', version1: 'test-version1', version2: 'test-version2' }), storage);
+        const result = await interpret(provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "diff_versions" -> ok', async () => {
+      if (typeof provenanceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.diff({ entityId: "item-1", version1: "prov-1", version2: "prov-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing" -> notfound', async () => {
+      if (typeof provenanceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.diff({ entityId: "item-missing", version1: "prov-x", version2: "prov-y" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('reproduce', () => {
     it('builds a valid StorageProgram', () => {
-      const program = provenanceHandler.reproduce({ entityId: 'test-entityId' });
+      const program = provenanceHandler.reproduce({ entityId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Provenance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = provenanceHandler.reproduce({ entityId: 'test-entityId' });
+      const program = provenanceHandler.reproduce({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = provenanceHandler.reproduce({ entityId: 'test-entityId' });
+      const program = provenanceHandler.reproduce({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = provenanceHandler.reproduce({ entityId: 'test-entityId' });
+      const program = provenanceHandler.reproduce({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Provenance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = provenanceHandler.reproduce({ entityId: 'test-entityId' });
+      const program = provenanceHandler.reproduce({ entityId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Provenance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof provenanceHandler.reproduce !== 'function') return;
       try {
-        const result = await interpret(provenanceHandler.reproduce({ entityId: 'test-entityId' }), storage);
+        const result = await interpret(provenanceHandler.reproduce({ entityId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('Provenance functional handler', () => {
       }
     });
 
+    it('fixture "reproduce_existing" -> ok', async () => {
+      if (typeof provenanceHandler.reproduce !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.reproduce({ entityId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reproduce_missing" -> notfound', async () => {
+      if (typeof provenanceHandler.reproduce !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(provenanceHandler.reproduce({ entityId: "item-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof provenanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = provenanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Provenance');
+    });
   });
 
   describe('invariant examples', () => {

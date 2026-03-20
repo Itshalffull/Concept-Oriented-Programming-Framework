@@ -26,7 +26,7 @@ describe('Quorum functional handler', () => {
 
   describe('setThreshold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 });
+      const program = quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Quorum functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 });
+      const program = quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 });
+      const program = quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 });
+      const program = quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Quorum functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 });
+      const program = quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Quorum functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof quorumHandler.setThreshold !== 'function') return;
       try {
-        const result = await interpret(quorumHandler.setThreshold({ thresholdType: 'test-thresholdType', value: 1 }), storage);
+        const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Quorum functional handler', () => {
       }
     });
 
+    it('fixture "absolute_ten" -> ok', async () => {
+      if (typeof quorumHandler.setThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Absolute", value: "10.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fractional_half" -> ok', async () => {
+      if (typeof quorumHandler.setThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.setThreshold({ thresholdType: "Fractional", value: "0.5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_type" -> error', async () => {
+      if (typeof quorumHandler.setThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.setThreshold({ thresholdType: "", value: "10.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quorumHandler.check({ totalVotes: 1, totalEligible: 1 });
+      const program = quorumHandler.check({ totalVotes: "15", totalEligible: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Quorum functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quorumHandler.check({ totalVotes: 1, totalEligible: 1 });
+      const program = quorumHandler.check({ totalVotes: "15", totalEligible: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quorumHandler.check({ totalVotes: 1, totalEligible: 1 });
+      const program = quorumHandler.check({ totalVotes: "15", totalEligible: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quorumHandler.check({ totalVotes: 1, totalEligible: 1 });
+      const program = quorumHandler.check({ totalVotes: "15", totalEligible: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Quorum functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quorumHandler.check({ totalVotes: 1, totalEligible: 1 });
+      const program = quorumHandler.check({ totalVotes: "15", totalEligible: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Quorum functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof quorumHandler.check !== 'function') return;
       try {
-        const result = await interpret(quorumHandler.check({ totalVotes: 1, totalEligible: 1 }), storage);
+        const result = await interpret(quorumHandler.check({ totalVotes: "15", totalEligible: "100" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Quorum functional handler', () => {
       }
     });
 
+    it('fixture "quorum_met" -> ok', async () => {
+      if (typeof quorumHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.check({ totalVotes: "15", totalEligible: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "quorum_not_met" -> error', async () => {
+      if (typeof quorumHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.check({ totalVotes: "3", totalEligible: "100" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('updateThreshold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 });
+      const program = quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Quorum functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 });
+      const program = quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 });
+      const program = quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 });
+      const program = quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Quorum functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 });
+      const program = quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Quorum functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof quorumHandler.updateThreshold !== 'function') return;
       try {
-        const result = await interpret(quorumHandler.updateThreshold({ rule: 'test', newType: 'test-newType', newValue: 1 }), storage);
+        const result = await interpret(quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Quorum functional handler', () => {
       }
     });
 
+    it('fixture "update_to_fractional" -> ok', async () => {
+      if (typeof quorumHandler.updateThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.updateThreshold({ rule: "quorum-001", newType: "Fractional", newValue: "0.25" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing_rule" -> error', async () => {
+      if (typeof quorumHandler.updateThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quorumHandler.updateThreshold({ rule: "quorum-nonexistent", newType: "Absolute", newValue: "5.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof quorumHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = quorumHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Quorum');
+    });
   });
 
   describe('invariant examples', () => {

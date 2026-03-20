@@ -26,7 +26,7 @@ describe('Health functional handler', () => {
 
   describe('checkConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' });
+      const program = healthHandler.checkConcept({ concept: "User", runtime: "server" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Health functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' });
+      const program = healthHandler.checkConcept({ concept: "User", runtime: "server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' });
+      const program = healthHandler.checkConcept({ concept: "User", runtime: "server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' });
+      const program = healthHandler.checkConcept({ concept: "User", runtime: "server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Health functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' });
+      const program = healthHandler.checkConcept({ concept: "User", runtime: "server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Health functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof healthHandler.checkConcept !== 'function') return;
       try {
-        const result = await interpret(healthHandler.checkConcept({ concept: 'test-concept', runtime: 'test-runtime' }), storage);
+        const result = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Health functional handler', () => {
       }
     });
 
+    it('fixture "check_user" -> ok', async () => {
+      if (typeof healthHandler.checkConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkConcept({ concept: "User", runtime: "server" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_payment" -> ok', async () => {
+      if (typeof healthHandler.checkConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkConcept({ concept: "Payment", runtime: "worker" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_empty_concept" -> error', async () => {
+      if (typeof healthHandler.checkConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkConcept({ concept: "", runtime: "server" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' });
+      const program = healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Health functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' });
+      const program = healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' });
+      const program = healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' });
+      const program = healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Health functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' });
+      const program = healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Health functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof healthHandler.checkSync !== 'function') return;
       try {
-        const result = await interpret(healthHandler.checkSync({ sync: 'test-sync', concepts: 'test' }), storage);
+        const result = await interpret(healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Health functional handler', () => {
       }
     });
 
+    it('fixture "check_auth_sync" -> ok', async () => {
+      if (typeof healthHandler.checkSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkSync({ sync: "auth-session-sync", concepts: ["User","Session"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_sync_empty" -> error', async () => {
+      if (typeof healthHandler.checkSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkSync({ sync: "", concepts: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkSuite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' });
+      const program = healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Health functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' });
+      const program = healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' });
+      const program = healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' });
+      const program = healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Health functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' });
+      const program = healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Health functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof healthHandler.checkSuite !== 'function') return;
       try {
-        const result = await interpret(healthHandler.checkSuite({ suite: 'test-suite', environment: 'test-environment' }), storage);
+        const result = await interpret(healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,32 @@ describe('Health functional handler', () => {
       }
     });
 
+    it('fixture "check_auth_suite" -> ok', async () => {
+      if (typeof healthHandler.checkSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkSuite({ suite: "auth-suite", environment: "staging" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_suite_prod" -> ok', async () => {
+      if (typeof healthHandler.checkSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkSuite({ suite: "payments", environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_suite_empty" -> error', async () => {
+      if (typeof healthHandler.checkSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkSuite({ suite: "", environment: "staging" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkInvariant', () => {
     it('builds a valid StorageProgram', () => {
-      const program = healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' });
+      const program = healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Health functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' });
+      const program = healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' });
+      const program = healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' });
+      const program = healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Health functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' });
+      const program = healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Health functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof healthHandler.checkInvariant !== 'function') return;
       try {
-        const result = await interpret(healthHandler.checkInvariant({ concept: 'test-concept', invariant: 'test-invariant' }), storage);
+        const result = await interpret(healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('Health functional handler', () => {
       }
     });
 
+    it('fixture "check_invariant" -> ok', async () => {
+      if (typeof healthHandler.checkInvariant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkInvariant({ concept: "User", invariant: "valid-email" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_invariant_empty" -> error', async () => {
+      if (typeof healthHandler.checkInvariant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(healthHandler.checkInvariant({ concept: "", invariant: "valid-email" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof healthHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = healthHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Health');
+    });
   });
 
   describe('invariant examples', () => {

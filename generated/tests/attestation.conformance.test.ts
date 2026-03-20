@@ -26,7 +26,7 @@ describe('Attestation functional handler', () => {
 
   describe('attest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' });
+      const program = attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Attestation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' });
+      const program = attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' });
+      const program = attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' });
+      const program = attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Attestation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' });
+      const program = attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Attestation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attestationHandler.attest !== 'function') return;
       try {
-        const result = await interpret(attestationHandler.attest({ schema: 'test-schema', attester: 'test-attester', recipient: 'test-recipient', data: 'test-data', expiry: 'test' }), storage);
+        const result = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Attestation functional handler', () => {
       }
     });
 
+    it('fixture "attest_kyc" -> ok', async () => {
+      if (typeof attestationHandler.attest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.attest({ schema: "kyc-identity", attester: "civic-authority", recipient: "alice", data: "{\"level\":\"basic\"}", expiry: "2027-12-31T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "attest_empty_schema" -> error', async () => {
+      if (typeof attestationHandler.attest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.attest({ schema: "", attester: "civic-authority", recipient: "alice", data: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('revoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' });
+      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Attestation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' });
+      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' });
+      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' });
+      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Attestation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' });
+      const program = attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Attestation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attestationHandler.revoke !== 'function') return;
       try {
-        const result = await interpret(attestationHandler.revoke({ attestation: 'test', revoker: 'test-revoker' }), storage);
+        const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Attestation functional handler', () => {
       }
     });
 
+    it('fixture "revoke_by_attester" -> ok', async () => {
+      if (typeof attestationHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "civic-authority" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "revoke_unauthorized" -> error', async () => {
+      if (typeof attestationHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.revoke({ attestation: "attest-1001", revoker: "mallory" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attestationHandler.verify({ attestation: 'test' });
+      const program = attestationHandler.verify({ attestation: "attest-1001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Attestation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attestationHandler.verify({ attestation: 'test' });
+      const program = attestationHandler.verify({ attestation: "attest-1001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attestationHandler.verify({ attestation: 'test' });
+      const program = attestationHandler.verify({ attestation: "attest-1001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attestationHandler.verify({ attestation: 'test' });
+      const program = attestationHandler.verify({ attestation: "attest-1001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Attestation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attestationHandler.verify({ attestation: 'test' });
+      const program = attestationHandler.verify({ attestation: "attest-1001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Attestation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attestationHandler.verify !== 'function') return;
       try {
-        const result = await interpret(attestationHandler.verify({ attestation: 'test' }), storage);
+        const result = await interpret(attestationHandler.verify({ attestation: "attest-1001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Attestation functional handler', () => {
       }
     });
 
+    it('fixture "verify_valid" -> ok', async () => {
+      if (typeof attestationHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.verify({ attestation: "attest-1001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_nonexistent" -> error', async () => {
+      if (typeof attestationHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attestationHandler.verify({ attestation: "attest-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof attestationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = attestationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Attestation');
+    });
   });
 
   describe('invariant examples', () => {

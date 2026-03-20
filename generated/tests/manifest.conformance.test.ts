@@ -26,7 +26,7 @@ describe('Manifest functional handler', () => {
 
   describe('add', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true });
+      const program = manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true });
+      const program = manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true });
+      const program = manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true });
+      const program = manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true });
+      const program = manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.add !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.add({ project: 'test', module_id: 'test-module_id', version_range: 'test-version_range', edge_type: 'test-edge_type', environment: 'test-environment', features: 'test', optional: true }), storage);
+        const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "add_normal_dep" -> ok', async () => {
+      if (typeof manifestHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_invalid_module_id" -> error', async () => {
+      if (typeof manifestHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.remove({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.remove({ project: "my-app", module_id: "lodash" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.remove({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.remove({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.remove({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.remove({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.remove({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.remove({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.remove({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.remove({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.remove !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.remove({ project: 'test', module_id: 'test-module_id' }), storage);
+        const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing_dep" -> ok', async () => {
+      if (typeof manifestHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent_dep" -> error', async () => {
+      if (typeof manifestHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "nonexistent-pkg" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('override', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' });
+      const program = manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' });
+      const program = manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' });
+      const program = manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' });
+      const program = manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' });
+      const program = manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.override !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.override({ project: 'test', module_id: 'test-module_id', replacement_id: 'test', replacement_source: 'test', version_pin: 'test' }), storage);
+        const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "override_with_pin" -> ok', async () => {
+      if (typeof manifestHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "override_no_fields" -> error', async () => {
+      if (typeof manifestHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: null }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('disable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.disable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.disable({ project: "my-app", module_id: "lodash" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.disable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.disable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.disable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.disable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.disable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.disable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.disable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.disable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.disable !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.disable({ project: 'test', module_id: 'test-module_id' }), storage);
+        const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "disable_existing_dep" -> ok', async () => {
+      if (typeof manifestHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disable_missing_dep" -> error', async () => {
+      if (typeof manifestHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "nonexistent-pkg" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('enable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.enable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.enable({ project: "my-app", module_id: "lodash" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.enable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.enable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.enable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.enable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.enable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.enable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.enable({ project: 'test', module_id: 'test-module_id' });
+      const program = manifestHandler.enable({ project: "my-app", module_id: "lodash" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.enable !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.enable({ project: 'test', module_id: 'test-module_id' }), storage);
+        const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "enable_disabled_dep" -> ok', async () => {
+      if (typeof manifestHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enable_not_disabled" -> error', async () => {
+      if (typeof manifestHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "not-disabled-pkg" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('merge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.merge({ base: 'test', overlay: 'test' });
+      const program = manifestHandler.merge({ base: "project-base", overlay: "project-overlay" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.merge({ base: 'test', overlay: 'test' });
+      const program = manifestHandler.merge({ base: "project-base", overlay: "project-overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.merge({ base: 'test', overlay: 'test' });
+      const program = manifestHandler.merge({ base: "project-base", overlay: "project-overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.merge({ base: 'test', overlay: 'test' });
+      const program = manifestHandler.merge({ base: "project-base", overlay: "project-overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.merge({ base: 'test', overlay: 'test' });
+      const program = manifestHandler.merge({ base: "project-base", overlay: "project-overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.merge !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.merge({ base: 'test', overlay: 'test' }), storage);
+        const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "merge_two_manifests" -> ok', async () => {
+      if (typeof manifestHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "merge_missing_manifest" -> error', async () => {
+      if (typeof manifestHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.merge({ base: "nonexistent", overlay: "also-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manifestHandler.validate({ project: 'test' });
+      const program = manifestHandler.validate({ project: "my-app" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Manifest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manifestHandler.validate({ project: 'test' });
+      const program = manifestHandler.validate({ project: "my-app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manifestHandler.validate({ project: 'test' });
+      const program = manifestHandler.validate({ project: "my-app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manifestHandler.validate({ project: 'test' });
+      const program = manifestHandler.validate({ project: "my-app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Manifest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manifestHandler.validate({ project: 'test' });
+      const program = manifestHandler.validate({ project: "my-app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Manifest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manifestHandler.validate !== 'function') return;
       try {
-        const result = await interpret(manifestHandler.validate({ project: 'test' }), storage);
+        const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Manifest functional handler', () => {
       }
     });
 
+    it('fixture "validate_valid_project" -> ok', async () => {
+      if (typeof manifestHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing_project" -> error', async () => {
+      if (typeof manifestHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manifestHandler.validate({ project: "nonexistent-project" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof manifestHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = manifestHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Manifest');
+    });
   });
 
   describe('invariant examples', () => {

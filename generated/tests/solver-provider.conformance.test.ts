@@ -19,7 +19,7 @@ describe('SolverProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof solverProviderHandler.register !== 'function') return;
       try {
-        const result = await solverProviderHandler.register({ provider_id: 'test-provider_id', supported_languages: 'test', supported_kinds: 'test', capabilities: 'test', priority: 1 }, storage);
+        const result = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('SolverProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof solverProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.register({ provider_id: "z3", name: "Z3 SMT Solver", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\",\"precondition\",\"postcondition\",\"safety\"]", priority: "1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> invalid', async () => {
+      if (typeof solverProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.register({ provider_id: "z3", name: "", supported_languages: "[\"smtlib\"]", supported_kinds: "[\"invariant\"]" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +49,7 @@ describe('SolverProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof solverProviderHandler.dispatch !== 'function') return;
       try {
-        const result = await solverProviderHandler.dispatch({ property_ref: 'test-property_ref', formal_language: 'test-formal_language', kind: 'test-kind', timeout_ms: 1 }, storage);
+        const result = await solverProviderHandler.dispatch({ property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('SolverProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_dispatch" -> ok', async () => {
+      if (typeof solverProviderHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.dispatch({ property_ref: "prop-1", formal_language: "smtlib", kind: "invariant" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_matching_provider" -> no_provider', async () => {
+      if (typeof solverProviderHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.dispatch({ property_ref: "prop-2", formal_language: "coq", kind: "liveness" }, storage);
+      expect(result.variant).toBe('no_provider');
     });
 
   });
@@ -51,7 +79,7 @@ describe('SolverProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof solverProviderHandler.dispatch_batch !== 'function') return;
       try {
-        const result = await solverProviderHandler.dispatch_batch({ properties: 'test', timeout_ms: 1 }, storage);
+        const result = await solverProviderHandler.dispatch_batch({ property_refs: "[\"prop-1\",\"prop-2\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,13 +89,27 @@ describe('SolverProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid_batch" -> ok', async () => {
+      if (typeof solverProviderHandler.dispatch_batch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.dispatch_batch({ property_refs: "[\"prop-1\",\"prop-2\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_batch" -> invalid', async () => {
+      if (typeof solverProviderHandler.dispatch_batch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.dispatch_batch({ property_refs: "[]" }, storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('health_check', () => {
     it('executes without crashing', async () => {
       if (typeof solverProviderHandler.health_check !== 'function') return;
       try {
-        const result = await solverProviderHandler.health_check({ provider: 'test' }, storage);
+        const result = await solverProviderHandler.health_check({ provider_id: "z3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('SolverProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_health" -> ok', async () => {
+      if (typeof solverProviderHandler.health_check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.health_check({ provider_id: "z3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "health_missing" -> notfound', async () => {
+      if (typeof solverProviderHandler.health_check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.health_check({ provider_id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -93,13 +149,20 @@ describe('SolverProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof solverProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('unregister', () => {
     it('executes without crashing', async () => {
       if (typeof solverProviderHandler.unregister !== 'function') return;
       try {
-        const result = await solverProviderHandler.unregister({ provider_id: 'test-provider_id' }, storage);
+        const result = await solverProviderHandler.unregister({ provider_id: "z3" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +172,37 @@ describe('SolverProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid_unregister" -> ok', async () => {
+      if (typeof solverProviderHandler.unregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.unregister({ provider_id: "z3" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unregister_missing" -> notfound', async () => {
+      if (typeof solverProviderHandler.unregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await solverProviderHandler.unregister({ provider_id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof solverProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = solverProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SolverProvider');
+    });
   });
 
   describe('invariant examples', () => {
@@ -129,10 +223,10 @@ describe('SolverProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('health_check'), input: fc.record({ provider: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string({ minLength: 1, maxLength: 50 }), supported_kinds: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string(), priority: fc.string() }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ property_refs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('health_check'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -160,10 +254,10 @@ describe('SolverProvider imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ properties: fc.string(), timeout_ms: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('health_check'), input: fc.record({ provider: fc.string() }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string({ minLength: 1, maxLength: 50 }), supported_kinds: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string(), priority: fc.string() }) }),
+              fc.record({ action: fc.constant('dispatch'), input: fc.record({ property_ref: fc.string({ minLength: 1, maxLength: 50 }), formal_language: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('dispatch_batch'), input: fc.record({ property_refs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('health_check'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('unregister'), input: fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -203,7 +297,7 @@ describe('SolverProvider imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string(), supported_kinds: fc.string(), capabilities: fc.string(), priority: fc.integer({ min: 1, max: 1000 }) }),
+          fc.record({ provider_id: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), supported_languages: fc.string({ minLength: 1, maxLength: 50 }), supported_kinds: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string(), priority: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await solverProviderHandler.register(input as Record<string, unknown>, storage);

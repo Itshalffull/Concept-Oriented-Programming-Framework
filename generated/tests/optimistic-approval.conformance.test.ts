@@ -26,7 +26,7 @@ describe('OptimisticApproval functional handler', () => {
 
   describe('assert', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 });
+      const program = optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 });
+      const program = optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 });
+      const program = optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 });
+      const program = optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 });
+      const program = optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('OptimisticApproval functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticApprovalHandler.assert !== 'function') return;
       try {
-        const result = await interpret(optimisticApprovalHandler.assert({ asserter: 'test-asserter', payload: 'test-payload', bond: 1, challengePeriodHours: 1 }), storage);
+        const result = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('OptimisticApproval functional handler', () => {
       }
     });
 
+    it('fixture "assert_valid" -> ok', async () => {
+      if (typeof optimisticApprovalHandler.assert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: "100.0", challengePeriodHours: "48.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assert_zero_bond" -> error', async () => {
+      if (typeof optimisticApprovalHandler.assert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.assert({ asserter: "alice", payload: "Unauthorized action", bond: "0.0", challengePeriodHours: "24.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('challenge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' });
+      const program = optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' });
+      const program = optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' });
+      const program = optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' });
+      const program = optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' });
+      const program = optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('OptimisticApproval functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticApprovalHandler.challenge !== 'function') return;
       try {
-        const result = await interpret(optimisticApprovalHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' }), storage);
+        const result = await interpret(optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('OptimisticApproval functional handler', () => {
       }
     });
 
+    it('fixture "challenge_pending" -> ok', async () => {
+      if (typeof optimisticApprovalHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.challenge({ assertion: "assertion-001", challenger: "bob", bond: "100.0", evidence: "Transaction exceeds approved limit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "challenge_expired" -> error', async () => {
+      if (typeof optimisticApprovalHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.challenge({ assertion: "assertion-expired", challenger: "bob", bond: "50.0", evidence: "Too late" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('finalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimisticApprovalHandler.finalize({ assertion: 'test' });
+      const program = optimisticApprovalHandler.finalize({ assertion: "assertion-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimisticApprovalHandler.finalize({ assertion: 'test' });
+      const program = optimisticApprovalHandler.finalize({ assertion: "assertion-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimisticApprovalHandler.finalize({ assertion: 'test' });
+      const program = optimisticApprovalHandler.finalize({ assertion: "assertion-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimisticApprovalHandler.finalize({ assertion: 'test' });
+      const program = optimisticApprovalHandler.finalize({ assertion: "assertion-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimisticApprovalHandler.finalize({ assertion: 'test' });
+      const program = optimisticApprovalHandler.finalize({ assertion: "assertion-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('OptimisticApproval functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticApprovalHandler.finalize !== 'function') return;
       try {
-        const result = await interpret(optimisticApprovalHandler.finalize({ assertion: 'test' }), storage);
+        const result = await interpret(optimisticApprovalHandler.finalize({ assertion: "assertion-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('OptimisticApproval functional handler', () => {
       }
     });
 
+    it('fixture "finalize_unchallenged" -> ok', async () => {
+      if (typeof optimisticApprovalHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.finalize({ assertion: "assertion-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "finalize_missing" -> error', async () => {
+      if (typeof optimisticApprovalHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.finalize({ assertion: "assertion-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' });
+      const program = optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' });
+      const program = optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' });
+      const program = optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' });
+      const program = optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('OptimisticApproval functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' });
+      const program = optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('OptimisticApproval functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticApprovalHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(optimisticApprovalHandler.resolve({ assertion: 'test', outcome: 'test-outcome' }), storage);
+        const result = await interpret(optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('OptimisticApproval functional handler', () => {
       }
     });
 
+    it('fixture "resolve_in_favor" -> ok', async () => {
+      if (typeof optimisticApprovalHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.resolve({ assertion: "assertion-001", outcome: "approved" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof optimisticApprovalHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(optimisticApprovalHandler.resolve({ assertion: "assertion-nonexistent", outcome: "rejected" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof optimisticApprovalHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = optimisticApprovalHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('OptimisticApproval');
+    });
   });
 
   describe('invariant examples', () => {

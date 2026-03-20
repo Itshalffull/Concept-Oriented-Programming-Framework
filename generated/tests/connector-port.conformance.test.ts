@@ -26,7 +26,7 @@ describe('ConnectorPort functional handler', () => {
 
   describe('addPort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' });
+      const program = connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' });
+      const program = connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' });
+      const program = connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' });
+      const program = connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' });
+      const program = connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.addPort !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.addPort({ owner: 'test', side: 'test-side', offset: 1, direction: 'test-direction', port_type: 'test', label: 'test', max_connections: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "add_data_output" -> ok', async () => {
+      if (typeof connectorPortHandler.addPort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "right", offset: "0.5", direction: "out", port_type: "data", label: "Output", max_connections: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_center_input" -> ok', async () => {
+      if (typeof connectorPortHandler.addPort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.addPort({ owner: "node-2", side: "center", offset: "0.0", direction: "in", port_type: "signal", label: "Trigger", max_connections: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_side" -> error', async () => {
+      if (typeof connectorPortHandler.addPort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "diagonal", offset: "0.5", direction: "out", port_type: "data", label: "Bad", max_connections: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_direction" -> error', async () => {
+      if (typeof connectorPortHandler.addPort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.addPort({ owner: "node-1", side: "top", offset: "0.5", direction: "lateral", port_type: "data", label: "Bad", max_connections: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removePort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.removePort({ port: 'test' });
+      const program = connectorPortHandler.removePort({ port: "port-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.removePort({ port: 'test' });
+      const program = connectorPortHandler.removePort({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.removePort({ port: 'test' });
+      const program = connectorPortHandler.removePort({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.removePort({ port: 'test' });
+      const program = connectorPortHandler.removePort({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.removePort({ port: 'test' });
+      const program = connectorPortHandler.removePort({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.removePort !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.removePort({ port: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.removePort({ port: "port-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing" -> ok', async () => {
+      if (typeof connectorPortHandler.removePort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.removePort({ port: "port-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_missing" -> notfound', async () => {
+      if (typeof connectorPortHandler.removePort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.removePort({ port: "port-999" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('movePort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 });
+      const program = connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 });
+      const program = connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 });
+      const program = connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 });
+      const program = connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 });
+      const program = connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.movePort !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.movePort({ port: 'test', side: 'test-side', offset: 1 }), storage);
+        const result = await interpret(connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "move_to_left" -> ok', async () => {
+      if (typeof connectorPortHandler.movePort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.movePort({ port: "port-1", side: "left", offset: "0.3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "move_missing" -> notfound', async () => {
+      if (typeof connectorPortHandler.movePort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.movePort({ port: "port-999", side: "top", offset: "0.5" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('validateConnection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' });
+      const program = connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' });
+      const program = connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' });
+      const program = connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' });
+      const program = connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' });
+      const program = connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.validateConnection !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.validateConnection({ source_port: 'test', target_port: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "validate_compatible" -> ok', async () => {
+      if (typeof connectorPortHandler.validateConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_self" -> incompatible', async () => {
+      if (typeof connectorPortHandler.validateConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.validateConnection({ source_port: "port-1", target_port: "port-1" }), storage);
+      expect(result.variant).toBe('incompatible');
+    });
+
   });
 
   describe('incrementConnection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.incrementConnection({ port: 'test' });
+      const program = connectorPortHandler.incrementConnection({ port: "port-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.incrementConnection({ port: 'test' });
+      const program = connectorPortHandler.incrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.incrementConnection({ port: 'test' });
+      const program = connectorPortHandler.incrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.incrementConnection({ port: 'test' });
+      const program = connectorPortHandler.incrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.incrementConnection({ port: 'test' });
+      const program = connectorPortHandler.incrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.incrementConnection !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.incrementConnection({ port: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.incrementConnection({ port: "port-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "increment_ok" -> ok', async () => {
+      if (typeof connectorPortHandler.incrementConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.incrementConnection({ port: "port-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "increment_missing" -> error', async () => {
+      if (typeof connectorPortHandler.incrementConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.incrementConnection({ port: "port-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('decrementConnection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.decrementConnection({ port: 'test' });
+      const program = connectorPortHandler.decrementConnection({ port: "port-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.decrementConnection({ port: 'test' });
+      const program = connectorPortHandler.decrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.decrementConnection({ port: 'test' });
+      const program = connectorPortHandler.decrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.decrementConnection({ port: 'test' });
+      const program = connectorPortHandler.decrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.decrementConnection({ port: 'test' });
+      const program = connectorPortHandler.decrementConnection({ port: "port-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.decrementConnection !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.decrementConnection({ port: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.decrementConnection({ port: "port-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "decrement_ok" -> ok', async () => {
+      if (typeof connectorPortHandler.decrementConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.decrementConnection({ port: "port-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "decrement_missing" -> error', async () => {
+      if (typeof connectorPortHandler.decrementConnection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.decrementConnection({ port: "port-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getPortsForOwner', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorPortHandler.getPortsForOwner({ owner: 'test' });
+      const program = connectorPortHandler.getPortsForOwner({ owner: "node-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorPortHandler.getPortsForOwner({ owner: 'test' });
+      const program = connectorPortHandler.getPortsForOwner({ owner: "node-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorPortHandler.getPortsForOwner({ owner: 'test' });
+      const program = connectorPortHandler.getPortsForOwner({ owner: "node-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorPortHandler.getPortsForOwner({ owner: 'test' });
+      const program = connectorPortHandler.getPortsForOwner({ owner: "node-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('ConnectorPort functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorPortHandler.getPortsForOwner({ owner: 'test' });
+      const program = connectorPortHandler.getPortsForOwner({ owner: "node-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('ConnectorPort functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
       try {
-        const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: 'test' }), storage);
+        const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +526,38 @@ describe('ConnectorPort functional handler', () => {
       }
     });
 
+    it('fixture "get_ports_for_node" -> ok', async () => {
+      if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_ports_for_unknown" -> ok', async () => {
+      if (typeof connectorPortHandler.getPortsForOwner !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorPortHandler.getPortsForOwner({ owner: "node-unknown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof connectorPortHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = connectorPortHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConnectorPort');
+    });
   });
 
   describe('invariant examples', () => {

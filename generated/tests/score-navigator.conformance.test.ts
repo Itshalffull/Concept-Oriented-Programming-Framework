@@ -26,7 +26,7 @@ describe('ScoreNavigator functional handler', () => {
 
   describe('show', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' });
+      const program = scoreNavigatorHandler.show({ kind: "concept", name: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' });
+      const program = scoreNavigatorHandler.show({ kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' });
+      const program = scoreNavigatorHandler.show({ kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' });
+      const program = scoreNavigatorHandler.show({ kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' });
+      const program = scoreNavigatorHandler.show({ kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScoreNavigator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreNavigatorHandler.show !== 'function') return;
       try {
-        const result = await interpret(scoreNavigatorHandler.show({ kind: 'test-kind', name: 'test-name' }), storage);
+        const result = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ScoreNavigator functional handler', () => {
       }
     });
 
+    it('fixture "valid_show" -> ok', async () => {
+      if (typeof scoreNavigatorHandler.show !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_kind" -> notfound', async () => {
+      if (typeof scoreNavigatorHandler.show !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.show({ kind: "", name: "User" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "missing_name" -> notfound', async () => {
+      if (typeof scoreNavigatorHandler.show !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.show({ kind: "concept", name: "" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('traverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' });
+      const program = scoreNavigatorHandler.traverse({ relation: "actions", target: "register" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' });
+      const program = scoreNavigatorHandler.traverse({ relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' });
+      const program = scoreNavigatorHandler.traverse({ relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' });
+      const program = scoreNavigatorHandler.traverse({ relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' });
+      const program = scoreNavigatorHandler.traverse({ relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ScoreNavigator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreNavigatorHandler.traverse !== 'function') return;
       try {
-        const result = await interpret(scoreNavigatorHandler.traverse({ relation: 'test-relation', target: 'test-target' }), storage);
+        const result = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "register" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,27 @@ describe('ScoreNavigator functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_traverse" -> ok', async () => {
+      if (typeof scoreNavigatorHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "register" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_relation" -> notfound', async () => {
+      if (typeof scoreNavigatorHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.traverse({ relation: "", target: "register" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "missing_target" -> notfound', async () => {
+      if (typeof scoreNavigatorHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.traverse({ relation: "actions", target: "" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -196,11 +238,25 @@ describe('ScoreNavigator functional handler', () => {
       }
     });
 
+    it('fixture "valid_back" -> ok', async () => {
+      if (typeof scoreNavigatorHandler.back !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.back({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_history" -> empty', async () => {
+      if (typeof scoreNavigatorHandler.back !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.back({  }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreNavigatorHandler.list({ kind: 'test-kind' });
+      const program = scoreNavigatorHandler.list({ kind: "concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreNavigatorHandler.list({ kind: 'test-kind' });
+      const program = scoreNavigatorHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreNavigatorHandler.list({ kind: 'test-kind' });
+      const program = scoreNavigatorHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreNavigatorHandler.list({ kind: 'test-kind' });
+      const program = scoreNavigatorHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ScoreNavigator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreNavigatorHandler.list({ kind: 'test-kind' });
+      const program = scoreNavigatorHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ScoreNavigator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreNavigatorHandler.list !== 'function') return;
       try {
-        const result = await interpret(scoreNavigatorHandler.list({ kind: 'test-kind' }), storage);
+        const result = await interpret(scoreNavigatorHandler.list({ kind: "concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,45 @@ describe('ScoreNavigator functional handler', () => {
       }
     });
 
+    it('fixture "valid_list" -> ok', async () => {
+      if (typeof scoreNavigatorHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.list({ kind: "concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_kind" -> error', async () => {
+      if (typeof scoreNavigatorHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.list({ kind: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "empty_kind" -> error', async () => {
+      if (typeof scoreNavigatorHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreNavigatorHandler.list({ kind: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreNavigatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreNavigatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreNavigator');
+    });
   });
 
   describe('invariant examples', () => {

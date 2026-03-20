@@ -26,7 +26,7 @@ describe('CountingMethod functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' });
+      const program = countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' });
+      const program = countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' });
+      const program = countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' });
+      const program = countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' });
+      const program = countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('CountingMethod functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof countingMethodHandler.register !== 'function') return;
       try {
-        const result = await interpret(countingMethodHandler.register({ name: 'test-name', provider: 'test-provider', parameters: 'test-parameters' }), storage);
+        const result = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('CountingMethod functional handler', () => {
       }
     });
 
+    it('fixture "register_majority" -> ok', async () => {
+      if (typeof countingMethodHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.register({ name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof countingMethodHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.register({ name: "", provider: "Majority", parameters: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('aggregate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('CountingMethod functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof countingMethodHandler.aggregate !== 'function') return;
       try {
-        const result = await interpret(countingMethodHandler.aggregate({ method: 'test', ballots: 'test-ballots', weights: 'test-weights' }), storage);
+        const result = await interpret(countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('CountingMethod functional handler', () => {
       }
     });
 
+    it('fixture "aggregate_valid" -> ok', async () => {
+      if (typeof countingMethodHandler.aggregate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.aggregate({ method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "aggregate_missing_method" -> error', async () => {
+      if (typeof countingMethodHandler.aggregate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.aggregate({ method: "counting-nonexistent", ballots: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deregister', () => {
     it('builds a valid StorageProgram', () => {
-      const program = countingMethodHandler.deregister({ method: 'test' });
+      const program = countingMethodHandler.deregister({ method: "counting-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = countingMethodHandler.deregister({ method: 'test' });
+      const program = countingMethodHandler.deregister({ method: "counting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = countingMethodHandler.deregister({ method: 'test' });
+      const program = countingMethodHandler.deregister({ method: "counting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = countingMethodHandler.deregister({ method: 'test' });
+      const program = countingMethodHandler.deregister({ method: "counting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('CountingMethod functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = countingMethodHandler.deregister({ method: 'test' });
+      const program = countingMethodHandler.deregister({ method: "counting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('CountingMethod functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof countingMethodHandler.deregister !== 'function') return;
       try {
-        const result = await interpret(countingMethodHandler.deregister({ method: 'test' }), storage);
+        const result = await interpret(countingMethodHandler.deregister({ method: "counting-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('CountingMethod functional handler', () => {
       }
     });
 
+    it('fixture "deregister_existing" -> ok', async () => {
+      if (typeof countingMethodHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.deregister({ method: "counting-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deregister_missing" -> error', async () => {
+      if (typeof countingMethodHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(countingMethodHandler.deregister({ method: "counting-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof countingMethodHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = countingMethodHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CountingMethod');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Formula functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = formulaHandler.create({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.create({ formula: "total_price", expression: "price * quantity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Formula functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = formulaHandler.create({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.create({ formula: "total_price", expression: "price * quantity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = formulaHandler.create({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.create({ formula: "total_price", expression: "price * quantity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = formulaHandler.create({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.create({ formula: "total_price", expression: "price * quantity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Formula functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = formulaHandler.create({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.create({ formula: "total_price", expression: "price * quantity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Formula functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof formulaHandler.create !== 'function') return;
       try {
-        const result = await interpret(formulaHandler.create({ formula: 'test', expression: 'test-expression' }), storage);
+        const result = await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Formula functional handler', () => {
       }
     });
 
+    it('fixture "create_formula" -> ok', async () => {
+      if (typeof formulaHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_formula" -> error', async () => {
+      if (typeof formulaHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = formulaHandler.evaluate({ formula: 'test' });
+      const program = formulaHandler.evaluate({ formula: "total_price" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Formula functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = formulaHandler.evaluate({ formula: 'test' });
+      const program = formulaHandler.evaluate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = formulaHandler.evaluate({ formula: 'test' });
+      const program = formulaHandler.evaluate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = formulaHandler.evaluate({ formula: 'test' });
+      const program = formulaHandler.evaluate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Formula functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = formulaHandler.evaluate({ formula: 'test' });
+      const program = formulaHandler.evaluate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Formula functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof formulaHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(formulaHandler.evaluate({ formula: 'test' }), storage);
+        const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Formula functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_existing" -> ok', async () => {
+      if (typeof formulaHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_missing" -> error', async () => {
+      if (typeof formulaHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.evaluate({ formula: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = formulaHandler.getDependencies({ formula: 'test' });
+      const program = formulaHandler.getDependencies({ formula: "total_price" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Formula functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = formulaHandler.getDependencies({ formula: 'test' });
+      const program = formulaHandler.getDependencies({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = formulaHandler.getDependencies({ formula: 'test' });
+      const program = formulaHandler.getDependencies({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = formulaHandler.getDependencies({ formula: 'test' });
+      const program = formulaHandler.getDependencies({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Formula functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = formulaHandler.getDependencies({ formula: 'test' });
+      const program = formulaHandler.getDependencies({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Formula functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof formulaHandler.getDependencies !== 'function') return;
       try {
-        const result = await interpret(formulaHandler.getDependencies({ formula: 'test' }), storage);
+        const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Formula functional handler', () => {
       }
     });
 
+    it('fixture "get_deps" -> ok', async () => {
+      if (typeof formulaHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_deps_missing" -> error', async () => {
+      if (typeof formulaHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.getDependencies({ formula: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invalidate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = formulaHandler.invalidate({ formula: 'test' });
+      const program = formulaHandler.invalidate({ formula: "total_price" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Formula functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = formulaHandler.invalidate({ formula: 'test' });
+      const program = formulaHandler.invalidate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = formulaHandler.invalidate({ formula: 'test' });
+      const program = formulaHandler.invalidate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = formulaHandler.invalidate({ formula: 'test' });
+      const program = formulaHandler.invalidate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Formula functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = formulaHandler.invalidate({ formula: 'test' });
+      const program = formulaHandler.invalidate({ formula: "total_price" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Formula functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof formulaHandler.invalidate !== 'function') return;
       try {
-        const result = await interpret(formulaHandler.invalidate({ formula: 'test' }), storage);
+        const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Formula functional handler', () => {
       }
     });
 
+    it('fixture "invalidate_existing" -> ok', async () => {
+      if (typeof formulaHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_missing" -> error', async () => {
+      if (typeof formulaHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.invalidate({ formula: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setExpression', () => {
     it('builds a valid StorageProgram', () => {
-      const program = formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Formula functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Formula functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' });
+      const program = formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Formula functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof formulaHandler.setExpression !== 'function') return;
       try {
-        const result = await interpret(formulaHandler.setExpression({ formula: 'test', expression: 'test-expression' }), storage);
+        const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Formula functional handler', () => {
       }
     });
 
+    it('fixture "set_expr" -> ok', async () => {
+      if (typeof formulaHandler.setExpression !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_expr_missing" -> error', async () => {
+      if (typeof formulaHandler.setExpression !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(formulaHandler.setExpression({ formula: "nonexistent", expression: "a + b" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof formulaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = formulaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Formula');
+    });
   });
 
   describe('invariant examples', () => {

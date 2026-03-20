@@ -26,7 +26,7 @@ describe('RustToolchain functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RustToolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RustToolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RustToolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rustToolchainHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(rustToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' }), storage);
+        const result = await interpret(rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -78,6 +78,20 @@ describe('RustToolchain functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_linux" -> ok', async () => {
+      if (typeof rustToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unsupported" -> error', async () => {
+      if (typeof rustToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustToolchainHandler.resolve({ platform: "mips-unknown", versionConstraint: "stable" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -138,6 +152,31 @@ describe('RustToolchain functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof rustToolchainHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rustToolchainHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rustToolchainHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rustToolchainHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RustToolchain');
+    });
   });
 
   describe('invariant examples', () => {

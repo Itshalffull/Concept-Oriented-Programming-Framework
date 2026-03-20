@@ -26,7 +26,7 @@ describe('UISchema functional handler', () => {
 
   describe('inspect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' });
+      const program = uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' });
+      const program = uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' });
+      const program = uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' });
+      const program = uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' });
+      const program = uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.inspect !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.inspect({ schema: 'test', conceptSpec: 'test-conceptSpec' }), storage);
+        const result = await interpret(uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_inspect" -> ok', async () => {
+      if (typeof uISchemaHandler.inspect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "inspect_with_annotations" -> ok', async () => {
+      if (typeof uISchemaHandler.inspect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.inspect({ schema: "S-2", conceptSpec: "{\"name\":\"Task\",\"suite\":\"project-mgmt\",\"annotations\":{\"surface\":{\"tags\":[\"kanban\"]}},\"fields\":[\"status\"],\"actions\":[\"update\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "inspect_bad_json" -> error', async () => {
+      if (typeof uISchemaHandler.inspect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.inspect({ schema: "S-3", conceptSpec: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('override', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' });
+      const program = uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' });
+      const program = uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' });
+      const program = uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' });
+      const program = uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' });
+      const program = uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.override !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.override({ schema: 'test', overrides: 'test-overrides' }), storage);
+        const result = await interpret(uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_override" -> ok', async () => {
+      if (typeof uISchemaHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "override_bad_json" -> error', async () => {
+      if (typeof uISchemaHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.override({ schema: "S-1", overrides: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.getSchema({ schema: 'test' });
+      const program = uISchemaHandler.getSchema({ schema: "S-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.getSchema({ schema: 'test' });
+      const program = uISchemaHandler.getSchema({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.getSchema({ schema: 'test' });
+      const program = uISchemaHandler.getSchema({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.getSchema({ schema: 'test' });
+      const program = uISchemaHandler.getSchema({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.getSchema({ schema: 'test' });
+      const program = uISchemaHandler.getSchema({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.getSchema !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.getSchema({ schema: 'test' }), storage);
+        const result = await interpret(uISchemaHandler.getSchema({ schema: "S-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_get_schema" -> ok', async () => {
+      if (typeof uISchemaHandler.getSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getSchema({ schema: "S-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_schema_nonexistent" -> error', async () => {
+      if (typeof uISchemaHandler.getSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getSchema({ schema: "S-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getElements', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.getElements({ schema: 'test' });
+      const program = uISchemaHandler.getElements({ schema: "S-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.getElements({ schema: 'test' });
+      const program = uISchemaHandler.getElements({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.getElements({ schema: 'test' });
+      const program = uISchemaHandler.getElements({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.getElements({ schema: 'test' });
+      const program = uISchemaHandler.getElements({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.getElements({ schema: 'test' });
+      const program = uISchemaHandler.getElements({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.getElements !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.getElements({ schema: 'test' }), storage);
+        const result = await interpret(uISchemaHandler.getElements({ schema: "S-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_get_elements" -> ok', async () => {
+      if (typeof uISchemaHandler.getElements !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getElements({ schema: "S-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_elements_nonexistent" -> error', async () => {
+      if (typeof uISchemaHandler.getElements !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getElements({ schema: "S-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getEntityElement', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.getEntityElement({ schema: 'test' });
+      const program = uISchemaHandler.getEntityElement({ schema: "S-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.getEntityElement({ schema: 'test' });
+      const program = uISchemaHandler.getEntityElement({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.getEntityElement({ schema: 'test' });
+      const program = uISchemaHandler.getEntityElement({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.getEntityElement({ schema: 'test' });
+      const program = uISchemaHandler.getEntityElement({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.getEntityElement({ schema: 'test' });
+      const program = uISchemaHandler.getEntityElement({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.getEntityElement !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.getEntityElement({ schema: 'test' }), storage);
+        const result = await interpret(uISchemaHandler.getEntityElement({ schema: "S-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_get_entity" -> ok', async () => {
+      if (typeof uISchemaHandler.getEntityElement !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getEntityElement({ schema: "S-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_entity_nonexistent" -> error', async () => {
+      if (typeof uISchemaHandler.getEntityElement !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.getEntityElement({ schema: "S-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('markResolved', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uISchemaHandler.markResolved({ schema: 'test' });
+      const program = uISchemaHandler.markResolved({ schema: "S-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('UISchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uISchemaHandler.markResolved({ schema: 'test' });
+      const program = uISchemaHandler.markResolved({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uISchemaHandler.markResolved({ schema: 'test' });
+      const program = uISchemaHandler.markResolved({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uISchemaHandler.markResolved({ schema: 'test' });
+      const program = uISchemaHandler.markResolved({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('UISchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uISchemaHandler.markResolved({ schema: 'test' });
+      const program = uISchemaHandler.markResolved({ schema: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('UISchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof uISchemaHandler.markResolved !== 'function') return;
       try {
-        const result = await interpret(uISchemaHandler.markResolved({ schema: 'test' }), storage);
+        const result = await interpret(uISchemaHandler.markResolved({ schema: "S-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('UISchema functional handler', () => {
       }
     });
 
+    it('fixture "valid_mark_resolved" -> ok', async () => {
+      if (typeof uISchemaHandler.markResolved !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.markResolved({ schema: "S-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mark_resolved_nonexistent" -> error', async () => {
+      if (typeof uISchemaHandler.markResolved !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(uISchemaHandler.markResolved({ schema: "S-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof uISchemaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = uISchemaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('UISchema');
+    });
   });
 
   describe('invariant examples', () => {

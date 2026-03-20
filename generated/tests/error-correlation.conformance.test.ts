@@ -26,7 +26,7 @@ describe('ErrorCorrelation functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' });
+      const program = errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' });
+      const program = errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' });
+      const program = errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' });
+      const program = errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' });
+      const program = errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.record !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.record({ flowId: 'test-flowId', errorKind: 'test-errorKind', message: 'test-message', rawEvent: 'test-rawEvent' }), storage);
+        const result = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "record_action_error" -> ok', async () => {
+      if (typeof errorCorrelationHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_sync_mismatch" -> ok', async () => {
+      if (typeof errorCorrelationHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_flow" -> error', async () => {
+      if (typeof errorCorrelationHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.record({ flowId: "", errorKind: "action-error", message: "fail", rawEvent: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' });
+      const program = errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' });
+      const program = errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' });
+      const program = errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' });
+      const program = errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' });
+      const program = errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: 'test-symbol', since: 'test-since' }), storage);
+        const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "find_by_concept" -> ok', async () => {
+      if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_by_action_since" -> ok', async () => {
+      if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_symbol" -> error', async () => {
+      if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "", since: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByKind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' });
+      const program = errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' });
+      const program = errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' });
+      const program = errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' });
+      const program = errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' });
+      const program = errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.findByKind !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: 'test-errorKind', since: 'test-since' }), storage);
+        const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,32 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "find_action_errors" -> ok', async () => {
+      if (typeof errorCorrelationHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_transport_recent" -> ok', async () => {
+      if (typeof errorCorrelationHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "transport-error", since: "2026-02-01T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_kind" -> error', async () => {
+      if (typeof errorCorrelationHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "", since: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('errorHotspots', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 });
+      const program = errorCorrelationHandler.errorHotspots({ since: "", topN: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 });
+      const program = errorCorrelationHandler.errorHotspots({ since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 });
+      const program = errorCorrelationHandler.errorHotspots({ since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 });
+      const program = errorCorrelationHandler.errorHotspots({ since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 });
+      const program = errorCorrelationHandler.errorHotspots({ since: "", topN: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.errorHotspots !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.errorHotspots({ since: 'test-since', topN: 1 }), storage);
+        const result = await interpret(errorCorrelationHandler.errorHotspots({ since: "", topN: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "hotspots_top5" -> ok', async () => {
+      if (typeof errorCorrelationHandler.errorHotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.errorHotspots({ since: "", topN: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "hotspots_recent" -> ok', async () => {
+      if (typeof errorCorrelationHandler.errorHotspots !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.errorHotspots({ since: "2026-03-01T00:00:00Z", topN: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('rootCause', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.rootCause({ error: 'test' });
+      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.rootCause({ error: 'test' });
+      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.rootCause({ error: 'test' });
+      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.rootCause({ error: 'test' });
+      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.rootCause({ error: 'test' });
+      const program = errorCorrelationHandler.rootCause({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.rootCause !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.rootCause({ error: 'test' }), storage);
+        const result = await interpret(errorCorrelationHandler.rootCause({ error: "error-correlation-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +389,25 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "root_cause_valid" -> ok', async () => {
+      if (typeof errorCorrelationHandler.rootCause !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.rootCause({ error: "error-correlation-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "root_cause_missing" -> error', async () => {
+      if (typeof errorCorrelationHandler.rootCause !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.rootCause({ error: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = errorCorrelationHandler.get({ error: 'test' });
+      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +415,21 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = errorCorrelationHandler.get({ error: 'test' });
+      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = errorCorrelationHandler.get({ error: 'test' });
+      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = errorCorrelationHandler.get({ error: 'test' });
+      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +442,7 @@ describe('ErrorCorrelation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = errorCorrelationHandler.get({ error: 'test' });
+      const program = errorCorrelationHandler.get({ error: "error-correlation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +451,7 @@ describe('ErrorCorrelation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof errorCorrelationHandler.get !== 'function') return;
       try {
-        const result = await interpret(errorCorrelationHandler.get({ error: 'test' }), storage);
+        const result = await interpret(errorCorrelationHandler.get({ error: "error-correlation-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +461,38 @@ describe('ErrorCorrelation functional handler', () => {
       }
     });
 
+    it('fixture "get_valid" -> ok', async () => {
+      if (typeof errorCorrelationHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.get({ error: "error-correlation-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof errorCorrelationHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(errorCorrelationHandler.get({ error: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof errorCorrelationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = errorCorrelationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ErrorCorrelation');
+    });
   });
 
   describe('invariant examples', () => {

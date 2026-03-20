@@ -26,7 +26,7 @@ describe('DefinitionUnit functional handler', () => {
 
   describe('extract', () => {
     it('builds a valid StorageProgram', () => {
-      const program = definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 });
+      const program = definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 });
+      const program = definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 });
+      const program = definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 });
+      const program = definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 });
+      const program = definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DefinitionUnit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof definitionUnitHandler.extract !== 'function') return;
       try {
-        const result = await interpret(definitionUnitHandler.extract({ tree: 'test-tree', startByte: 1, endByte: 1 }), storage);
+        const result = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('DefinitionUnit functional handler', () => {
       }
     });
 
+    it('fixture "extract_function" -> ok', async () => {
+      if (typeof definitionUnitHandler.extract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extract_empty_tree" -> error', async () => {
+      if (typeof definitionUnitHandler.extract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.extract({ tree: "", startByte: "0", endByte: "50" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findBySymbol', () => {
     it('builds a valid StorageProgram', () => {
-      const program = definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' });
+      const program = definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' });
+      const program = definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' });
+      const program = definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' });
+      const program = definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' });
+      const program = definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('DefinitionUnit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
       try {
-        const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('DefinitionUnit functional handler', () => {
       }
     });
 
+    it('fixture "find_by_symbol" -> ok', async () => {
+      if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_missing_symbol" -> error', async () => {
+      if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByPattern', () => {
     it('builds a valid StorageProgram', () => {
-      const program = definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' });
+      const program = definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' });
+      const program = definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' });
+      const program = definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' });
+      const program = definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' });
+      const program = definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('DefinitionUnit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
       try {
-        const result = await interpret(definitionUnitHandler.findByPattern({ kind: 'test-kind', language: 'test-language', namePattern: 'test-namePattern' }), storage);
+        const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('DefinitionUnit functional handler', () => {
       }
     });
 
+    it('fixture "find_ts_functions" -> ok', async () => {
+      if (typeof definitionUnitHandler.findByPattern !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_all" -> ok', async () => {
+      if (typeof definitionUnitHandler.findByPattern !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.findByPattern({ kind: "", language: "", namePattern: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = definitionUnitHandler.diff({ a: 'test', b: 'test' });
+      const program = definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = definitionUnitHandler.diff({ a: 'test', b: 'test' });
+      const program = definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = definitionUnitHandler.diff({ a: 'test', b: 'test' });
+      const program = definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = definitionUnitHandler.diff({ a: 'test', b: 'test' });
+      const program = definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('DefinitionUnit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = definitionUnitHandler.diff({ a: 'test', b: 'test' });
+      const program = definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('DefinitionUnit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof definitionUnitHandler.diff !== 'function') return;
       try {
-        const result = await interpret(definitionUnitHandler.diff({ a: 'test', b: 'test' }), storage);
+        const result = await interpret(definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('DefinitionUnit functional handler', () => {
       }
     });
 
+    it('fixture "diff_units" -> ok', async () => {
+      if (typeof definitionUnitHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing" -> error', async () => {
+      if (typeof definitionUnitHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(definitionUnitHandler.diff({ a: "", b: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof definitionUnitHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = definitionUnitHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DefinitionUnit');
+    });
   });
 
   describe('invariant examples', () => {

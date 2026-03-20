@@ -26,7 +26,7 @@ describe('Relation functional handler', () => {
 
   describe('defineRelation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' });
+      const program = relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Relation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' });
+      const program = relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' });
+      const program = relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' });
+      const program = relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Relation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' });
+      const program = relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Relation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof relationHandler.defineRelation !== 'function') return;
       try {
-        const result = await interpret(relationHandler.defineRelation({ relation: 'test', schema: 'test-schema' }), storage);
+        const result = await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Relation functional handler', () => {
       }
     });
 
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof relationHandler.defineRelation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{\"forward_label\":\"parent of\",\"reverse_label\":\"child of\",\"cardinality\":\"one-to-many\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_define" -> exists', async () => {
+      if (typeof relationHandler.defineRelation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.defineRelation({ relation: "parent-child", schema: "{}" }), storage);
+      expect(result.variant).toBe('exists');
+    });
+
   });
 
   describe('link', () => {
     it('builds a valid StorageProgram', () => {
-      const program = relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Relation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Relation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Relation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof relationHandler.link !== 'function') return;
       try {
-        const result = await interpret(relationHandler.link({ relation: 'test', source: 'test-source', target: 'test-target' }), storage);
+        const result = await interpret(relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Relation functional handler', () => {
       }
     });
 
+    it('fixture "valid_link" -> ok', async () => {
+      if (typeof relationHandler.link !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.link({ relation: "parent-child", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_relation" -> invalid', async () => {
+      if (typeof relationHandler.link !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.link({ relation: "nonexistent-rel", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('unlink', () => {
     it('builds a valid StorageProgram', () => {
-      const program = relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Relation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Relation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' });
+      const program = relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Relation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof relationHandler.unlink !== 'function') return;
       try {
-        const result = await interpret(relationHandler.unlink({ relation: 'test', source: 'test-source', target: 'test-target' }), storage);
+        const result = await interpret(relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Relation functional handler', () => {
       }
     });
 
+    it('fixture "valid_unlink" -> ok', async () => {
+      if (typeof relationHandler.unlink !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.unlink({ relation: "parent-child", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_link" -> notfound', async () => {
+      if (typeof relationHandler.unlink !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.unlink({ relation: "nonexistent-rel", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getRelated', () => {
     it('builds a valid StorageProgram', () => {
-      const program = relationHandler.getRelated({ relation: 'test', entity: 'test-entity' });
+      const program = relationHandler.getRelated({ relation: "parent-child", entity: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Relation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = relationHandler.getRelated({ relation: 'test', entity: 'test-entity' });
+      const program = relationHandler.getRelated({ relation: "parent-child", entity: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = relationHandler.getRelated({ relation: 'test', entity: 'test-entity' });
+      const program = relationHandler.getRelated({ relation: "parent-child", entity: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = relationHandler.getRelated({ relation: 'test', entity: 'test-entity' });
+      const program = relationHandler.getRelated({ relation: "parent-child", entity: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Relation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = relationHandler.getRelated({ relation: 'test', entity: 'test-entity' });
+      const program = relationHandler.getRelated({ relation: "parent-child", entity: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Relation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof relationHandler.getRelated !== 'function') return;
       try {
-        const result = await interpret(relationHandler.getRelated({ relation: 'test', entity: 'test-entity' }), storage);
+        const result = await interpret(relationHandler.getRelated({ relation: "parent-child", entity: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Relation functional handler', () => {
       }
     });
 
+    it('fixture "valid_related" -> ok', async () => {
+      if (typeof relationHandler.getRelated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.getRelated({ relation: "parent-child", entity: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_relation_get" -> notfound', async () => {
+      if (typeof relationHandler.getRelated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(relationHandler.getRelated({ relation: "nonexistent-rel", entity: "alice" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof relationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = relationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Relation');
+    });
   });
 
   describe('invariant examples', () => {

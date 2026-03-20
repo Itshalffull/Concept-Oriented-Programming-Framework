@@ -26,7 +26,7 @@ describe('Circle functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' });
+      const program = circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' });
+      const program = circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' });
+      const program = circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' });
+      const program = circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' });
+      const program = circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.create !== 'function') return;
       try {
-        const result = await interpret(circleHandler.create({ name: 'test-name', domain: 'test-domain', parent: 'test' }), storage);
+        const result = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof circleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_with_parent" -> ok', async () => {
+      if (typeof circleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof circleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.create({ name: "", domain: "unknown", purpose: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('assignMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.assignMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.assignMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.assignMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.assignMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.assignMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.assignMember !== 'function') return;
       try {
-        const result = await interpret(circleHandler.assignMember({ circle: 'test', member: 'test-member' }), storage);
+        const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_assign" -> ok', async () => {
+      if (typeof circleHandler.assignMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_nonexistent" -> error', async () => {
+      if (typeof circleHandler.assignMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.assignMember({ circle: "circle-999", member: "bob", role: "lead" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.removeMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.removeMember({ circle: "circle-1", member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.removeMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.removeMember({ circle: "circle-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.removeMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.removeMember({ circle: "circle-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.removeMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.removeMember({ circle: "circle-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.removeMember({ circle: 'test', member: 'test-member' });
+      const program = circleHandler.removeMember({ circle: "circle-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.removeMember !== 'function') return;
       try {
-        const result = await interpret(circleHandler.removeMember({ circle: 'test', member: 'test-member' }), storage);
+        const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof circleHandler.removeMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent_circle" -> error', async () => {
+      if (typeof circleHandler.removeMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.removeMember({ circle: "circle-999", member: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setLinks', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' });
+      const program = circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' });
+      const program = circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' });
+      const program = circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' });
+      const program = circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' });
+      const program = circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.setLinks !== 'function') return;
       try {
-        const result = await interpret(circleHandler.setLinks({ circle: 'test', repLink: 'test', leadLink: 'test' }), storage);
+        const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_set_links" -> ok', async () => {
+      if (typeof circleHandler.setLinks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_links_nonexistent" -> error', async () => {
+      if (typeof circleHandler.setLinks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.setLinks({ circle: "circle-999", leadLink: "alice", repLink: "bob" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('dissolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.dissolve({ circle: 'test' });
+      const program = circleHandler.dissolve({ circle: "circle-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.dissolve({ circle: 'test' });
+      const program = circleHandler.dissolve({ circle: "circle-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.dissolve({ circle: 'test' });
+      const program = circleHandler.dissolve({ circle: "circle-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.dissolve({ circle: 'test' });
+      const program = circleHandler.dissolve({ circle: "circle-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.dissolve({ circle: 'test' });
+      const program = circleHandler.dissolve({ circle: "circle-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.dissolve !== 'function') return;
       try {
-        const result = await interpret(circleHandler.dissolve({ circle: 'test' }), storage);
+        const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_dissolve" -> ok', async () => {
+      if (typeof circleHandler.dissolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dissolve_nonexistent" -> error', async () => {
+      if (typeof circleHandler.dissolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.dissolve({ circle: "circle-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkJurisdiction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' });
+      const program = circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Circle functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' });
+      const program = circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' });
+      const program = circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' });
+      const program = circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Circle functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' });
+      const program = circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Circle functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
       try {
-        const result = await interpret(circleHandler.checkJurisdiction({ circle: 'test', action: 'test-action' }), storage);
+        const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('Circle functional handler', () => {
       }
     });
 
+    it('fixture "valid_jurisdiction" -> ok', async () => {
+      if (typeof circleHandler.checkJurisdiction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "jurisdiction_nonexistent" -> error', async () => {
+      if (typeof circleHandler.checkJurisdiction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-999", action: "approve-budget" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof circleHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = circleHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Circle');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('ThemeGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' });
+      const program = themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ThemeGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' });
+      const program = themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' });
+      const program = themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' });
+      const program = themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ThemeGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' });
+      const program = themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ThemeGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(themeGenHandler.generate({ gen: 'test', target: 'test-target', themeAst: 'test-themeAst' }), storage);
+        const result = await interpret(themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,59 @@ describe('ThemeGen functional handler', () => {
       }
     });
 
+    it('fixture "css_variables" -> ok', async () => {
+      if (typeof themeGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeGenHandler.generate({ gen: "g-1", target: "css-variables", themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tailwind_target" -> ok', async () => {
+      if (typeof themeGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeGenHandler.generate({ gen: "g-2", target: "tailwind", themeAst: "{\"tokens\":{\"color.primary\":\"#10b981\"},\"context\":{\"density\":\"comfortable\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "w3c_dtcg_target" -> ok', async () => {
+      if (typeof themeGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeGenHandler.generate({ gen: "g-3", target: "w3c-dtcg", themeAst: "{\"tokens\":{\"color.brand\":\"#ef4444\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported_target" -> error', async () => {
+      if (typeof themeGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeGenHandler.generate({ gen: "g-4", target: "scss-modules", themeAst: "{\"tokens\":{}}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_ast_json" -> error', async () => {
+      if (typeof themeGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeGenHandler.generate({ gen: "g-5", target: "css-variables", themeAst: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThemeGen');
+    });
   });
 
   describe('invariant examples', () => {

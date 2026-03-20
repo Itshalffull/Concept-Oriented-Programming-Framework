@@ -26,7 +26,7 @@ describe('Interactor functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' });
+      const program = interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Interactor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' });
+      const program = interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' });
+      const program = interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' });
+      const program = interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Interactor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' });
+      const program = interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Interactor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorHandler.define !== 'function') return;
       try {
-        const result = await interpret(interactorHandler.define({ interactor: 'test', name: 'test-name', category: 'test-category', properties: 'test-properties' }), storage);
+        const result = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Interactor functional handler', () => {
       }
     });
 
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof interactorHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "entity_define" -> ok', async () => {
+      if (typeof interactorHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_category" -> duplicate', async () => {
+      if (typeof interactorHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.define({ name: "test-type", category: "invalid-category", properties: "{}" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('classify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' });
+      const program = interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Interactor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' });
+      const program = interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' });
+      const program = interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' });
+      const program = interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Interactor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' });
+      const program = interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Interactor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       try {
-        const result = await interpret(interactorHandler.classify({ interactor: 'test', fieldType: 'test-fieldType', constraints: 'test', intent: 'test' }), storage);
+        const result = await interpret(interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Interactor functional handler', () => {
       }
     });
 
+    it('fixture "field_classify" -> ok', async () => {
+      if (typeof interactorHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "entity_classify" -> ok', async () => {
+      if (typeof interactorHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.classify({ fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_match" -> ambiguous', async () => {
+      if (typeof interactorHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.classify({ fieldType: "UnknownType", constraints: "{}", intent: "" }), storage);
+      expect(result.variant).toBe('ambiguous');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorHandler.get({ interactor: 'test' });
+      const program = interactorHandler.get({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Interactor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorHandler.get({ interactor: 'test' });
+      const program = interactorHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorHandler.get({ interactor: 'test' });
+      const program = interactorHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorHandler.get({ interactor: 'test' });
+      const program = interactorHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Interactor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorHandler.get({ interactor: 'test' });
+      const program = interactorHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Interactor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorHandler.get !== 'function') return;
       try {
-        const result = await interpret(interactorHandler.get({ interactor: 'test' }), storage);
+        const result = await interpret(interactorHandler.get({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('Interactor functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof interactorHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.get({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_get" -> notfound', async () => {
+      if (typeof interactorHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.get({ interactor: "nonexistent-interactor" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactorHandler.list({ category: 'test' });
+      const program = interactorHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Interactor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactorHandler.list({ category: 'test' });
+      const program = interactorHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactorHandler.list({ category: 'test' });
+      const program = interactorHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactorHandler.list({ category: 'test' });
+      const program = interactorHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Interactor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactorHandler.list({ category: 'test' });
+      const program = interactorHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Interactor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interactorHandler.list !== 'function') return;
       try {
-        const result = await interpret(interactorHandler.list({ category: 'test' }), storage);
+        const result = await interpret(interactorHandler.list({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('Interactor functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof interactorHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_category" -> ok', async () => {
+      if (typeof interactorHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactorHandler.list({ category: "selection" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof interactorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = interactorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Interactor');
+    });
   });
 
   describe('invariant examples', () => {

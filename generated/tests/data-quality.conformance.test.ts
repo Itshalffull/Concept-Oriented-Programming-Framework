@@ -26,7 +26,7 @@ describe('DataQuality functional handler', () => {
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' });
+      const program = dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' });
+      const program = dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' });
+      const program = dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' });
+      const program = dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' });
+      const program = dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DataQuality functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataQualityHandler.validate !== 'function') return;
       try {
-        const result = await interpret(dataQualityHandler.validate({ item: 'test-item', rulesetId: 'test-rulesetId' }), storage);
+        const result = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DataQuality functional handler', () => {
       }
     });
 
+    it('fixture "validate_ok" -> ok', async () => {
+      if (typeof dataQualityHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_invalid_json" -> invalid', async () => {
+      if (typeof dataQualityHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.validate({ item: "not-json", rulesetId: "article_rules" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "validate_missing_ruleset" -> notfound', async () => {
+      if (typeof dataQualityHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.validate({ item: "{\"title\":\"Test\"}", rulesetId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('quarantine', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' });
+      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' });
+      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' });
+      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' });
+      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' });
+      const program = dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DataQuality functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataQualityHandler.quarantine !== 'function') return;
       try {
-        const result = await interpret(dataQualityHandler.quarantine({ itemId: 'test-itemId', violations: 'test-violations' }), storage);
+        const result = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,18 @@ describe('DataQuality functional handler', () => {
       }
     });
 
+    it('fixture "quarantine_item" -> ok', async () => {
+      if (typeof dataQualityHandler.quarantine !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.quarantine({ itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('release', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.release({ itemId: 'test-itemId' });
+      const program = dataQualityHandler.release({ itemId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.release({ itemId: 'test-itemId' });
+      const program = dataQualityHandler.release({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.release({ itemId: 'test-itemId' });
+      const program = dataQualityHandler.release({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.release({ itemId: 'test-itemId' });
+      const program = dataQualityHandler.release({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.release({ itemId: 'test-itemId' });
+      const program = dataQualityHandler.release({ itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('DataQuality functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataQualityHandler.release !== 'function') return;
       try {
-        const result = await interpret(dataQualityHandler.release({ itemId: 'test-itemId' }), storage);
+        const result = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('DataQuality functional handler', () => {
       }
     });
 
+    it('fixture "release_quarantined" -> ok', async () => {
+      if (typeof dataQualityHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.release({ itemId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "release_missing" -> notfound', async () => {
+      if (typeof dataQualityHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.release({ itemId: "item-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('profile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' });
+      const program = dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' });
+      const program = dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' });
+      const program = dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' });
+      const program = dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' });
+      const program = dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('DataQuality functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataQualityHandler.profile !== 'function') return;
       try {
-        const result = await interpret(dataQualityHandler.profile({ datasetQuery: 'test-datasetQuery' }), storage);
+        const result = await interpret(dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,18 @@ describe('DataQuality functional handler', () => {
       }
     });
 
+    it('fixture "profile_articles" -> ok', async () => {
+      if (typeof dataQualityHandler.profile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.profile({ datasetQuery: "SELECT * FROM articles" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('reconcile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' });
+      const program = dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +315,21 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' });
+      const program = dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' });
+      const program = dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' });
+      const program = dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +342,7 @@ describe('DataQuality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' });
+      const program = dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +351,7 @@ describe('DataQuality functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataQualityHandler.reconcile !== 'function') return;
       try {
-        const result = await interpret(dataQualityHandler.reconcile({ field: 'test-field', knowledgeBase: 'test-knowledgeBase' }), storage);
+        const result = await interpret(dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +361,31 @@ describe('DataQuality functional handler', () => {
       }
     });
 
+    it('fixture "reconcile_author" -> ok', async () => {
+      if (typeof dataQualityHandler.reconcile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataQualityHandler.reconcile({ field: "author_name", knowledgeBase: "wikidata" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dataQualityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dataQualityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DataQuality');
+    });
   });
 
   describe('invariant examples', () => {

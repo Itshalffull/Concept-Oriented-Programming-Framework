@@ -26,7 +26,7 @@ describe('Transform functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.apply({ value: "Hello World!", transformId: "slugify" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Transform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.apply({ value: "Hello World!", transformId: "slugify" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.apply({ value: "Hello World!", transformId: "slugify" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.apply({ value: "Hello World!", transformId: "slugify" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Transform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.apply({ value: "Hello World!", transformId: "slugify" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Transform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transformHandler.apply !== 'function') return;
       try {
-        const result = await interpret(transformHandler.apply({ value: 'test-value', transformId: 'test-transformId' }), storage);
+        const result = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Transform functional handler', () => {
       }
     });
 
+    it('fixture "apply_slugify" -> ok', async () => {
+      if (typeof transformHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.apply({ value: "Hello World!", transformId: "slugify" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_strip_tags" -> ok', async () => {
+      if (typeof transformHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.apply({ value: "<p>Clean text</p>", transformId: "strip_tags" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_missing" -> notfound', async () => {
+      if (typeof transformHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.apply({ value: "test", transformId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('chain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' });
+      const program = transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Transform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' });
+      const program = transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' });
+      const program = transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' });
+      const program = transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Transform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' });
+      const program = transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Transform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transformHandler.chain !== 'function') return;
       try {
-        const result = await interpret(transformHandler.chain({ value: 'test-value', transformIds: 'test-transformIds' }), storage);
+        const result = await interpret(transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Transform functional handler', () => {
       }
     });
 
+    it('fixture "chain_two" -> ok', async () => {
+      if (typeof transformHandler.chain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.chain({ value: "Hello World!", transformIds: "slugify,strip_tags" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "chain_empty" -> error', async () => {
+      if (typeof transformHandler.chain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.chain({ value: "", transformIds: "slugify" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Transform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Transform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' });
+      const program = transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Transform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transformHandler.preview !== 'function') return;
       try {
-        const result = await interpret(transformHandler.preview({ value: 'test-value', transformId: 'test-transformId' }), storage);
+        const result = await interpret(transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Transform functional handler', () => {
       }
     });
 
+    it('fixture "preview_html" -> ok', async () => {
+      if (typeof transformHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.preview({ value: "<b>Bold</b>", transformId: "html_to_markdown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_missing" -> notfound', async () => {
+      if (typeof transformHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transformHandler.preview({ value: "test", transformId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transformHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = transformHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Transform');
+    });
   });
 
   describe('invariant examples', () => {

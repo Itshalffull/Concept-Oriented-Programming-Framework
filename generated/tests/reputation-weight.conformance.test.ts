@@ -26,7 +26,7 @@ describe('ReputationWeight functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' });
+      const program = reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ReputationWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' });
+      const program = reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' });
+      const program = reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' });
+      const program = reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ReputationWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' });
+      const program = reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ReputationWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof reputationWeightHandler.configure !== 'function') return;
       try {
-        const result = await interpret(reputationWeightHandler.configure({ scalingFunction: 'test-scalingFunction', cap: 'test', floor: 'test' }), storage);
+        const result = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ReputationWeight functional handler', () => {
       }
     });
 
+    it('fixture "configure_linear" -> ok', async () => {
+      if (typeof reputationWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_empty" -> error', async () => {
+      if (typeof reputationWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(reputationWeightHandler.configure({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
-  describe('computeWeight', () => {
+  describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 });
+      const program = reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ReputationWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 });
+      const program = reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 });
+      const program = reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 });
+      const program = reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,16 +133,16 @@ describe('ReputationWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 });
+      const program = reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof reputationWeightHandler.computeWeight !== 'function') return;
+      if (typeof reputationWeightHandler.compute !== 'function') return;
       try {
-        const result = await interpret(reputationWeightHandler.computeWeight({ config: 'test', reputationScore: 1 }), storage);
+        const result = await interpret(reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,15 +152,47 @@ describe('ReputationWeight functional handler', () => {
       }
     });
 
+    it('fixture "compute_linear" -> ok', async () => {
+      if (typeof reputationWeightHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compute_negative" -> error', async () => {
+      if (typeof reputationWeightHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "bob", reputationScore: "-5.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof reputationWeightHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = reputationWeightHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ReputationWeight');
+    });
   });
 
   describe('invariant examples', () => {
-    it("configure-then-computeWeight", async () => {
+    it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: {"type":"literal","value":"Linear"}, cap: {"type":"literal","value":100}, floor: {"type":"literal","value":1} }), storage);
+      const configureResult0 = await interpret(reputationWeightHandler.configure({ scalingFunction: {"type":"literal","value":"linear"}, cap: {"type":"literal","value":100} }), storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
-      const thenResult0 = await interpret(reputationWeightHandler.computeWeight({ config: {"type":"variable","name":"rw"}, reputationScore: {"type":"literal","value":50} }), storage);
+      const thenResult0 = await interpret(reputationWeightHandler.compute({ config: {"type":"variable","name":"rw"}, participant: {"type":"variable","name":"p"}, reputationScore: {"type":"literal","value":50} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });
 
@@ -166,7 +212,7 @@ describe('ReputationWeight functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ scalingFunction: fc.string({ minLength: 1, maxLength: 50 }), cap: fc.string(), floor: fc.string() }),
+          fc.record({ scalingFunction: fc.string(), cap: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = reputationWeightHandler.configure(input as Record<string, unknown>);

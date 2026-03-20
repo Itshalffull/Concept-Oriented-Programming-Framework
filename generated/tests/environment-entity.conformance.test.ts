@@ -26,7 +26,7 @@ describe('EnvironmentEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' });
+      const program = environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' });
+      const program = environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' });
+      const program = environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' });
+      const program = environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' });
+      const program = environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.register({ name: 'test-name', environment: 'test-environment', kind: 'test-kind', value: 'test-value', source: 'test-source' }), storage);
+        const result = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_config" -> ok', async () => {
+      if (typeof environmentEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.register({ name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_secret" -> ok', async () => {
+      if (typeof environmentEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.register({ name: "DATABASE_URL", environment: "staging", kind: "secret", value: "***", source: "vault" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof environmentEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.register({ name: "", environment: "production", kind: "config", value: "x", source: "env-file" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' });
+      const program = environmentEntityHandler.get({ name: "API_PORT", environment: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' });
+      const program = environmentEntityHandler.get({ name: "API_PORT", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' });
+      const program = environmentEntityHandler.get({ name: "API_PORT", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' });
+      const program = environmentEntityHandler.get({ name: "API_PORT", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' });
+      const program = environmentEntityHandler.get({ name: "API_PORT", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.get({ name: 'test-name', environment: 'test-environment' }), storage);
+        const result = await interpret(environmentEntityHandler.get({ name: "API_PORT", environment: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_config" -> ok', async () => {
+      if (typeof environmentEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.get({ name: "API_PORT", environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof environmentEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.get({ name: "NONEXISTENT_VAR", environment: "production" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByEnvironment', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.findByEnvironment({ environment: 'test-environment' });
+      const program = environmentEntityHandler.findByEnvironment({ environment: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.findByEnvironment({ environment: 'test-environment' });
+      const program = environmentEntityHandler.findByEnvironment({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.findByEnvironment({ environment: 'test-environment' });
+      const program = environmentEntityHandler.findByEnvironment({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.findByEnvironment({ environment: 'test-environment' });
+      const program = environmentEntityHandler.findByEnvironment({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.findByEnvironment({ environment: 'test-environment' });
+      const program = environmentEntityHandler.findByEnvironment({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: 'test-environment' }), storage);
+        const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_production" -> ok', async () => {
+      if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_env" -> error', async () => {
+      if (typeof environmentEntityHandler.findByEnvironment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByEnvironment({ environment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = environmentEntityHandler.findByConcept({ concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = environmentEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = environmentEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = environmentEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = environmentEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(environmentEntityHandler.findByConcept({ concept: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user_concept" -> ok', async () => {
+      if (typeof environmentEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByConcept({ concept: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_concept" -> error', async () => {
+      if (typeof environmentEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByConcept({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByRuntime', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = environmentEntityHandler.findByRuntime({ runtime: "api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = environmentEntityHandler.findByRuntime({ runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = environmentEntityHandler.findByRuntime({ runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = environmentEntityHandler.findByRuntime({ runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = environmentEntityHandler.findByRuntime({ runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: 'test-runtime' }), storage);
+        const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: "api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_api_runtime" -> ok', async () => {
+      if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: "api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_runtime" -> error', async () => {
+      if (typeof environmentEntityHandler.findByRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.findByRuntime({ runtime: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diffEnvironments', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' });
+      const program = environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' });
+      const program = environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' });
+      const program = environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' });
+      const program = environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' });
+      const program = environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.diffEnvironments !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.diffEnvironments({ envA: 'test-envA', envB: 'test-envB' }), storage);
+        const result = await interpret(environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +447,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "diff_staging_prod" -> ok', async () => {
+      if (typeof environmentEntityHandler.diffEnvironments !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.diffEnvironments({ envA: "staging", envB: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_empty_env" -> error', async () => {
+      if (typeof environmentEntityHandler.diffEnvironments !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.diffEnvironments({ envA: "", envB: "production" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('secretsAudit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.secretsAudit({ environment: 'test-environment' });
+      const program = environmentEntityHandler.secretsAudit({ environment: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +473,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.secretsAudit({ environment: 'test-environment' });
+      const program = environmentEntityHandler.secretsAudit({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.secretsAudit({ environment: 'test-environment' });
+      const program = environmentEntityHandler.secretsAudit({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.secretsAudit({ environment: 'test-environment' });
+      const program = environmentEntityHandler.secretsAudit({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +500,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.secretsAudit({ environment: 'test-environment' });
+      const program = environmentEntityHandler.secretsAudit({ environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +509,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.secretsAudit({ environment: 'test-environment' }), storage);
+        const result = await interpret(environmentEntityHandler.secretsAudit({ environment: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +519,25 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "audit_production" -> ok', async () => {
+      if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.secretsAudit({ environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "audit_empty" -> error', async () => {
+      if (typeof environmentEntityHandler.secretsAudit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.secretsAudit({ environment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('featureFlags', () => {
     it('builds a valid StorageProgram', () => {
-      const program = environmentEntityHandler.featureFlags({ environment: 'test-environment' });
+      const program = environmentEntityHandler.featureFlags({ environment: "staging" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +545,21 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = environmentEntityHandler.featureFlags({ environment: 'test-environment' });
+      const program = environmentEntityHandler.featureFlags({ environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = environmentEntityHandler.featureFlags({ environment: 'test-environment' });
+      const program = environmentEntityHandler.featureFlags({ environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = environmentEntityHandler.featureFlags({ environment: 'test-environment' });
+      const program = environmentEntityHandler.featureFlags({ environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +572,7 @@ describe('EnvironmentEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = environmentEntityHandler.featureFlags({ environment: 'test-environment' });
+      const program = environmentEntityHandler.featureFlags({ environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +581,7 @@ describe('EnvironmentEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof environmentEntityHandler.featureFlags !== 'function') return;
       try {
-        const result = await interpret(environmentEntityHandler.featureFlags({ environment: 'test-environment' }), storage);
+        const result = await interpret(environmentEntityHandler.featureFlags({ environment: "staging" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,6 +591,38 @@ describe('EnvironmentEntity functional handler', () => {
       }
     });
 
+    it('fixture "flags_staging" -> ok', async () => {
+      if (typeof environmentEntityHandler.featureFlags !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.featureFlags({ environment: "staging" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "flags_empty" -> error', async () => {
+      if (typeof environmentEntityHandler.featureFlags !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(environmentEntityHandler.featureFlags({ environment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof environmentEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = environmentEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EnvironmentEntity');
+    });
   });
 
   describe('invariant examples', () => {

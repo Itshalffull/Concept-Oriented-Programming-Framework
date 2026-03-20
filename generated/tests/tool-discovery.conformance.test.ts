@@ -26,7 +26,7 @@ describe('ToolDiscovery functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true });
+      const program = toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true });
+      const program = toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true });
+      const program = toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true });
+      const program = toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true });
+      const program = toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ToolDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolDiscoveryHandler.register !== 'function') return;
       try {
-        const result = await interpret(toolDiscoveryHandler.register({ name: 'test-name', briefDescription: 'test-briefDescription', fullDescription: 'test-fullDescription', category: 'test-category', concept: 'test-concept', action: 'test-action', inputSchema: 'test-inputSchema', alwaysLoaded: true }), storage);
+        const result = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ToolDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_register" -> duplicate', async () => {
+      if (typeof toolDiscoveryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.register({ name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: "false" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('searchTools', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 });
+      const program = toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 });
+      const program = toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 });
+      const program = toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 });
+      const program = toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 });
+      const program = toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ToolDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolDiscoveryHandler.searchTools !== 'function') return;
       try {
-        const result = await interpret(toolDiscoveryHandler.searchTools({ query: 'test-query', limit: 1 }), storage);
+        const result = await interpret(toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('ToolDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_search" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.searchTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.searchTools({ query: "graphql query", limit: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_match" -> empty', async () => {
+      if (typeof toolDiscoveryHandler.searchTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.searchTools({ query: "zzzznonexistentzzz", limit: "10" }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
+    it('fixture "empty_query" -> empty', async () => {
+      if (typeof toolDiscoveryHandler.searchTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.searchTools({ query: "", limit: "10" }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
   });
 
   describe('describeTools', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolDiscoveryHandler.describeTools({ tools: 'test' });
+      const program = toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolDiscoveryHandler.describeTools({ tools: 'test' });
+      const program = toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolDiscoveryHandler.describeTools({ tools: 'test' });
+      const program = toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolDiscoveryHandler.describeTools({ tools: 'test' });
+      const program = toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolDiscoveryHandler.describeTools({ tools: 'test' });
+      const program = toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ToolDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
       try {
-        const result = await interpret(toolDiscoveryHandler.describeTools({ tools: 'test' }), storage);
+        const result = await interpret(toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +229,20 @@ describe('ToolDiscovery functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_describe" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.describeTools({ tools: ["score_query","score_navigate"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_tools" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.describeTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.describeTools({ tools: [] }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,11 +303,18 @@ describe('ToolDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_list_categories" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.listCategories !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.listCategories({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getCategory', () => {
     it('builds a valid StorageProgram', () => {
-      const program = toolDiscoveryHandler.getCategory({ category: 'test-category' });
+      const program = toolDiscoveryHandler.getCategory({ category: "score" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = toolDiscoveryHandler.getCategory({ category: 'test-category' });
+      const program = toolDiscoveryHandler.getCategory({ category: "score" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = toolDiscoveryHandler.getCategory({ category: 'test-category' });
+      const program = toolDiscoveryHandler.getCategory({ category: "score" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = toolDiscoveryHandler.getCategory({ category: 'test-category' });
+      const program = toolDiscoveryHandler.getCategory({ category: "score" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ToolDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = toolDiscoveryHandler.getCategory({ category: 'test-category' });
+      const program = toolDiscoveryHandler.getCategory({ category: "score" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ToolDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof toolDiscoveryHandler.getCategory !== 'function') return;
       try {
-        const result = await interpret(toolDiscoveryHandler.getCategory({ category: 'test-category' }), storage);
+        const result = await interpret(toolDiscoveryHandler.getCategory({ category: "score" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -310,6 +366,27 @@ describe('ToolDiscovery functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_category" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.getCategory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.getCategory({ category: "score" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_category" -> notfound', async () => {
+      if (typeof toolDiscoveryHandler.getCategory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.getCategory({ category: "nonexistent_category" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "empty_category" -> notfound', async () => {
+      if (typeof toolDiscoveryHandler.getCategory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.getCategory({ category: "" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -370,6 +447,31 @@ describe('ToolDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_always_loaded" -> ok', async () => {
+      if (typeof toolDiscoveryHandler.getAlwaysLoaded !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(toolDiscoveryHandler.getAlwaysLoaded({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof toolDiscoveryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = toolDiscoveryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ToolDiscovery');
+    });
   });
 
   describe('invariant examples', () => {

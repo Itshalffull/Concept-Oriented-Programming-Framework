@@ -80,11 +80,18 @@ describe('SemanticMerge functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof semanticMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticMergeHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('SemanticMerge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('SemanticMerge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('SemanticMerge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof semanticMergeHandler.execute !== 'function') return;
       try {
-        const result = await interpret(semanticMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' }), storage);
+        const result = await interpret(semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,45 @@ describe('SemanticMerge functional handler', () => {
       }
     });
 
+    it('fixture "clean_semantic" -> ok', async () => {
+      if (typeof semanticMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticMergeHandler.execute({ base: "import os\ndef main():\n  pass", ours: "import os\ndef main():\n  pass", theirs: "import os\nimport sys\ndef main():\n  pass" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "conflict_semantic" -> ok', async () => {
+      if (typeof semanticMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticMergeHandler.execute({ base: "function foo() { return 1; }", ours: "function foo() { return 2; }", theirs: "function foo() { return 3; }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "non_string_content" -> error', async () => {
+      if (typeof semanticMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticMergeHandler.execute({ base: "42", ours: "text", theirs: "text" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof semanticMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = semanticMergeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SemanticMerge');
+    });
   });
 
   describe('invariant examples', () => {

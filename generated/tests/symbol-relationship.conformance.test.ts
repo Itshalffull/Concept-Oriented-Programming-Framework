@@ -26,7 +26,7 @@ describe('SymbolRelationship functional handler', () => {
 
   describe('add', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SymbolRelationship functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       try {
-        const result = await interpret(symbolRelationshipHandler.add({ source: 'test-source', target: 'test-target', kind: 'test-kind' }), storage);
+        const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('SymbolRelationship functional handler', () => {
       }
     });
 
+    it('fixture "valid_add" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_extends" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_duplicate" -> error', async () => {
+      if (typeof symbolRelationshipHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findFrom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('SymbolRelationship functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
       try {
-        const result = await interpret(symbolRelationshipHandler.findFrom({ source: 'test-source', kind: 'test-kind' }), storage);
+        const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('SymbolRelationship functional handler', () => {
       }
     });
 
+    it('fixture "find_from_source" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_from_all_kinds" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('findTo', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' });
+      const program = symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('SymbolRelationship functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
       try {
-        const result = await interpret(symbolRelationshipHandler.findTo({ target: 'test-target', kind: 'test-kind' }), storage);
+        const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('SymbolRelationship functional handler', () => {
       }
     });
 
+    it('fixture "find_to_target" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.findTo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_to_all_kinds" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.findTo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('transitiveClosure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' });
+      const program = symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' });
+      const program = symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' });
+      const program = symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' });
+      const program = symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' });
+      const program = symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('SymbolRelationship functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
       try {
-        const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: 'test-start', kind: 'test-kind', direction: 'test-direction' }), storage);
+        const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('SymbolRelationship functional handler', () => {
       }
     });
 
+    it('fixture "forward_closure" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "backward_closure" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/AdminHandler", kind: "extends", direction: "backward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolRelationshipHandler.get({ relationship: 'test' });
+      const program = symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolRelationshipHandler.get({ relationship: 'test' });
+      const program = symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolRelationshipHandler.get({ relationship: 'test' });
+      const program = symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolRelationshipHandler.get({ relationship: 'test' });
+      const program = symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('SymbolRelationship functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolRelationshipHandler.get({ relationship: 'test' });
+      const program = symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('SymbolRelationship functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolRelationshipHandler.get !== 'function') return;
       try {
-        const result = await interpret(symbolRelationshipHandler.get({ relationship: 'test' }), storage);
+        const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('SymbolRelationship functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof symbolRelationshipHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof symbolRelationshipHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof symbolRelationshipHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = symbolRelationshipHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SymbolRelationship');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('TypeSystem functional handler', () => {
 
   describe('registerType', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' });
+      const program = typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' });
+      const program = typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' });
+      const program = typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' });
+      const program = typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' });
+      const program = typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TypeSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeSystemHandler.registerType !== 'function') return;
       try {
-        const result = await interpret(typeSystemHandler.registerType({ type: 'test', schema: 'test-schema', constraints: 'test-constraints' }), storage);
+        const result = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('TypeSystem functional handler', () => {
       }
     });
 
+    it('fixture "register_string_type" -> ok', async () => {
+      if (typeof typeSystemHandler.registerType !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.registerType({ type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_type" -> error', async () => {
+      if (typeof typeSystemHandler.registerType !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.registerType({ type: "", schema: "{}", constraints: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeSystemHandler.resolve({ type: 'test' });
+      const program = typeSystemHandler.resolve({ type: "email" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeSystemHandler.resolve({ type: 'test' });
+      const program = typeSystemHandler.resolve({ type: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeSystemHandler.resolve({ type: 'test' });
+      const program = typeSystemHandler.resolve({ type: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeSystemHandler.resolve({ type: 'test' });
+      const program = typeSystemHandler.resolve({ type: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeSystemHandler.resolve({ type: 'test' });
+      const program = typeSystemHandler.resolve({ type: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('TypeSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeSystemHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(typeSystemHandler.resolve({ type: 'test' }), storage);
+        const result = await interpret(typeSystemHandler.resolve({ type: "email" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('TypeSystem functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof typeSystemHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.resolve({ type: "email" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof typeSystemHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.resolve({ type: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('navigate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeSystemHandler.navigate({ type: 'test', path: 'test-path' });
+      const program = typeSystemHandler.navigate({ type: "user", path: "address.city" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeSystemHandler.navigate({ type: 'test', path: 'test-path' });
+      const program = typeSystemHandler.navigate({ type: "user", path: "address.city" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeSystemHandler.navigate({ type: 'test', path: 'test-path' });
+      const program = typeSystemHandler.navigate({ type: "user", path: "address.city" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeSystemHandler.navigate({ type: 'test', path: 'test-path' });
+      const program = typeSystemHandler.navigate({ type: "user", path: "address.city" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeSystemHandler.navigate({ type: 'test', path: 'test-path' });
+      const program = typeSystemHandler.navigate({ type: "user", path: "address.city" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('TypeSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeSystemHandler.navigate !== 'function') return;
       try {
-        const result = await interpret(typeSystemHandler.navigate({ type: 'test', path: 'test-path' }), storage);
+        const result = await interpret(typeSystemHandler.navigate({ type: "user", path: "address.city" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('TypeSystem functional handler', () => {
       }
     });
 
+    it('fixture "navigate_nested" -> ok', async () => {
+      if (typeof typeSystemHandler.navigate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.navigate({ type: "user", path: "address.city" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "navigate_missing_type" -> error', async () => {
+      if (typeof typeSystemHandler.navigate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.navigate({ type: "nonexistent", path: "field" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('serialize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeSystemHandler.serialize({ type: 'test', value: 'test-value' });
+      const program = typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeSystemHandler.serialize({ type: 'test', value: 'test-value' });
+      const program = typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeSystemHandler.serialize({ type: 'test', value: 'test-value' });
+      const program = typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeSystemHandler.serialize({ type: 'test', value: 'test-value' });
+      const program = typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('TypeSystem functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeSystemHandler.serialize({ type: 'test', value: 'test-value' });
+      const program = typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('TypeSystem functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeSystemHandler.serialize !== 'function') return;
       try {
-        const result = await interpret(typeSystemHandler.serialize({ type: 'test', value: 'test-value' }), storage);
+        const result = await interpret(typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('TypeSystem functional handler', () => {
       }
     });
 
+    it('fixture "serialize_value" -> ok', async () => {
+      if (typeof typeSystemHandler.serialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.serialize({ type: "email", value: "\"user@example.com\"" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "serialize_missing_type" -> error', async () => {
+      if (typeof typeSystemHandler.serialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeSystemHandler.serialize({ type: "nonexistent", value: "\"test\"" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof typeSystemHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = typeSystemHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TypeSystem');
+    });
   });
 
   describe('invariant examples', () => {

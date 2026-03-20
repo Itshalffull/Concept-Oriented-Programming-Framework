@@ -80,11 +80,18 @@ describe('HistogramDiff functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof histogramDiffHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(histogramDiffHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' });
+      const program = histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('HistogramDiff functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' });
+      const program = histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' });
+      const program = histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' });
+      const program = histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('HistogramDiff functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' });
+      const program = histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('HistogramDiff functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof histogramDiffHandler.compute !== 'function') return;
       try {
-        const result = await interpret(histogramDiffHandler.compute({ contentA: 'test', contentB: 'test' }), storage);
+        const result = await interpret(histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('HistogramDiff functional handler', () => {
       }
     });
 
+    it('fixture "diff_text" -> ok', async () => {
+      if (typeof histogramDiffHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "non_string" -> error', async () => {
+      if (typeof histogramDiffHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(histogramDiffHandler.compute({ contentA: "123", contentB: "text" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof histogramDiffHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = histogramDiffHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('HistogramDiff');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('SyncEngine functional handler', () => {
 
   describe('registerSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.registerSync({ sync: 'test' });
+      const program = syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.registerSync({ sync: 'test' });
+      const program = syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.registerSync({ sync: 'test' });
+      const program = syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.registerSync({ sync: 'test' });
+      const program = syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.registerSync({ sync: 'test' });
+      const program = syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SyncEngine functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEngineHandler.registerSync !== 'function') return;
       try {
-        const result = await interpret(syncEngineHandler.registerSync({ sync: 'test' }), storage);
+        const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SyncEngine functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof syncEngineHandler.registerSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof syncEngineHandler.registerSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":""} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('onCompletion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.onCompletion({ completion: 'test' });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.onCompletion({ completion: 'test' });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.onCompletion({ completion: 'test' });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.onCompletion({ completion: 'test' });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.onCompletion({ completion: 'test' });
+      const program = syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SyncEngine functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEngineHandler.onCompletion !== 'function') return;
       try {
-        const result = await interpret(syncEngineHandler.onCompletion({ completion: 'test' }), storage);
+        const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,18 @@ describe('SyncEngine functional handler', () => {
       }
     });
 
+    it('fixture "valid_completion" -> ok', async () => {
+      if (typeof syncEngineHandler.onCompletion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('evaluateWhere', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' });
+      const program = syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +171,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' });
+      const program = syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' });
+      const program = syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' });
+      const program = syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +198,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' });
+      const program = syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +207,7 @@ describe('SyncEngine functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
       try {
-        const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: 'test', queries: 'test' }), storage);
+        const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +217,25 @@ describe('SyncEngine functional handler', () => {
       }
     });
 
+    it('fixture "valid_evaluate" -> ok', async () => {
+      if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_bindings" -> error', async () => {
+      if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: null, queries: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('queueSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +243,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +270,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' });
+      const program = syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +279,7 @@ describe('SyncEngine functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEngineHandler.queueSync !== 'function') return;
       try {
-        const result = await interpret(syncEngineHandler.queueSync({ sync: 'test', bindings: 'test', flow: 'test-flow' }), storage);
+        const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +289,18 @@ describe('SyncEngine functional handler', () => {
       }
     });
 
+    it('fixture "valid_queue" -> ok', async () => {
+      if (typeof syncEngineHandler.queueSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('onAvailabilityChange', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true });
+      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +308,21 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true });
+      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true });
+      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true });
+      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +335,7 @@ describe('SyncEngine functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true });
+      const program = syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +344,7 @@ describe('SyncEngine functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
       try {
-        const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: 'test-conceptUri', available: true }), storage);
+        const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -310,6 +352,20 @@ describe('SyncEngine functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "concept_online" -> ok', async () => {
+      if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "concept_offline" -> ok', async () => {
+      if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "false" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -370,6 +426,31 @@ describe('SyncEngine functional handler', () => {
       }
     });
 
+    it('fixture "valid_drain" -> ok', async () => {
+      if (typeof syncEngineHandler.drainConflicts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncEngineHandler.drainConflicts({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncEngineHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncEngineHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncEngine');
+    });
   });
 
   describe('invariant examples', () => {

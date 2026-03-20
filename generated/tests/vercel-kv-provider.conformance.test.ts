@@ -19,7 +19,7 @@ describe('VercelKVProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelKVProviderHandler.provision !== 'function') return;
       try {
-        const result = await vercelKVProviderHandler.provision({ storeName: 'test-storeName', config: 'test-config' }, storage);
+        const result = await vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('VercelKVProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "provision_session_cache" -> ok', async () => {
+      if (typeof vercelKVProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_rate_limiter" -> ok', async () => {
+      if (typeof vercelKVProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.provision({ storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_name" -> error', async () => {
+      if (typeof vercelKVProviderHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.provision({ storeName: "", config: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('VercelKVProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
       try {
-        const result = await vercelKVProviderHandler.getCredentials({ storeName: 'test-storeName' }, storage);
+        const result = await vercelKVProviderHandler.getCredentials({ storeName: "session-cache" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('VercelKVProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_session_cache" -> ok', async () => {
+      if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.getCredentials({ storeName: "session-cache" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.getCredentials({ storeName: "no-such-store" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('VercelKVProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelKVProviderHandler.destroy !== 'function') return;
       try {
-        const result = await vercelKVProviderHandler.destroy({ storeName: 'test-storeName' }, storage);
+        const result = await vercelKVProviderHandler.destroy({ storeName: "session-cache" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +96,37 @@ describe('VercelKVProvider imperative handler', () => {
       }
     });
 
+    it('fixture "destroy_session_cache" -> ok', async () => {
+      if (typeof vercelKVProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.destroy({ storeName: "session-cache" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_nonexistent" -> error', async () => {
+      if (typeof vercelKVProviderHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelKVProviderHandler.destroy({ storeName: "no-such-store" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof vercelKVProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = vercelKVProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VercelKVProvider');
+    });
   });
 
   describe('invariant examples', () => {

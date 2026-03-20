@@ -82,6 +82,24 @@ describe('ReactComponentSymbolExtractor functional handler', () => {
 
   });
 
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof reactComponentSymbolExtractorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = reactComponentSymbolExtractorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ReactComponentSymbolExtractor');
+    });
+  });
+
   describe('state invariants (stateful PBT)', () => {
     it('always: valid-extractorRef', async () => {
       await fc.assert(

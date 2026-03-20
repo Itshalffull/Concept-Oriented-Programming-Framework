@@ -26,7 +26,7 @@ describe('PluginRegistry functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' });
+      const program = pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' });
+      const program = pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' });
+      const program = pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' });
+      const program = pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' });
+      const program = pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.register !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.register({ type: 'test-type', name: 'test-name', metadata: 'test-metadata' }), storage);
+        const result = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "register_formatter" -> ok', async () => {
+      if (typeof pluginRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_type" -> error', async () => {
+      if (typeof pluginRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.register({ type: "", name: "orphan", metadata: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.discover({ type: 'test-type' });
+      const program = pluginRegistryHandler.discover({ type: "formatter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.discover({ type: 'test-type' });
+      const program = pluginRegistryHandler.discover({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.discover({ type: 'test-type' });
+      const program = pluginRegistryHandler.discover({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.discover({ type: 'test-type' });
+      const program = pluginRegistryHandler.discover({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.discover({ type: 'test-type' });
+      const program = pluginRegistryHandler.discover({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.discover({ type: 'test-type' }), storage);
+        const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "discover_formatters" -> ok', async () => {
+      if (typeof pluginRegistryHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_empty_type" -> error', async () => {
+      if (typeof pluginRegistryHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.discover({ type: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('createInstance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.createInstance({ plugin: 'test', config: 'test-config' }), storage);
+        const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "create_with_config" -> ok', async () => {
+      if (typeof pluginRegistryHandler.createInstance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_config" -> error', async () => {
+      if (typeof pluginRegistryHandler.createInstance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "bad-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDefinitions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.getDefinitions({ type: 'test-type' });
+      const program = pluginRegistryHandler.getDefinitions({ type: "formatter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.getDefinitions({ type: 'test-type' });
+      const program = pluginRegistryHandler.getDefinitions({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.getDefinitions({ type: 'test-type' });
+      const program = pluginRegistryHandler.getDefinitions({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.getDefinitions({ type: 'test-type' });
+      const program = pluginRegistryHandler.getDefinitions({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.getDefinitions({ type: 'test-type' });
+      const program = pluginRegistryHandler.getDefinitions({ type: "formatter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.getDefinitions({ type: 'test-type' }), storage);
+        const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "get_formatter_defs" -> ok', async () => {
+      if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown_defs" -> error', async () => {
+      if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('alterDefinitions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' });
+      const program = pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' });
+      const program = pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' });
+      const program = pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' });
+      const program = pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' });
+      const program = pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: 'test-type', alterations: 'test-alterations' }), storage);
+        const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "alter_formatters" -> ok', async () => {
+      if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "alter_missing_type" -> error', async () => {
+      if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "", alterations: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('derivePlugins', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('PluginRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' });
+      const program = pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('PluginRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       try {
-        const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: 'test', config: 'test-config' }), storage);
+        const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('PluginRegistry functional handler', () => {
       }
     });
 
+    it('fixture "derive_variant" -> ok', async () => {
+      if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "derive_nonexistent" -> error', async () => {
+      if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "nonexistent:plugin", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof pluginRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = pluginRegistryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PluginRegistry');
+    });
   });
 
   describe('invariant examples', () => {

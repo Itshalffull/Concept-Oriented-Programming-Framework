@@ -26,7 +26,7 @@ describe('Ref functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = refHandler.create({ name: 'test-name', hash: 'test-hash' });
+      const program = refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Ref functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = refHandler.create({ name: 'test-name', hash: 'test-hash' });
+      const program = refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = refHandler.create({ name: 'test-name', hash: 'test-hash' });
+      const program = refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = refHandler.create({ name: 'test-name', hash: 'test-hash' });
+      const program = refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Ref functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = refHandler.create({ name: 'test-name', hash: 'test-hash' });
+      const program = refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Ref functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof refHandler.create !== 'function') return;
       try {
-        const result = await interpret(refHandler.create({ name: 'test-name', hash: 'test-hash' }), storage);
+        const result = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Ref functional handler', () => {
       }
     });
 
+    it('fixture "create_head" -> ok', async () => {
+      if (typeof refHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.create({ name: "HEAD", hash: "sha256:abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_ref_name" -> error', async () => {
+      if (typeof refHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.create({ name: "", hash: "sha256:abc123" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' });
+      const program = refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Ref functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' });
+      const program = refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' });
+      const program = refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' });
+      const program = refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Ref functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' });
+      const program = refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Ref functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof refHandler.update !== 'function') return;
       try {
-        const result = await interpret(refHandler.update({ name: 'test-name', newHash: 'test-newHash', expectedOldHash: 'test-expectedOldHash' }), storage);
+        const result = await interpret(refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Ref functional handler', () => {
       }
     });
 
+    it('fixture "update_head" -> ok', async () => {
+      if (typeof refHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.update({ name: "HEAD", newHash: "sha256:newdef456", expectedOldHash: "sha256:abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_empty_name" -> error', async () => {
+      if (typeof refHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.update({ name: "", newHash: "sha256:abc", expectedOldHash: "sha256:def" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = refHandler.delete({ name: 'test-name' });
+      const program = refHandler.delete({ name: "tags/v1.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Ref functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = refHandler.delete({ name: 'test-name' });
+      const program = refHandler.delete({ name: "tags/v1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = refHandler.delete({ name: 'test-name' });
+      const program = refHandler.delete({ name: "tags/v1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = refHandler.delete({ name: 'test-name' });
+      const program = refHandler.delete({ name: "tags/v1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Ref functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = refHandler.delete({ name: 'test-name' });
+      const program = refHandler.delete({ name: "tags/v1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Ref functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof refHandler.delete !== 'function') return;
       try {
-        const result = await interpret(refHandler.delete({ name: 'test-name' }), storage);
+        const result = await interpret(refHandler.delete({ name: "tags/v1.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Ref functional handler', () => {
       }
     });
 
+    it('fixture "delete_tag" -> ok', async () => {
+      if (typeof refHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.delete({ name: "tags/v1.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_empty_name" -> error', async () => {
+      if (typeof refHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.delete({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = refHandler.resolve({ name: 'test-name' });
+      const program = refHandler.resolve({ name: "HEAD" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Ref functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = refHandler.resolve({ name: 'test-name' });
+      const program = refHandler.resolve({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = refHandler.resolve({ name: 'test-name' });
+      const program = refHandler.resolve({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = refHandler.resolve({ name: 'test-name' });
+      const program = refHandler.resolve({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Ref functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = refHandler.resolve({ name: 'test-name' });
+      const program = refHandler.resolve({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Ref functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof refHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(refHandler.resolve({ name: 'test-name' }), storage);
+        const result = await interpret(refHandler.resolve({ name: "HEAD" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Ref functional handler', () => {
       }
     });
 
+    it('fixture "resolve_head" -> ok', async () => {
+      if (typeof refHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.resolve({ name: "HEAD" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof refHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.resolve({ name: "nonexistent-ref" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('log', () => {
     it('builds a valid StorageProgram', () => {
-      const program = refHandler.log({ name: 'test-name' });
+      const program = refHandler.log({ name: "HEAD" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Ref functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = refHandler.log({ name: 'test-name' });
+      const program = refHandler.log({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = refHandler.log({ name: 'test-name' });
+      const program = refHandler.log({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = refHandler.log({ name: 'test-name' });
+      const program = refHandler.log({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Ref functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = refHandler.log({ name: 'test-name' });
+      const program = refHandler.log({ name: "HEAD" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Ref functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof refHandler.log !== 'function') return;
       try {
-        const result = await interpret(refHandler.log({ name: 'test-name' }), storage);
+        const result = await interpret(refHandler.log({ name: "HEAD" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Ref functional handler', () => {
       }
     });
 
+    it('fixture "log_head" -> ok', async () => {
+      if (typeof refHandler.log !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.log({ name: "HEAD" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "log_missing" -> error', async () => {
+      if (typeof refHandler.log !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(refHandler.log({ name: "nonexistent-ref" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof refHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = refHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Ref');
+    });
   });
 
   describe('invariant examples', () => {

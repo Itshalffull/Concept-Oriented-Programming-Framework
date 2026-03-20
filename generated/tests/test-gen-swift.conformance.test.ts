@@ -19,7 +19,7 @@ describe('TestGenSwift imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenSwiftHandler.render !== 'function') return;
       try {
-        const result = await testGenSwiftHandler.render({ test_plan: 'test-test_plan', output_path: 'test-output_path' }, storage);
+        const result = await testGenSwiftHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.swift" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('TestGenSwift imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "render_valid" -> ok', async () => {
+      if (typeof testGenSwiftHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.swift" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "render_invalid_json" -> error', async () => {
+      if (typeof testGenSwiftHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.render({ test_plan: "not json", output_path: "test.ts" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('TestGenSwift imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenSwiftHandler.renderBatch !== 'function') return;
       try {
-        const result = await testGenSwiftHandler.renderBatch({ test_plans: 'test-test_plans' }, storage);
+        const result = await testGenSwiftHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('TestGenSwift imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "batch_valid" -> ok', async () => {
+      if (typeof testGenSwiftHandler.renderBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "batch_empty" -> error', async () => {
+      if (typeof testGenSwiftHandler.renderBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.renderBatch({ test_plans: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('TestGenSwift imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof testGenSwiftHandler.listRendered !== 'function') return;
       try {
-        const result = await testGenSwiftHandler.listRendered({ concept_ref: 'test-concept_ref' }, storage);
+        const result = await testGenSwiftHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +89,37 @@ describe('TestGenSwift imperative handler', () => {
       }
     });
 
+    it('fixture "list_valid" -> ok', async () => {
+      if (typeof testGenSwiftHandler.listRendered !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> error', async () => {
+      if (typeof testGenSwiftHandler.listRendered !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await testGenSwiftHandler.listRendered({ concept_ref: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof testGenSwiftHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = testGenSwiftHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TestGenSwift');
+    });
   });
 
   describe('invariant examples', () => {

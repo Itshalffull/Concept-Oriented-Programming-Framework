@@ -26,7 +26,7 @@ describe('ConsentProcess functional handler', () => {
 
   describe('initiate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' });
+      const program = consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' });
+      const program = consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' });
+      const program = consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' });
+      const program = consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' });
+      const program = consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConsentProcess functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof consentProcessHandler.initiate !== 'function') return;
       try {
-        const result = await interpret(consentProcessHandler.initiate({ proposalRef: 'test-proposalRef' }), storage);
+        const result = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ConsentProcess functional handler', () => {
       }
     });
 
+    it('fixture "initiate_budget_proposal" -> ok', async () => {
+      if (typeof consentProcessHandler.initiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "initiate_empty_ref" -> error', async () => {
+      if (typeof consentProcessHandler.initiate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.initiate({ proposalRef: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('advancePhase', () => {
     it('builds a valid StorageProgram', () => {
-      const program = consentProcessHandler.advancePhase({ process: 'test' });
+      const program = consentProcessHandler.advancePhase({ process: "consent-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = consentProcessHandler.advancePhase({ process: 'test' });
+      const program = consentProcessHandler.advancePhase({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = consentProcessHandler.advancePhase({ process: 'test' });
+      const program = consentProcessHandler.advancePhase({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = consentProcessHandler.advancePhase({ process: 'test' });
+      const program = consentProcessHandler.advancePhase({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = consentProcessHandler.advancePhase({ process: 'test' });
+      const program = consentProcessHandler.advancePhase({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ConsentProcess functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof consentProcessHandler.advancePhase !== 'function') return;
       try {
-        const result = await interpret(consentProcessHandler.advancePhase({ process: 'test' }), storage);
+        const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ConsentProcess functional handler', () => {
       }
     });
 
+    it('fixture "advance_to_clarifying" -> ok', async () => {
+      if (typeof consentProcessHandler.advancePhase !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "advance_missing_process" -> error', async () => {
+      if (typeof consentProcessHandler.advancePhase !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('raiseObjection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true });
+      const program = consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true });
+      const program = consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true });
+      const program = consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true });
+      const program = consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true });
+      const program = consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ConsentProcess functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof consentProcessHandler.raiseObjection !== 'function') return;
       try {
-        const result = await interpret(consentProcessHandler.raiseObjection({ process: 'test', objector: 'test-objector', reason: 'test-reason', isParamount: true }), storage);
+        const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ConsentProcess functional handler', () => {
       }
     });
 
+    it('fixture "raise_paramount" -> ok', async () => {
+      if (typeof consentProcessHandler.raiseObjection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "raise_during_wrong_phase" -> error', async () => {
+      if (typeof consentProcessHandler.raiseObjection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "bob", reason: "Unclear scope", isParamount: "false" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('integrateObjection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' });
+      const program = consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' });
+      const program = consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' });
+      const program = consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' });
+      const program = consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' });
+      const program = consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ConsentProcess functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof consentProcessHandler.integrateObjection !== 'function') return;
       try {
-        const result = await interpret(consentProcessHandler.integrateObjection({ process: 'test', objectionIndex: 1, amendment: 'test-amendment' }), storage);
+        const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ConsentProcess functional handler', () => {
       }
     });
 
+    it('fixture "integrate_first_objection" -> ok', async () => {
+      if (typeof consentProcessHandler.integrateObjection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "integrate_missing_objection" -> error', async () => {
+      if (typeof consentProcessHandler.integrateObjection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "99", amendment: "N/A" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = consentProcessHandler.resolve({ process: 'test' });
+      const program = consentProcessHandler.resolve({ process: "consent-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = consentProcessHandler.resolve({ process: 'test' });
+      const program = consentProcessHandler.resolve({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = consentProcessHandler.resolve({ process: 'test' });
+      const program = consentProcessHandler.resolve({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = consentProcessHandler.resolve({ process: 'test' });
+      const program = consentProcessHandler.resolve({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ConsentProcess functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = consentProcessHandler.resolve({ process: 'test' });
+      const program = consentProcessHandler.resolve({ process: "consent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ConsentProcess functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof consentProcessHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(consentProcessHandler.resolve({ process: 'test' }), storage);
+        const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('ConsentProcess functional handler', () => {
       }
     });
 
+    it('fixture "resolve_clean" -> ok', async () => {
+      if (typeof consentProcessHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing_process" -> error', async () => {
+      if (typeof consentProcessHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(consentProcessHandler.resolve({ process: "consent-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof consentProcessHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = consentProcessHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConsentProcess');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('ChainMonitor functional handler', () => {
 
   describe('awaitFinality', () => {
     it('builds a valid StorageProgram', () => {
-      const program = chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' });
+      const program = chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' });
+      const program = chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' });
+      const program = chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' });
+      const program = chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' });
+      const program = chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ChainMonitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof chainMonitorHandler.awaitFinality !== 'function') return;
       try {
-        const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: 'test-txHash', level: 'test-level' }), storage);
+        const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ChainMonitor functional handler', () => {
       }
     });
 
+    it('fixture "await_finality_valid" -> ok', async () => {
+      if (typeof chainMonitorHandler.awaitFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "await_finality_empty_hash" -> timeout', async () => {
+      if (typeof chainMonitorHandler.awaitFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: "", level: "confirmations" }), storage);
+      expect(result.variant).toBe('timeout');
+    });
+
   });
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' });
+      const program = chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' });
+      const program = chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' });
+      const program = chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' });
+      const program = chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' });
+      const program = chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ChainMonitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof chainMonitorHandler.subscribe !== 'function') return;
       try {
-        const result = await interpret(chainMonitorHandler.subscribe({ chainId: 1, rpcUrl: 'test-rpcUrl' }), storage);
+        const result = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ChainMonitor functional handler', () => {
       }
     });
 
+    it('fixture "subscribe_valid" -> ok', async () => {
+      if (typeof chainMonitorHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_missing_rpc" -> error', async () => {
+      if (typeof chainMonitorHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('onBlock', () => {
     it('builds a valid StorageProgram', () => {
-      const program = chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' });
+      const program = chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' });
+      const program = chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' });
+      const program = chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' });
+      const program = chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ChainMonitor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' });
+      const program = chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ChainMonitor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof chainMonitorHandler.onBlock !== 'function') return;
       try {
-        const result = await interpret(chainMonitorHandler.onBlock({ chainId: 1, blockNumber: 1, blockHash: 'test-blockHash' }), storage);
+        const result = await interpret(chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('ChainMonitor functional handler', () => {
       }
     });
 
+    it('fixture "on_block_valid" -> ok', async () => {
+      if (typeof chainMonitorHandler.onBlock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "on_block_empty_hash" -> reorg', async () => {
+      if (typeof chainMonitorHandler.onBlock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "" }), storage);
+      expect(result.variant).toBe('reorg');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof chainMonitorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = chainMonitorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ChainMonitor');
+    });
   });
 
   describe('invariant examples', () => {

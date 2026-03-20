@@ -26,7 +26,7 @@ describe('TerminalAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TerminalAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TerminalAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TerminalAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof terminalAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(terminalAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('TerminalAdapter functional handler', () => {
       }
     });
 
+    it('fixture "normalize_ansi_classes" -> ok', async () => {
+      if (typeof terminalAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_data_attrs" -> ok', async () => {
+      if (typeof terminalAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{ \"aria-label\": \"Menu\", \"data-section\": \"nav\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_empty_props" -> error', async () => {
+      if (typeof terminalAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "normalize_invalid_json" -> error', async () => {
+      if (typeof terminalAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terminalAdapterHandler.normalize({ adapter: "terminal-1", props: "{invalid" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof terminalAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = terminalAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TerminalAdapter');
+    });
   });
 
   describe('invariant examples', () => {

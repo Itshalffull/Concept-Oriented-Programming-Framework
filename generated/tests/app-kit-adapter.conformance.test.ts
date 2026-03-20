@@ -26,7 +26,7 @@ describe('AppKitAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AppKitAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AppKitAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AppKitAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appKitAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(appKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('AppKitAdapter functional handler', () => {
       }
     });
 
+    it('fixture "button_with_click" -> ok', async () => {
+      if (typeof appKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_widget_mapping" -> ok', async () => {
+      if (typeof appKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appKitAdapterHandler.normalize({ adapter: "appkit-form", props: "{ \"__widget\": \"button\", \"aria-label\": \"Submit\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof appKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof appKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appKitAdapterHandler.normalize({ adapter: "appkit-main", props: "not json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof appKitAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = appKitAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AppKitAdapter');
+    });
   });
 
   describe('invariant examples', () => {

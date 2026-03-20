@@ -19,7 +19,7 @@ describe('SyncCompiler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncCompilerHandler.compile !== 'function') return;
       try {
-        const result = await syncCompilerHandler.compile({ sync: 'test', ast: 'test' }, storage);
+        const result = await syncCompilerHandler.compile({ sync: "sync-001", ast: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('SyncCompiler imperative handler', () => {
       }
     });
 
+    it('fixture "valid_sync" -> ok', async () => {
+      if (typeof syncCompilerHandler.compile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncCompilerHandler.compile({ sync: "sync-001", ast: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof syncCompilerHandler.compile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncCompilerHandler.compile({ sync: "sync-002", ast: {"name":""} }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "empty_then" -> error', async () => {
+      if (typeof syncCompilerHandler.compile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncCompilerHandler.compile({ sync: "sync-003", ast: {"name":"BadSync","annotations":[],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[]} }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncCompilerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncCompilerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncCompiler');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Version functional handler', () => {
 
   describe('snapshot', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' });
+      const program = versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Version functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' });
+      const program = versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' });
+      const program = versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' });
+      const program = versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Version functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' });
+      const program = versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Version functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionHandler.snapshot !== 'function') return;
       try {
-        const result = await interpret(versionHandler.snapshot({ version: 'test', entity: 'test-entity', data: 'test-data', author: 'test-author' }), storage);
+        const result = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Version functional handler', () => {
       }
     });
 
+    it('fixture "valid_snapshot" -> ok', async () => {
+      if (typeof versionHandler.snapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.snapshot({ version: "v1", entity: "doc-1", data: "initial content", author: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "another_snapshot" -> ok', async () => {
+      if (typeof versionHandler.snapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.snapshot({ version: "v2", entity: "doc-1", data: "updated content", author: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listVersions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionHandler.listVersions({ entity: 'test-entity' });
+      const program = versionHandler.listVersions({ entity: "doc-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Version functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionHandler.listVersions({ entity: 'test-entity' });
+      const program = versionHandler.listVersions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionHandler.listVersions({ entity: 'test-entity' });
+      const program = versionHandler.listVersions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionHandler.listVersions({ entity: 'test-entity' });
+      const program = versionHandler.listVersions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Version functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionHandler.listVersions({ entity: 'test-entity' });
+      const program = versionHandler.listVersions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Version functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionHandler.listVersions !== 'function') return;
       try {
-        const result = await interpret(versionHandler.listVersions({ entity: 'test-entity' }), storage);
+        const result = await interpret(versionHandler.listVersions({ entity: "doc-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Version functional handler', () => {
       }
     });
 
+    it('fixture "valid_list" -> ok', async () => {
+      if (typeof versionHandler.listVersions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.listVersions({ entity: "doc-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_unknown_entity" -> ok', async () => {
+      if (typeof versionHandler.listVersions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.listVersions({ entity: "nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionHandler.rollback({ version: 'test' });
+      const program = versionHandler.rollback({ version: "v1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Version functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionHandler.rollback({ version: 'test' });
+      const program = versionHandler.rollback({ version: "v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionHandler.rollback({ version: 'test' });
+      const program = versionHandler.rollback({ version: "v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionHandler.rollback({ version: 'test' });
+      const program = versionHandler.rollback({ version: "v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Version functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionHandler.rollback({ version: 'test' });
+      const program = versionHandler.rollback({ version: "v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Version functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(versionHandler.rollback({ version: 'test' }), storage);
+        const result = await interpret(versionHandler.rollback({ version: "v1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Version functional handler', () => {
       }
     });
 
+    it('fixture "valid_rollback" -> ok', async () => {
+      if (typeof versionHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.rollback({ version: "v1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing" -> notfound', async () => {
+      if (typeof versionHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.rollback({ version: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionHandler.diff({ versionA: 'test', versionB: 'test' });
+      const program = versionHandler.diff({ versionA: "v1", versionB: "v2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Version functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionHandler.diff({ versionA: 'test', versionB: 'test' });
+      const program = versionHandler.diff({ versionA: "v1", versionB: "v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionHandler.diff({ versionA: 'test', versionB: 'test' });
+      const program = versionHandler.diff({ versionA: "v1", versionB: "v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionHandler.diff({ versionA: 'test', versionB: 'test' });
+      const program = versionHandler.diff({ versionA: "v1", versionB: "v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Version functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionHandler.diff({ versionA: 'test', versionB: 'test' });
+      const program = versionHandler.diff({ versionA: "v1", versionB: "v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Version functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionHandler.diff !== 'function') return;
       try {
-        const result = await interpret(versionHandler.diff({ versionA: 'test', versionB: 'test' }), storage);
+        const result = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Version functional handler', () => {
       }
     });
 
+    it('fixture "valid_diff" -> ok', async () => {
+      if (typeof versionHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.diff({ versionA: "v1", versionB: "v2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing" -> notfound', async () => {
+      if (typeof versionHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionHandler.diff({ versionA: "v1", versionB: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof versionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = versionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Version');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('LanguageGrammar functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' });
+      const program = languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' });
+      const program = languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' });
+      const program = languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' });
+      const program = languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' });
+      const program = languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('LanguageGrammar functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
       try {
-        const result = await interpret(languageGrammarHandler.register({ name: 'test-name', extensions: 'test-extensions', parserWasmPath: 'test-parserWasmPath', nodeTypes: 'test-nodeTypes' }), storage);
+        const result = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('LanguageGrammar functional handler', () => {
       }
     });
 
+    it('fixture "register_typescript" -> ok', async () => {
+      if (typeof languageGrammarHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof languageGrammarHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.register({ name: "", extensions: "[]", parserWasmPath: "x.wasm", nodeTypes: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' });
+      const program = languageGrammarHandler.resolve({ fileExtension: ".ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' });
+      const program = languageGrammarHandler.resolve({ fileExtension: ".ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' });
+      const program = languageGrammarHandler.resolve({ fileExtension: ".ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' });
+      const program = languageGrammarHandler.resolve({ fileExtension: ".ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' });
+      const program = languageGrammarHandler.resolve({ fileExtension: ".ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('LanguageGrammar functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(languageGrammarHandler.resolve({ fileExtension: 'test-fileExtension' }), storage);
+        const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('LanguageGrammar functional handler', () => {
       }
     });
 
+    it('fixture "resolve_ts" -> ok', async () => {
+      if (typeof languageGrammarHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> error', async () => {
+      if (typeof languageGrammarHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".xyz" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveByMime', () => {
     it('builds a valid StorageProgram', () => {
-      const program = languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' });
+      const program = languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' });
+      const program = languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' });
+      const program = languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' });
+      const program = languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' });
+      const program = languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('LanguageGrammar functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
       try {
-        const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: 'test-mimeType' }), storage);
+        const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('LanguageGrammar functional handler', () => {
       }
     });
 
+    it('fixture "resolve_mime_ts" -> ok', async () => {
+      if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_mime_unknown" -> error', async () => {
+      if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/unknown" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = languageGrammarHandler.get({ grammar: 'test' });
+      const program = languageGrammarHandler.get({ grammar: "grammar-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = languageGrammarHandler.get({ grammar: 'test' });
+      const program = languageGrammarHandler.get({ grammar: "grammar-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = languageGrammarHandler.get({ grammar: 'test' });
+      const program = languageGrammarHandler.get({ grammar: "grammar-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = languageGrammarHandler.get({ grammar: 'test' });
+      const program = languageGrammarHandler.get({ grammar: "grammar-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('LanguageGrammar functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = languageGrammarHandler.get({ grammar: 'test' });
+      const program = languageGrammarHandler.get({ grammar: "grammar-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('LanguageGrammar functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
       try {
-        const result = await interpret(languageGrammarHandler.get({ grammar: 'test' }), storage);
+        const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -252,6 +294,20 @@ describe('LanguageGrammar functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_grammar" -> ok', async () => {
+      if (typeof languageGrammarHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof languageGrammarHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.get({ grammar: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -312,6 +368,31 @@ describe('LanguageGrammar functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof languageGrammarHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(languageGrammarHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof languageGrammarHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = languageGrammarHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LanguageGrammar');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Affordance functional handler', () => {
 
   describe('declare', () => {
     it('builds a valid StorageProgram', () => {
-      const program = affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' });
+      const program = affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Affordance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' });
+      const program = affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' });
+      const program = affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' });
+      const program = affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Affordance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' });
+      const program = affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Affordance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof affordanceHandler.declare !== 'function') return;
       try {
-        const result = await interpret(affordanceHandler.declare({ affordance: 'test', widget: 'test-widget', interactor: 'test-interactor', specificity: 1, conditions: 'test', bind: 'test', contractVersion: 'test', densityExempt: 'test', motifOptimized: 'test' }), storage);
+        const result = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Affordance functional handler', () => {
       }
     });
 
+    it('fixture "valid_declare" -> ok', async () => {
+      if (typeof affordanceHandler.declare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "entity_declare" -> ok', async () => {
+      if (typeof affordanceHandler.declare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.declare({ widget: "approval-detail", interactor: "entity-detail", specificity: "20", conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_declare" -> duplicate', async () => {
+      if (typeof affordanceHandler.declare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('match', () => {
     it('builds a valid StorageProgram', () => {
-      const program = affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' });
+      const program = affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Affordance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' });
+      const program = affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' });
+      const program = affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' });
+      const program = affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Affordance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' });
+      const program = affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Affordance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       try {
-        const result = await interpret(affordanceHandler.match({ affordance: 'test', interactor: 'test-interactor', context: 'test-context' }), storage);
+        const result = await interpret(affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Affordance functional handler', () => {
       }
     });
 
+    it('fixture "valid_match" -> ok', async () => {
+      if (typeof affordanceHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "entity_match" -> ok', async () => {
+      if (typeof affordanceHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.match({ interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_match" -> none', async () => {
+      if (typeof affordanceHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.match({ interactor: "nonexistent-type", context: "{}" }), storage);
+      expect(result.variant).toBe('none');
+    });
+
   });
 
   describe('explain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = affordanceHandler.explain({ affordance: 'test' });
+      const program = affordanceHandler.explain({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Affordance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = affordanceHandler.explain({ affordance: 'test' });
+      const program = affordanceHandler.explain({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = affordanceHandler.explain({ affordance: 'test' });
+      const program = affordanceHandler.explain({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = affordanceHandler.explain({ affordance: 'test' });
+      const program = affordanceHandler.explain({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Affordance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = affordanceHandler.explain({ affordance: 'test' });
+      const program = affordanceHandler.explain({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Affordance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof affordanceHandler.explain !== 'function') return;
       try {
-        const result = await interpret(affordanceHandler.explain({ affordance: 'test' }), storage);
+        const result = await interpret(affordanceHandler.explain({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('Affordance functional handler', () => {
       }
     });
 
+    it('fixture "valid_explain" -> ok', async () => {
+      if (typeof affordanceHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.explain({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_explain" -> notfound', async () => {
+      if (typeof affordanceHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.explain({ affordance: "nonexistent-affordance" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = affordanceHandler.remove({ affordance: 'test' });
+      const program = affordanceHandler.remove({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Affordance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = affordanceHandler.remove({ affordance: 'test' });
+      const program = affordanceHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = affordanceHandler.remove({ affordance: 'test' });
+      const program = affordanceHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = affordanceHandler.remove({ affordance: 'test' });
+      const program = affordanceHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Affordance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = affordanceHandler.remove({ affordance: 'test' });
+      const program = affordanceHandler.remove({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Affordance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof affordanceHandler.remove !== 'function') return;
       try {
-        const result = await interpret(affordanceHandler.remove({ affordance: 'test' }), storage);
+        const result = await interpret(affordanceHandler.remove({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('Affordance functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof affordanceHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.remove({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_remove" -> notfound', async () => {
+      if (typeof affordanceHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(affordanceHandler.remove({ affordance: "nonexistent-affordance" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof affordanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = affordanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Affordance');
+    });
   });
 
   describe('invariant examples', () => {

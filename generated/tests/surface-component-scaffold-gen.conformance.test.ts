@@ -26,7 +26,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' }), storage);
+        const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_component" -> ok', async () => {
+      if (typeof surfaceComponentScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_component" -> ok', async () => {
+      if (typeof surfaceComponentScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Badge", parts: ["root"], states: ["idle"], events: [], role: "status", requires: null, affordance: null, props: [], compose: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' });
+      const program = surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(surfaceComponentScaffoldGenHandler.preview({ name: 'test-name', parts: 'test', states: 'test', events: 'test', role: 'test', requires: 'test', affordance: 'test', props: 'test', compose: 'test' }), storage);
+        const result = await interpret(surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,13 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof surfaceComponentScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,6 +217,31 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof surfaceComponentScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceComponentScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof surfaceComponentScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = surfaceComponentScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SurfaceComponentScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

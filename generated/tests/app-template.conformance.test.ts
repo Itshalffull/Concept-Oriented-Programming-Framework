@@ -26,7 +26,7 @@ describe('AppTemplate functional handler', () => {
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appTemplateHandler.list({ category: 'test' });
+      const program = appTemplateHandler.list({ category: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appTemplateHandler.list({ category: 'test' });
+      const program = appTemplateHandler.list({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appTemplateHandler.list({ category: 'test' });
+      const program = appTemplateHandler.list({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appTemplateHandler.list({ category: 'test' });
+      const program = appTemplateHandler.list({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appTemplateHandler.list({ category: 'test' });
+      const program = appTemplateHandler.list({ category: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AppTemplate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
       try {
-        const result = await interpret(appTemplateHandler.list({ category: 'test' }), storage);
+        const result = await interpret(appTemplateHandler.list({ category: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AppTemplate functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof appTemplateHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.list({ category: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_category" -> ok', async () => {
+      if (typeof appTemplateHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.list({ category: "content" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('detail', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appTemplateHandler.detail({ name: 'test-name' });
+      const program = appTemplateHandler.detail({ name: "social" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appTemplateHandler.detail({ name: 'test-name' });
+      const program = appTemplateHandler.detail({ name: "social" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appTemplateHandler.detail({ name: 'test-name' });
+      const program = appTemplateHandler.detail({ name: "social" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appTemplateHandler.detail({ name: 'test-name' });
+      const program = appTemplateHandler.detail({ name: "social" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appTemplateHandler.detail({ name: 'test-name' });
+      const program = appTemplateHandler.detail({ name: "social" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AppTemplate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       try {
-        const result = await interpret(appTemplateHandler.detail({ name: 'test-name' }), storage);
+        const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AppTemplate functional handler', () => {
       }
     });
 
+    it('fixture "valid_detail" -> ok', async () => {
+      if (typeof appTemplateHandler.detail !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detail_nonexistent" -> error', async () => {
+      if (typeof appTemplateHandler.detail !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.detail({ name: "nonexistent-template" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('customize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' });
+      const program = appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' });
+      const program = appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' });
+      const program = appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' });
+      const program = appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' });
+      const program = appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AppTemplate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       try {
-        const result = await interpret(appTemplateHandler.customize({ template: 'test', add: 'test', remove: 'test', features: 'test' }), storage);
+        const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('AppTemplate functional handler', () => {
       }
     });
 
+    it('fixture "valid_customize" -> ok', async () => {
+      if (typeof appTemplateHandler.customize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "customize_remove_required" -> error', async () => {
+      if (typeof appTemplateHandler.customize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[]", remove: "[\"User\"]", features: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' });
+      const program = appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' });
+      const program = appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' });
+      const program = appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' });
+      const program = appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('AppTemplate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' });
+      const program = appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('AppTemplate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       try {
-        const result = await interpret(appTemplateHandler.register({ name: 'test-name', description: 'test-description', category: 'test-category', modules: 'test', syncs: 'test' }), storage);
+        const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('AppTemplate functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof appTemplateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> error', async () => {
+      if (typeof appTemplateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appTemplateHandler.register({ name: "social", description: "Duplicate", category: "content", modules: "[\"User\"]", syncs: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof appTemplateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = appTemplateHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AppTemplate');
+    });
   });
 
   describe('invariant examples', () => {

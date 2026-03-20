@@ -26,7 +26,7 @@ describe('VersionSpace functional handler', () => {
 
   describe('fork', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' });
+      const program = versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' });
+      const program = versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' });
+      const program = versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' });
+      const program = versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' });
+      const program = versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.fork !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.fork({ name: 'test-name', parent: 'test', scope: 'test-scope', visibility: 'test-visibility' }), storage);
+        const result = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "fork_from_base" -> ok', async () => {
+      if (typeof versionSpaceHandler.fork !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.fork({ name: "redesign", parent: null, scope: null, visibility: "shared" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fork_private" -> ok', async () => {
+      if (typeof versionSpaceHandler.fork !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.fork({ name: "experiment", parent: null, scope: null, visibility: "private" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fork_bad_parent" -> parent_not_found', async () => {
+      if (typeof versionSpaceHandler.fork !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.fork({ name: "child", parent: "vs-nonexistent", scope: null, visibility: "shared" }), storage);
+      expect(result.variant).toBe('parent_not_found');
+    });
+
   });
 
   describe('enter', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.enter({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.enter({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.enter({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.enter({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.enter({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.enter !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.enter({ space: 'test', user: 'test-user' }), storage);
+        const result = await interpret(versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "enter_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.enter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.enter({ space: "vs-redesign", user: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enter_archived" -> archived', async () => {
+      if (typeof versionSpaceHandler.enter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.enter({ space: "vs-archived", user: "alice" }), storage);
+      expect(result.variant).toBe('archived');
+    });
+
+    it('fixture "enter_denied" -> access_denied', async () => {
+      if (typeof versionSpaceHandler.enter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.enter({ space: "vs-private", user: "stranger" }), storage);
+      expect(result.variant).toBe('access_denied');
+    });
+
   });
 
   describe('leave', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.leave({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.leave({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.leave({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.leave({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.leave({ space: 'test', user: 'test-user' });
+      const program = versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.leave !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.leave({ space: 'test', user: 'test-user' }), storage);
+        const result = await interpret(versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "leave_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.leave !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.leave({ space: "vs-redesign", user: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "leave_not_in" -> ok', async () => {
+      if (typeof versionSpaceHandler.leave !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.leave({ space: "vs-other", user: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' });
+      const program = versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.write !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.write({ space: 'test', entity_id: 'test-entity_id', fields: 'test-fields' }), storage);
+        const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "write_override" -> ok', async () => {
+      if (typeof versionSpaceHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.write({ space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_missing_space" -> read_only', async () => {
+      if (typeof versionSpaceHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.write({ space: "vs-nonexistent", entity_id: "article-42", fields: "{}" }), storage);
+      expect(result.variant).toBe('read_only');
+    });
+
   });
 
   describe('create_in_space', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' });
+      const program = versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' });
+      const program = versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' });
+      const program = versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' });
+      const program = versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' });
+      const program = versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.create_in_space !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.create_in_space({ space: 'test', fields: 'test-fields' }), storage);
+        const result = await interpret(versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "create_entity" -> ok', async () => {
+      if (typeof versionSpaceHandler.create_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.create_in_space({ space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_minimal" -> ok', async () => {
+      if (typeof versionSpaceHandler.create_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.create_in_space({ space: "vs-experiment", fields: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('delete_in_space', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.delete_in_space({ space: 'test', entity_id: 'test-entity_id' }), storage);
+        const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "delete_entity" -> ok', async () => {
+      if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_nonexistent" -> ok', async () => {
+      if (typeof versionSpaceHandler.delete_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.delete_in_space({ space: "vs-redesign", entity_id: "article-999" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.resolve({ space: 'test', entity_id: 'test-entity_id' }), storage);
+        const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +526,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "resolve_overridden" -> ok', async () => {
+      if (typeof versionSpaceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_base_fallback" -> ok', async () => {
+      if (typeof versionSpaceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.resolve({ space: "vs-redesign", entity_id: "article-99" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('propose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' });
+      const program = versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +552,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' });
+      const program = versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' });
+      const program = versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' });
+      const program = versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +579,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' });
+      const program = versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +588,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.propose !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.propose({ space: 'test', target: 'test', message: 'test-message' }), storage);
+        const result = await interpret(versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +598,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "propose_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.propose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.propose({ space: "vs-redesign", target: "base", message: "Ready for review" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "propose_already" -> already_proposed', async () => {
+      if (typeof versionSpaceHandler.propose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.propose({ space: "vs-proposed", target: "base", message: "Duplicate" }), storage);
+      expect(result.variant).toBe('already_proposed');
+    });
+
   });
 
   describe('merge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +624,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +651,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +660,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.merge !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.merge({ space: 'test', target: 'test', strategy: 'test-strategy' }), storage);
+        const result = await interpret(versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +670,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "merge_clean" -> ok', async () => {
+      if (typeof versionSpaceHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.merge({ space: "vs-redesign", target: "base", strategy: "ours" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "merge_missing" -> conflicts', async () => {
+      if (typeof versionSpaceHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.merge({ space: "vs-nonexistent", target: "base", strategy: "ours" }), storage);
+      expect(result.variant).toBe('conflicts');
+    });
+
   });
 
   describe('sync_spaces', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +696,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +723,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' });
+      const program = versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +732,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.sync_spaces !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.sync_spaces({ space_a: 'test', space_b: 'test', direction: 'test-direction', strategy: 'test-strategy' }), storage);
+        const result = await interpret(versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +742,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "sync_compatible" -> ok', async () => {
+      if (typeof versionSpaceHandler.sync_spaces !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.sync_spaces({ space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_missing" -> incompatible_scope', async () => {
+      if (typeof versionSpaceHandler.sync_spaces !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.sync_spaces({ space_a: "vs-nonexistent", space_b: "vs-beta", direction: "a_to_b", strategy: "ours" }), storage);
+      expect(result.variant).toBe('incompatible_scope');
+    });
+
   });
 
   describe('cherry_pick', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +768,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +795,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' });
+      const program = versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +804,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.cherry_pick({ source: 'test', target: 'test', entity_id: 'test-entity_id' }), storage);
+        const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,11 +814,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "cherry_pick_exists" -> ok', async () => {
+      if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cherry_pick_not_overridden" -> not_overridden', async () => {
+      if (typeof versionSpaceHandler.cherry_pick !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.cherry_pick({ source: "vs-alpha", target: "vs-beta", entity_id: "article-999" }), storage);
+      expect(result.variant).toBe('not_overridden');
+    });
+
   });
 
   describe('promote_to_base', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.promote_to_base({ space: 'test' });
+      const program = versionSpaceHandler.promote_to_base({ space: "vs-redesign" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -672,21 +840,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.promote_to_base({ space: 'test' });
+      const program = versionSpaceHandler.promote_to_base({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.promote_to_base({ space: 'test' });
+      const program = versionSpaceHandler.promote_to_base({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.promote_to_base({ space: 'test' });
+      const program = versionSpaceHandler.promote_to_base({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -699,7 +867,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.promote_to_base({ space: 'test' });
+      const program = versionSpaceHandler.promote_to_base({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -708,7 +876,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.promote_to_base !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.promote_to_base({ space: 'test' }), storage);
+        const result = await interpret(versionSpaceHandler.promote_to_base({ space: "vs-redesign" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -718,11 +886,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "promote_leaf" -> ok', async () => {
+      if (typeof versionSpaceHandler.promote_to_base !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.promote_to_base({ space: "vs-redesign" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "promote_missing" -> access_denied', async () => {
+      if (typeof versionSpaceHandler.promote_to_base !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.promote_to_base({ space: "vs-nonexistent" }), storage);
+      expect(result.variant).toBe('access_denied');
+    });
+
   });
 
   describe('rebase', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.rebase({ space: 'test' });
+      const program = versionSpaceHandler.rebase({ space: "vs-redesign" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -730,21 +912,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.rebase({ space: 'test' });
+      const program = versionSpaceHandler.rebase({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.rebase({ space: 'test' });
+      const program = versionSpaceHandler.rebase({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.rebase({ space: 'test' });
+      const program = versionSpaceHandler.rebase({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -757,7 +939,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.rebase({ space: 'test' });
+      const program = versionSpaceHandler.rebase({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -766,7 +948,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.rebase !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.rebase({ space: 'test' }), storage);
+        const result = await interpret(versionSpaceHandler.rebase({ space: "vs-redesign" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -776,11 +958,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "rebase_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.rebase !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.rebase({ space: "vs-redesign" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rebase_empty" -> ok', async () => {
+      if (typeof versionSpaceHandler.rebase !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.rebase({ space: "vs-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.diff({ space: 'test' });
+      const program = versionSpaceHandler.diff({ space: "vs-redesign" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -788,21 +984,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.diff({ space: 'test' });
+      const program = versionSpaceHandler.diff({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.diff({ space: 'test' });
+      const program = versionSpaceHandler.diff({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.diff({ space: 'test' });
+      const program = versionSpaceHandler.diff({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -815,7 +1011,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.diff({ space: 'test' });
+      const program = versionSpaceHandler.diff({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -824,7 +1020,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.diff !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.diff({ space: 'test' }), storage);
+        const result = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -834,11 +1030,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "diff_with_changes" -> ok', async () => {
+      if (typeof versionSpaceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.diff({ space: "vs-redesign" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_empty" -> ok', async () => {
+      if (typeof versionSpaceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.diff({ space: "vs-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('archive', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.archive({ space: 'test' });
+      const program = versionSpaceHandler.archive({ space: "vs-redesign" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -846,21 +1056,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.archive({ space: 'test' });
+      const program = versionSpaceHandler.archive({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.archive({ space: 'test' });
+      const program = versionSpaceHandler.archive({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.archive({ space: 'test' });
+      const program = versionSpaceHandler.archive({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -873,7 +1083,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.archive({ space: 'test' });
+      const program = versionSpaceHandler.archive({ space: "vs-redesign" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -882,7 +1092,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.archive !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.archive({ space: 'test' }), storage);
+        const result = await interpret(versionSpaceHandler.archive({ space: "vs-redesign" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -892,11 +1102,25 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "archive_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.archive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.archive({ space: "vs-redesign" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "archive_already" -> ok', async () => {
+      if (typeof versionSpaceHandler.archive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.archive({ space: "vs-archived" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute_in_space', () => {
     it('builds a valid StorageProgram', () => {
-      const program = versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' });
+      const program = versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -904,21 +1128,21 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' });
+      const program = versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' });
+      const program = versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' });
+      const program = versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -931,7 +1155,7 @@ describe('VersionSpace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' });
+      const program = versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -940,7 +1164,7 @@ describe('VersionSpace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof versionSpaceHandler.execute_in_space !== 'function') return;
       try {
-        const result = await interpret(versionSpaceHandler.execute_in_space({ space: 'test', action: 'test-action', params: 'test-params' }), storage);
+        const result = await interpret(versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -950,6 +1174,38 @@ describe('VersionSpace functional handler', () => {
       }
     });
 
+    it('fixture "execute_in_active" -> ok', async () => {
+      if (typeof versionSpaceHandler.execute_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.execute_in_space({ space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_in_missing" -> space_not_found', async () => {
+      if (typeof versionSpaceHandler.execute_in_space !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(versionSpaceHandler.execute_in_space({ space: "vs-nonexistent", action: "update", params: "{}" }), storage);
+      expect(result.variant).toBe('space_not_found');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof versionSpaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = versionSpaceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VersionSpace');
+    });
   });
 
   describe('invariant examples', () => {

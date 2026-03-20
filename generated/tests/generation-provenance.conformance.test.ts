@@ -19,7 +19,7 @@ describe('GenerationProvenance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.record !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.record({ outputFile: 'test-outputFile', generator: 'test-generator', sourceSpec: 'test-sourceSpec', sourceSpecKind: 'test-sourceSpecKind', config: 'test-config' }, storage);
+        const result = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('GenerationProvenance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "record_handler" -> ok', async () => {
+      if (typeof generationProvenanceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_output" -> error', async () => {
+      if (typeof generationProvenanceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.record({ outputFile: "", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('GenerationProvenance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.getByFile !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.getByFile({ outputFile: 'test-outputFile' }, storage);
+        const result = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('GenerationProvenance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_known_file" -> ok', async () => {
+      if (typeof generationProvenanceHandler.getByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_handwritten_file" -> error', async () => {
+      if (typeof generationProvenanceHandler.getByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.getByFile({ outputFile: "src/manual-code.ts" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('GenerationProvenance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.findByGenerator({ generator: 'test-generator' }, storage);
+        const result = await generationProvenanceHandler.findByGenerator({ generator: "HandlerScaffoldGen" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('GenerationProvenance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_scaffold_gen_files" -> ok', async () => {
+      if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.findByGenerator({ generator: "HandlerScaffoldGen" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_gen" -> error', async () => {
+      if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.findByGenerator({ generator: "NonexistentGen" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('GenerationProvenance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.findBySource({ sourceSpec: 'test-sourceSpec' }, storage);
+        const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/app/article.concept" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,13 +119,27 @@ describe('GenerationProvenance imperative handler', () => {
       }
     });
 
+    it('fixture "find_article_outputs" -> ok', async () => {
+      if (typeof generationProvenanceHandler.findBySource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/app/article.concept" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_no_outputs" -> error', async () => {
+      if (typeof generationProvenanceHandler.findBySource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/nonexistent.concept" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('generationChain', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.generationChain !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.generationChain({ outputFile: 'test-outputFile' }, storage);
+        const result = await generationProvenanceHandler.generationChain({ outputFile: "handlers/ts/article.handler.ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('GenerationProvenance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "chain_handler" -> ok', async () => {
+      if (typeof generationProvenanceHandler.generationChain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.generationChain({ outputFile: "handlers/ts/article.handler.ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "chain_handwritten" -> error', async () => {
+      if (typeof generationProvenanceHandler.generationChain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.generationChain({ outputFile: "src/manual-code.ts" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -109,13 +179,27 @@ describe('GenerationProvenance imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof generationProvenanceHandler.staleFiles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.staleFiles({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stale_check_failure" -> error', async () => {
+      if (typeof generationProvenanceHandler.staleFiles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.staleFiles({  }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('impactOfGeneratorChange', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: 'test-generator' }, storage);
+        const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "HandlerScaffoldGen" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('GenerationProvenance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "impact_scaffold_change" -> ok', async () => {
+      if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "HandlerScaffoldGen" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "impact_unknown_gen" -> error', async () => {
+      if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "NonexistentGen" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +229,7 @@ describe('GenerationProvenance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof generationProvenanceHandler.isGenerated !== 'function') return;
       try {
-        const result = await generationProvenanceHandler.isGenerated({ file: 'test-file' }, storage);
+        const result = await generationProvenanceHandler.isGenerated({ file: "handlers/ts/article.handler.ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -141,6 +239,37 @@ describe('GenerationProvenance imperative handler', () => {
       }
     });
 
+    it('fixture "check_generated_file" -> ok', async () => {
+      if (typeof generationProvenanceHandler.isGenerated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.isGenerated({ file: "handlers/ts/article.handler.ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_handwritten_file" -> error', async () => {
+      if (typeof generationProvenanceHandler.isGenerated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await generationProvenanceHandler.isGenerated({ file: "src/manual-code.ts" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof generationProvenanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = generationProvenanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GenerationProvenance');
+    });
   });
 
   describe('invariant examples', () => {

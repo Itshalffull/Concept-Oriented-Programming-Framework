@@ -19,7 +19,7 @@ describe('ReadWriteSetProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
       try {
-        const result = await readWriteSetProviderHandler.analyze({ program: 'test-program' }, storage);
+        const result = await readWriteSetProviderHandler.analyze({ program: "get(users, u1); put(users, u1, data)" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,51 @@ describe('ReadWriteSetProvider imperative handler', () => {
       }
     });
 
+    it('fixture "read_write_program" -> ok', async () => {
+      if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await readWriteSetProviderHandler.analyze({ program: "get(users, u1); put(users, u1, data)" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_only_program" -> ok', async () => {
+      if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await readWriteSetProviderHandler.analyze({ program: "get(users, u1)" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pure_program" -> ok', async () => {
+      if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await readWriteSetProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"effects\":{\"reads\":[],\"writes\":[]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_program" -> error', async () => {
+      if (typeof readWriteSetProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await readWriteSetProviderHandler.analyze({ program: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof readWriteSetProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = readWriteSetProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ReadWriteSetProvider');
+    });
   });
 
   describe('invariant examples', () => {

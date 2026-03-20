@@ -26,7 +26,7 @@ describe('InterfaceEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' }), storage);
+        const result = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_conduit_api" -> ok', async () => {
+      if (typeof interfaceEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_minimal" -> ok', async () => {
+      if (typeof interfaceEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof interfaceEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.register({ name: "", source: "empty.yaml", manifest: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.get({ name: 'test-name' });
+      const program = interfaceEntityHandler.get({ name: "conduit-api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.get({ name: 'test-name' });
+      const program = interfaceEntityHandler.get({ name: "conduit-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.get({ name: 'test-name' });
+      const program = interfaceEntityHandler.get({ name: "conduit-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.get({ name: 'test-name' });
+      const program = interfaceEntityHandler.get({ name: "conduit-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.get({ name: 'test-name' });
+      const program = interfaceEntityHandler.get({ name: "conduit-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.get({ name: 'test-name' }), storage);
+        const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_conduit" -> ok', async () => {
+      if (typeof interfaceEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.get({ name: "nonexistent-interface" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "get_api" -> ok', async () => {
+      if (typeof interfaceEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listEndpoints', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' });
+      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' });
+      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' });
+      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' });
+      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' });
+      const program = interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: 'test', target: 'test-target' }), storage);
+        const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "endpoints_rest" -> ok', async () => {
+      if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "endpoints_empty_target" -> error', async () => {
+      if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listCommands', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: 'test' });
+      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: 'test' });
+      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: 'test' });
+      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: 'test' });
+      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listCommands({ interface: 'test' });
+      const program = interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.listCommands({ interface: 'test' }), storage);
+        const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "commands_valid" -> ok', async () => {
+      if (typeof interfaceEntityHandler.listCommands !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "commands_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.listCommands !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listCommands({ interface: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listTools', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listTools({ interface: 'test' });
+      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listTools({ interface: 'test' });
+      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listTools({ interface: 'test' });
+      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listTools({ interface: 'test' });
+      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listTools({ interface: 'test' });
+      const program = interfaceEntityHandler.listTools({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.listTools({ interface: 'test' }), storage);
+        const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "tools_valid" -> ok', async () => {
+      if (typeof interfaceEntityHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tools_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listTools({ interface: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listSkills', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: 'test' });
+      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: 'test' });
+      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: 'test' });
+      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: 'test' });
+      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.listSkills({ interface: 'test' });
+      const program = interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.listSkills({ interface: 'test' }), storage);
+        const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "skills_valid" -> ok', async () => {
+      if (typeof interfaceEntityHandler.listSkills !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "skills_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.listSkills !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.listSkills({ interface: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = interfaceEntityHandler.findByConcept({ concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = interfaceEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = interfaceEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = interfaceEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = interfaceEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +526,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user_concept" -> ok', async () => {
+      if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_concept" -> error', async () => {
+      if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = interfaceEntityHandler.findByAction({ concept: "User", action: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +552,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = interfaceEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = interfaceEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = interfaceEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +579,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' });
+      const program = interfaceEntityHandler.findByAction({ concept: "User", action: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +588,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.findByAction !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.findByAction({ concept: 'test-concept', action: 'test-action' }), storage);
+        const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +598,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user_create" -> ok', async () => {
+      if (typeof interfaceEntityHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_action" -> error', async () => {
+      if (typeof interfaceEntityHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceEndpointToAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +624,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +651,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +660,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: 'test-target', path: 'test-path', method: 'test-method' }), storage);
+        const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +670,39 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "trace_post_users" -> ok', async () => {
+      if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing_endpoint" -> error', async () => {
+      if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/nonexistent", method: "GET" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "trace_rest" -> ok', async () => {
+      if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/nonexistent", method: "GET" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToolToAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' });
+      const program = interfaceEntityHandler.traceToolToAction({ toolName: "user-create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +710,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' });
+      const program = interfaceEntityHandler.traceToolToAction({ toolName: "user-create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' });
+      const program = interfaceEntityHandler.traceToolToAction({ toolName: "user-create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' });
+      const program = interfaceEntityHandler.traceToolToAction({ toolName: "user-create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +737,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' });
+      const program = interfaceEntityHandler.traceToolToAction({ toolName: "user-create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +746,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: 'test-toolName' }), storage);
+        const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +756,32 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "trace_tool" -> ok', async () => {
+      if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing_tool" -> error', async () => {
+      if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "nonexistent-tool" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "trace_tool_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('generatedSchemas', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: 'test' });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +789,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: 'test' });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: 'test' });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: 'test' });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +816,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.generatedSchemas({ interface: 'test' });
+      const program = interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +825,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: 'test' }), storage);
+        const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,11 +835,25 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "schemas_valid" -> ok', async () => {
+      if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "schemas_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validateAgainstSpecs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' });
+      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -672,21 +861,21 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' });
+      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' });
+      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' });
+      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -699,7 +888,7 @@ describe('InterfaceEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' });
+      const program = interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -708,7 +897,7 @@ describe('InterfaceEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
       try {
-        const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: 'test' }), storage);
+        const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -718,6 +907,38 @@ describe('InterfaceEntity functional handler', () => {
       }
     });
 
+    it('fixture "validate_valid" -> ok', async () => {
+      if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> error', async () => {
+      if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof interfaceEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = interfaceEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InterfaceEntity');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('OpenAiEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof openAiEndpointHandler.register !== 'function') return;
       try {
-        const result = await openAiEndpointHandler.register({ name: 'test-name', apiKey: 'test-apiKey', model: 'test-model', baseUrl: 'test-baseUrl', dimensions: 1 }, storage);
+        const result = await openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test-abc123", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: "1536" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('OpenAiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "embeddings_endpoint" -> ok', async () => {
+      if (typeof openAiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test-abc123", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: "1536" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "gpt4_endpoint" -> ok', async () => {
+      if (typeof openAiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.register({ name: "chat-gpt4", apiKey: "sk-prod-xyz789", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: "0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof openAiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.register({ name: "", apiKey: "sk-test", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: "0" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof openAiEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await openAiEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await openAiEndpointHandler.resolve({ name: "embeddings" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('OpenAiEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof openAiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.resolve({ name: "embeddings" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof openAiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('OpenAiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof openAiEndpointHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await openAiEndpointHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof openAiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = openAiEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('OpenAiEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

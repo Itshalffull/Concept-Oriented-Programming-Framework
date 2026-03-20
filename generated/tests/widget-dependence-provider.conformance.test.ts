@@ -80,6 +80,38 @@ describe('WidgetDependenceProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof widgetDependenceProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetDependenceProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_init" -> loadError', async () => {
+      if (typeof widgetDependenceProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetDependenceProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('loadError');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetDependenceProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetDependenceProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetDependenceProvider');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

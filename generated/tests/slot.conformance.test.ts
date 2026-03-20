@@ -26,7 +26,7 @@ describe('Slot functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' });
+      const program = slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Slot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' });
+      const program = slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' });
+      const program = slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' });
+      const program = slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Slot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' });
+      const program = slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Slot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof slotHandler.define !== 'function') return;
       try {
-        const result = await interpret(slotHandler.define({ slot: 'test', name: 'test-name', host: 'test-host', position: 'test-position', fallback: 'test' }), storage);
+        const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Slot functional handler', () => {
       }
     });
 
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof slotHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_fallback" -> ok', async () => {
+      if (typeof slotHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.define({ name: "footer", host: "dialog", position: "after-body" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_slot" -> duplicate', async () => {
+      if (typeof slotHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.define({ name: "header", host: "dialog", position: "before-title" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('fill', () => {
     it('builds a valid StorageProgram', () => {
-      const program = slotHandler.fill({ slot: 'test', content: 'test-content' });
+      const program = slotHandler.fill({ content: "<h2>Custom Header</h2>" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Slot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = slotHandler.fill({ slot: 'test', content: 'test-content' });
+      const program = slotHandler.fill({ content: "<h2>Custom Header</h2>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = slotHandler.fill({ slot: 'test', content: 'test-content' });
+      const program = slotHandler.fill({ content: "<h2>Custom Header</h2>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = slotHandler.fill({ slot: 'test', content: 'test-content' });
+      const program = slotHandler.fill({ content: "<h2>Custom Header</h2>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Slot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = slotHandler.fill({ slot: 'test', content: 'test-content' });
+      const program = slotHandler.fill({ content: "<h2>Custom Header</h2>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Slot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof slotHandler.fill !== 'function') return;
       try {
-        const result = await interpret(slotHandler.fill({ slot: 'test', content: 'test-content' }), storage);
+        const result = await interpret(slotHandler.fill({ content: "<h2>Custom Header</h2>" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Slot functional handler', () => {
       }
     });
 
+    it('fixture "valid_fill" -> ok', async () => {
+      if (typeof slotHandler.fill !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.fill({ content: "<h2>Custom Header</h2>" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_slot" -> notfound', async () => {
+      if (typeof slotHandler.fill !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.fill({ slot: "nonexistent-slot", content: "some content" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('clear', () => {
     it('builds a valid StorageProgram', () => {
-      const program = slotHandler.clear({ slot: 'test' });
+      const program = slotHandler.clear({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Slot functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = slotHandler.clear({ slot: 'test' });
+      const program = slotHandler.clear({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = slotHandler.clear({ slot: 'test' });
+      const program = slotHandler.clear({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = slotHandler.clear({ slot: 'test' });
+      const program = slotHandler.clear({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Slot functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = slotHandler.clear({ slot: 'test' });
+      const program = slotHandler.clear({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Slot functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof slotHandler.clear !== 'function') return;
       try {
-        const result = await interpret(slotHandler.clear({ slot: 'test' }), storage);
+        const result = await interpret(slotHandler.clear({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Slot functional handler', () => {
       }
     });
 
+    it('fixture "valid_clear" -> ok', async () => {
+      if (typeof slotHandler.clear !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.clear({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_clear" -> notfound', async () => {
+      if (typeof slotHandler.clear !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(slotHandler.clear({ slot: "nonexistent-slot" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof slotHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = slotHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Slot');
+    });
   });
 
   describe('invariant examples', () => {

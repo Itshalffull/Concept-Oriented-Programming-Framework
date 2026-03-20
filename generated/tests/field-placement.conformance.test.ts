@@ -26,7 +26,7 @@ describe('FieldPlacement functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' });
+      const program = fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' });
+      const program = fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' });
+      const program = fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' });
+      const program = fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' });
+      const program = fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.create !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.create({ source_field: 'test-source_field', formatter: 'test-formatter' }), storage);
+        const result = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "create_title" -> ok', async () => {
+      if (typeof fieldPlacementHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_field" -> error', async () => {
+      if (typeof fieldPlacementHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.create({ source_field: "", formatter: "plain" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' });
+      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' });
+      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' });
+      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' });
+      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' });
+      const program = fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.configure({ placement: 'test', formatter: 'test', formatter_options: 'test', label_display: 'test', label_override: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "configure_formatter" -> ok', async () => {
+      if (typeof fieldPlacementHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_nonexistent" -> error', async () => {
+      if (typeof fieldPlacementHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('set_visibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' });
+      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' });
+      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' });
+      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' });
+      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' });
+      const program = fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.set_visibility({ placement: 'test', visible: true, role_visibility: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "hide_field" -> ok', async () => {
+      if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "show_field" -> ok', async () => {
+      if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('set_field_mapping', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' });
+      const program = fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: 'test', mapping: 'test-mapping' }), storage);
+        const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "set_mapping" -> ok', async () => {
+      if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_mapping_empty" -> error', async () => {
+      if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('clear_field_mapping', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: 'test' });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: 'test' });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: 'test' });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: 'test' });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.clear_field_mapping({ placement: 'test' });
+      const program = fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "clear_existing_mapping" -> ok', async () => {
+      if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_nonexistent" -> error', async () => {
+      if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.get({ placement: 'test' });
+      const program = fieldPlacementHandler.get({ placement: "fp-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.get({ placement: 'test' });
+      const program = fieldPlacementHandler.get({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.get({ placement: 'test' });
+      const program = fieldPlacementHandler.get({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.get({ placement: 'test' });
+      const program = fieldPlacementHandler.get({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.get({ placement: 'test' });
+      const program = fieldPlacementHandler.get({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.get({ placement: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof fieldPlacementHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof fieldPlacementHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.get({ placement: "fp-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.delete({ placement: 'test' });
+      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.delete({ placement: 'test' });
+      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.delete({ placement: 'test' });
+      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.delete({ placement: 'test' });
+      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.delete({ placement: 'test' });
+      const program = fieldPlacementHandler.delete({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.delete({ placement: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +512,25 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof fieldPlacementHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_nonexistent" -> error', async () => {
+      if (typeof fieldPlacementHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('duplicate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
+      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +538,21 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
+      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
+      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
+      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +565,7 @@ describe('FieldPlacement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldPlacementHandler.duplicate({ placement: 'test' });
+      const program = fieldPlacementHandler.duplicate({ placement: "fp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +574,7 @@ describe('FieldPlacement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       try {
-        const result = await interpret(fieldPlacementHandler.duplicate({ placement: 'test' }), storage);
+        const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -484,6 +582,20 @@ describe('FieldPlacement functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "duplicate_existing" -> ok', async () => {
+      if (typeof fieldPlacementHandler.duplicate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_nonexistent" -> error', async () => {
+      if (typeof fieldPlacementHandler.duplicate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-missing" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -544,6 +656,31 @@ describe('FieldPlacement functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof fieldPlacementHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldPlacementHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fieldPlacementHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fieldPlacementHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FieldPlacement');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('ParallelismProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof parallelismProviderHandler.analyze !== 'function') return;
       try {
-        const result = await parallelismProviderHandler.analyze({ program: 'test-program' }, storage);
+        const result = await parallelismProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"get\",\"relation\":\"orders\",\"key\":\"o1\",\"bindAs\":\"orderResult\"},{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('ParallelismProvider imperative handler', () => {
       }
     });
 
+    it('fixture "independent_gets" -> ok', async () => {
+      if (typeof parallelismProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await parallelismProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"get\",\"relation\":\"orders\",\"key\":\"o1\",\"bindAs\":\"orderResult\"},{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "linear_chain" -> ok', async () => {
+      if (typeof parallelismProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await parallelismProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"userResult\"},{\"tag\":\"pureFrom\",\"fn\":\"identity\"}]}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof parallelismProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await parallelismProviderHandler.analyze({ program: "not valid json{{{" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof parallelismProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = parallelismProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ParallelismProvider');
+    });
   });
 
   describe('invariant examples', () => {

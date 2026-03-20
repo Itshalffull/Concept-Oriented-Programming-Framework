@@ -19,7 +19,7 @@ describe('FunctionalHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof functionalHandlerHandler.register !== 'function') return;
       try {
-        const result = await functionalHandlerHandler.register({ handler: 'test', concept: 'test-concept', action: 'test-action', purity: 'test-purity', variants: 'test-variants' }, storage);
+        const result = await functionalHandlerHandler.register({ handler: "handler-user-create", concept: "User", action: "create", purity: "read-write", variants: "[\"ok\",\"error\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('FunctionalHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_readwrite" -> ok', async () => {
+      if (typeof functionalHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.register({ handler: "handler-user-create", concept: "User", action: "create", purity: "read-write", variants: "[\"ok\",\"error\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_pure" -> ok', async () => {
+      if (typeof functionalHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.register({ handler: "handler-ping", concept: "Ping", action: "ping", purity: "pure", variants: "[\"ok\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_concept" -> error', async () => {
+      if (typeof functionalHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.register({ handler: "handler-bad", concept: "", action: "create", purity: "read-write", variants: "[]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('FunctionalHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof functionalHandlerHandler.build !== 'function') return;
       try {
-        const result = await functionalHandlerHandler.build({ handler: 'test', input: 'test-input' }, storage);
+        const result = await functionalHandlerHandler.build({ handler: "handler-user-create", input: "{\"name\":\"Alice\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('FunctionalHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "build_program" -> ok', async () => {
+      if (typeof functionalHandlerHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.build({ handler: "handler-user-create", input: "{\"name\":\"Alice\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_handler" -> error', async () => {
+      if (typeof functionalHandlerHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.build({ handler: "nonexistent", input: "{\"name\":\"Alice\"}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('FunctionalHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof functionalHandlerHandler.list !== 'function') return;
       try {
-        const result = await functionalHandlerHandler.list({ concept: 'test-concept' }, storage);
+        const result = await functionalHandlerHandler.list({ concept: "User" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('FunctionalHandler imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_user_handlers" -> ok', async () => {
+      if (typeof functionalHandlerHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.list({ concept: "User" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> error', async () => {
+      if (typeof functionalHandlerHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.list({ concept: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('FunctionalHandler imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof functionalHandlerHandler.validatePurity !== 'function') return;
       try {
-        const result = await functionalHandlerHandler.validatePurity({ handler: 'test', program: 'test-program' }, storage);
+        const result = await functionalHandlerHandler.validatePurity({ handler: "handler-user-create", program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{}}],\"effects\":{\"reads\":[],\"writes\":[\"users\"]}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +126,37 @@ describe('FunctionalHandler imperative handler', () => {
       }
     });
 
+    it('fixture "validate_consistent" -> ok', async () => {
+      if (typeof functionalHandlerHandler.validatePurity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.validatePurity({ handler: "handler-user-create", program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{}}],\"effects\":{\"reads\":[],\"writes\":[\"users\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing_handler" -> error', async () => {
+      if (typeof functionalHandlerHandler.validatePurity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await functionalHandlerHandler.validatePurity({ handler: "nonexistent", program: "{}" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof functionalHandlerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = functionalHandlerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FunctionalHandler');
+    });
   });
 
   describe('invariant examples', () => {

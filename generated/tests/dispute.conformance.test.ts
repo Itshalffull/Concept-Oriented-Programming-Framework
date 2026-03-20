@@ -26,7 +26,7 @@ describe('Dispute functional handler', () => {
 
   describe('open', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' });
+      const program = disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Dispute functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' });
+      const program = disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' });
+      const program = disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' });
+      const program = disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Dispute functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' });
+      const program = disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Dispute functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disputeHandler.open !== 'function') return;
       try {
-        const result = await interpret(disputeHandler.open({ challenger: 'test-challenger', respondent: 'test-respondent', subject: 'test-subject', evidence: 'test-evidence', bond: 'test' }), storage);
+        const result = await interpret(disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Dispute functional handler', () => {
       }
     });
 
+    it('fixture "open_dispute_with_bond" -> ok', async () => {
+      if (typeof disputeHandler.open !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.open({ challenger: "alice", respondent: "bob", subject: "Unauthorized budget allocation", evidence: "Transaction log entry 2026-01-15", bond: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "open_dispute_missing_challenger" -> error', async () => {
+      if (typeof disputeHandler.open !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.open({ challenger: "", respondent: "bob", subject: "Budget issue", evidence: "None" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('submitEvidence', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' });
+      const program = disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Dispute functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' });
+      const program = disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' });
+      const program = disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' });
+      const program = disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Dispute functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' });
+      const program = disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Dispute functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disputeHandler.submitEvidence !== 'function') return;
       try {
-        const result = await interpret(disputeHandler.submitEvidence({ dispute: 'test', submitter: 'test-submitter', content: 'test-content' }), storage);
+        const result = await interpret(disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Dispute functional handler', () => {
       }
     });
 
+    it('fixture "submit_evidence_valid" -> ok', async () => {
+      if (typeof disputeHandler.submitEvidence !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.submitEvidence({ dispute: "dispute-001", party: "alice", evidence: "Email thread showing policy violation on 2026-01-15" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "submit_evidence_unknown_dispute" -> not_open', async () => {
+      if (typeof disputeHandler.submitEvidence !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.submitEvidence({ dispute: "nonexistent", party: "alice", evidence: "Some evidence" }), storage);
+      expect(result.variant).toBe('not_open');
+    });
+
   });
 
   describe('arbitrate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' });
+      const program = disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Dispute functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' });
+      const program = disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' });
+      const program = disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' });
+      const program = disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Dispute functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' });
+      const program = disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Dispute functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disputeHandler.arbitrate !== 'function') return;
       try {
-        const result = await interpret(disputeHandler.arbitrate({ dispute: 'test', arbiter: 'test-arbiter', resolution: 'test-resolution' }), storage);
+        const result = await interpret(disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Dispute functional handler', () => {
       }
     });
 
+    it('fixture "arbitrate_valid" -> ok', async () => {
+      if (typeof disputeHandler.arbitrate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.arbitrate({ dispute: "dispute-001", arbitrator: "judge_carol", decision: "upheld", reasoning: "Evidence clearly demonstrates policy violation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "arbitrate_unknown_dispute" -> error', async () => {
+      if (typeof disputeHandler.arbitrate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.arbitrate({ dispute: "nonexistent", arbitrator: "judge_carol", decision: "upheld", reasoning: "N/A" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('appeal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' });
+      const program = disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Dispute functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' });
+      const program = disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' });
+      const program = disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' });
+      const program = disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Dispute functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' });
+      const program = disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Dispute functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disputeHandler.appeal !== 'function') return;
       try {
-        const result = await interpret(disputeHandler.appeal({ dispute: 'test', appellant: 'test-appellant', reason: 'test-reason' }), storage);
+        const result = await interpret(disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Dispute functional handler', () => {
       }
     });
 
+    it('fixture "appeal_resolved_dispute" -> ok', async () => {
+      if (typeof disputeHandler.appeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.appeal({ dispute: "dispute-001", appellant: "bob", grounds: "New evidence not considered in original decision" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "appeal_unresolved_dispute" -> not_resolved', async () => {
+      if (typeof disputeHandler.appeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disputeHandler.appeal({ dispute: "dispute-open", appellant: "bob", grounds: "Premature ruling" }), storage);
+      expect(result.variant).toBe('not_resolved');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof disputeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = disputeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Dispute');
+    });
   });
 
   describe('invariant examples', () => {
@@ -262,9 +336,9 @@ describe('Dispute functional handler', () => {
       const openResult0 = await interpret(disputeHandler.open({ challenger: {"type":"variable","name":"_"}, respondent: {"type":"variable","name":"_"}, subject: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"}, bond: {"type":"variable","name":"_"} }), storage);
       expect(openResult0.variant).toBe("opened");
       const dispute = openResult0.output["dispute"];
-      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: {"type":"variable","name":"ds"}, submitter: {"type":"variable","name":"_"}, content: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(disputeHandler.submitEvidence({ dispute: {"type":"variable","name":"ds"}, party: {"type":"variable","name":"_"}, evidence: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("submitted");
-      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: {"type":"variable","name":"ds"}, arbiter: {"type":"variable","name":"_"}, resolution: {"type":"variable","name":"_"} }), storage);
+      const thenResult1 = await interpret(disputeHandler.arbitrate({ dispute: {"type":"variable","name":"ds"}, arbitrator: {"type":"variable","name":"_"}, decision: {"type":"variable","name":"_"}, reasoning: {"type":"variable","name":"_"} }), storage);
       expect(thenResult1.variant).toBe("resolved");
     });
 
@@ -277,9 +351,9 @@ describe('Dispute functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 50 }), respondent: fc.string({ minLength: 1, maxLength: 50 }), subject: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string() }) }),
-              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), party: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbitrator: fc.string({ minLength: 1, maxLength: 50 }), decision: fc.string({ minLength: 1, maxLength: 50 }), reasoning: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), grounds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -307,9 +381,9 @@ describe('Dispute functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('open'), input: fc.record({ challenger: fc.string({ minLength: 1, maxLength: 50 }), respondent: fc.string({ minLength: 1, maxLength: 50 }), subject: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }), bond: fc.string() }) }),
-              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), submitter: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbiter: fc.string({ minLength: 1, maxLength: 50 }), resolution: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('submitEvidence'), input: fc.record({ dispute: fc.string(), party: fc.string({ minLength: 1, maxLength: 50 }), evidence: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('arbitrate'), input: fc.record({ dispute: fc.string(), arbitrator: fc.string({ minLength: 1, maxLength: 50 }), decision: fc.string({ minLength: 1, maxLength: 50 }), reasoning: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('appeal'), input: fc.record({ dispute: fc.string(), appellant: fc.string({ minLength: 1, maxLength: 50 }), grounds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

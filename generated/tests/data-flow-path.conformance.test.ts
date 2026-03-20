@@ -19,7 +19,7 @@ describe('DataFlowPath imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataFlowPathHandler.trace !== 'function') return;
       try {
-        const result = await dataFlowPathHandler.trace({ source: 'test-source', sink: 'test-sink' }, storage);
+        const result = await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('DataFlowPath imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_trace" -> ok', async () => {
+      if (typeof dataFlowPathHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.trace({ source: "config/db-url", sink: "ts/function/connect" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "taint_trace" -> ok', async () => {
+      if (typeof dataFlowPathHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.trace({ source: "user-input/form", sink: "ts/function/query" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_path" -> noPath', async () => {
+      if (typeof dataFlowPathHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.trace({ source: "isolated/node-a", sink: "isolated/node-b" }, storage);
+      expect(result.variant).toBe('noPath');
     });
 
   });
@@ -35,7 +56,7 @@ describe('DataFlowPath imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataFlowPathHandler.traceFromConfig !== 'function') return;
       try {
-        const result = await dataFlowPathHandler.traceFromConfig({ configKey: 'test-configKey' }, storage);
+        const result = await dataFlowPathHandler.traceFromConfig({ configKey: "db-url" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('DataFlowPath imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_config" -> ok', async () => {
+      if (typeof dataFlowPathHandler.traceFromConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.traceFromConfig({ configKey: "db-url" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "prefixed_config" -> ok', async () => {
+      if (typeof dataFlowPathHandler.traceFromConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.traceFromConfig({ configKey: "config/api-key" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -51,7 +86,7 @@ describe('DataFlowPath imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataFlowPathHandler.traceToOutput !== 'function') return;
       try {
-        const result = await dataFlowPathHandler.traceToOutput({ output: 'test-output' }, storage);
+        const result = await dataFlowPathHandler.traceToOutput({ output: "dist/bundle.js" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('DataFlowPath imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_output" -> ok', async () => {
+      if (typeof dataFlowPathHandler.traceToOutput !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.traceToOutput({ output: "dist/bundle.js" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "report_output" -> ok', async () => {
+      if (typeof dataFlowPathHandler.traceToOutput !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.traceToOutput({ output: "reports/coverage.json" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -67,7 +116,7 @@ describe('DataFlowPath imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataFlowPathHandler.get !== 'function') return;
       try {
-        const result = await dataFlowPathHandler.get({ path: 'test' }, storage);
+        const result = await dataFlowPathHandler.get({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +126,37 @@ describe('DataFlowPath imperative handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof dataFlowPathHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.get({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_path" -> notfound', async () => {
+      if (typeof dataFlowPathHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await dataFlowPathHandler.get({ path: "data-flow-path-nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dataFlowPathHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dataFlowPathHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DataFlowPath');
+    });
   });
 
   describe('invariant examples', () => {

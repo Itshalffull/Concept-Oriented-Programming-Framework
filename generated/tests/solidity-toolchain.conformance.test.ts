@@ -26,7 +26,7 @@ describe('SolidityToolchain functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SolidityToolchain functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SolidityToolchain functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' });
+      const program = solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SolidityToolchain functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof solidityToolchainHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(solidityToolchainHandler.resolve({ platform: 'test-platform', versionConstraint: 'test' }), storage);
+        const result = await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -78,6 +78,34 @@ describe('SolidityToolchain functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_shanghai" -> ok', async () => {
+      if (typeof solidityToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_cancun" -> ok', async () => {
+      if (typeof solidityToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityToolchainHandler.resolve({ platform: "cancun" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unsupported_evm" -> error', async () => {
+      if (typeof solidityToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityToolchainHandler.resolve({ platform: "prague" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "resolve_empty_platform" -> error', async () => {
+      if (typeof solidityToolchainHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityToolchainHandler.resolve({ platform: "" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -138,6 +166,31 @@ describe('SolidityToolchain functional handler', () => {
       }
     });
 
+    it('fixture "register_valid" -> ok', async () => {
+      if (typeof solidityToolchainHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityToolchainHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof solidityToolchainHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = solidityToolchainHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SolidityToolchain');
+    });
   });
 
   describe('invariant examples', () => {

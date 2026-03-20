@@ -26,7 +26,7 @@ describe('DeployOrchestrator functional handler', () => {
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeployOrchestrator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployOrchestratorHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: 'test-manifestPath', environment: 'test-environment' }), storage);
+        const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,53 @@ describe('DeployOrchestrator functional handler', () => {
       }
     });
 
+    it('fixture "production_deploy" -> ok', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "staging_deploy" -> ok', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-api/deploy/vercel.deploy.yaml", environment: "staging" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_manifest" -> manifestNotFound', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "/nonexistent/deploy.yaml", environment: "production" }), storage);
+      expect(result.variant).toBe('manifestNotFound');
+    });
+
+    it('fixture "invalid_manifest" -> planFailed', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./broken-app/deploy/invalid.yaml", environment: "production" }), storage);
+      expect(result.variant).toBe('planFailed');
+    });
+
+    it('fixture "bad_validation" -> validationFailed', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "invalid-env" }), storage);
+      expect(result.variant).toBe('validationFailed');
+    });
+
+    it('fixture "failed_deploy" -> deployFailed', async () => {
+      if (typeof deployOrchestratorHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "broken-runtime" }), storage);
+      expect(result.variant).toBe('deployFailed');
+    });
+
   });
 
   describe('deployAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +134,21 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +161,7 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' });
+      const program = deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +170,7 @@ describe('DeployOrchestrator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployOrchestratorHandler.deployAll !== 'function') return;
       try {
-        const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: 'test-projectRoot', environment: 'test-environment' }), storage);
+        const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +180,25 @@ describe('DeployOrchestrator functional handler', () => {
       }
     });
 
+    it('fixture "deploy_all_production" -> ok', async () => {
+      if (typeof deployOrchestratorHandler.deployAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_apps_found" -> noAppsFound', async () => {
+      if (typeof deployOrchestratorHandler.deployAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: "/empty/directory", environment: "production" }), storage);
+      expect(result.variant).toBe('noAppsFound');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployOrchestratorHandler.status({ run: 'test' });
+      const program = deployOrchestratorHandler.status({ run: "run-1710000000-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +206,21 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployOrchestratorHandler.status({ run: 'test' });
+      const program = deployOrchestratorHandler.status({ run: "run-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployOrchestratorHandler.status({ run: 'test' });
+      const program = deployOrchestratorHandler.status({ run: "run-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployOrchestratorHandler.status({ run: 'test' });
+      const program = deployOrchestratorHandler.status({ run: "run-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +233,7 @@ describe('DeployOrchestrator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployOrchestratorHandler.status({ run: 'test' });
+      const program = deployOrchestratorHandler.status({ run: "run-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +242,7 @@ describe('DeployOrchestrator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployOrchestratorHandler.status !== 'function') return;
       try {
-        const result = await interpret(deployOrchestratorHandler.status({ run: 'test' }), storage);
+        const result = await interpret(deployOrchestratorHandler.status({ run: "run-1710000000-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +252,38 @@ describe('DeployOrchestrator functional handler', () => {
       }
     });
 
+    it('fixture "check_status" -> ok', async () => {
+      if (typeof deployOrchestratorHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.status({ run: "run-1710000000-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_run" -> notfound', async () => {
+      if (typeof deployOrchestratorHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployOrchestratorHandler.status({ run: "run-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deployOrchestratorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deployOrchestratorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeployOrchestrator');
+    });
   });
 
   describe('invariant examples', () => {

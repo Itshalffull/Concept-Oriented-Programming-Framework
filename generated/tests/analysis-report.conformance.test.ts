@@ -26,7 +26,7 @@ describe('AnalysisReport functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' });
+      const program = analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' });
+      const program = analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' });
+      const program = analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' });
+      const program = analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' });
+      const program = analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AnalysisReport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       try {
-        const result = await interpret(analysisReportHandler.generate({ result: 'test-result', format: 'test-format', title: 'test' }), storage);
+        const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('AnalysisReport functional handler', () => {
       }
     });
 
+    it('fixture "table_report" -> ok', async () => {
+      if (typeof analysisReportHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "summary_report" -> ok', async () => {
+      if (typeof analysisReportHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dashboard_report" -> ok', async () => {
+      if (typeof analysisReportHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_format" -> unsupported_format', async () => {
+      if (typeof analysisReportHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[]}", format: "sparkline", title: null }), storage);
+      expect(result.variant).toBe('unsupported_format');
+    });
+
+    it('fixture "bad_result" -> invalid_result', async () => {
+      if (typeof analysisReportHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.generate({ result: "not json", format: "table", title: null }), storage);
+      expect(result.variant).toBe('invalid_result');
+    });
+
   });
 
   describe('compare', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisReportHandler.compare({ results: 'test-results', format: 'test-format' });
+      const program = analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisReportHandler.compare({ results: 'test-results', format: 'test-format' });
+      const program = analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisReportHandler.compare({ results: 'test-results', format: 'test-format' });
+      const program = analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisReportHandler.compare({ results: 'test-results', format: 'test-format' });
+      const program = analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisReportHandler.compare({ results: 'test-results', format: 'test-format' });
+      const program = analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('AnalysisReport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisReportHandler.compare !== 'function') return;
       try {
-        const result = await interpret(analysisReportHandler.compare({ results: 'test-results', format: 'test-format' }), storage);
+        const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,25 @@ describe('AnalysisReport functional handler', () => {
       }
     });
 
+    it('fixture "two_results" -> ok', async () => {
+      if (typeof analysisReportHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "single_result" -> insufficient_results', async () => {
+      if (typeof analysisReportHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[]}\"]", format: "table" }), storage);
+      expect(result.variant).toBe('insufficient_results');
+    });
+
   });
 
   describe('getReport', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisReportHandler.getReport({ report: 'test' });
+      const program = analysisReportHandler.getReport({ report: "report-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisReportHandler.getReport({ report: 'test' });
+      const program = analysisReportHandler.getReport({ report: "report-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisReportHandler.getReport({ report: 'test' });
+      const program = analysisReportHandler.getReport({ report: "report-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisReportHandler.getReport({ report: 'test' });
+      const program = analysisReportHandler.getReport({ report: "report-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisReportHandler.getReport({ report: 'test' });
+      const program = analysisReportHandler.getReport({ report: "report-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('AnalysisReport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
       try {
-        const result = await interpret(analysisReportHandler.getReport({ report: 'test' }), storage);
+        const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +245,25 @@ describe('AnalysisReport functional handler', () => {
       }
     });
 
+    it('fixture "existing_report" -> ok', async () => {
+      if (typeof analysisReportHandler.getReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_report" -> notfound', async () => {
+      if (typeof analysisReportHandler.getReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.getReport({ report: "report-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('listReports', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisReportHandler.listReports({ result: 'test' });
+      const program = analysisReportHandler.listReports({ result: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisReportHandler.listReports({ result: 'test' });
+      const program = analysisReportHandler.listReports({ result: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisReportHandler.listReports({ result: 'test' });
+      const program = analysisReportHandler.listReports({ result: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisReportHandler.listReports({ result: 'test' });
+      const program = analysisReportHandler.listReports({ result: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisReportHandler.listReports({ result: 'test' });
+      const program = analysisReportHandler.listReports({ result: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('AnalysisReport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       try {
-        const result = await interpret(analysisReportHandler.listReports({ result: 'test' }), storage);
+        const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('AnalysisReport functional handler', () => {
       }
     });
 
+    it('fixture "all_reports" -> ok', async () => {
+      if (typeof analysisReportHandler.listReports !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "filtered" -> ok', async () => {
+      if (typeof analysisReportHandler.listReports !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.listReports({ result: "result-abc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('exportReport', () => {
     it('builds a valid StorageProgram', () => {
-      const program = analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' });
+      const program = analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' });
+      const program = analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' });
+      const program = analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' });
+      const program = analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('AnalysisReport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' });
+      const program = analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('AnalysisReport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       try {
-        const result = await interpret(analysisReportHandler.exportReport({ report: 'test', outputFormat: 'test-outputFormat' }), storage);
+        const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +389,52 @@ describe('AnalysisReport functional handler', () => {
       }
     });
 
+    it('fixture "csv_export" -> ok', async () => {
+      if (typeof analysisReportHandler.exportReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "markdown_export" -> ok', async () => {
+      if (typeof analysisReportHandler.exportReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "markdown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported" -> unsupported_output', async () => {
+      if (typeof analysisReportHandler.exportReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "pdf" }), storage);
+      expect(result.variant).toBe('unsupported_output');
+    });
+
+    it('fixture "missing_report" -> notfound', async () => {
+      if (typeof analysisReportHandler.exportReport !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(analysisReportHandler.exportReport({ report: "report-nonexistent", outputFormat: "json" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof analysisReportHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = analysisReportHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AnalysisReport');
+    });
   });
 
   describe('invariant examples', () => {

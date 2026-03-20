@@ -26,7 +26,7 @@ describe('RuntimeRegistry functional handler', () => {
 
   describe('registerConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' });
+      const program = runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' });
+      const program = runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' });
+      const program = runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' });
+      const program = runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' });
+      const program = runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
       try {
-        const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: 'test-uri', has_storage: true, storage_name: 'test-storage_name', storage_type: 'test-storage_type' }), storage);
+        const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('RuntimeRegistry functional handler', () => {
       }
     });
 
+    it('fixture "register_content_node" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_uri" -> error', async () => {
+      if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "", has_storage: "false", storage_name: "", storage_type: "standard" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' });
+      const program = runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' });
+      const program = runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' });
+      const program = runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' });
+      const program = runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' });
+      const program = runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
       try {
-        const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: 'test-sync_name', source: 'test-source', suite: 'test-suite' }), storage);
+        const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('RuntimeRegistry functional handler', () => {
       }
     });
 
+    it('fixture "register_content_sync" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_sync_name" -> error', async () => {
+      if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "", source: "unknown.ts", suite: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeRegistryHandler.getConcept({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeRegistryHandler.getConcept({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeRegistryHandler.getConcept({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeRegistryHandler.getConcept({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeRegistryHandler.getConcept({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
       try {
-        const result = await interpret(runtimeRegistryHandler.getConcept({ uri: 'test-uri' }), storage);
+        const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,20 @@ describe('RuntimeRegistry functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_existing_concept" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_concept" -> error', async () => {
+      if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/NonExistent" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +296,13 @@ describe('RuntimeRegistry functional handler', () => {
       }
     });
 
+    it('fixture "list_all_concepts" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.listConcepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.listConcepts({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listSyncs', () => {
@@ -312,11 +361,18 @@ describe('RuntimeRegistry functional handler', () => {
       }
     });
 
+    it('fixture "list_all_syncs" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.listSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.listSyncs({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('isLoaded', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeRegistryHandler.isLoaded({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +380,21 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeRegistryHandler.isLoaded({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeRegistryHandler.isLoaded({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeRegistryHandler.isLoaded({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +407,7 @@ describe('RuntimeRegistry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeRegistryHandler.isLoaded({ uri: 'test-uri' });
+      const program = runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +416,7 @@ describe('RuntimeRegistry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
       try {
-        const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: 'test-uri' }), storage);
+        const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +426,38 @@ describe('RuntimeRegistry functional handler', () => {
       }
     });
 
+    it('fixture "is_loaded_existing" -> ok', async () => {
+      if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "is_loaded_missing" -> error', async () => {
+      if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof runtimeRegistryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = runtimeRegistryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RuntimeRegistry');
+    });
   });
 
   describe('invariant examples', () => {

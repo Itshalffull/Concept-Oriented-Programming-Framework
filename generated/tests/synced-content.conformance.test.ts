@@ -26,7 +26,7 @@ describe('SyncedContent functional handler', () => {
 
   describe('createReference', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncedContentHandler.createReference({ ref: 'test', original: 'test' });
+      const program = syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncedContentHandler.createReference({ ref: 'test', original: 'test' });
+      const program = syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncedContentHandler.createReference({ ref: 'test', original: 'test' });
+      const program = syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncedContentHandler.createReference({ ref: 'test', original: 'test' });
+      const program = syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncedContentHandler.createReference({ ref: 'test', original: 'test' });
+      const program = syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SyncedContent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncedContentHandler.createReference !== 'function') return;
       try {
-        const result = await interpret(syncedContentHandler.createReference({ ref: 'test', original: 'test' }), storage);
+        const result = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SyncedContent functional handler', () => {
       }
     });
 
+    it('fixture "create_ref" -> ok', async () => {
+      if (typeof syncedContentHandler.createReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.createReference({ ref: "ref-1", original: "doc-main" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_ref_missing" -> notfound', async () => {
+      if (typeof syncedContentHandler.createReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.createReference({ ref: "ref-2", original: "doc-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('editOriginal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' });
+      const program = syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' });
+      const program = syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' });
+      const program = syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' });
+      const program = syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' });
+      const program = syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SyncedContent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncedContentHandler.editOriginal !== 'function') return;
       try {
-        const result = await interpret(syncedContentHandler.editOriginal({ original: 'test', content: 'test-content' }), storage);
+        const result = await interpret(syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SyncedContent functional handler', () => {
       }
     });
 
+    it('fixture "edit_content" -> ok', async () => {
+      if (typeof syncedContentHandler.editOriginal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.editOriginal({ original: "doc-main", content: "Updated paragraph text" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "edit_missing" -> notfound', async () => {
+      if (typeof syncedContentHandler.editOriginal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.editOriginal({ original: "doc-missing", content: "text" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('deleteReference', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncedContentHandler.deleteReference({ ref: 'test' });
+      const program = syncedContentHandler.deleteReference({ ref: "ref-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncedContentHandler.deleteReference({ ref: 'test' });
+      const program = syncedContentHandler.deleteReference({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncedContentHandler.deleteReference({ ref: 'test' });
+      const program = syncedContentHandler.deleteReference({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncedContentHandler.deleteReference({ ref: 'test' });
+      const program = syncedContentHandler.deleteReference({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncedContentHandler.deleteReference({ ref: 'test' });
+      const program = syncedContentHandler.deleteReference({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SyncedContent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncedContentHandler.deleteReference !== 'function') return;
       try {
-        const result = await interpret(syncedContentHandler.deleteReference({ ref: 'test' }), storage);
+        const result = await interpret(syncedContentHandler.deleteReference({ ref: "ref-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('SyncedContent functional handler', () => {
       }
     });
 
+    it('fixture "delete_ref" -> ok', async () => {
+      if (typeof syncedContentHandler.deleteReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.deleteReference({ ref: "ref-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> notfound', async () => {
+      if (typeof syncedContentHandler.deleteReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.deleteReference({ ref: "ref-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('convertToIndependent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncedContentHandler.convertToIndependent({ ref: 'test' });
+      const program = syncedContentHandler.convertToIndependent({ ref: "ref-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncedContentHandler.convertToIndependent({ ref: 'test' });
+      const program = syncedContentHandler.convertToIndependent({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncedContentHandler.convertToIndependent({ ref: 'test' });
+      const program = syncedContentHandler.convertToIndependent({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncedContentHandler.convertToIndependent({ ref: 'test' });
+      const program = syncedContentHandler.convertToIndependent({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('SyncedContent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncedContentHandler.convertToIndependent({ ref: 'test' });
+      const program = syncedContentHandler.convertToIndependent({ ref: "ref-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('SyncedContent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncedContentHandler.convertToIndependent !== 'function') return;
       try {
-        const result = await interpret(syncedContentHandler.convertToIndependent({ ref: 'test' }), storage);
+        const result = await interpret(syncedContentHandler.convertToIndependent({ ref: "ref-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('SyncedContent functional handler', () => {
       }
     });
 
+    it('fixture "convert_ref" -> ok', async () => {
+      if (typeof syncedContentHandler.convertToIndependent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.convertToIndependent({ ref: "ref-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "convert_missing" -> notfound', async () => {
+      if (typeof syncedContentHandler.convertToIndependent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncedContentHandler.convertToIndependent({ ref: "ref-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncedContentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncedContentHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncedContent');
+    });
   });
 
   describe('invariant examples', () => {

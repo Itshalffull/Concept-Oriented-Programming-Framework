@@ -26,7 +26,7 @@ describe('Typography functional handler', () => {
 
   describe('defineScale', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 });
+      const program = typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Typography functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 });
+      const program = typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 });
+      const program = typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 });
+      const program = typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Typography functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 });
+      const program = typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Typography functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typographyHandler.defineScale !== 'function') return;
       try {
-        const result = await interpret(typographyHandler.defineScale({ typography: 'test', baseSize: 1, ratio: 1, steps: 1 }), storage);
+        const result = await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('Typography functional handler', () => {
       }
     });
 
+    it('fixture "scale_major_third" -> ok', async () => {
+      if (typeof typographyHandler.defineScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineScale({ typography: "X-1", baseSize: "16.0", ratio: "1.25", steps: "6" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "scale_minor_third" -> ok', async () => {
+      if (typeof typographyHandler.defineScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineScale({ typography: "X-2", baseSize: "14.0", ratio: "1.2", steps: "4" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "scale_zero_base" -> invalid', async () => {
+      if (typeof typographyHandler.defineScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineScale({ typography: "X-3", baseSize: "0.0", ratio: "1.25", steps: "6" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "scale_negative_ratio" -> invalid', async () => {
+      if (typeof typographyHandler.defineScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineScale({ typography: "X-4", baseSize: "16.0", ratio: "-1.0", steps: "6" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "scale_non_integer_steps" -> invalid', async () => {
+      if (typeof typographyHandler.defineScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineScale({ typography: "X-5", baseSize: "16.0", ratio: "1.25", steps: "0" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('defineFontStack', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' });
+      const program = typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('Typography functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' });
+      const program = typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' });
+      const program = typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' });
+      const program = typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('Typography functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' });
+      const program = typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('Typography functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typographyHandler.defineFontStack !== 'function') return;
       try {
-        const result = await interpret(typographyHandler.defineFontStack({ typography: 'test', name: 'test-name', fonts: 'test-fonts', category: 'test-category' }), storage);
+        const result = await interpret(typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,32 @@ describe('Typography functional handler', () => {
       }
     });
 
+    it('fixture "fontstack_heading" -> ok', async () => {
+      if (typeof typographyHandler.defineFontStack !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineFontStack({ typography: "X-6", name: "heading", fonts: "[\"Inter\", \"Helvetica Neue\", \"Arial\"]", category: "sans-serif" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fontstack_mono" -> ok', async () => {
+      if (typeof typographyHandler.defineFontStack !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineFontStack({ typography: "X-7", name: "code", fonts: "JetBrains Mono, Fira Code, Consolas", category: "monospace" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fontstack_invalid_category" -> invalid', async () => {
+      if (typeof typographyHandler.defineFontStack !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineFontStack({ typography: "X-8", name: "fancy", fonts: "[\"Lobster\"]", category: "cursive" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('defineStyle', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +206,21 @@ describe('Typography functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +233,7 @@ describe('Typography functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' });
+      const program = typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +242,7 @@ describe('Typography functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typographyHandler.defineStyle !== 'function') return;
       try {
-        const result = await interpret(typographyHandler.defineStyle({ typography: 'test', name: 'test-name', config: 'test-config' }), storage);
+        const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +252,52 @@ describe('Typography functional handler', () => {
       }
     });
 
+    it('fixture "style_heading1" -> ok', async () => {
+      if (typeof typographyHandler.defineStyle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-9", name: "heading-1", config: "{ \"fontSize\": 32, \"fontWeight\": 700, \"lineHeight\": 1.2, \"letterSpacing\": \"-0.02em\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "style_body" -> ok', async () => {
+      if (typeof typographyHandler.defineStyle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-10", name: "body", config: "{ \"fontSize\": 16, \"fontWeight\": 400, \"lineHeight\": 1.5 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "style_invalid_json" -> invalid', async () => {
+      if (typeof typographyHandler.defineStyle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-11", name: "broken", config: "not-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "style_missing_fontSize" -> invalid', async () => {
+      if (typeof typographyHandler.defineStyle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typographyHandler.defineStyle({ typography: "X-12", name: "incomplete", config: "{ \"fontWeight\": 400 }" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof typographyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = typographyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Typography');
+    });
   });
 
   describe('invariant examples', () => {

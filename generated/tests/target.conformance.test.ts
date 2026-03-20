@@ -26,7 +26,7 @@ describe('Target functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' });
+      const program = targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Target functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' });
+      const program = targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' });
+      const program = targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' });
+      const program = targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Target functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' });
+      const program = targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Target functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(targetHandler.generate({ projection: 'test-projection', targetType: 'test-targetType', config: 'test-config' }), storage);
+        const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Target functional handler', () => {
       }
     });
 
+    it('fixture "generate_rest" -> ok', async () => {
+      if (typeof targetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_graphql" -> ok', async () => {
+      if (typeof targetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "graphql", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_unsupported" -> error', async () => {
+      if (typeof targetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "unknown-target", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "generate_empty_projection" -> error', async () => {
+      if (typeof targetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.generate({ projection: "", targetType: "rest", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = targetHandler.diff({ output: 'test' });
+      const program = targetHandler.diff({ output: "output-rest-score-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Target functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = targetHandler.diff({ output: 'test' });
+      const program = targetHandler.diff({ output: "output-rest-score-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = targetHandler.diff({ output: 'test' });
+      const program = targetHandler.diff({ output: "output-rest-score-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = targetHandler.diff({ output: 'test' });
+      const program = targetHandler.diff({ output: "output-rest-score-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Target functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = targetHandler.diff({ output: 'test' });
+      const program = targetHandler.diff({ output: "output-rest-score-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Target functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetHandler.diff !== 'function') return;
       try {
-        const result = await interpret(targetHandler.diff({ output: 'test' }), storage);
+        const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,38 @@ describe('Target functional handler', () => {
       }
     });
 
+    it('fixture "diff_existing" -> ok', async () => {
+      if (typeof targetHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_not_found" -> error', async () => {
+      if (typeof targetHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(targetHandler.diff({ output: "output-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof targetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = targetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Target');
+    });
   });
 
   describe('invariant examples', () => {

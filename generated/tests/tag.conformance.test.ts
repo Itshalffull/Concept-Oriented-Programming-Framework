@@ -26,7 +26,7 @@ describe('Tag functional handler', () => {
 
   describe('addTag', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tagHandler.addTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.addTag({ entity: "page-42", tag: "important" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Tag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tagHandler.addTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.addTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tagHandler.addTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.addTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tagHandler.addTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.addTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Tag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tagHandler.addTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.addTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Tag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tagHandler.addTag !== 'function') return;
       try {
-        const result = await interpret(tagHandler.addTag({ entity: 'test-entity', tag: 'test' }), storage);
+        const result = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Tag functional handler', () => {
       }
     });
 
+    it('fixture "add_tag_to_page" -> ok', async () => {
+      if (typeof tagHandler.addTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.addTag({ entity: "page-42", tag: "important" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_tag_empty_entity" -> error', async () => {
+      if (typeof tagHandler.addTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.addTag({ entity: "", tag: "label" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeTag', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tagHandler.removeTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.removeTag({ entity: "page-42", tag: "important" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Tag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tagHandler.removeTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.removeTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tagHandler.removeTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.removeTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tagHandler.removeTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.removeTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Tag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tagHandler.removeTag({ entity: 'test-entity', tag: 'test' });
+      const program = tagHandler.removeTag({ entity: "page-42", tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Tag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tagHandler.removeTag !== 'function') return;
       try {
-        const result = await interpret(tagHandler.removeTag({ entity: 'test-entity', tag: 'test' }), storage);
+        const result = await interpret(tagHandler.removeTag({ entity: "page-42", tag: "important" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Tag functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing_tag" -> ok', async () => {
+      if (typeof tagHandler.removeTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.removeTag({ entity: "page-42", tag: "important" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent_tag" -> error', async () => {
+      if (typeof tagHandler.removeTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.removeTag({ entity: "page-99", tag: "missing-tag" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getByTag', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tagHandler.getByTag({ tag: 'test' });
+      const program = tagHandler.getByTag({ tag: "important" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Tag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tagHandler.getByTag({ tag: 'test' });
+      const program = tagHandler.getByTag({ tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tagHandler.getByTag({ tag: 'test' });
+      const program = tagHandler.getByTag({ tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tagHandler.getByTag({ tag: 'test' });
+      const program = tagHandler.getByTag({ tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Tag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tagHandler.getByTag({ tag: 'test' });
+      const program = tagHandler.getByTag({ tag: "important" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Tag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tagHandler.getByTag !== 'function') return;
       try {
-        const result = await interpret(tagHandler.getByTag({ tag: 'test' }), storage);
+        const result = await interpret(tagHandler.getByTag({ tag: "important" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Tag functional handler', () => {
       }
     });
 
+    it('fixture "get_by_existing_tag" -> ok', async () => {
+      if (typeof tagHandler.getByTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.getByTag({ tag: "important" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_by_empty_tag" -> error', async () => {
+      if (typeof tagHandler.getByTag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.getByTag({ tag: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getChildren', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tagHandler.getChildren({ tag: 'test' });
+      const program = tagHandler.getChildren({ tag: "engineering" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Tag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tagHandler.getChildren({ tag: 'test' });
+      const program = tagHandler.getChildren({ tag: "engineering" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tagHandler.getChildren({ tag: 'test' });
+      const program = tagHandler.getChildren({ tag: "engineering" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tagHandler.getChildren({ tag: 'test' });
+      const program = tagHandler.getChildren({ tag: "engineering" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Tag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tagHandler.getChildren({ tag: 'test' });
+      const program = tagHandler.getChildren({ tag: "engineering" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Tag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tagHandler.getChildren !== 'function') return;
       try {
-        const result = await interpret(tagHandler.getChildren({ tag: 'test' }), storage);
+        const result = await interpret(tagHandler.getChildren({ tag: "engineering" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Tag functional handler', () => {
       }
     });
 
+    it('fixture "get_children_of_tag" -> ok', async () => {
+      if (typeof tagHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.getChildren({ tag: "engineering" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_children_missing_tag" -> error', async () => {
+      if (typeof tagHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.getChildren({ tag: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rename', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tagHandler.rename({ tag: 'test', name: 'test-name' });
+      const program = tagHandler.rename({ tag: "important", name: "critical" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Tag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tagHandler.rename({ tag: 'test', name: 'test-name' });
+      const program = tagHandler.rename({ tag: "important", name: "critical" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tagHandler.rename({ tag: 'test', name: 'test-name' });
+      const program = tagHandler.rename({ tag: "important", name: "critical" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tagHandler.rename({ tag: 'test', name: 'test-name' });
+      const program = tagHandler.rename({ tag: "important", name: "critical" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Tag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tagHandler.rename({ tag: 'test', name: 'test-name' });
+      const program = tagHandler.rename({ tag: "important", name: "critical" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Tag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tagHandler.rename !== 'function') return;
       try {
-        const result = await interpret(tagHandler.rename({ tag: 'test', name: 'test-name' }), storage);
+        const result = await interpret(tagHandler.rename({ tag: "important", name: "critical" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Tag functional handler', () => {
       }
     });
 
+    it('fixture "rename_existing_tag" -> ok', async () => {
+      if (typeof tagHandler.rename !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.rename({ tag: "important", name: "critical" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rename_missing_tag" -> error', async () => {
+      if (typeof tagHandler.rename !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tagHandler.rename({ tag: "nonexistent", name: "new-name" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof tagHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = tagHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Tag');
+    });
   });
 
   describe('invariant examples', () => {

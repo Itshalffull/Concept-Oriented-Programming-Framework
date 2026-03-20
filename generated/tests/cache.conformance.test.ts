@@ -26,7 +26,7 @@ describe('Cache functional handler', () => {
 
   describe('set', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 });
+      const program = cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Cache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 });
+      const program = cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 });
+      const program = cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 });
+      const program = cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Cache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 });
+      const program = cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Cache functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cacheHandler.set !== 'function') return;
       try {
-        const result = await interpret(cacheHandler.set({ bin: 'test', key: 'test-key', data: 'test-data', tags: 'test-tags', maxAge: 1 }), storage);
+        const result = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Cache functional handler', () => {
       }
     });
 
+    it('fixture "set_page_cache" -> ok', async () => {
+      if (typeof cacheHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_missing_bin" -> error', async () => {
+      if (typeof cacheHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cacheHandler.get({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.get({ bin: "render", key: "home-page" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Cache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cacheHandler.get({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.get({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cacheHandler.get({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.get({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cacheHandler.get({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.get({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Cache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cacheHandler.get({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.get({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Cache functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cacheHandler.get !== 'function') return;
       try {
-        const result = await interpret(cacheHandler.get({ bin: 'test', key: 'test-key' }), storage);
+        const result = await interpret(cacheHandler.get({ bin: "render", key: "home-page" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Cache functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof cacheHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.get({ bin: "render", key: "home-page" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof cacheHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.get({ bin: "render", key: "does-not-exist" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invalidate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cacheHandler.invalidate({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.invalidate({ bin: "render", key: "home-page" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Cache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cacheHandler.invalidate({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.invalidate({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cacheHandler.invalidate({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.invalidate({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cacheHandler.invalidate({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.invalidate({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Cache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cacheHandler.invalidate({ bin: 'test', key: 'test-key' });
+      const program = cacheHandler.invalidate({ bin: "render", key: "home-page" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Cache functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cacheHandler.invalidate !== 'function') return;
       try {
-        const result = await interpret(cacheHandler.invalidate({ bin: 'test', key: 'test-key' }), storage);
+        const result = await interpret(cacheHandler.invalidate({ bin: "render", key: "home-page" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Cache functional handler', () => {
       }
     });
 
+    it('fixture "invalidate_existing" -> ok', async () => {
+      if (typeof cacheHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.invalidate({ bin: "render", key: "home-page" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_missing" -> error', async () => {
+      if (typeof cacheHandler.invalidate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.invalidate({ bin: "render", key: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invalidateByTags', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cacheHandler.invalidateByTags({ tags: 'test-tags' });
+      const program = cacheHandler.invalidateByTags({ tags: "page,frontpage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Cache functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cacheHandler.invalidateByTags({ tags: 'test-tags' });
+      const program = cacheHandler.invalidateByTags({ tags: "page,frontpage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cacheHandler.invalidateByTags({ tags: 'test-tags' });
+      const program = cacheHandler.invalidateByTags({ tags: "page,frontpage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cacheHandler.invalidateByTags({ tags: 'test-tags' });
+      const program = cacheHandler.invalidateByTags({ tags: "page,frontpage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Cache functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cacheHandler.invalidateByTags({ tags: 'test-tags' });
+      const program = cacheHandler.invalidateByTags({ tags: "page,frontpage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Cache functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cacheHandler.invalidateByTags !== 'function') return;
       try {
-        const result = await interpret(cacheHandler.invalidateByTags({ tags: 'test-tags' }), storage);
+        const result = await interpret(cacheHandler.invalidateByTags({ tags: "page,frontpage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Cache functional handler', () => {
       }
     });
 
+    it('fixture "invalidate_page_tags" -> ok', async () => {
+      if (typeof cacheHandler.invalidateByTags !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.invalidateByTags({ tags: "page,frontpage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_empty_tags" -> error', async () => {
+      if (typeof cacheHandler.invalidateByTags !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cacheHandler.invalidateByTags({ tags: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof cacheHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = cacheHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Cache');
+    });
   });
 
   describe('invariant examples', () => {

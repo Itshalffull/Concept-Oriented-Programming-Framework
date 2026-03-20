@@ -19,7 +19,7 @@ describe('TemporalVersion imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof temporalVersionHandler.record !== 'function') return;
       try {
-        const result = await temporalVersionHandler.record({ contentHash: 'test-contentHash', validFrom: 'test', validTo: 'test', metadata: 'test' }, storage);
+        const result = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('TemporalVersion imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "record_version" -> ok', async () => {
+      if (typeof temporalVersionHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_empty_hash" -> error', async () => {
+      if (typeof temporalVersionHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('TemporalVersion imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof temporalVersionHandler.asOf !== 'function') return;
       try {
-        const result = await temporalVersionHandler.asOf({ systemTime: 'test', validTime: 'test' }, storage);
+        const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: null }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +59,34 @@ describe('TemporalVersion imperative handler', () => {
       }
     });
 
+    it('fixture "query_system_time" -> ok', async () => {
+      if (typeof temporalVersionHandler.asOf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: null }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_both_times" -> ok', async () => {
+      if (typeof temporalVersionHandler.asOf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_far_future" -> error', async () => {
+      if (typeof temporalVersionHandler.asOf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.asOf({ systemTime: "2099-01-01T00:00:00Z", validTime: null }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('between', () => {
     it('executes without crashing', async () => {
       if (typeof temporalVersionHandler.between !== 'function') return;
       try {
-        const result = await temporalVersionHandler.between({ start: 'test-start', end: 'test-end', dimension: 'test-dimension' }, storage);
+        const result = await temporalVersionHandler.between({ start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('TemporalVersion imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "between_system" -> ok', async () => {
+      if (typeof temporalVersionHandler.between !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.between({ start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "between_invalid_dim" -> error', async () => {
+      if (typeof temporalVersionHandler.between !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.between({ start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "bogus" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -77,13 +126,20 @@ describe('TemporalVersion imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof temporalVersionHandler.current !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.current({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('supersede', () => {
     it('executes without crashing', async () => {
       if (typeof temporalVersionHandler.supersede !== 'function') return;
       try {
-        const result = await temporalVersionHandler.supersede({ versionId: 'test', contentHash: 'test-contentHash' }, storage);
+        const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('TemporalVersion imperative handler', () => {
       }
     });
 
+    it('fixture "supersede_existing" -> ok', async () => {
+      if (typeof temporalVersionHandler.supersede !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "supersede_empty_hash" -> error', async () => {
+      if (typeof temporalVersionHandler.supersede !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof temporalVersionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = temporalVersionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TemporalVersion');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.register !== 'function') return;
       try {
-        const result = await derivedEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' }, storage);
+        const result = await derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('DerivedEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_trash" -> ok', async () => {
+      if (typeof derivedEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_minimal" -> ok', async () => {
+      if (typeof derivedEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof derivedEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.register({ name: "", source: "specs/empty.derived", ast: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.get !== 'function') return;
       try {
-        const result = await derivedEntityHandler.get({ name: 'test-name' }, storage);
+        const result = await derivedEntityHandler.get({ name: "Trash" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('DerivedEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_trash" -> ok', async () => {
+      if (typeof derivedEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.get({ name: "Trash" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof derivedEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.get({ name: "NonexistentDerived" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.findByComposedConcept !== 'function') return;
       try {
-        const result = await derivedEntityHandler.findByComposedConcept({ concept: 'test-concept' }, storage);
+        const result = await derivedEntityHandler.findByComposedConcept({ concept: "Article" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('DerivedEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_by_article" -> ok', async () => {
+      if (typeof derivedEntityHandler.findByComposedConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.findByComposedConcept({ concept: "Article" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_by_empty" -> error', async () => {
+      if (typeof derivedEntityHandler.findByComposedConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.findByComposedConcept({ concept: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.findBySync !== 'function') return;
       try {
-        const result = await derivedEntityHandler.findBySync({ syncName: 'test-syncName' }, storage);
+        const result = await derivedEntityHandler.findBySync({ syncName: "trash-on-delete" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('DerivedEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_by_sync" -> ok', async () => {
+      if (typeof derivedEntityHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.findBySync({ syncName: "trash-on-delete" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_by_sync_empty" -> error', async () => {
+      if (typeof derivedEntityHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.findBySync({ syncName: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +146,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.compositionTree !== 'function') return;
       try {
-        const result = await derivedEntityHandler.compositionTree({ entity: 'test' }, storage);
+        const result = await derivedEntityHandler.compositionTree({ entity: "derived-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +154,20 @@ describe('DerivedEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "tree_valid" -> ok', async () => {
+      if (typeof derivedEntityHandler.compositionTree !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.compositionTree({ entity: "derived-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tree_missing" -> error', async () => {
+      if (typeof derivedEntityHandler.compositionTree !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.compositionTree({ entity: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +176,7 @@ describe('DerivedEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof derivedEntityHandler.traceRollup !== 'function') return;
       try {
-        const result = await derivedEntityHandler.traceRollup({ entity: 'test', flowId: 'test-flowId' }, storage);
+        const result = await derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +186,37 @@ describe('DerivedEntity imperative handler', () => {
       }
     });
 
+    it('fixture "rollup_valid" -> ok', async () => {
+      if (typeof derivedEntityHandler.traceRollup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollup_missing_entity" -> error', async () => {
+      if (typeof derivedEntityHandler.traceRollup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await derivedEntityHandler.traceRollup({ entity: "nonexistent-id", flowId: "flow-abc-123" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof derivedEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = derivedEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DerivedEntity');
+    });
   });
 
   describe('invariant examples', () => {

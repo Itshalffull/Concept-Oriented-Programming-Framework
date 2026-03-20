@@ -26,7 +26,7 @@ describe('Namespace functional handler', () => {
 
   describe('createNamespacedPage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' });
+      const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Namespace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' });
+      const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' });
+      const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' });
+      const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Namespace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' });
+      const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Namespace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
       try {
-        const result = await interpret(namespaceHandler.createNamespacedPage({ node: 'test', path: 'test-path' }), storage);
+        const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Namespace functional handler', () => {
       }
     });
 
+    it('fixture "create_nested_page" -> ok', async () => {
+      if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_root_page" -> ok', async () => {
+      if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-root-1", path: "home" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_node" -> error', async () => {
+      if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.createNamespacedPage({ node: "", path: "projects/beta" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getChildren', () => {
     it('builds a valid StorageProgram', () => {
-      const program = namespaceHandler.getChildren({ node: 'test' });
+      const program = namespaceHandler.getChildren({ node: "ns-alpha-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Namespace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = namespaceHandler.getChildren({ node: 'test' });
+      const program = namespaceHandler.getChildren({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = namespaceHandler.getChildren({ node: 'test' });
+      const program = namespaceHandler.getChildren({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = namespaceHandler.getChildren({ node: 'test' });
+      const program = namespaceHandler.getChildren({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Namespace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = namespaceHandler.getChildren({ node: 'test' });
+      const program = namespaceHandler.getChildren({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Namespace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof namespaceHandler.getChildren !== 'function') return;
       try {
-        const result = await interpret(namespaceHandler.getChildren({ node: 'test' }), storage);
+        const result = await interpret(namespaceHandler.getChildren({ node: "ns-alpha-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Namespace functional handler', () => {
       }
     });
 
+    it('fixture "get_existing_children" -> ok', async () => {
+      if (typeof namespaceHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.getChildren({ node: "ns-alpha-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_children_missing_node" -> error', async () => {
+      if (typeof namespaceHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.getChildren({ node: "ns-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getHierarchy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = namespaceHandler.getHierarchy({ node: 'test' });
+      const program = namespaceHandler.getHierarchy({ node: "ns-alpha-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Namespace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = namespaceHandler.getHierarchy({ node: 'test' });
+      const program = namespaceHandler.getHierarchy({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = namespaceHandler.getHierarchy({ node: 'test' });
+      const program = namespaceHandler.getHierarchy({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = namespaceHandler.getHierarchy({ node: 'test' });
+      const program = namespaceHandler.getHierarchy({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Namespace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = namespaceHandler.getHierarchy({ node: 'test' });
+      const program = namespaceHandler.getHierarchy({ node: "ns-alpha-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Namespace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof namespaceHandler.getHierarchy !== 'function') return;
       try {
-        const result = await interpret(namespaceHandler.getHierarchy({ node: 'test' }), storage);
+        const result = await interpret(namespaceHandler.getHierarchy({ node: "ns-alpha-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Namespace functional handler', () => {
       }
     });
 
+    it('fixture "get_existing_hierarchy" -> ok', async () => {
+      if (typeof namespaceHandler.getHierarchy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.getHierarchy({ node: "ns-alpha-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_hierarchy_missing_node" -> error', async () => {
+      if (typeof namespaceHandler.getHierarchy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.getHierarchy({ node: "ns-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('move', () => {
     it('builds a valid StorageProgram', () => {
-      const program = namespaceHandler.move({ node: 'test', newPath: 'test-newPath' });
+      const program = namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Namespace functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = namespaceHandler.move({ node: 'test', newPath: 'test-newPath' });
+      const program = namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = namespaceHandler.move({ node: 'test', newPath: 'test-newPath' });
+      const program = namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = namespaceHandler.move({ node: 'test', newPath: 'test-newPath' });
+      const program = namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Namespace functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = namespaceHandler.move({ node: 'test', newPath: 'test-newPath' });
+      const program = namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Namespace functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof namespaceHandler.move !== 'function') return;
       try {
-        const result = await interpret(namespaceHandler.move({ node: 'test', newPath: 'test-newPath' }), storage);
+        const result = await interpret(namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('Namespace functional handler', () => {
       }
     });
 
+    it('fixture "move_existing_node" -> ok', async () => {
+      if (typeof namespaceHandler.move !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.move({ node: "ns-alpha-1", newPath: "archive/alpha/docs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "move_missing_node" -> error', async () => {
+      if (typeof namespaceHandler.move !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.move({ node: "ns-nonexistent", newPath: "archive/gone" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = namespaceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Namespace');
+    });
   });
 
   describe('invariant examples', () => {

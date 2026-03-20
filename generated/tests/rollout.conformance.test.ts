@@ -26,7 +26,7 @@ describe('Rollout functional handler', () => {
 
   describe('begin', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' });
+      const program = rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' });
+      const program = rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' });
+      const program = rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' });
+      const program = rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' });
+      const program = rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.begin !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.begin({ plan: 'test-plan', strategy: 'test-strategy', steps: 'test' }), storage);
+        const result = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "canary_rollout" -> ok', async () => {
+      if (typeof rolloutHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.begin({ plan: "dp-042", strategy: "canary", steps: ["step1","step2"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "blue_green_rollout" -> ok', async () => {
+      if (typeof rolloutHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.begin({ plan: "dp-100", strategy: "blue-green", steps: ["swap"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_strategy" -> invalidStrategy', async () => {
+      if (typeof rolloutHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.begin({ plan: "dp-001", strategy: "rainbow", steps: ["step1"] }), storage);
+      expect(result.variant).toBe('invalidStrategy');
+    });
+
   });
 
   describe('advance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.advance({ rollout: 'test' });
+      const program = rolloutHandler.advance({ rollout: "ro-active-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.advance({ rollout: 'test' });
+      const program = rolloutHandler.advance({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.advance({ rollout: 'test' });
+      const program = rolloutHandler.advance({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.advance({ rollout: 'test' });
+      const program = rolloutHandler.advance({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.advance({ rollout: 'test' });
+      const program = rolloutHandler.advance({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.advance !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.advance({ rollout: 'test' }), storage);
+        const result = await interpret(rolloutHandler.advance({ rollout: "ro-active-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "advance_active" -> ok', async () => {
+      if (typeof rolloutHandler.advance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.advance({ rollout: "ro-active-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "advance_missing" -> paused', async () => {
+      if (typeof rolloutHandler.advance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.advance({ rollout: "ro-nonexistent" }), storage);
+      expect(result.variant).toBe('paused');
+    });
+
   });
 
   describe('pause', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' });
+      const program = rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' });
+      const program = rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' });
+      const program = rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' });
+      const program = rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' });
+      const program = rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.pause !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.pause({ rollout: 'test', reason: 'test-reason' }), storage);
+        const result = await interpret(rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "pause_active" -> ok', async () => {
+      if (typeof rolloutHandler.pause !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.pause({ rollout: "ro-active-001", reason: "High error rate detected" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pause_missing" -> ok', async () => {
+      if (typeof rolloutHandler.pause !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.pause({ rollout: "ro-nonexistent", reason: "Manual pause" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resume', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.resume({ rollout: 'test' });
+      const program = rolloutHandler.resume({ rollout: "ro-paused-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.resume({ rollout: 'test' });
+      const program = rolloutHandler.resume({ rollout: "ro-paused-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.resume({ rollout: 'test' });
+      const program = rolloutHandler.resume({ rollout: "ro-paused-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.resume({ rollout: 'test' });
+      const program = rolloutHandler.resume({ rollout: "ro-paused-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.resume({ rollout: 'test' });
+      const program = rolloutHandler.resume({ rollout: "ro-paused-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.resume !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.resume({ rollout: 'test' }), storage);
+        const result = await interpret(rolloutHandler.resume({ rollout: "ro-paused-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "resume_paused" -> ok', async () => {
+      if (typeof rolloutHandler.resume !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.resume({ rollout: "ro-paused-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resume_missing" -> ok', async () => {
+      if (typeof rolloutHandler.resume !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.resume({ rollout: "ro-nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('abort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.abort({ rollout: 'test' });
+      const program = rolloutHandler.abort({ rollout: "ro-active-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.abort({ rollout: 'test' });
+      const program = rolloutHandler.abort({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.abort({ rollout: 'test' });
+      const program = rolloutHandler.abort({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.abort({ rollout: 'test' });
+      const program = rolloutHandler.abort({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.abort({ rollout: 'test' });
+      const program = rolloutHandler.abort({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.abort !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.abort({ rollout: 'test' }), storage);
+        const result = await interpret(rolloutHandler.abort({ rollout: "ro-active-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "abort_active" -> ok', async () => {
+      if (typeof rolloutHandler.abort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.abort({ rollout: "ro-active-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "abort_completed" -> alreadyComplete', async () => {
+      if (typeof rolloutHandler.abort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.abort({ rollout: "ro-completed-001" }), storage);
+      expect(result.variant).toBe('alreadyComplete');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rolloutHandler.status({ rollout: 'test' });
+      const program = rolloutHandler.status({ rollout: "ro-active-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Rollout functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rolloutHandler.status({ rollout: 'test' });
+      const program = rolloutHandler.status({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rolloutHandler.status({ rollout: 'test' });
+      const program = rolloutHandler.status({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rolloutHandler.status({ rollout: 'test' });
+      const program = rolloutHandler.status({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Rollout functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rolloutHandler.status({ rollout: 'test' });
+      const program = rolloutHandler.status({ rollout: "ro-active-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Rollout functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rolloutHandler.status !== 'function') return;
       try {
-        const result = await interpret(rolloutHandler.status({ rollout: 'test' }), storage);
+        const result = await interpret(rolloutHandler.status({ rollout: "ro-active-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('Rollout functional handler', () => {
       }
     });
 
+    it('fixture "status_existing" -> ok', async () => {
+      if (typeof rolloutHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.status({ rollout: "ro-active-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_unknown" -> ok', async () => {
+      if (typeof rolloutHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rolloutHandler.status({ rollout: "ro-nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rolloutHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rolloutHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Rollout');
+    });
   });
 
   describe('invariant examples', () => {

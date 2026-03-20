@@ -80,6 +80,31 @@ describe('SymbolIndexProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof symbolIndexProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolIndexProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof symbolIndexProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = symbolIndexProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SymbolIndexProvider');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

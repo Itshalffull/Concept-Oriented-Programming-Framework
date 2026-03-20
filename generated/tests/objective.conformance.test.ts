@@ -26,7 +26,7 @@ describe('Objective functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' });
+      const program = objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' });
+      const program = objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' });
+      const program = objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' });
+      const program = objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' });
+      const program = objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Objective functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof objectiveHandler.create !== 'function') return;
       try {
-        const result = await interpret(objectiveHandler.create({ title: 'test-title', description: 'test-description', owner: 'test-owner', targets: 'test' }), storage);
+        const result = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Objective functional handler', () => {
       }
     });
 
+    it('fixture "create_revenue_goal" -> ok', async () => {
+      if (typeof objectiveHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.create({ title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_title" -> error', async () => {
+      if (typeof objectiveHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.create({ title: "", description: "", owner: "", metricRefs: [], targetDate: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('updateProgress', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 });
+      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 });
+      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 });
+      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 });
+      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 });
+      const program = objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Objective functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof objectiveHandler.updateProgress !== 'function') return;
       try {
-        const result = await interpret(objectiveHandler.updateProgress({ objective: 'test', metricRef: 'test-metricRef', currentValue: 1 }), storage);
+        const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Objective functional handler', () => {
       }
     });
 
+    it('fixture "update_halfway" -> ok', async () => {
+      if (typeof objectiveHandler.updateProgress !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-001", currentValue: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_nonexistent" -> error', async () => {
+      if (typeof objectiveHandler.updateProgress !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.updateProgress({ objective: "objective-nonexistent", currentValue: "10.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.evaluate({ objective: 'test' });
+      const program = objectiveHandler.evaluate({ objective: "objective-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.evaluate({ objective: 'test' });
+      const program = objectiveHandler.evaluate({ objective: "objective-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.evaluate({ objective: 'test' });
+      const program = objectiveHandler.evaluate({ objective: "objective-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.evaluate({ objective: 'test' });
+      const program = objectiveHandler.evaluate({ objective: "objective-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.evaluate({ objective: 'test' });
+      const program = objectiveHandler.evaluate({ objective: "objective-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Objective functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof objectiveHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(objectiveHandler.evaluate({ objective: 'test' }), storage);
+        const result = await interpret(objectiveHandler.evaluate({ objective: "objective-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Objective functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_existing" -> ok', async () => {
+      if (typeof objectiveHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.evaluate({ objective: "objective-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_nonexistent" -> error', async () => {
+      if (typeof objectiveHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.evaluate({ objective: "objective-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = objectiveHandler.cancel({ objective: 'test' });
+      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Objective functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = objectiveHandler.cancel({ objective: 'test' });
+      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = objectiveHandler.cancel({ objective: 'test' });
+      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = objectiveHandler.cancel({ objective: 'test' });
+      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Objective functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = objectiveHandler.cancel({ objective: 'test' });
+      const program = objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Objective functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof objectiveHandler.cancel !== 'function') return;
       try {
-        const result = await interpret(objectiveHandler.cancel({ objective: 'test' }), storage);
+        const result = await interpret(objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,15 +296,47 @@ describe('Objective functional handler', () => {
       }
     });
 
+    it('fixture "cancel_with_reason" -> ok', async () => {
+      if (typeof objectiveHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.cancel({ objective: "objective-001", reason: "Budget constraints" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cancel_nonexistent" -> error', async () => {
+      if (typeof objectiveHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(objectiveHandler.cancel({ objective: "objective-nonexistent", reason: "N/A" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof objectiveHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = objectiveHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Objective');
+    });
   });
 
   describe('invariant examples', () => {
     it("create-then-updateProgress", async () => {
       const storage = createInMemoryStorage();
-      const createResult0 = await interpret(objectiveHandler.create({ title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, owner: {"type":"variable","name":"_"}, targets: {"type":"variable","name":"_"} }), storage);
+      const createResult0 = await interpret(objectiveHandler.create({ title: {"type":"variable","name":"_"}, description: {"type":"variable","name":"_"}, owner: {"type":"variable","name":"_"}, metricRefs: {"type":"variable","name":"_"}, targetDate: {"type":"variable","name":"_"} }), storage);
       expect(createResult0.variant).toBe("created");
       const objective = createResult0.output["objective"];
-      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: {"type":"variable","name":"ob"}, metricRef: {"type":"variable","name":"_"}, currentValue: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(objectiveHandler.updateProgress({ objective: {"type":"variable","name":"ob"}, currentValue: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("progressed");
     });
 
@@ -274,10 +348,10 @@ describe('Objective functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }) }),
-              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 50 }), currentValue: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), metricRefs: fc.string(), targetDate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), currentValue: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ objective: fc.string() }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -304,10 +378,10 @@ describe('Objective functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }) }),
-              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), metricRef: fc.string({ minLength: 1, maxLength: 50 }), currentValue: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), metricRefs: fc.string(), targetDate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('updateProgress'), input: fc.record({ objective: fc.string(), currentValue: fc.string() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ objective: fc.string() }) }),
-              fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ objective: fc.string(), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -346,7 +420,7 @@ describe('Objective functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string() }),
+          fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string({ minLength: 1, maxLength: 50 }), metricRefs: fc.string(), targetDate: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = objectiveHandler.create(input as Record<string, unknown>);

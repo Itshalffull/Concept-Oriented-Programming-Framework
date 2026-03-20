@@ -80,11 +80,18 @@ describe('MultiValueResolution functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof multiValueResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(multiValueResolutionHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('attemptResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('MultiValueResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('MultiValueResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('MultiValueResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
       try {
-        const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' }), storage);
+        const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('MultiValueResolution functional handler', () => {
       }
     });
 
+    it('fixture "resolve_two_values" -> ok', async () => {
+      if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_with_base" -> ok', async () => {
+      if (typeof multiValueResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(multiValueResolutionHandler.attemptResolve({ base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof multiValueResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = multiValueResolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('MultiValueResolution');
+    });
   });
 
   describe('invariant examples', () => {

@@ -80,6 +80,38 @@ describe('WidgetScopeProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof widgetScopeProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetScopeProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "init_failure" -> error', async () => {
+      if (typeof widgetScopeProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetScopeProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetScopeProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetScopeProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetScopeProvider');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

@@ -26,7 +26,7 @@ describe('ScoreBridge functional handler', () => {
 
   describe('connect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' });
+      const program = scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' });
+      const program = scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' });
+      const program = scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' });
+      const program = scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' });
+      const program = scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.connect !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.connect({ endpoint: 'test-endpoint', protocol: 'test-protocol', authToken: 'test-authToken' }), storage);
+        const result = await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_connect" -> ok', async () => {
+      if (typeof scoreBridgeHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_endpoint" -> unreachable', async () => {
+      if (typeof scoreBridgeHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.connect({ endpoint: "", protocol: "http", authToken: "tok_live_abc123" }), storage);
+      expect(result.variant).toBe('unreachable');
+    });
+
+    it('fixture "bad_auth" -> auth_failed', async () => {
+      if (typeof scoreBridgeHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "invalid_token" }), storage);
+      expect(result.variant).toBe('auth_failed');
+    });
+
   });
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' });
+      const program = scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' });
+      const program = scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' });
+      const program = scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' });
+      const program = scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' });
+      const program = scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.query !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.query({ bridge: 'test', graphql: 'test-graphql' }), storage);
+        const result = await interpret(scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_query" -> ok', async () => {
+      if (typeof scoreBridgeHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_bridge" -> notfound', async () => {
+      if (typeof scoreBridgeHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.query({ bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('show', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' });
+      const program = scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' });
+      const program = scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' });
+      const program = scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' });
+      const program = scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' });
+      const program = scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.show !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.show({ bridge: 'test', kind: 'test-kind', name: 'test-name' }), storage);
+        const result = await interpret(scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_show" -> ok', async () => {
+      if (typeof scoreBridgeHandler.show !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "show_no_bridge" -> notfound', async () => {
+      if (typeof scoreBridgeHandler.show !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.show({ bridge: "bridge-nonexistent", kind: "concept", name: "User" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('traverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' });
+      const program = scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' });
+      const program = scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' });
+      const program = scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' });
+      const program = scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' });
+      const program = scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.traverse !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.traverse({ bridge: 'test', relation: 'test-relation', target: 'test-target' }), storage);
+        const result = await interpret(scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_traverse" -> ok', async () => {
+      if (typeof scoreBridgeHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traverse_no_bridge" -> notfound', async () => {
+      if (typeof scoreBridgeHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.traverse({ bridge: "bridge-nonexistent", relation: "actions", target: "register" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('disconnect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.disconnect({ bridge: 'test' });
+      const program = scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.disconnect({ bridge: 'test' });
+      const program = scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.disconnect({ bridge: 'test' });
+      const program = scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.disconnect({ bridge: 'test' });
+      const program = scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.disconnect({ bridge: 'test' });
+      const program = scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.disconnect !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.disconnect({ bridge: 'test' }), storage);
+        const result = await interpret(scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_disconnect" -> ok', async () => {
+      if (typeof scoreBridgeHandler.disconnect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disconnect_no_bridge" -> notfound', async () => {
+      if (typeof scoreBridgeHandler.disconnect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.disconnect({ bridge: "bridge-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreBridgeHandler.status({ bridge: 'test' });
+      const program = scoreBridgeHandler.status({ bridge: "bridge-api-example-com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreBridgeHandler.status({ bridge: 'test' });
+      const program = scoreBridgeHandler.status({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreBridgeHandler.status({ bridge: 'test' });
+      const program = scoreBridgeHandler.status({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreBridgeHandler.status({ bridge: 'test' });
+      const program = scoreBridgeHandler.status({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('ScoreBridge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreBridgeHandler.status({ bridge: 'test' });
+      const program = scoreBridgeHandler.status({ bridge: "bridge-api-example-com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('ScoreBridge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreBridgeHandler.status !== 'function') return;
       try {
-        const result = await interpret(scoreBridgeHandler.status({ bridge: 'test' }), storage);
+        const result = await interpret(scoreBridgeHandler.status({ bridge: "bridge-api-example-com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('ScoreBridge functional handler', () => {
       }
     });
 
+    it('fixture "valid_status" -> ok', async () => {
+      if (typeof scoreBridgeHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.status({ bridge: "bridge-api-example-com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_no_bridge" -> notfound', async () => {
+      if (typeof scoreBridgeHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreBridgeHandler.status({ bridge: "bridge-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreBridgeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreBridgeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreBridge');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Signal functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' });
+      const program = signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Signal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' });
+      const program = signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' });
+      const program = signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' });
+      const program = signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Signal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' });
+      const program = signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Signal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof signalHandler.create !== 'function') return;
       try {
-        const result = await interpret(signalHandler.create({ signal: 'test', kind: 'test-kind', initialValue: 'test-initialValue' }), storage);
+        const result = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Signal functional handler', () => {
       }
     });
 
+    it('fixture "valid_create_state" -> ok', async () => {
+      if (typeof signalHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid_create_computed" -> ok', async () => {
+      if (typeof signalHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_kind" -> error', async () => {
+      if (typeof signalHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.create({ signal: "G-3", kind: "unknown", initialValue: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('read', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signalHandler.read({ signal: 'test' });
+      const program = signalHandler.read({ signal: "G-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Signal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signalHandler.read({ signal: 'test' });
+      const program = signalHandler.read({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signalHandler.read({ signal: 'test' });
+      const program = signalHandler.read({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signalHandler.read({ signal: 'test' });
+      const program = signalHandler.read({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Signal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signalHandler.read({ signal: 'test' });
+      const program = signalHandler.read({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Signal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof signalHandler.read !== 'function') return;
       try {
-        const result = await interpret(signalHandler.read({ signal: 'test' }), storage);
+        const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Signal functional handler', () => {
       }
     });
 
+    it('fixture "valid_read" -> ok', async () => {
+      if (typeof signalHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_nonexistent" -> error', async () => {
+      if (typeof signalHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.read({ signal: "G-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signalHandler.write({ signal: 'test', value: 'test-value' });
+      const program = signalHandler.write({ signal: "G-1", value: "world" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Signal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signalHandler.write({ signal: 'test', value: 'test-value' });
+      const program = signalHandler.write({ signal: "G-1", value: "world" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signalHandler.write({ signal: 'test', value: 'test-value' });
+      const program = signalHandler.write({ signal: "G-1", value: "world" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signalHandler.write({ signal: 'test', value: 'test-value' });
+      const program = signalHandler.write({ signal: "G-1", value: "world" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Signal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signalHandler.write({ signal: 'test', value: 'test-value' });
+      const program = signalHandler.write({ signal: "G-1", value: "world" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Signal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof signalHandler.write !== 'function') return;
       try {
-        const result = await interpret(signalHandler.write({ signal: 'test', value: 'test-value' }), storage);
+        const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Signal functional handler', () => {
       }
     });
 
+    it('fixture "valid_write" -> ok', async () => {
+      if (typeof signalHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_nonexistent" -> error', async () => {
+      if (typeof signalHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.write({ signal: "G-999", value: "x" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('batch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signalHandler.batch({ signals: 'test-signals' });
+      const program = signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Signal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signalHandler.batch({ signals: 'test-signals' });
+      const program = signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signalHandler.batch({ signals: 'test-signals' });
+      const program = signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signalHandler.batch({ signals: 'test-signals' });
+      const program = signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Signal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signalHandler.batch({ signals: 'test-signals' });
+      const program = signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Signal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof signalHandler.batch !== 'function') return;
       try {
-        const result = await interpret(signalHandler.batch({ signals: 'test-signals' }), storage);
+        const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Signal functional handler', () => {
       }
     });
 
+    it('fixture "valid_batch" -> ok', async () => {
+      if (typeof signalHandler.batch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_batch" -> error', async () => {
+      if (typeof signalHandler.batch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.batch({ signals: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('dispose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = signalHandler.dispose({ signal: 'test' });
+      const program = signalHandler.dispose({ signal: "G-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Signal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = signalHandler.dispose({ signal: 'test' });
+      const program = signalHandler.dispose({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = signalHandler.dispose({ signal: 'test' });
+      const program = signalHandler.dispose({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = signalHandler.dispose({ signal: 'test' });
+      const program = signalHandler.dispose({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Signal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = signalHandler.dispose({ signal: 'test' });
+      const program = signalHandler.dispose({ signal: "G-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Signal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof signalHandler.dispose !== 'function') return;
       try {
-        const result = await interpret(signalHandler.dispose({ signal: 'test' }), storage);
+        const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Signal functional handler', () => {
       }
     });
 
+    it('fixture "valid_dispose" -> ok', async () => {
+      if (typeof signalHandler.dispose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dispose_nonexistent" -> error', async () => {
+      if (typeof signalHandler.dispose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(signalHandler.dispose({ signal: "G-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof signalHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = signalHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Signal');
+    });
   });
 
   describe('invariant examples', () => {

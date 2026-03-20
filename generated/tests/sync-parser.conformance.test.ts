@@ -19,7 +19,7 @@ describe('SyncParser imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncParserHandler.parse !== 'function') return;
       try {
-        const result = await syncParserHandler.parse({ source: 'test-source', manifests: 'test' }, storage);
+        const result = await syncParserHandler.parse({ source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: [] }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('SyncParser imperative handler', () => {
       }
     });
 
+    it('fixture "valid_source" -> ok', async () => {
+      if (typeof syncParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncParserHandler.parse({ source: "sync T [eager]\nwhen {\n  A/act: [ x: ?v ] => []\n}\nthen {\n  B/do: [ x: ?v ]\n}", manifests: [] }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_source" -> error', async () => {
+      if (typeof syncParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncParserHandler.parse({ source: "", manifests: [] }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_syntax" -> error', async () => {
+      if (typeof syncParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await syncParserHandler.parse({ source: "not valid sync file", manifests: [] }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncParserHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncParserHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncParser');
+    });
   });
 
   describe('invariant examples', () => {

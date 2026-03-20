@@ -26,7 +26,7 @@ describe('Meeting functional handler', () => {
 
   describe('schedule', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.schedule({ title: 'test-title', agenda: 'test' });
+      const program = meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.schedule({ title: 'test-title', agenda: 'test' });
+      const program = meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.schedule({ title: 'test-title', agenda: 'test' });
+      const program = meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.schedule({ title: 'test-title', agenda: 'test' });
+      const program = meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.schedule({ title: 'test-title', agenda: 'test' });
+      const program = meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.schedule !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.schedule({ title: 'test-title', agenda: 'test' }), storage);
+        const result = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "schedule_board_meeting" -> ok', async () => {
+      if (typeof meetingHandler.schedule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "schedule_empty_title" -> error', async () => {
+      if (typeof meetingHandler.schedule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.schedule({ title: "", agenda: ["Item 1"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('callToOrder', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' });
+      const program = meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' });
+      const program = meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' });
+      const program = meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' });
+      const program = meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' });
+      const program = meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.callToOrder !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.callToOrder({ meeting: 'test', chair: 'test-chair' }), storage);
+        const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "call_existing_meeting" -> ok', async () => {
+      if (typeof meetingHandler.callToOrder !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "call_missing_meeting" -> error', async () => {
+      if (typeof meetingHandler.callToOrder !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-nonexistent", chair: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('makeMotion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' });
+      const program = meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' });
+      const program = meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' });
+      const program = meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' });
+      const program = meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' });
+      const program = meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.makeMotion !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.makeMotion({ meeting: 'test', mover: 'test-mover', motionType: 'test-motionType', text: 'test-text' }), storage);
+        const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "make_main_motion" -> ok', async () => {
+      if (typeof meetingHandler.makeMotion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "make_motion_missing_meeting" -> error', async () => {
+      if (typeof meetingHandler.makeMotion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-nonexistent", mover: "bob", motionType: "main", text: "Test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('secondMotion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 });
+      const program = meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 });
+      const program = meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 });
+      const program = meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 });
+      const program = meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 });
+      const program = meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.secondMotion !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.secondMotion({ meeting: 'test', seconder: 'test-seconder', motionIndex: 1 }), storage);
+        const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "second_existing_motion" -> ok', async () => {
+      if (typeof meetingHandler.secondMotion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "second_missing_motion" -> error', async () => {
+      if (typeof meetingHandler.secondMotion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "99" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('callQuestion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.callQuestion({ meeting: 'test' });
+      const program = meetingHandler.callQuestion({ meeting: "meeting-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.callQuestion({ meeting: 'test' });
+      const program = meetingHandler.callQuestion({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.callQuestion({ meeting: 'test' });
+      const program = meetingHandler.callQuestion({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.callQuestion({ meeting: 'test' });
+      const program = meetingHandler.callQuestion({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.callQuestion({ meeting: 'test' });
+      const program = meetingHandler.callQuestion({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.callQuestion !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.callQuestion({ meeting: 'test' }), storage);
+        const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "call_question_valid" -> ok', async () => {
+      if (typeof meetingHandler.callQuestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "call_question_missing" -> error', async () => {
+      if (typeof meetingHandler.callQuestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('recordMinute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' });
+      const program = meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' });
+      const program = meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' });
+      const program = meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' });
+      const program = meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' });
+      const program = meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.recordMinute !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.recordMinute({ meeting: 'test', record: 'test-record' }), storage);
+        const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "record_minute_entry" -> ok', async () => {
+      if (typeof meetingHandler.recordMinute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_missing_meeting" -> error', async () => {
+      if (typeof meetingHandler.recordMinute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-nonexistent", record: "Test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('adjourn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = meetingHandler.adjourn({ meeting: 'test' });
+      const program = meetingHandler.adjourn({ meeting: "meeting-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Meeting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = meetingHandler.adjourn({ meeting: 'test' });
+      const program = meetingHandler.adjourn({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = meetingHandler.adjourn({ meeting: 'test' });
+      const program = meetingHandler.adjourn({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = meetingHandler.adjourn({ meeting: 'test' });
+      const program = meetingHandler.adjourn({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Meeting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = meetingHandler.adjourn({ meeting: 'test' });
+      const program = meetingHandler.adjourn({ meeting: "meeting-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Meeting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof meetingHandler.adjourn !== 'function') return;
       try {
-        const result = await interpret(meetingHandler.adjourn({ meeting: 'test' }), storage);
+        const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Meeting functional handler', () => {
       }
     });
 
+    it('fixture "adjourn_valid" -> ok', async () => {
+      if (typeof meetingHandler.adjourn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "adjourn_missing" -> error', async () => {
+      if (typeof meetingHandler.adjourn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof meetingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = meetingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Meeting');
+    });
   });
 
   describe('invariant examples', () => {

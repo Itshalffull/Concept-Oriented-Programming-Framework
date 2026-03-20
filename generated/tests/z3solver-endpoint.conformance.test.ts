@@ -19,7 +19,7 @@ describe('Z3SolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof z3SolverEndpointHandler.register !== 'function') return;
       try {
-        const result = await z3SolverEndpointHandler.register({ name: 'test-name', binaryPath: 'test-binaryPath', timeout: 1, options: 'test-options' }, storage);
+        const result = await z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('Z3SolverEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "z3_default" -> ok', async () => {
+      if (typeof z3SolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "z3_custom_path" -> ok', async () => {
+      if (typeof z3SolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.register({ name: "z3-custom", binaryPath: "/opt/z3/bin/z3", timeout: "60000", options: "-smt2 -T:60" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof z3SolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.register({ name: "", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('Z3SolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof z3SolverEndpointHandler.solve !== 'function') return;
       try {
-        const result = await z3SolverEndpointHandler.solve({ name: 'test-name', formula: 'test-formula', logic: 'test-logic' }, storage);
+        const result = await z3SolverEndpointHandler.solve({ name: "z3-local", formula: "(declare-const x Int) (assert (> x 0)) (check-sat)", logic: "QF_LIA" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('Z3SolverEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "solve_sat" -> ok', async () => {
+      if (typeof z3SolverEndpointHandler.solve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.solve({ name: "z3-local", formula: "(declare-const x Int) (assert (> x 0)) (check-sat)", logic: "QF_LIA" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "solve_missing_endpoint" -> error', async () => {
+      if (typeof z3SolverEndpointHandler.solve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.solve({ name: "nonexistent", formula: "(check-sat)", logic: "ALL" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('Z3SolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof z3SolverEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await z3SolverEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await z3SolverEndpointHandler.resolve({ name: "z3-local" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +96,37 @@ describe('Z3SolverEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof z3SolverEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.resolve({ name: "z3-local" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof z3SolverEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await z3SolverEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof z3SolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = z3SolverEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Z3SolverEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

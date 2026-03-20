@@ -80,11 +80,18 @@ describe('ThreeWayMerge functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof threeWayMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(threeWayMergeHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('ThreeWayMerge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('ThreeWayMerge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('ThreeWayMerge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       try {
-        const result = await interpret(threeWayMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' }), storage);
+        const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,45 @@ describe('ThreeWayMerge functional handler', () => {
       }
     });
 
+    it('fixture "clean_merge" -> ok', async () => {
+      if (typeof threeWayMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "conflicting_merge" -> ok', async () => {
+      if (typeof threeWayMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(threeWayMergeHandler.execute({ base: "line1", ours: "lineA", theirs: "lineB" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "non_string_content" -> error', async () => {
+      if (typeof threeWayMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(threeWayMergeHandler.execute({ base: "42", ours: "text", theirs: "text" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof threeWayMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = threeWayMergeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThreeWayMerge');
+    });
   });
 
   describe('invariant examples', () => {

@@ -29,13 +29,20 @@ describe('WebSocketProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof webSocketProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('configure', () => {
     it('executes without crashing', async () => {
       if (typeof webSocketProviderHandler.configure !== 'function') return;
       try {
-        const result = await webSocketProviderHandler.configure({ name: 'test-name', url: 'test-url', protocols: 'test-protocols' }, storage);
+        const result = await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +50,20 @@ describe('WebSocketProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "configure_events" -> ok', async () => {
+      if (typeof webSocketProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_with_protocol" -> ok', async () => {
+      if (typeof webSocketProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -51,7 +72,7 @@ describe('WebSocketProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof webSocketProviderHandler.send !== 'function') return;
       try {
-        const result = await webSocketProviderHandler.send({ connection: 'test-connection', message: 'test-message' }, storage);
+        const result = await webSocketProviderHandler.send({ connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,20 @@ describe('WebSocketProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "send_json_message" -> ok', async () => {
+      if (typeof webSocketProviderHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.send({ connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "send_to_unknown" -> notConnected', async () => {
+      if (typeof webSocketProviderHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.send({ connection: "nonexistent", message: "hello" }, storage);
+      expect(result.variant).toBe('notConnected');
     });
 
   });
@@ -67,7 +102,7 @@ describe('WebSocketProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof webSocketProviderHandler.receive !== 'function') return;
       try {
-        const result = await webSocketProviderHandler.receive({ connection: 'test-connection' }, storage);
+        const result = await webSocketProviderHandler.receive({ connection: "events" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,13 +112,27 @@ describe('WebSocketProvider imperative handler', () => {
       }
     });
 
+    it('fixture "receive_from_events" -> ok', async () => {
+      if (typeof webSocketProviderHandler.receive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.receive({ connection: "events" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "receive_from_unknown" -> notConnected', async () => {
+      if (typeof webSocketProviderHandler.receive !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.receive({ connection: "nonexistent" }, storage);
+      expect(result.variant).toBe('notConnected');
+    });
+
   });
 
   describe('close', () => {
     it('executes without crashing', async () => {
       if (typeof webSocketProviderHandler.close !== 'function') return;
       try {
-        const result = await webSocketProviderHandler.close({ connection: 'test-connection' }, storage);
+        const result = await webSocketProviderHandler.close({ connection: "events" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +140,20 @@ describe('WebSocketProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "close_events" -> ok', async () => {
+      if (typeof webSocketProviderHandler.close !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.close({ connection: "events" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "close_unknown" -> notFound', async () => {
+      if (typeof webSocketProviderHandler.close !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.close({ connection: "nonexistent" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -109,6 +172,30 @@ describe('WebSocketProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof webSocketProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webSocketProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof webSocketProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = webSocketProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WebSocketProvider');
+    });
   });
 
   describe('invariant examples', () => {

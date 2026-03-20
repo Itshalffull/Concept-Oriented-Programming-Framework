@@ -26,7 +26,7 @@ describe('Schema functional handler', () => {
 
   describe('defineSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' });
+      const program = schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' });
+      const program = schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' });
+      const program = schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' });
+      const program = schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' });
+      const program = schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.defineSchema !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.defineSchema({ schema: 'test', fields: 'test-fields' }), storage);
+        const result = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "create_article" -> ok', async () => {
+      if (typeof schemaHandler.defineSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_fields" -> error', async () => {
+      if (typeof schemaHandler.defineSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.defineSchema({ schema: "empty", fields: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addField', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.addField({ schema: 'test', field: 'test-field' });
+      const program = schemaHandler.addField({ schema: "article", field: "tags" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.addField({ schema: 'test', field: 'test-field' });
+      const program = schemaHandler.addField({ schema: "article", field: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.addField({ schema: 'test', field: 'test-field' });
+      const program = schemaHandler.addField({ schema: "article", field: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.addField({ schema: 'test', field: 'test-field' });
+      const program = schemaHandler.addField({ schema: "article", field: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.addField({ schema: 'test', field: 'test-field' });
+      const program = schemaHandler.addField({ schema: "article", field: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.addField !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.addField({ schema: 'test', field: 'test-field' }), storage);
+        const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "add_tags_field" -> ok', async () => {
+      if (typeof schemaHandler.addField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_missing" -> error', async () => {
+      if (typeof schemaHandler.addField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.addField({ schema: "nonexistent", field: "tags" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('extendSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.extendSchema({ schema: 'test', parent: 'test' });
+      const program = schemaHandler.extendSchema({ schema: "blog-post", parent: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.extendSchema({ schema: 'test', parent: 'test' });
+      const program = schemaHandler.extendSchema({ schema: "blog-post", parent: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.extendSchema({ schema: 'test', parent: 'test' });
+      const program = schemaHandler.extendSchema({ schema: "blog-post", parent: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.extendSchema({ schema: 'test', parent: 'test' });
+      const program = schemaHandler.extendSchema({ schema: "blog-post", parent: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.extendSchema({ schema: 'test', parent: 'test' });
+      const program = schemaHandler.extendSchema({ schema: "blog-post", parent: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.extendSchema !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.extendSchema({ schema: 'test', parent: 'test' }), storage);
+        const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "extend_blog_from_article" -> ok', async () => {
+      if (typeof schemaHandler.extendSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extend_missing_parent" -> error', async () => {
+      if (typeof schemaHandler.extendSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('applyTo', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.applyTo({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.applyTo({ entity: 'test-entity', schema: 'test' }), storage);
+        const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "apply_article_to_page" -> ok', async () => {
+      if (typeof schemaHandler.applyTo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_missing_schema" -> error', async () => {
+      if (typeof schemaHandler.applyTo !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeFrom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' });
+      const program = schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.removeFrom({ entity: 'test-entity', schema: 'test' }), storage);
+        const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "remove_article_from_page" -> ok', async () => {
+      if (typeof schemaHandler.removeFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_unapplied" -> error', async () => {
+      if (typeof schemaHandler.removeFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-99", schema: "article" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getAssociations', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.getAssociations({ schema: 'test' });
+      const program = schemaHandler.getAssociations({ schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.getAssociations({ schema: 'test' });
+      const program = schemaHandler.getAssociations({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.getAssociations({ schema: 'test' });
+      const program = schemaHandler.getAssociations({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.getAssociations({ schema: 'test' });
+      const program = schemaHandler.getAssociations({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.getAssociations({ schema: 'test' });
+      const program = schemaHandler.getAssociations({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.getAssociations !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.getAssociations({ schema: 'test' }), storage);
+        const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "get_article_entities" -> ok', async () => {
+      if (typeof schemaHandler.getAssociations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_entities" -> error', async () => {
+      if (typeof schemaHandler.getAssociations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.getAssociations({ schema: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaHandler.export({ schema: 'test' });
+      const program = schemaHandler.export({ schema: "article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Schema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaHandler.export({ schema: 'test' });
+      const program = schemaHandler.export({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaHandler.export({ schema: 'test' });
+      const program = schemaHandler.export({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaHandler.export({ schema: 'test' });
+      const program = schemaHandler.export({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Schema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaHandler.export({ schema: 'test' });
+      const program = schemaHandler.export({ schema: "article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Schema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaHandler.export !== 'function') return;
       try {
-        const result = await interpret(schemaHandler.export({ schema: 'test' }), storage);
+        const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Schema functional handler', () => {
       }
     });
 
+    it('fixture "export_article" -> ok', async () => {
+      if (typeof schemaHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_missing" -> error', async () => {
+      if (typeof schemaHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaHandler.export({ schema: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof schemaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = schemaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Schema');
+    });
   });
 
   describe('invariant examples', () => {
@@ -452,8 +568,8 @@ describe('Schema functional handler', () => {
               fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extendSchema'), input: fc.record({ schema: fc.string(), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
-              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
               fc.record({ action: fc.constant('getAssociations'), input: fc.record({ schema: fc.string() }) }),
               fc.record({ action: fc.constant('export'), input: fc.record({ schema: fc.string() }) }),
             ),
@@ -485,8 +601,8 @@ describe('Schema functional handler', () => {
               fc.record({ action: fc.constant('defineSchema'), input: fc.record({ schema: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('addField'), input: fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('extendSchema'), input: fc.record({ schema: fc.string(), parent: fc.string() }) }),
-              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
-              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('applyTo'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
+              fc.record({ action: fc.constant('removeFrom'), input: fc.record({ entity_id: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string() }) }),
               fc.record({ action: fc.constant('getAssociations'), input: fc.record({ schema: fc.string() }) }),
               fc.record({ action: fc.constant('export'), input: fc.record({ schema: fc.string() }) }),
             ),

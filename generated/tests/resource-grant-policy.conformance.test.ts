@@ -26,7 +26,7 @@ describe('ResourceGrantPolicy functional handler', () => {
 
   describe('setGrant', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' });
+      const program = resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' });
+      const program = resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' });
+      const program = resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' });
+      const program = resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' });
+      const program = resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
       try {
-        const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: 'test', scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName', roles: 'test' }), storage);
+        const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ResourceGrantPolicy functional handler', () => {
       }
     });
 
+    it('fixture "set_wildcard_view" -> ok', async () => {
+      if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_empty_grant" -> error', async () => {
+      if (typeof resourceGrantPolicyHandler.setGrant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.setGrant({ grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getGrant', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceGrantPolicyHandler.getGrant !== 'function') return;
       try {
-        const result = await interpret(resourceGrantPolicyHandler.getGrant({ scope: 'test-scope', resourcePattern: 'test-resourcePattern', actionName: 'test-actionName' }), storage);
+        const result = await interpret(resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ResourceGrantPolicy functional handler', () => {
       }
     });
 
+    it('fixture "get_existing_grant" -> ok', async () => {
+      if (typeof resourceGrantPolicyHandler.getGrant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "*", actionName: "view" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_grant" -> error', async () => {
+      if (typeof resourceGrantPolicyHandler.getGrant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.getGrant({ scope: "schema", resourcePattern: "NonExistent", actionName: "delete" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' });
+      const program = resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceGrantPolicyHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(resourceGrantPolicyHandler.resolve({ scope: 'test-scope', resource: 'test-resource', actionName: 'test-actionName' }), storage);
+        const result = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ResourceGrantPolicy functional handler', () => {
       }
     });
 
+    it('fixture "resolve_article_view" -> ok', async () => {
+      if (typeof resourceGrantPolicyHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Article", actionName: "view" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_no_match" -> error', async () => {
+      if (typeof resourceGrantPolicyHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.resolve({ scope: "schema", resource: "Secret", actionName: "destroy" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceGrantPolicyHandler.list({ scope: 'test' });
+      const program = resourceGrantPolicyHandler.list({ scope: "schema" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceGrantPolicyHandler.list({ scope: 'test' });
+      const program = resourceGrantPolicyHandler.list({ scope: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceGrantPolicyHandler.list({ scope: 'test' });
+      const program = resourceGrantPolicyHandler.list({ scope: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceGrantPolicyHandler.list({ scope: 'test' });
+      const program = resourceGrantPolicyHandler.list({ scope: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceGrantPolicyHandler.list({ scope: 'test' });
+      const program = resourceGrantPolicyHandler.list({ scope: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ResourceGrantPolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceGrantPolicyHandler.list !== 'function') return;
       try {
-        const result = await interpret(resourceGrantPolicyHandler.list({ scope: 'test' }), storage);
+        const result = await interpret(resourceGrantPolicyHandler.list({ scope: "schema" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('ResourceGrantPolicy functional handler', () => {
       }
     });
 
+    it('fixture "list_by_scope" -> ok', async () => {
+      if (typeof resourceGrantPolicyHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.list({ scope: "schema" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof resourceGrantPolicyHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceGrantPolicyHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof resourceGrantPolicyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = resourceGrantPolicyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ResourceGrantPolicy');
+    });
   });
 
   describe('invariant examples', () => {

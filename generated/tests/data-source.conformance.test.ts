@@ -26,7 +26,7 @@ describe('DataSource functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' });
+      const program = dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DataSource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' });
+      const program = dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' });
+      const program = dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' });
+      const program = dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DataSource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' });
+      const program = dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DataSource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataSourceHandler.register !== 'function') return;
       try {
-        const result = await interpret(dataSourceHandler.register({ name: 'test-name', uri: 'test-uri', credentials: 'test-credentials' }), storage);
+        const result = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DataSource functional handler', () => {
       }
     });
 
+    it('fixture "register_api" -> ok', async () => {
+      if (typeof dataSourceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_db" -> ok', async () => {
+      if (typeof dataSourceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.register({ name: "analytics_db", uri: "postgres://db.internal:5432/analytics", credentials: "user:pass" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> exists', async () => {
+      if (typeof dataSourceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.register({ name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }), storage);
+      expect(result.variant).toBe('exists');
+    });
+
   });
 
   describe('connect', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceHandler.connect({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.connect({ sourceId: "src-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DataSource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceHandler.connect({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.connect({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceHandler.connect({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.connect({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceHandler.connect({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.connect({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DataSource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceHandler.connect({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.connect({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DataSource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataSourceHandler.connect !== 'function') return;
       try {
-        const result = await interpret(dataSourceHandler.connect({ sourceId: 'test-sourceId' }), storage);
+        const result = await interpret(dataSourceHandler.connect({ sourceId: "src-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('DataSource functional handler', () => {
       }
     });
 
+    it('fixture "connect_existing" -> ok', async () => {
+      if (typeof dataSourceHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.connect({ sourceId: "src-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "connect_missing" -> notfound', async () => {
+      if (typeof dataSourceHandler.connect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.connect({ sourceId: "src-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceHandler.discover({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.discover({ sourceId: "src-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('DataSource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceHandler.discover({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.discover({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceHandler.discover({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.discover({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceHandler.discover({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.discover({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('DataSource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceHandler.discover({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.discover({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('DataSource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataSourceHandler.discover !== 'function') return;
       try {
-        const result = await interpret(dataSourceHandler.discover({ sourceId: 'test-sourceId' }), storage);
+        const result = await interpret(dataSourceHandler.discover({ sourceId: "src-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('DataSource functional handler', () => {
       }
     });
 
+    it('fixture "discover_existing" -> ok', async () => {
+      if (typeof dataSourceHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.discover({ sourceId: "src-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_missing" -> notfound', async () => {
+      if (typeof dataSourceHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.discover({ sourceId: "src-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('healthCheck', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.healthCheck({ sourceId: "src-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('DataSource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.healthCheck({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.healthCheck({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.healthCheck({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('DataSource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.healthCheck({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('DataSource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataSourceHandler.healthCheck !== 'function') return;
       try {
-        const result = await interpret(dataSourceHandler.healthCheck({ sourceId: 'test-sourceId' }), storage);
+        const result = await interpret(dataSourceHandler.healthCheck({ sourceId: "src-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('DataSource functional handler', () => {
       }
     });
 
+    it('fixture "health_existing" -> ok', async () => {
+      if (typeof dataSourceHandler.healthCheck !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.healthCheck({ sourceId: "src-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "health_missing" -> notfound', async () => {
+      if (typeof dataSourceHandler.healthCheck !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.healthCheck({ sourceId: "src-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('deactivate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dataSourceHandler.deactivate({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.deactivate({ sourceId: "src-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('DataSource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dataSourceHandler.deactivate({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.deactivate({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dataSourceHandler.deactivate({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.deactivate({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dataSourceHandler.deactivate({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.deactivate({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('DataSource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dataSourceHandler.deactivate({ sourceId: 'test-sourceId' });
+      const program = dataSourceHandler.deactivate({ sourceId: "src-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('DataSource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dataSourceHandler.deactivate !== 'function') return;
       try {
-        const result = await interpret(dataSourceHandler.deactivate({ sourceId: 'test-sourceId' }), storage);
+        const result = await interpret(dataSourceHandler.deactivate({ sourceId: "src-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('DataSource functional handler', () => {
       }
     });
 
+    it('fixture "deactivate_existing" -> ok', async () => {
+      if (typeof dataSourceHandler.deactivate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.deactivate({ sourceId: "src-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deactivate_missing" -> notfound', async () => {
+      if (typeof dataSourceHandler.deactivate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceHandler.deactivate({ sourceId: "src-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dataSourceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dataSourceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DataSource');
+    });
   });
 
   describe('invariant examples', () => {

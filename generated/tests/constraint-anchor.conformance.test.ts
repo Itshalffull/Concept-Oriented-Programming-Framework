@@ -26,7 +26,7 @@ describe('ConstraintAnchor functional handler', () => {
 
   describe('pin', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 });
+      const program = constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 });
+      const program = constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 });
+      const program = constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 });
+      const program = constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 });
+      const program = constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.pin !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.pin({ canvas_id: 'test', item_id: 'test', x: 1, y: 1 }), storage);
+        const result = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "pin_item" -> ok', async () => {
+      if (typeof constraintAnchorHandler.pin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-a", x: "100.0", y: "200.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pin_origin" -> ok', async () => {
+      if (typeof constraintAnchorHandler.pin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.pin({ canvas_id: "canvas-1", item_id: "node-b", x: "0.0", y: "0.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('align', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' });
+      const program = constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' });
+      const program = constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' });
+      const program = constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' });
+      const program = constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' });
+      const program = constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.align !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.align({ canvas_id: 'test', item_ids: 'test', axis: 'test-axis' }), storage);
+        const result = await interpret(constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,39 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "align_x" -> ok', async () => {
+      if (typeof constraintAnchorHandler.align !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], axis: "x" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "align_y" -> ok', async () => {
+      if (typeof constraintAnchorHandler.align !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], axis: "y" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "too_few_items" -> error', async () => {
+      if (typeof constraintAnchorHandler.align !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a"], axis: "x" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_axis" -> error', async () => {
+      if (typeof constraintAnchorHandler.align !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.align({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], axis: "z" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('separate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 });
+      const program = constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 });
+      const program = constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 });
+      const program = constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 });
+      const program = constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 });
+      const program = constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.separate !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.separate({ canvas_id: 'test', item_a: 'test', item_b: 'test', gap: 1 }), storage);
+        const result = await interpret(constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "separate_items" -> ok', async () => {
+      if (typeof constraintAnchorHandler.separate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-a", item_b: "node-b", gap: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "large_gap" -> ok', async () => {
+      if (typeof constraintAnchorHandler.separate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.separate({ canvas_id: "canvas-1", item_a: "node-x", item_b: "node-y", gap: "200.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('setFlowDirection', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' });
+      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' });
+      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' });
+      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' });
+      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' });
+      const program = constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.setFlowDirection !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: 'test', item_ids: 'test', direction: 'test-direction' }), storage);
+        const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "top_to_bottom" -> ok', async () => {
+      if (typeof constraintAnchorHandler.setFlowDirection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b"], direction: "top-to-bottom" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "left_to_right" -> ok', async () => {
+      if (typeof constraintAnchorHandler.setFlowDirection !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.setFlowDirection({ canvas_id: "canvas-1", item_ids: ["node-a","node-b","node-c"], direction: "left-to-right" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('removeAnchor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.removeAnchor({ anchor: 'test' });
+      const program = constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.removeAnchor({ anchor: 'test' });
+      const program = constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.removeAnchor({ anchor: 'test' });
+      const program = constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.removeAnchor({ anchor: 'test' });
+      const program = constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.removeAnchor({ anchor: 'test' });
+      const program = constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.removeAnchor !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.removeAnchor({ anchor: 'test' }), storage);
+        const result = await interpret(constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "existing_anchor" -> ok', async () => {
+      if (typeof constraintAnchorHandler.removeAnchor !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.removeAnchor({ anchor: "anchor-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nonexistent" -> notfound', async () => {
+      if (typeof constraintAnchorHandler.removeAnchor !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.removeAnchor({ anchor: "anchor-999" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getAnchorsForCanvas', () => {
     it('builds a valid StorageProgram', () => {
-      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' });
+      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' });
+      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' });
+      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' });
+      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('ConstraintAnchor functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' });
+      const program = constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('ConstraintAnchor functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof constraintAnchorHandler.getAnchorsForCanvas !== 'function') return;
       try {
-        const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: 'test' }), storage);
+        const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +454,38 @@ describe('ConstraintAnchor functional handler', () => {
       }
     });
 
+    it('fixture "for_canvas" -> ok', async () => {
+      if (typeof constraintAnchorHandler.getAnchorsForCanvas !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_canvas" -> ok', async () => {
+      if (typeof constraintAnchorHandler.getAnchorsForCanvas !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(constraintAnchorHandler.getAnchorsForCanvas({ canvas_id: "canvas-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof constraintAnchorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = constraintAnchorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConstraintAnchor');
+    });
   });
 
   describe('invariant examples', () => {

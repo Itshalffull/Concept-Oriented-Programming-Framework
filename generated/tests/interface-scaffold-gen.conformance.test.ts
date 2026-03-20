@@ -26,7 +26,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('InterfaceScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(interfaceScaffoldGenHandler.generate({ name: 'test-name', targets: 'test', sdks: 'test' }), storage);
+        const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('InterfaceScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_generate" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: ["rest"], sdks: ["typescript"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof interfaceScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.generate({ name: "", targets: [], sdks: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('InterfaceScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' });
+      const program = interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('InterfaceScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof interfaceScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(interfaceScaffoldGenHandler.preview({ name: 'test-name', targets: 'test', sdks: 'test' }), storage);
+        const result = await interpret(interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('InterfaceScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_preview" -> error', async () => {
+      if (typeof interfaceScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.preview({ name: "", targets: [], sdks: [] }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('InterfaceScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof interfaceScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interfaceScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof interfaceScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = interfaceScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InterfaceScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

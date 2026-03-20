@@ -26,7 +26,7 @@ describe('Backlink functional handler', () => {
 
   describe('getBacklinks', () => {
     it('builds a valid StorageProgram', () => {
-      const program = backlinkHandler.getBacklinks({ entity: 'test' });
+      const program = backlinkHandler.getBacklinks({ entity: "doc-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Backlink functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = backlinkHandler.getBacklinks({ entity: 'test' });
+      const program = backlinkHandler.getBacklinks({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = backlinkHandler.getBacklinks({ entity: 'test' });
+      const program = backlinkHandler.getBacklinks({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = backlinkHandler.getBacklinks({ entity: 'test' });
+      const program = backlinkHandler.getBacklinks({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Backlink functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = backlinkHandler.getBacklinks({ entity: 'test' });
+      const program = backlinkHandler.getBacklinks({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Backlink functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof backlinkHandler.getBacklinks !== 'function') return;
       try {
-        const result = await interpret(backlinkHandler.getBacklinks({ entity: 'test' }), storage);
+        const result = await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Backlink functional handler', () => {
       }
     });
 
+    it('fixture "valid_backlinks" -> ok', async () => {
+      if (typeof backlinkHandler.getBacklinks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(backlinkHandler.getBacklinks({ entity: "doc-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_backlinks" -> ok', async () => {
+      if (typeof backlinkHandler.getBacklinks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(backlinkHandler.getBacklinks({ entity: "orphaned-doc" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getUnlinkedMentions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = backlinkHandler.getUnlinkedMentions({ entity: 'test' });
+      const program = backlinkHandler.getUnlinkedMentions({ entity: "doc-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Backlink functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = backlinkHandler.getUnlinkedMentions({ entity: 'test' });
+      const program = backlinkHandler.getUnlinkedMentions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = backlinkHandler.getUnlinkedMentions({ entity: 'test' });
+      const program = backlinkHandler.getUnlinkedMentions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = backlinkHandler.getUnlinkedMentions({ entity: 'test' });
+      const program = backlinkHandler.getUnlinkedMentions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Backlink functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = backlinkHandler.getUnlinkedMentions({ entity: 'test' });
+      const program = backlinkHandler.getUnlinkedMentions({ entity: "doc-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Backlink functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
       try {
-        const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: 'test' }), storage);
+        const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: "doc-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,20 @@ describe('Backlink functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_mentions" -> ok', async () => {
+      if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: "doc-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_mentions" -> ok', async () => {
+      if (typeof backlinkHandler.getUnlinkedMentions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(backlinkHandler.getUnlinkedMentions({ entity: "orphaned-doc" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,6 +224,31 @@ describe('Backlink functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof backlinkHandler.reindex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(backlinkHandler.reindex({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof backlinkHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = backlinkHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Backlink');
+    });
   });
 
   describe('invariant examples', () => {

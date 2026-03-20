@@ -19,7 +19,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.correlate !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.correlate({ flowId: 'test-flowId' }, storage);
+        const result = await runtimeFlowHandler.correlate({ flowId: "f-123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "correlate_flow" -> ok', async () => {
+      if (typeof runtimeFlowHandler.correlate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.correlate({ flowId: "f-123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "correlate_empty" -> error', async () => {
+      if (typeof runtimeFlowHandler.correlate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.correlate({ flowId: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.findByAction !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.findByAction({ action: 'test-action', since: 'test-since' }, storage);
+        const result = await runtimeFlowHandler.findByAction({ action: "User/create", since: "2026-01-01T00:00:00Z" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_create" -> ok', async () => {
+      if (typeof runtimeFlowHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findByAction({ action: "User/create", since: "2026-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof runtimeFlowHandler.findByAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findByAction({ action: "", since: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.findBySync !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.findBySync({ sync: 'test-sync', since: 'test-since' }, storage);
+        const result = await runtimeFlowHandler.findBySync({ sync: "onUserCreate", since: "2026-01-01T00:00:00Z" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_sync" -> ok', async () => {
+      if (typeof runtimeFlowHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findBySync({ sync: "onUserCreate", since: "2026-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_sync" -> error', async () => {
+      if (typeof runtimeFlowHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findBySync({ sync: "", since: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.findByVariant !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.findByVariant({ variant: 'test-variant', since: 'test-since' }, storage);
+        const result = await runtimeFlowHandler.findByVariant({ variant: "ok", since: "2026-01-01T00:00:00Z" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_ok" -> ok', async () => {
+      if (typeof runtimeFlowHandler.findByVariant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findByVariant({ variant: "ok", since: "2026-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_variant" -> error', async () => {
+      if (typeof runtimeFlowHandler.findByVariant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findByVariant({ variant: "", since: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.findFailures !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.findFailures({ since: 'test-since' }, storage);
+        const result = await runtimeFlowHandler.findFailures({ since: "2026-01-01T00:00:00Z" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_recent" -> ok', async () => {
+      if (typeof runtimeFlowHandler.findFailures !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findFailures({ since: "2026-01-01T00:00:00Z" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_all" -> ok', async () => {
+      if (typeof runtimeFlowHandler.findFailures !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.findFailures({ since: "" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -99,7 +169,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.compareToStatic !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.compareToStatic({ flow: 'test' }, storage);
+        const result = await runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compare_flow" -> ok', async () => {
+      if (typeof runtimeFlowHandler.compareToStatic !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.compareToStatic({ flow: "runtime-flow-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compare_missing" -> error', async () => {
+      if (typeof runtimeFlowHandler.compareToStatic !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.compareToStatic({ flow: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +199,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.sourceLocations({ flow: 'test' }, storage);
+        const result = await runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('RuntimeFlow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "locations_flow" -> ok', async () => {
+      if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.sourceLocations({ flow: "runtime-flow-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "locations_missing" -> error', async () => {
+      if (typeof runtimeFlowHandler.sourceLocations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.sourceLocations({ flow: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +229,7 @@ describe('RuntimeFlow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeFlowHandler.get !== 'function') return;
       try {
-        const result = await runtimeFlowHandler.get({ flow: 'test' }, storage);
+        const result = await runtimeFlowHandler.get({ flow: "runtime-flow-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -141,6 +239,37 @@ describe('RuntimeFlow imperative handler', () => {
       }
     });
 
+    it('fixture "get_flow" -> ok', async () => {
+      if (typeof runtimeFlowHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.get({ flow: "runtime-flow-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof runtimeFlowHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await runtimeFlowHandler.get({ flow: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof runtimeFlowHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = runtimeFlowHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RuntimeFlow');
+    });
   });
 
   describe('invariant examples', () => {

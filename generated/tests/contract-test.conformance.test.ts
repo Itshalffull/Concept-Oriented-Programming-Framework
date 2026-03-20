@@ -26,7 +26,7 @@ describe('ContractTest functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ContractTest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractTestHandler.generate !== 'function') return;
       try {
-        const result = await interpret(contractTestHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' }), storage);
+        const result = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ContractTest functional handler', () => {
       }
     });
 
+    it('fixture "generate_password" -> ok', async () => {
+      if (typeof contractTestHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_missing_concept" -> specError', async () => {
+      if (typeof contractTestHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.generate({ concept: "", specPath: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('specError');
+    });
+
+    it('fixture "generate_missing_path" -> specError', async () => {
+      if (typeof contractTestHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.generate({ concept: "password", specPath: "" }), storage);
+      expect(result.variant).toBe('specError');
+    });
+
   });
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' });
+      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' });
+      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' });
+      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' });
+      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' });
+      const program = contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ContractTest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractTestHandler.verify !== 'function') return;
       try {
-        const result = await interpret(contractTestHandler.verify({ contract: 'test', producerArtifact: 'test-producerArtifact', producerLanguage: 'test-producerLanguage', consumerArtifact: 'test-consumerArtifact', consumerLanguage: 'test-consumerLanguage' }), storage);
+        const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('ContractTest functional handler', () => {
       }
     });
 
+    it('fixture "verify_rust_ts" -> ok', async () => {
+      if (typeof contractTestHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_no_producer" -> producerUnavailable', async () => {
+      if (typeof contractTestHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: "", producerLanguage: "rust", consumerArtifact: ".clef-artifacts/ts/password", consumerLanguage: "typescript" }), storage);
+      expect(result.variant).toBe('producerUnavailable');
+    });
+
+    it('fixture "verify_no_consumer" -> consumerUnavailable', async () => {
+      if (typeof contractTestHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.verify({ contract: "ctr-pwd-001", producerArtifact: ".clef-artifacts/rust/password", producerLanguage: "rust", consumerArtifact: "", consumerLanguage: "typescript" }), storage);
+      expect(result.variant).toBe('consumerUnavailable');
+    });
+
   });
 
   describe('matrix', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractTestHandler.matrix({ concepts: 'test' });
+      const program = contractTestHandler.matrix({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractTestHandler.matrix({ concepts: 'test' });
+      const program = contractTestHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractTestHandler.matrix({ concepts: 'test' });
+      const program = contractTestHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractTestHandler.matrix({ concepts: 'test' });
+      const program = contractTestHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractTestHandler.matrix({ concepts: 'test' });
+      const program = contractTestHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ContractTest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractTestHandler.matrix !== 'function') return;
       try {
-        const result = await interpret(contractTestHandler.matrix({ concepts: 'test' }), storage);
+        const result = await interpret(contractTestHandler.matrix({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('ContractTest functional handler', () => {
       }
     });
 
+    it('fixture "matrix_all" -> ok', async () => {
+      if (typeof contractTestHandler.matrix !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.matrix({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "matrix_filtered" -> ok', async () => {
+      if (typeof contractTestHandler.matrix !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.matrix({ concepts: ["password","auth"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('canDeploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' });
+      const program = contractTestHandler.canDeploy({ concept: "password", language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' });
+      const program = contractTestHandler.canDeploy({ concept: "password", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' });
+      const program = contractTestHandler.canDeploy({ concept: "password", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' });
+      const program = contractTestHandler.canDeploy({ concept: "password", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ContractTest functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' });
+      const program = contractTestHandler.canDeploy({ concept: "password", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ContractTest functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractTestHandler.canDeploy !== 'function') return;
       try {
-        const result = await interpret(contractTestHandler.canDeploy({ concept: 'test-concept', language: 'test-language' }), storage);
+        const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('ContractTest functional handler', () => {
       }
     });
 
+    it('fixture "can_deploy_ts" -> ok', async () => {
+      if (typeof contractTestHandler.canDeploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "can_deploy_rust" -> ok', async () => {
+      if (typeof contractTestHandler.canDeploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractTestHandler.canDeploy({ concept: "password", language: "rust" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contractTestHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contractTestHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContractTest');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Attribution functional handler', () => {
 
   describe('attribute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' });
+      const program = attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Attribution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' });
+      const program = attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' });
+      const program = attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' });
+      const program = attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Attribution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' });
+      const program = attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Attribution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attributionHandler.attribute !== 'function') return;
       try {
-        const result = await interpret(attributionHandler.attribute({ contentRef: 'test-contentRef', region: 'test', agent: 'test-agent', changeRef: 'test-changeRef' }), storage);
+        const result = await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Attribution functional handler', () => {
       }
     });
 
+    it('fixture "attribute_code_region" -> ok', async () => {
+      if (typeof attributionHandler.attribute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.attribute({ contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "attribute_empty_ref" -> error', async () => {
+      if (typeof attributionHandler.attribute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.attribute({ contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('blame', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attributionHandler.blame({ contentRef: 'test-contentRef' });
+      const program = attributionHandler.blame({ contentRef: "doc-main-ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Attribution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attributionHandler.blame({ contentRef: 'test-contentRef' });
+      const program = attributionHandler.blame({ contentRef: "doc-main-ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attributionHandler.blame({ contentRef: 'test-contentRef' });
+      const program = attributionHandler.blame({ contentRef: "doc-main-ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attributionHandler.blame({ contentRef: 'test-contentRef' });
+      const program = attributionHandler.blame({ contentRef: "doc-main-ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Attribution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attributionHandler.blame({ contentRef: 'test-contentRef' });
+      const program = attributionHandler.blame({ contentRef: "doc-main-ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Attribution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attributionHandler.blame !== 'function') return;
       try {
-        const result = await interpret(attributionHandler.blame({ contentRef: 'test-contentRef' }), storage);
+        const result = await interpret(attributionHandler.blame({ contentRef: "doc-main-ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Attribution functional handler', () => {
       }
     });
 
+    it('fixture "blame_existing_doc" -> ok', async () => {
+      if (typeof attributionHandler.blame !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.blame({ contentRef: "doc-main-ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "blame_unknown_doc" -> error', async () => {
+      if (typeof attributionHandler.blame !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.blame({ contentRef: "nonexistent-doc" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('history', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' });
+      const program = attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Attribution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' });
+      const program = attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' });
+      const program = attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' });
+      const program = attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Attribution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' });
+      const program = attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Attribution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attributionHandler.history !== 'function') return;
       try {
-        const result = await interpret(attributionHandler.history({ contentRef: 'test-contentRef', region: 'test' }), storage);
+        const result = await interpret(attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Attribution functional handler', () => {
       }
     });
 
+    it('fixture "history_known_region" -> ok', async () => {
+      if (typeof attributionHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:10-25" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "history_unknown_region" -> error', async () => {
+      if (typeof attributionHandler.history !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.history({ contentRef: "doc-main-ts", region: "lines:999-1000" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setOwnership', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' });
+      const program = attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Attribution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' });
+      const program = attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' });
+      const program = attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' });
+      const program = attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Attribution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' });
+      const program = attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Attribution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attributionHandler.setOwnership !== 'function') return;
       try {
-        const result = await interpret(attributionHandler.setOwnership({ pattern: 'test-pattern', owners: 'test' }), storage);
+        const result = await interpret(attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Attribution functional handler', () => {
       }
     });
 
+    it('fixture "set_ownership_glob" -> ok', async () => {
+      if (typeof attributionHandler.setOwnership !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.setOwnership({ pattern: "src/auth/**", owners: ["alice@example.com","bob@example.com"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_ownership_empty_owners" -> error', async () => {
+      if (typeof attributionHandler.setOwnership !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.setOwnership({ pattern: "src/**", owners: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('queryOwners', () => {
     it('builds a valid StorageProgram', () => {
-      const program = attributionHandler.queryOwners({ path: 'test-path' });
+      const program = attributionHandler.queryOwners({ path: "src/auth/login.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Attribution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = attributionHandler.queryOwners({ path: 'test-path' });
+      const program = attributionHandler.queryOwners({ path: "src/auth/login.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = attributionHandler.queryOwners({ path: 'test-path' });
+      const program = attributionHandler.queryOwners({ path: "src/auth/login.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = attributionHandler.queryOwners({ path: 'test-path' });
+      const program = attributionHandler.queryOwners({ path: "src/auth/login.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Attribution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = attributionHandler.queryOwners({ path: 'test-path' });
+      const program = attributionHandler.queryOwners({ path: "src/auth/login.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Attribution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof attributionHandler.queryOwners !== 'function') return;
       try {
-        const result = await interpret(attributionHandler.queryOwners({ path: 'test-path' }), storage);
+        const result = await interpret(attributionHandler.queryOwners({ path: "src/auth/login.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Attribution functional handler', () => {
       }
     });
 
+    it('fixture "query_matching_path" -> ok', async () => {
+      if (typeof attributionHandler.queryOwners !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.queryOwners({ path: "src/auth/login.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_unmatched_path" -> error', async () => {
+      if (typeof attributionHandler.queryOwners !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(attributionHandler.queryOwners({ path: "unowned/random/file.txt" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof attributionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = attributionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Attribution');
+    });
   });
 
   describe('invariant examples', () => {

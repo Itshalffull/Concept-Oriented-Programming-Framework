@@ -26,7 +26,7 @@ describe('SuiteManager functional handler', () => {
 
   describe('init', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManagerHandler.init({ name: 'test-name' });
+      const program = suiteManagerHandler.init({ name: "payment-suite" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManagerHandler.init({ name: 'test-name' });
+      const program = suiteManagerHandler.init({ name: "payment-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManagerHandler.init({ name: 'test-name' });
+      const program = suiteManagerHandler.init({ name: "payment-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManagerHandler.init({ name: 'test-name' });
+      const program = suiteManagerHandler.init({ name: "payment-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManagerHandler.init({ name: 'test-name' });
+      const program = suiteManagerHandler.init({ name: "payment-suite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SuiteManager functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManagerHandler.init !== 'function') return;
       try {
-        const result = await interpret(suiteManagerHandler.init({ name: 'test-name' }), storage);
+        const result = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SuiteManager functional handler', () => {
       }
     });
 
+    it('fixture "valid_init" -> ok', async () => {
+      if (typeof suiteManagerHandler.init !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.init({ name: "payment-suite" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> alreadyExists', async () => {
+      if (typeof suiteManagerHandler.init !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.init({ name: "" }), storage);
+      expect(result.variant).toBe('alreadyExists');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManagerHandler.validate({ path: 'test-path' });
+      const program = suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManagerHandler.validate({ path: 'test-path' });
+      const program = suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManagerHandler.validate({ path: 'test-path' });
+      const program = suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManagerHandler.validate({ path: 'test-path' });
+      const program = suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManagerHandler.validate({ path: 'test-path' });
+      const program = suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SuiteManager functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManagerHandler.validate !== 'function') return;
       try {
-        const result = await interpret(suiteManagerHandler.validate({ path: 'test-path' }), storage);
+        const result = await interpret(suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SuiteManager functional handler', () => {
       }
     });
 
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof suiteManagerHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.validate({ path: "./repertoire/payment-suite/" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_path" -> error', async () => {
+      if (typeof suiteManagerHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.validate({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManagerHandler.test({ path: 'test-path' });
+      const program = suiteManagerHandler.test({ path: "./repertoire/payment-suite/" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManagerHandler.test({ path: 'test-path' });
+      const program = suiteManagerHandler.test({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManagerHandler.test({ path: 'test-path' });
+      const program = suiteManagerHandler.test({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManagerHandler.test({ path: 'test-path' });
+      const program = suiteManagerHandler.test({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManagerHandler.test({ path: 'test-path' });
+      const program = suiteManagerHandler.test({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SuiteManager functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManagerHandler.test !== 'function') return;
       try {
-        const result = await interpret(suiteManagerHandler.test({ path: 'test-path' }), storage);
+        const result = await interpret(suiteManagerHandler.test({ path: "./repertoire/payment-suite/" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,20 @@ describe('SuiteManager functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_test" -> ok', async () => {
+      if (typeof suiteManagerHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.test({ path: "./repertoire/payment-suite/" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_test_path" -> error', async () => {
+      if (typeof suiteManagerHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.test({ path: "" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,11 +296,18 @@ describe('SuiteManager functional handler', () => {
       }
     });
 
+    it('fixture "valid_list" -> ok', async () => {
+      if (typeof suiteManagerHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('checkOverrides', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManagerHandler.checkOverrides({ path: 'test-path' });
+      const program = suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +315,21 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManagerHandler.checkOverrides({ path: 'test-path' });
+      const program = suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManagerHandler.checkOverrides({ path: 'test-path' });
+      const program = suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManagerHandler.checkOverrides({ path: 'test-path' });
+      const program = suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +342,7 @@ describe('SuiteManager functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManagerHandler.checkOverrides({ path: 'test-path' });
+      const program = suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +351,7 @@ describe('SuiteManager functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManagerHandler.checkOverrides !== 'function') return;
       try {
-        const result = await interpret(suiteManagerHandler.checkOverrides({ path: 'test-path' }), storage);
+        const result = await interpret(suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +361,38 @@ describe('SuiteManager functional handler', () => {
       }
     });
 
+    it('fixture "valid_overrides" -> ok', async () => {
+      if (typeof suiteManagerHandler.checkOverrides !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.checkOverrides({ path: "./repertoire/payment-suite/" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nonexistent_suite" -> invalidOverride', async () => {
+      if (typeof suiteManagerHandler.checkOverrides !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManagerHandler.checkOverrides({ path: "./repertoire/nonexistent-suite/" }), storage);
+      expect(result.variant).toBe('invalidOverride');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof suiteManagerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = suiteManagerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SuiteManager');
+    });
   });
 
   describe('invariant examples', () => {

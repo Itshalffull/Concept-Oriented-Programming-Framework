@@ -26,7 +26,7 @@ describe('Token functional handler', () => {
 
   describe('replace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tokenHandler.replace({ text: 'test-text', context: 'test-context' });
+      const program = tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Token functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tokenHandler.replace({ text: 'test-text', context: 'test-context' });
+      const program = tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tokenHandler.replace({ text: 'test-text', context: 'test-context' });
+      const program = tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tokenHandler.replace({ text: 'test-text', context: 'test-context' });
+      const program = tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Token functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tokenHandler.replace({ text: 'test-text', context: 'test-context' });
+      const program = tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Token functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tokenHandler.replace !== 'function') return;
       try {
-        const result = await interpret(tokenHandler.replace({ text: 'test-text', context: 'test-context' }), storage);
+        const result = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Token functional handler', () => {
       }
     });
 
+    it('fixture "replace_builtin" -> ok', async () => {
+      if (typeof tokenHandler.replace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.replace({ text: "Contact [user:mail] at [site:url]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "replace_no_tokens" -> ok', async () => {
+      if (typeof tokenHandler.replace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.replace({ text: "Hello World" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getAvailableTokens', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tokenHandler.getAvailableTokens({ context: 'test-context' });
+      const program = tokenHandler.getAvailableTokens({ context: "user" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Token functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tokenHandler.getAvailableTokens({ context: 'test-context' });
+      const program = tokenHandler.getAvailableTokens({ context: "user" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tokenHandler.getAvailableTokens({ context: 'test-context' });
+      const program = tokenHandler.getAvailableTokens({ context: "user" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tokenHandler.getAvailableTokens({ context: 'test-context' });
+      const program = tokenHandler.getAvailableTokens({ context: "user" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Token functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tokenHandler.getAvailableTokens({ context: 'test-context' });
+      const program = tokenHandler.getAvailableTokens({ context: "user" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Token functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tokenHandler.getAvailableTokens !== 'function') return;
       try {
-        const result = await interpret(tokenHandler.getAvailableTokens({ context: 'test-context' }), storage);
+        const result = await interpret(tokenHandler.getAvailableTokens({ context: "user" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Token functional handler', () => {
       }
     });
 
+    it('fixture "get_tokens_user" -> ok', async () => {
+      if (typeof tokenHandler.getAvailableTokens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.getAvailableTokens({ context: "user" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_tokens_empty" -> error', async () => {
+      if (typeof tokenHandler.getAvailableTokens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.getAvailableTokens({ context: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('scan', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tokenHandler.scan({ text: 'test-text' });
+      const program = tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Token functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tokenHandler.scan({ text: 'test-text' });
+      const program = tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tokenHandler.scan({ text: 'test-text' });
+      const program = tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tokenHandler.scan({ text: 'test-text' });
+      const program = tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Token functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tokenHandler.scan({ text: 'test-text' });
+      const program = tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Token functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tokenHandler.scan !== 'function') return;
       try {
-        const result = await interpret(tokenHandler.scan({ text: 'test-text' }), storage);
+        const result = await interpret(tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Token functional handler', () => {
       }
     });
 
+    it('fixture "scan_text" -> ok', async () => {
+      if (typeof tokenHandler.scan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.scan({ text: "Hello [user:name], visit [site:url]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "scan_no_tokens" -> ok', async () => {
+      if (typeof tokenHandler.scan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.scan({ text: "no tokens here" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('registerProvider', () => {
     it('builds a valid StorageProgram', () => {
-      const program = tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' });
+      const program = tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Token functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' });
+      const program = tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' });
+      const program = tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' });
+      const program = tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Token functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' });
+      const program = tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Token functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof tokenHandler.registerProvider !== 'function') return;
       try {
-        const result = await interpret(tokenHandler.registerProvider({ token: 'test', provider: 'test-provider' }), storage);
+        const result = await interpret(tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Token functional handler', () => {
       }
     });
 
+    it('fixture "register_mail" -> ok', async () => {
+      if (typeof tokenHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.registerProvider({ token: "user:mail", provider: "userMailProvider" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty" -> error', async () => {
+      if (typeof tokenHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(tokenHandler.registerProvider({ token: "", provider: "x" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof tokenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = tokenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Token');
+    });
   });
 
   describe('invariant examples', () => {

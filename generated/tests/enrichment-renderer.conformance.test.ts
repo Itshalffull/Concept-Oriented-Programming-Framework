@@ -26,7 +26,7 @@ describe('EnrichmentRenderer functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' });
+      const program = enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' });
+      const program = enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' });
+      const program = enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' });
+      const program = enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' });
+      const program = enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EnrichmentRenderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enrichmentRendererHandler.register !== 'function') return;
       try {
-        const result = await interpret(enrichmentRendererHandler.register({ key: 'test-key', format: 'test-format', order: 1, pattern: 'test-pattern', template: 'test-template' }), storage);
+        const result = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('EnrichmentRenderer functional handler', () => {
       }
     });
 
+    it('fixture "checklist_handler" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_handler" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_pattern" -> unknownPattern', async () => {
+      if (typeof enrichmentRendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.register({ key: "notes", format: "skill-md", order: "50", pattern: "nonexistent-pattern", template: "{}" }), storage);
+      expect(result.variant).toBe('unknownPattern');
+    });
+
+    it('fixture "bad_template_json" -> invalidTemplate', async () => {
+      if (typeof enrichmentRendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.register({ key: "notes", format: "skill-md", order: "50", pattern: "list", template: "not-valid-json{{" }), storage);
+      expect(result.variant).toBe('invalidTemplate');
+    });
+
   });
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' });
+      const program = enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' });
+      const program = enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' });
+      const program = enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' });
+      const program = enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' });
+      const program = enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('EnrichmentRenderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enrichmentRendererHandler.render !== 'function') return;
       try {
-        const result = await interpret(enrichmentRendererHandler.render({ content: 'test-content', format: 'test-format' }), storage);
+        const result = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,32 @@ describe('EnrichmentRenderer functional handler', () => {
       }
     });
 
+    it('fixture "valid_render" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json_content" -> invalidContent', async () => {
+      if (typeof enrichmentRendererHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.render({ content: "not-json{{", format: "skill-md" }), storage);
+      expect(result.variant).toBe('invalidContent');
+    });
+
+    it('fixture "no_handlers_for_format" -> unknownFormat', async () => {
+      if (typeof enrichmentRendererHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.render({ content: "{\"data\":\"value\"}", format: "unknown-format" }), storage);
+      expect(result.variant).toBe('unknownFormat');
+    });
+
   });
 
   describe('listHandlers', () => {
     it('builds a valid StorageProgram', () => {
-      const program = enrichmentRendererHandler.listHandlers({ format: 'test-format' });
+      const program = enrichmentRendererHandler.listHandlers({ format: "skill-md" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = enrichmentRendererHandler.listHandlers({ format: 'test-format' });
+      const program = enrichmentRendererHandler.listHandlers({ format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = enrichmentRendererHandler.listHandlers({ format: 'test-format' });
+      const program = enrichmentRendererHandler.listHandlers({ format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = enrichmentRendererHandler.listHandlers({ format: 'test-format' });
+      const program = enrichmentRendererHandler.listHandlers({ format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('EnrichmentRenderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = enrichmentRendererHandler.listHandlers({ format: 'test-format' });
+      const program = enrichmentRendererHandler.listHandlers({ format: "skill-md" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('EnrichmentRenderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       try {
-        const result = await interpret(enrichmentRendererHandler.listHandlers({ format: 'test-format' }), storage);
+        const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "skill-md" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +243,20 @@ describe('EnrichmentRenderer functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_skill_md" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "skill-md" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty_format" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "nonexistent-format" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -254,6 +317,31 @@ describe('EnrichmentRenderer functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof enrichmentRendererHandler.listPatterns !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(enrichmentRendererHandler.listPatterns({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof enrichmentRendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = enrichmentRendererHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EnrichmentRenderer');
+    });
   });
 
   describe('invariant examples', () => {

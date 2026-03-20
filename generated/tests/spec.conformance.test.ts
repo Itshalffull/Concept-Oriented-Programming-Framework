@@ -26,7 +26,7 @@ describe('Spec functional handler', () => {
 
   describe('emit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' });
+      const program = specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Spec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' });
+      const program = specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' });
+      const program = specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' });
+      const program = specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Spec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' });
+      const program = specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Spec functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof specHandler.emit !== 'function') return;
       try {
-        const result = await interpret(specHandler.emit({ projections: 'test', format: 'test-format', config: 'test-config' }), storage);
+        const result = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Spec functional handler', () => {
       }
     });
 
+    it('fixture "openapi_spec" -> ok', async () => {
+      if (typeof specHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "asyncapi_spec" -> ok', async () => {
+      if (typeof specHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(specHandler.emit({ projections: ["notification"], format: "asyncapi", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_format" -> error', async () => {
+      if (typeof specHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(specHandler.emit({ projections: ["user"], format: "unknown-fmt", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = specHandler.validate({ document: 'test' });
+      const program = specHandler.validate({ document: "spec-openapi-commerce-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Spec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = specHandler.validate({ document: 'test' });
+      const program = specHandler.validate({ document: "spec-openapi-commerce-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = specHandler.validate({ document: 'test' });
+      const program = specHandler.validate({ document: "spec-openapi-commerce-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = specHandler.validate({ document: 'test' });
+      const program = specHandler.validate({ document: "spec-openapi-commerce-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Spec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = specHandler.validate({ document: 'test' });
+      const program = specHandler.validate({ document: "spec-openapi-commerce-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Spec functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof specHandler.validate !== 'function') return;
       try {
-        const result = await interpret(specHandler.validate({ document: 'test' }), storage);
+        const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('Spec functional handler', () => {
       }
     });
 
+    it('fixture "valid_document" -> ok', async () => {
+      if (typeof specHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_document" -> error', async () => {
+      if (typeof specHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(specHandler.validate({ document: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof specHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = specHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Spec');
+    });
   });
 
   describe('invariant examples', () => {

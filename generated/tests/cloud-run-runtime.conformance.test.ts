@@ -26,7 +26,7 @@ describe('CloudRunRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 });
+      const program = cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 });
+      const program = cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 });
+      const program = cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 });
+      const program = cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 });
+      const program = cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(cloudRunRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', cpu: 1, memory: 1 }), storage);
+        const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('CloudRunRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_standard" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_high_mem" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "", projectId: "proj", region: "us-central1", cpu: "1", memory: "256" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(cloudRunRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' }), storage);
+        const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('CloudRunRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_gcr" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_service" -> error', async () => {
+      if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "", imageUri: "gcr.io/proj/app:latest" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 }), storage);
+        const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('CloudRunRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_split" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_no_service" -> error', async () => {
+      if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "", weight: "100" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' });
+      const program = cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(cloudRunRuntimeHandler.rollback({ service: 'test', targetRevision: 'test-targetRevision' }), storage);
+        const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('CloudRunRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_to_rev" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_revision" -> error', async () => {
+      if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cloudRunRuntimeHandler.destroy({ service: 'test' });
+      const program = cloudRunRuntimeHandler.destroy({ service: "svc-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cloudRunRuntimeHandler.destroy({ service: 'test' });
+      const program = cloudRunRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cloudRunRuntimeHandler.destroy({ service: 'test' });
+      const program = cloudRunRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cloudRunRuntimeHandler.destroy({ service: 'test' });
+      const program = cloudRunRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('CloudRunRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cloudRunRuntimeHandler.destroy({ service: 'test' });
+      const program = cloudRunRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('CloudRunRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(cloudRunRuntimeHandler.destroy({ service: 'test' }), storage);
+        const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('CloudRunRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof cloudRunRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = cloudRunRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CloudRunRuntime');
+    });
   });
 
   describe('invariant examples', () => {

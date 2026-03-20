@@ -26,7 +26,7 @@ describe('PredictionMarket functional handler', () => {
 
   describe('createMarket', () => {
     it('builds a valid StorageProgram', () => {
-      const program = predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' });
+      const program = predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' });
+      const program = predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' });
+      const program = predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' });
+      const program = predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' });
+      const program = predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PredictionMarket functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       try {
-        const result = await interpret(predictionMarketHandler.createMarket({ question: 'test-question', outcomes: 'test', deadline: 'test' }), storage);
+        const result = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('PredictionMarket functional handler', () => {
       }
     });
 
+    it('fixture "valid_market" -> ok', async () => {
+      if (typeof predictionMarketHandler.createMarket !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "multi_outcome" -> ok', async () => {
+      if (typeof predictionMarketHandler.createMarket !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.createMarket({ question: "Which party wins?", outcomes: ["Alpha","Beta","Gamma"], deadline: "2026-06-01T00:00:00Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_question" -> error', async () => {
+      if (typeof predictionMarketHandler.createMarket !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.createMarket({ question: "", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('trade', () => {
     it('builds a valid StorageProgram', () => {
-      const program = predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 });
+      const program = predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 });
+      const program = predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 });
+      const program = predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 });
+      const program = predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 });
+      const program = predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('PredictionMarket functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof predictionMarketHandler.trade !== 'function') return;
       try {
-        const result = await interpret(predictionMarketHandler.trade({ market: 'test', trader: 'test-trader', outcome: 'test-outcome', amount: 1 }), storage);
+        const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('PredictionMarket functional handler', () => {
       }
     });
 
+    it('fixture "buy_shares" -> ok', async () => {
+      if (typeof predictionMarketHandler.trade !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_market" -> error', async () => {
+      if (typeof predictionMarketHandler.trade !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.trade({ market: "market-nonexistent", trader: "bob", outcome: "No", amount: "10.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' });
+      const program = predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' });
+      const program = predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' });
+      const program = predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' });
+      const program = predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' });
+      const program = predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('PredictionMarket functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof predictionMarketHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(predictionMarketHandler.resolve({ market: 'test', outcome: 'test-outcome' }), storage);
+        const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('PredictionMarket functional handler', () => {
       }
     });
 
+    it('fixture "resolve_market" -> ok', async () => {
+      if (typeof predictionMarketHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof predictionMarketHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.resolve({ market: "market-nonexistent", outcome: "No" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('claimPayout', () => {
     it('builds a valid StorageProgram', () => {
-      const program = predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' });
+      const program = predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' });
+      const program = predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' });
+      const program = predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' });
+      const program = predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('PredictionMarket functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' });
+      const program = predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('PredictionMarket functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof predictionMarketHandler.claimPayout !== 'function') return;
       try {
-        const result = await interpret(predictionMarketHandler.claimPayout({ market: 'test', trader: 'test-trader' }), storage);
+        const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('PredictionMarket functional handler', () => {
       }
     });
 
+    it('fixture "claim_valid" -> ok', async () => {
+      if (typeof predictionMarketHandler.claimPayout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "claim_no_winnings" -> error', async () => {
+      if (typeof predictionMarketHandler.claimPayout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "bob" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof predictionMarketHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = predictionMarketHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PredictionMarket');
+    });
   });
 
   describe('invariant examples', () => {

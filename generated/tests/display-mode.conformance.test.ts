@@ -19,7 +19,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.create !== 'function') return;
       try {
-        const result = await displayModeHandler.create({ schema: 'test-schema', mode_id: 'test-mode_id', name: 'test-name' }, storage);
+        const result = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "create_article_full" -> ok', async () => {
+      if (typeof displayModeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.create({ schema: "Article", mode_id: "full", name: "Full Page" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_schema" -> error', async () => {
+      if (typeof displayModeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.create({ schema: "", mode_id: "full", name: "Full Page" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.resolve !== 'function') return;
       try {
-        const result = await displayModeHandler.resolve({ schema: 'test-schema', mode_id: 'test-mode_id' }, storage);
+        const result = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_article" -> ok', async () => {
+      if (typeof displayModeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.resolve({ schema: "Article", mode_id: "full" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof displayModeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.resolve({ schema: "Article", mode_id: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.set_layout !== 'function') return;
       try {
-        const result = await displayModeHandler.set_layout({ mode: 'test', layout: 'test-layout' }, storage);
+        const result = await displayModeHandler.set_layout({ mode: "Article:full", layout: "triple-zone-default" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "set_layout_triple" -> ok', async () => {
+      if (typeof displayModeHandler.set_layout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_layout({ mode: "Article:full", layout: "triple-zone-default" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_layout_missing_mode" -> error', async () => {
+      if (typeof displayModeHandler.set_layout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_layout({ mode: "Missing:mode", layout: "two-column" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.clear_layout !== 'function') return;
       try {
-        const result = await displayModeHandler.clear_layout({ mode: 'test' }, storage);
+        const result = await displayModeHandler.clear_layout({ mode: "Article:full" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "clear_existing_layout" -> ok', async () => {
+      if (typeof displayModeHandler.clear_layout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.clear_layout({ mode: "Article:full" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_layout_missing" -> error', async () => {
+      if (typeof displayModeHandler.clear_layout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.clear_layout({ mode: "Missing:mode" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.set_component_mapping !== 'function') return;
       try {
-        const result = await displayModeHandler.set_component_mapping({ mode: 'test', mapping: 'test-mapping' }, storage);
+        const result = await displayModeHandler.set_component_mapping({ mode: "Article:full", mapping: "article-hero-card" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "set_mapping_hero" -> ok', async () => {
+      if (typeof displayModeHandler.set_component_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_component_mapping({ mode: "Article:full", mapping: "article-hero-card" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_mapping_missing" -> error', async () => {
+      if (typeof displayModeHandler.set_component_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_component_mapping({ mode: "Missing:mode", mapping: "widget" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +169,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.clear_component_mapping !== 'function') return;
       try {
-        const result = await displayModeHandler.clear_component_mapping({ mode: 'test' }, storage);
+        const result = await displayModeHandler.clear_component_mapping({ mode: "Article:full" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "clear_comp_mapping" -> ok', async () => {
+      if (typeof displayModeHandler.clear_component_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.clear_component_mapping({ mode: "Article:full" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_comp_missing" -> error', async () => {
+      if (typeof displayModeHandler.clear_component_mapping !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.clear_component_mapping({ mode: "Missing:mode" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +199,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.set_flat_fields !== 'function') return;
       try {
-        const result = await displayModeHandler.set_flat_fields({ mode: 'test', placements: 'test' }, storage);
+        const result = await displayModeHandler.set_flat_fields({ mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "set_placements" -> ok', async () => {
+      if (typeof displayModeHandler.set_flat_fields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_flat_fields({ mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_placements_missing" -> error', async () => {
+      if (typeof displayModeHandler.set_flat_fields !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.set_flat_fields({ mode: "Missing:mode", placements: "[]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +229,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.get !== 'function') return;
       try {
-        const result = await displayModeHandler.get({ mode: 'test' }, storage);
+        const result = await displayModeHandler.get({ mode: "Article:full" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -139,6 +237,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_existing_mode" -> ok', async () => {
+      if (typeof displayModeHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.get({ mode: "Article:full" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_mode" -> error', async () => {
+      if (typeof displayModeHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.get({ mode: "Missing:mode" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -147,7 +259,7 @@ describe('DisplayMode imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.delete !== 'function') return;
       try {
-        const result = await displayModeHandler.delete({ mode: 'test' }, storage);
+        const result = await displayModeHandler.delete({ mode: "Article:full" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -157,13 +269,27 @@ describe('DisplayMode imperative handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof displayModeHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.delete({ mode: "Article:full" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> error', async () => {
+      if (typeof displayModeHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.delete({ mode: "Missing:mode" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('list_for_schema', () => {
     it('executes without crashing', async () => {
       if (typeof displayModeHandler.list_for_schema !== 'function') return;
       try {
-        const result = await displayModeHandler.list_for_schema({ schema: 'test-schema' }, storage);
+        const result = await displayModeHandler.list_for_schema({ schema: "Article" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -171,6 +297,20 @@ describe('DisplayMode imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "list_article_modes" -> ok', async () => {
+      if (typeof displayModeHandler.list_for_schema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.list_for_schema({ schema: "Article" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty_schema" -> error', async () => {
+      if (typeof displayModeHandler.list_for_schema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.list_for_schema({ schema: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -189,6 +329,30 @@ describe('DisplayMode imperative handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof displayModeHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await displayModeHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof displayModeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = displayModeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DisplayMode');
+    });
   });
 
   describe('invariant examples', () => {

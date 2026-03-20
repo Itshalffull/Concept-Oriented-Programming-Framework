@@ -26,7 +26,7 @@ describe('SchemaGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaGenHandler.generate({ spec: 'test', ast: 'test' });
+      const program = schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SchemaGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaGenHandler.generate({ spec: 'test', ast: 'test' });
+      const program = schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaGenHandler.generate({ spec: 'test', ast: 'test' });
+      const program = schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaGenHandler.generate({ spec: 'test', ast: 'test' });
+      const program = schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SchemaGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaGenHandler.generate({ spec: 'test', ast: 'test' });
+      const program = schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SchemaGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(schemaGenHandler.generate({ spec: 'test', ast: 'test' }), storage);
+        const result = await interpret(schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -78,6 +78,20 @@ describe('SchemaGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_ast" -> ok', async () => {
+      if (typeof schemaGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaGenHandler.generate({ spec: "s1", ast: {"name":"Invoice","typeParams":["T"],"purpose":"Manage invoices.","state":[],"actions":[{"name":"create","params":[],"variants":[{"name":"ok","params":[],"description":"Created."}]}],"invariants":[],"capabilities":[]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof schemaGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaGenHandler.generate({ spec: "s2", ast: {"name":""} }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -138,6 +152,31 @@ describe('SchemaGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof schemaGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof schemaGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = schemaGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SchemaGen');
+    });
   });
 
   describe('invariant examples', () => {

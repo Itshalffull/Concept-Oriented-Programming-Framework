@@ -26,7 +26,7 @@ describe('ProjectInit functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' });
+      const program = projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' });
+      const program = projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' });
+      const program = projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' });
+      const program = projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' });
+      const program = projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.create !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.create({ project_name: 'test-project_name', project_path: 'test-project_path', module_list: 'test', profile: 'test-profile', derived_concepts: 'test' }), storage);
+        const result = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof projectInitHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.create({ project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_derived" -> ok', async () => {
+      if (typeof projectInitHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.create({ project_name: "blog-app", project_path: "/tmp/blog", module_list: "[\"User\",\"Post\"]", profile: "{\"backend_languages\":[\"typescript\"]}", derived_concepts: "[{\"name\":\"BlogPost\",\"composes\":[\"User\",\"Post\"]}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof projectInitHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.create({ project_name: "", project_path: "/tmp/empty", module_list: "[\"User\"]", profile: "{}", derived_concepts: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "empty_modules" -> error', async () => {
+      if (typeof projectInitHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.create({ project_name: "no-mods", project_path: "/tmp/no-mods", module_list: "[]", profile: "{}", derived_concepts: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('writeManifest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.writeManifest({ init: 'test' });
+      const program = projectInitHandler.writeManifest({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.writeManifest({ init: 'test' });
+      const program = projectInitHandler.writeManifest({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.writeManifest({ init: 'test' });
+      const program = projectInitHandler.writeManifest({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.writeManifest({ init: 'test' });
+      const program = projectInitHandler.writeManifest({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.writeManifest({ init: 'test' });
+      const program = projectInitHandler.writeManifest({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.writeManifest !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.writeManifest({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.writeManifest({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_write_manifest" -> ok', async () => {
+      if (typeof projectInitHandler.writeManifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeManifest({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_manifest_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.writeManifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeManifest({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('writeInterfaceManifests', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.writeInterfaceManifests({ init: 'test' });
+      const program = projectInitHandler.writeInterfaceManifests({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.writeInterfaceManifests({ init: 'test' });
+      const program = projectInitHandler.writeInterfaceManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.writeInterfaceManifests({ init: 'test' });
+      const program = projectInitHandler.writeInterfaceManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.writeInterfaceManifests({ init: 'test' });
+      const program = projectInitHandler.writeInterfaceManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.writeInterfaceManifests({ init: 'test' });
+      const program = projectInitHandler.writeInterfaceManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.writeInterfaceManifests !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_write_interfaces" -> ok', async () => {
+      if (typeof projectInitHandler.writeInterfaceManifests !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_interfaces_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.writeInterfaceManifests !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeInterfaceManifests({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('writeDeployManifests', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.writeDeployManifests({ init: 'test' });
+      const program = projectInitHandler.writeDeployManifests({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.writeDeployManifests({ init: 'test' });
+      const program = projectInitHandler.writeDeployManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.writeDeployManifests({ init: 'test' });
+      const program = projectInitHandler.writeDeployManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.writeDeployManifests({ init: 'test' });
+      const program = projectInitHandler.writeDeployManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.writeDeployManifests({ init: 'test' });
+      const program = projectInitHandler.writeDeployManifests({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.writeDeployManifests !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.writeDeployManifests({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.writeDeployManifests({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_write_deploy" -> ok', async () => {
+      if (typeof projectInitHandler.writeDeployManifests !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeDeployManifests({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_deploy_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.writeDeployManifests !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeDeployManifests({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('writeDerivedConcepts', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.writeDerivedConcepts({ init: 'test' });
+      const program = projectInitHandler.writeDerivedConcepts({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.writeDerivedConcepts({ init: 'test' });
+      const program = projectInitHandler.writeDerivedConcepts({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.writeDerivedConcepts({ init: 'test' });
+      const program = projectInitHandler.writeDerivedConcepts({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.writeDerivedConcepts({ init: 'test' });
+      const program = projectInitHandler.writeDerivedConcepts({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.writeDerivedConcepts({ init: 'test' });
+      const program = projectInitHandler.writeDerivedConcepts({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.writeDerivedConcepts !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_write_derived" -> ok', async () => {
+      if (typeof projectInitHandler.writeDerivedConcepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_derived_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.writeDerivedConcepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.writeDerivedConcepts({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('triggerInstall', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.triggerInstall({ init: 'test' });
+      const program = projectInitHandler.triggerInstall({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.triggerInstall({ init: 'test' });
+      const program = projectInitHandler.triggerInstall({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.triggerInstall({ init: 'test' });
+      const program = projectInitHandler.triggerInstall({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.triggerInstall({ init: 'test' });
+      const program = projectInitHandler.triggerInstall({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.triggerInstall({ init: 'test' });
+      const program = projectInitHandler.triggerInstall({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.triggerInstall !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.triggerInstall({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.triggerInstall({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_trigger_install" -> ok', async () => {
+      if (typeof projectInitHandler.triggerInstall !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.triggerInstall({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trigger_install_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.triggerInstall !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.triggerInstall({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('triggerGenerate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.triggerGenerate({ init: 'test' });
+      const program = projectInitHandler.triggerGenerate({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.triggerGenerate({ init: 'test' });
+      const program = projectInitHandler.triggerGenerate({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.triggerGenerate({ init: 'test' });
+      const program = projectInitHandler.triggerGenerate({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.triggerGenerate({ init: 'test' });
+      const program = projectInitHandler.triggerGenerate({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.triggerGenerate({ init: 'test' });
+      const program = projectInitHandler.triggerGenerate({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.triggerGenerate !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.triggerGenerate({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.triggerGenerate({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +526,25 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_trigger_generate" -> ok', async () => {
+      if (typeof projectInitHandler.triggerGenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.triggerGenerate({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trigger_generate_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.triggerGenerate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.triggerGenerate({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('complete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = projectInitHandler.complete({ init: 'test' });
+      const program = projectInitHandler.complete({ init: "init-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +552,21 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = projectInitHandler.complete({ init: 'test' });
+      const program = projectInitHandler.complete({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = projectInitHandler.complete({ init: 'test' });
+      const program = projectInitHandler.complete({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = projectInitHandler.complete({ init: 'test' });
+      const program = projectInitHandler.complete({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +579,7 @@ describe('ProjectInit functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = projectInitHandler.complete({ init: 'test' });
+      const program = projectInitHandler.complete({ init: "init-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +588,7 @@ describe('ProjectInit functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof projectInitHandler.complete !== 'function') return;
       try {
-        const result = await interpret(projectInitHandler.complete({ init: 'test' }), storage);
+        const result = await interpret(projectInitHandler.complete({ init: "init-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,6 +598,38 @@ describe('ProjectInit functional handler', () => {
       }
     });
 
+    it('fixture "valid_complete" -> ok', async () => {
+      if (typeof projectInitHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.complete({ init: "init-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "complete_nonexistent" -> error', async () => {
+      if (typeof projectInitHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(projectInitHandler.complete({ init: "init-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof projectInitHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = projectInitHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProjectInit');
+    });
   });
 
   describe('invariant examples', () => {

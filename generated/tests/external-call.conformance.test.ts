@@ -29,13 +29,20 @@ describe('ExternalCall imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof externalCallHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.initialize({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('registerProtocol', () => {
     it('executes without crashing', async () => {
       if (typeof externalCallHandler.registerProtocol !== 'function') return;
       try {
-        const result = await externalCallHandler.registerProtocol({ protocol: 'test-protocol', providerName: 'test-providerName' }, storage);
+        const result = await externalCallHandler.registerProtocol({ protocol: "http", providerName: "HttpProvider" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('ExternalCall imperative handler', () => {
       }
     });
 
+    it('fixture "register_http" -> ok', async () => {
+      if (typeof externalCallHandler.registerProtocol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.registerProtocol({ protocol: "http", providerName: "HttpProvider" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> duplicate', async () => {
+      if (typeof externalCallHandler.registerProtocol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.registerProtocol({ protocol: "http", providerName: "AnotherHttpProvider" }, storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('dispatch', () => {
     it('executes without crashing', async () => {
       if (typeof externalCallHandler.dispatch !== 'function') return;
       try {
-        const result = await externalCallHandler.dispatch({ protocol: 'test-protocol', operation: 'test-operation', endpoint: 'test-endpoint', payload: 'test-payload', config: 'test-config' }, storage);
+        const result = await externalCallHandler.dispatch({ protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,27 @@ describe('ExternalCall imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "http_get" -> ok', async () => {
+      if (typeof externalCallHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.dispatch({ protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_protocol" -> protocolNotFound', async () => {
+      if (typeof externalCallHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.dispatch({ protocol: "ftp", operation: "LIST", endpoint: "ftp://files.example.com", payload: "{}", config: "{}" }, storage);
+      expect(result.variant).toBe('protocolNotFound');
+    });
+
+    it('fixture "bad_request" -> error', async () => {
+      if (typeof externalCallHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.dispatch({ protocol: "http", operation: "POST", endpoint: "https://api.example.com/invalid", payload: "{\"broken\": true}", config: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -77,6 +119,30 @@ describe('ExternalCall imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof externalCallHandler.listProtocols !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await externalCallHandler.listProtocols({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof externalCallHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = externalCallHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ExternalCall');
+    });
   });
 
   describe('invariant examples', () => {

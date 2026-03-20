@@ -26,7 +26,7 @@ describe('Collection functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' });
+      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' });
+      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' });
+      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' });
+      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' });
+      const program = collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Collection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       try {
-        const result = await interpret(collectionHandler.create({ collection: 'test', type: 'test-type', schema: 'test-schema' }), storage);
+        const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Collection functional handler', () => {
       }
     });
 
+    it('fixture "create_articles" -> ok', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_name" -> error', async () => {
+      if (typeof collectionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.addMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.addMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.addMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.addMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.addMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.addMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Collection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       try {
-        const result = await interpret(collectionHandler.addMember({ collection: 'test', member: 'test-member' }), storage);
+        const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Collection functional handler', () => {
       }
     });
 
+    it('fixture "add_article_member" -> ok', async () => {
+      if (typeof collectionHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_nonexistent" -> error', async () => {
+      if (typeof collectionHandler.addMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.addMember({ collection: "nonexistent", member: "item" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeMember', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.removeMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.removeMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.removeMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.removeMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.removeMember({ collection: 'test', member: 'test-member' });
+      const program = collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Collection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       try {
-        const result = await interpret(collectionHandler.removeMember({ collection: 'test', member: 'test-member' }), storage);
+        const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Collection functional handler', () => {
       }
     });
 
+    it('fixture "remove_article" -> ok', async () => {
+      if (typeof collectionHandler.removeMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_from_nonexistent" -> error', async () => {
+      if (typeof collectionHandler.removeMember !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.removeMember({ collection: "nonexistent", member: "item" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getMembers', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.getMembers({ collection: 'test' });
+      const program = collectionHandler.getMembers({ collection: "articles" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.getMembers({ collection: 'test' });
+      const program = collectionHandler.getMembers({ collection: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.getMembers({ collection: 'test' });
+      const program = collectionHandler.getMembers({ collection: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.getMembers({ collection: 'test' });
+      const program = collectionHandler.getMembers({ collection: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.getMembers({ collection: 'test' });
+      const program = collectionHandler.getMembers({ collection: "articles" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Collection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       try {
-        const result = await interpret(collectionHandler.getMembers({ collection: 'test' }), storage);
+        const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Collection functional handler', () => {
       }
     });
 
+    it('fixture "get_article_members" -> ok', async () => {
+      if (typeof collectionHandler.getMembers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent_members" -> error', async () => {
+      if (typeof collectionHandler.getMembers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.getMembers({ collection: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' });
+      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Collection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' });
+      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' });
+      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' });
+      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Collection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' });
+      const program = collectionHandler.setSchema({ collection: "articles", schema: "article-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Collection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof collectionHandler.setSchema !== 'function') return;
       try {
-        const result = await interpret(collectionHandler.setSchema({ collection: 'test', schema: 'test-schema' }), storage);
+        const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Collection functional handler', () => {
       }
     });
 
+    it('fixture "set_article_schema" -> ok', async () => {
+      if (typeof collectionHandler.setSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_schema_nonexistent" -> error', async () => {
+      if (typeof collectionHandler.setSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(collectionHandler.setSchema({ collection: "nonexistent", schema: "any" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof collectionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = collectionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Collection');
+    });
   });
 
   describe('invariant examples', () => {

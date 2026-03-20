@@ -26,7 +26,7 @@ describe('Fetcher functional handler', () => {
 
   describe('fetch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' });
+      const program = fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' });
+      const program = fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' });
+      const program = fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' });
+      const program = fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' });
+      const program = fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Fetcher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fetcherHandler.fetch !== 'function') return;
       try {
-        const result = await interpret(fetcherHandler.fetch({ module_id: 'test-module_id', version: 'test-version', source_url: 'test-source_url', expected_hash: 'test-expected_hash' }), storage);
+        const result = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Fetcher functional handler', () => {
       }
     });
 
+    it('fixture "fetch_module" -> ok', async () => {
+      if (typeof fetcherHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_bad_hash" -> error', async () => {
+      if (typeof fetcherHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.fetch({ module_id: "lodash", version: "4.17.21", source_url: "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz", expected_hash: "sha256:tampered" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('fetchBatch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fetcherHandler.fetchBatch({ items: 'test' });
+      const program = fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fetcherHandler.fetchBatch({ items: 'test' });
+      const program = fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fetcherHandler.fetchBatch({ items: 'test' });
+      const program = fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fetcherHandler.fetchBatch({ items: 'test' });
+      const program = fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fetcherHandler.fetchBatch({ items: 'test' });
+      const program = fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Fetcher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fetcherHandler.fetchBatch !== 'function') return;
       try {
-        const result = await interpret(fetcherHandler.fetchBatch({ items: 'test' }), storage);
+        const result = await interpret(fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Fetcher functional handler', () => {
       }
     });
 
+    it('fixture "fetch_batch_two_items" -> ok', async () => {
+      if (typeof fetcherHandler.fetchBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.fetchBatch({ items: [{"module_id":"lodash","version":"4.17.21","source_url":"https://registry.example.com/lodash.tgz","expected_hash":"sha256:abc"},{"module_id":"express","version":"4.18.2","source_url":"https://registry.example.com/express.tgz","expected_hash":"sha256:def"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_batch_empty" -> error', async () => {
+      if (typeof fetcherHandler.fetchBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.fetchBatch({ items: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fetcherHandler.cancel({ download: 'test' });
+      const program = fetcherHandler.cancel({ download: "dl-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fetcherHandler.cancel({ download: 'test' });
+      const program = fetcherHandler.cancel({ download: "dl-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fetcherHandler.cancel({ download: 'test' });
+      const program = fetcherHandler.cancel({ download: "dl-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fetcherHandler.cancel({ download: 'test' });
+      const program = fetcherHandler.cancel({ download: "dl-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Fetcher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fetcherHandler.cancel({ download: 'test' });
+      const program = fetcherHandler.cancel({ download: "dl-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Fetcher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fetcherHandler.cancel !== 'function') return;
       try {
-        const result = await interpret(fetcherHandler.cancel({ download: 'test' }), storage);
+        const result = await interpret(fetcherHandler.cancel({ download: "dl-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Fetcher functional handler', () => {
       }
     });
 
+    it('fixture "cancel_active_download" -> ok', async () => {
+      if (typeof fetcherHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.cancel({ download: "dl-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cancel_nonexistent" -> error', async () => {
+      if (typeof fetcherHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fetcherHandler.cancel({ download: "dl-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fetcherHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fetcherHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Fetcher');
+    });
   });
 
   describe('invariant examples', () => {

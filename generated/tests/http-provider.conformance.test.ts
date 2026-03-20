@@ -29,13 +29,20 @@ describe('HttpProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof httpProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('configure', () => {
     it('executes without crashing', async () => {
       if (typeof httpProviderHandler.configure !== 'function') return;
       try {
-        const result = await httpProviderHandler.configure({ name: 'test-name', baseUrl: 'test-baseUrl', headers: 'test-headers', timeout: 1 }, storage);
+        const result = await httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: "5000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('HttpProvider imperative handler', () => {
       }
     });
 
+    it('fixture "configure_test_api" -> ok', async () => {
+      if (typeof httpProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.configure({ name: "test-api", baseUrl: "https://api.example.com", headers: "{\"Authorization\":\"Bearer tok\"}", timeout: "5000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_internal" -> ok', async () => {
+      if (typeof httpProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.configure({ name: "internal-svc", baseUrl: "http://localhost:8080", headers: "{}", timeout: "30000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('executes without crashing', async () => {
       if (typeof httpProviderHandler.execute !== 'function') return;
       try {
-        const result = await httpProviderHandler.execute({ instance: 'test-instance', method: 'test-method', path: 'test-path', body: 'test-body', headers: 'test-headers' }, storage);
+        const result = await httpProviderHandler.execute({ instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,27 @@ describe('HttpProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_health" -> ok', async () => {
+      if (typeof httpProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.execute({ instance: "test-api", method: "GET", path: "/health", body: "", headers: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "post_data" -> ok', async () => {
+      if (typeof httpProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.execute({ instance: "test-api", method: "POST", path: "/users", body: "{\"name\":\"Alice\"}", headers: "{\"Content-Type\":\"application/json\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_unknown_instance" -> notFound', async () => {
+      if (typeof httpProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.execute({ instance: "nonexistent", method: "GET", path: "/", body: "", headers: "{}" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -77,6 +119,30 @@ describe('HttpProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof httpProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await httpProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof httpProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = httpProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('HttpProvider');
+    });
   });
 
   describe('invariant examples', () => {

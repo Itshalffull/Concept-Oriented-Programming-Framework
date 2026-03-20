@@ -26,7 +26,7 @@ describe('User functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' });
+      const program = userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('User functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' });
+      const program = userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' });
+      const program = userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' });
+      const program = userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('User functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' });
+      const program = userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('User functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof userHandler.register !== 'function') return;
       try {
-        const result = await interpret(userHandler.register({ user: 'test', name: 'test-name', email: 'test-email' }), storage);
+        const result = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,45 @@ describe('User functional handler', () => {
       }
     });
 
+    it('fixture "new_user" -> ok', async () => {
+      if (typeof userHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(userHandler.register({ user: "u-001", name: "Alice Chen", email: "alice@example.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_name" -> error', async () => {
+      if (typeof userHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(userHandler.register({ user: "u-002", name: "Alice Chen", email: "other@example.com" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "duplicate_email" -> error', async () => {
+      if (typeof userHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(userHandler.register({ user: "u-003", name: "Bob Smith", email: "alice@example.com" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof userHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = userHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('User');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('SolidityBuilder functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SolidityBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof solidityBuilderHandler.build !== 'function') return;
       try {
-        const result = await interpret(solidityBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' }), storage);
+        const result = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SolidityBuilder functional handler', () => {
       }
     });
 
+    it('fixture "build_contract" -> ok', async () => {
+      if (typeof solidityBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_source" -> error', async () => {
+      if (typeof solidityBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.build({ source: "", toolchainPath: "", platform: "evm", config: {"mode":"debug"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SolidityBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
       try {
-        const result = await interpret(solidityBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' }), storage);
+        const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SolidityBuilder functional handler', () => {
       }
     });
 
+    it('fixture "test_contract" -> ok', async () => {
+      if (typeof solidityBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing_build" -> error', async () => {
+      if (typeof solidityBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.test({ build: "nonexistent", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = solidityBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = solidityBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = solidityBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = solidityBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SolidityBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = solidityBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SolidityBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
       try {
-        const result = await interpret(solidityBuilderHandler.package({ build: 'test', format: 'test-format' }), storage);
+        const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,20 @@ describe('SolidityBuilder functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "package_abi" -> ok', async () => {
+      if (typeof solidityBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_unsupported" -> error', async () => {
+      if (typeof solidityBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "invalid-format" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +296,31 @@ describe('SolidityBuilder functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof solidityBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(solidityBuilderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof solidityBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = solidityBuilderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SolidityBuilder');
+    });
   });
 
   describe('invariant examples', () => {

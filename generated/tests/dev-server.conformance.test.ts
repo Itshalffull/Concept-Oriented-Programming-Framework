@@ -26,7 +26,7 @@ describe('DevServer functional handler', () => {
 
   describe('start', () => {
     it('builds a valid StorageProgram', () => {
-      const program = devServerHandler.start({ port: 1, watchDirs: 'test' });
+      const program = devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DevServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = devServerHandler.start({ port: 1, watchDirs: 'test' });
+      const program = devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = devServerHandler.start({ port: 1, watchDirs: 'test' });
+      const program = devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = devServerHandler.start({ port: 1, watchDirs: 'test' });
+      const program = devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DevServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = devServerHandler.start({ port: 1, watchDirs: 'test' });
+      const program = devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DevServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof devServerHandler.start !== 'function') return;
       try {
-        const result = await interpret(devServerHandler.start({ port: 1, watchDirs: 'test' }), storage);
+        const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DevServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_start" -> ok', async () => {
+      if (typeof devServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "custom_port" -> ok', async () => {
+      if (typeof devServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "port_conflict" -> portInUse', async () => {
+      if (typeof devServerHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs"] }), storage);
+      expect(result.variant).toBe('portInUse');
+    });
+
   });
 
   describe('stop', () => {
     it('builds a valid StorageProgram', () => {
-      const program = devServerHandler.stop({ session: 'test' });
+      const program = devServerHandler.stop({ session: "dev-server-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DevServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = devServerHandler.stop({ session: 'test' });
+      const program = devServerHandler.stop({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = devServerHandler.stop({ session: 'test' });
+      const program = devServerHandler.stop({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = devServerHandler.stop({ session: 'test' });
+      const program = devServerHandler.stop({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DevServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = devServerHandler.stop({ session: 'test' });
+      const program = devServerHandler.stop({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DevServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       try {
-        const result = await interpret(devServerHandler.stop({ session: 'test' }), storage);
+        const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('DevServer functional handler', () => {
       }
     });
 
+    it('fixture "valid_stop" -> ok', async () => {
+      if (typeof devServerHandler.stop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nonexistent_stop" -> ok', async () => {
+      if (typeof devServerHandler.stop !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.stop({ session: "dev-server-999" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = devServerHandler.status({ session: 'test' });
+      const program = devServerHandler.status({ session: "dev-server-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('DevServer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = devServerHandler.status({ session: 'test' });
+      const program = devServerHandler.status({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = devServerHandler.status({ session: 'test' });
+      const program = devServerHandler.status({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = devServerHandler.status({ session: 'test' });
+      const program = devServerHandler.status({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('DevServer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = devServerHandler.status({ session: 'test' });
+      const program = devServerHandler.status({ session: "dev-server-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('DevServer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof devServerHandler.status !== 'function') return;
       try {
-        const result = await interpret(devServerHandler.status({ session: 'test' }), storage);
+        const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('DevServer functional handler', () => {
       }
     });
 
+    it('fixture "running_status" -> ok', async () => {
+      if (typeof devServerHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stopped_status" -> stopped', async () => {
+      if (typeof devServerHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(devServerHandler.status({ session: "dev-server-999" }), storage);
+      expect(result.variant).toBe('stopped');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof devServerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = devServerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DevServer');
+    });
   });
 
   describe('invariant examples', () => {

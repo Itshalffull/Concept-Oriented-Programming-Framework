@@ -29,13 +29,20 @@ describe('GrpcProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof grpcProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('configure', () => {
     it('executes without crashing', async () => {
       if (typeof grpcProviderHandler.configure !== 'function') return;
       try {
-        const result = await grpcProviderHandler.configure({ name: 'test-name', target: 'test-target', protoRef: 'test-protoRef', options: 'test-options' }, storage);
+        const result = await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('GrpcProvider imperative handler', () => {
       }
     });
 
+    it('fixture "configure_user_service" -> ok', async () => {
+      if (typeof grpcProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_with_tls" -> ok', async () => {
+      if (typeof grpcProviderHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.configure({ name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('executes without crashing', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       try {
-        const result = await grpcProviderHandler.execute({ channel: 'test-channel', service: 'test-service', method: 'test-method', payload: 'test-payload' }, storage);
+        const result = await grpcProviderHandler.execute({ channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,20 @@ describe('GrpcProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_user" -> ok', async () => {
+      if (typeof grpcProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.execute({ channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_unknown_channel" -> notFound', async () => {
+      if (typeof grpcProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.execute({ channel: "nonexistent", service: "Svc", method: "Call", payload: "{}" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -77,6 +112,30 @@ describe('GrpcProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof grpcProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await grpcProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof grpcProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = grpcProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GrpcProvider');
+    });
   });
 
   describe('invariant examples', () => {

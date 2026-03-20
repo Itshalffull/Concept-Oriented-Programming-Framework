@@ -26,7 +26,7 @@ describe('Wallet functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' });
+      const program = walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Wallet functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' });
+      const program = walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' });
+      const program = walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' });
+      const program = walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Wallet functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' });
+      const program = walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Wallet functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof walletHandler.verify !== 'function') return;
       try {
-        const result = await interpret(walletHandler.verify({ address: 'test-address', message: 'test-message', signature: 'test-signature' }), storage);
+        const result = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Wallet functional handler', () => {
       }
     });
 
+    it('fixture "verify_valid_signature" -> ok', async () => {
+      if (typeof walletHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.verify({ address: "0x0000000000000000000000000000000000000000", message: "Sign this message", signature: "0xdeadbeef" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_mismatched_address" -> invalid', async () => {
+      if (typeof walletHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.verify({ address: "0x1234567890abcdef1234567890abcdef12345678", message: "Sign this message", signature: "0xdeadbeef" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('verifyTypedData', () => {
     it('builds a valid StorageProgram', () => {
-      const program = walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' });
+      const program = walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Wallet functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' });
+      const program = walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' });
+      const program = walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' });
+      const program = walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Wallet functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' });
+      const program = walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Wallet functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof walletHandler.verifyTypedData !== 'function') return;
       try {
-        const result = await interpret(walletHandler.verifyTypedData({ address: 'test-address', domain: 'test-domain', types: 'test-types', value: 'test-value', signature: 'test-signature' }), storage);
+        const result = await interpret(walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Wallet functional handler', () => {
       }
     });
 
+    it('fixture "verify_typed_data_valid" -> ok', async () => {
+      if (typeof walletHandler.verifyTypedData !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.verifyTypedData({ address: "0x0000000000000000000000000000000000000000", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_typed_data_mismatch" -> invalid', async () => {
+      if (typeof walletHandler.verifyTypedData !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.verifyTypedData({ address: "0x9999999999999999999999999999999999999999", domain: "{\"name\":\"MyApp\"}", types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}", value: "{\"content\":\"hello\"}", signature: "0xabcdef" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('getNonce', () => {
     it('builds a valid StorageProgram', () => {
-      const program = walletHandler.getNonce({ address: 'test-address' });
+      const program = walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Wallet functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = walletHandler.getNonce({ address: 'test-address' });
+      const program = walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = walletHandler.getNonce({ address: 'test-address' });
+      const program = walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = walletHandler.getNonce({ address: 'test-address' });
+      const program = walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Wallet functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = walletHandler.getNonce({ address: 'test-address' });
+      const program = walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Wallet functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof walletHandler.getNonce !== 'function') return;
       try {
-        const result = await interpret(walletHandler.getNonce({ address: 'test-address' }), storage);
+        const result = await interpret(walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Wallet functional handler', () => {
       }
     });
 
+    it('fixture "get_nonce_existing" -> ok', async () => {
+      if (typeof walletHandler.getNonce !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.getNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonce_unknown" -> notFound', async () => {
+      if (typeof walletHandler.getNonce !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.getNonce({ address: "0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('incrementNonce', () => {
     it('builds a valid StorageProgram', () => {
-      const program = walletHandler.incrementNonce({ address: 'test-address' });
+      const program = walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Wallet functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = walletHandler.incrementNonce({ address: 'test-address' });
+      const program = walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = walletHandler.incrementNonce({ address: 'test-address' });
+      const program = walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = walletHandler.incrementNonce({ address: 'test-address' });
+      const program = walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Wallet functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = walletHandler.incrementNonce({ address: 'test-address' });
+      const program = walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Wallet functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof walletHandler.incrementNonce !== 'function') return;
       try {
-        const result = await interpret(walletHandler.incrementNonce({ address: 'test-address' }), storage);
+        const result = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,31 @@ describe('Wallet functional handler', () => {
       }
     });
 
+    it('fixture "increment_nonce_valid" -> ok', async () => {
+      if (typeof walletHandler.incrementNonce !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(walletHandler.incrementNonce({ address: "0x0000000000000000000000000000000000000000" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof walletHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = walletHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Wallet');
+    });
   });
 
   describe('invariant examples', () => {

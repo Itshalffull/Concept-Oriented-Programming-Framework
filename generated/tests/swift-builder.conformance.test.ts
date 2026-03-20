@@ -26,7 +26,7 @@ describe('SwiftBuilder functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SwiftBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof swiftBuilderHandler.build !== 'function') return;
       try {
-        const result = await interpret(swiftBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' }), storage);
+        const result = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('SwiftBuilder functional handler', () => {
       }
     });
 
+    it('fixture "build_release" -> ok', async () => {
+      if (typeof swiftBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_debug" -> ok', async () => {
+      if (typeof swiftBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_no_source" -> error', async () => {
+      if (typeof swiftBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.build({ source: "", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('SwiftBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       try {
-        const result = await interpret(swiftBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' }), storage);
+        const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('SwiftBuilder functional handler', () => {
       }
     });
 
+    it('fixture "test_unit" -> ok', async () => {
+      if (typeof swiftBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_with_invocation" -> ok', async () => {
+      if (typeof swiftBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing_build" -> error', async () => {
+      if (typeof swiftBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.test({ build: "", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = swiftBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = swiftBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = swiftBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = swiftBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('SwiftBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = swiftBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('SwiftBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       try {
-        const result = await interpret(swiftBuilderHandler.package({ build: 'test', format: 'test-format' }), storage);
+        const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +236,27 @@ describe('SwiftBuilder functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "package_framework" -> ok', async () => {
+      if (typeof swiftBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_xcframework" -> ok', async () => {
+      if (typeof swiftBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "xcframework" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_unsupported" -> error', async () => {
+      if (typeof swiftBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "deb" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +317,31 @@ describe('SwiftBuilder functional handler', () => {
       }
     });
 
+    it('fixture "register_valid" -> ok', async () => {
+      if (typeof swiftBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(swiftBuilderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof swiftBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = swiftBuilderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SwiftBuilder');
+    });
   });
 
   describe('invariant examples', () => {

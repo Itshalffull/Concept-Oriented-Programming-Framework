@@ -19,7 +19,7 @@ describe('LocalModelInstance imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof localModelInstanceHandler.register !== 'function') return;
       try {
-        const result = await localModelInstanceHandler.register({ name: 'test-name', runtime: 'test-runtime', modelPath: 'test-modelPath', tokenizerPath: 'test-tokenizerPath', device: 'test-device', maxSequenceLength: 1, dimensions: 1 }, storage);
+        const result = await localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: "512", dimensions: "768" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('LocalModelInstance imperative handler', () => {
       }
     });
 
+    it('fixture "codebert_onnx" -> ok', async () => {
+      if (typeof localModelInstanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: "512", dimensions: "768" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unixcoder_wasm" -> ok', async () => {
+      if (typeof localModelInstanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.register({ name: "unixcoder", runtime: "wasm", modelPath: "/models/unixcoder.wasm", tokenizerPath: "", device: "cpu", maxSequenceLength: "256", dimensions: "768" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof localModelInstanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.register({ name: "", runtime: "onnx", modelPath: "/models/test.onnx", tokenizerPath: "", device: "cpu", maxSequenceLength: "512", dimensions: "768" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof localModelInstanceHandler.resolve !== 'function') return;
       try {
-        const result = await localModelInstanceHandler.resolve({ name: 'test-name' }, storage);
+        const result = await localModelInstanceHandler.resolve({ name: "codebert-base" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('LocalModelInstance imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof localModelInstanceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.resolve({ name: "codebert-base" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof localModelInstanceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('LocalModelInstance imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof localModelInstanceHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await localModelInstanceHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof localModelInstanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = localModelInstanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LocalModelInstance');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('DesktopAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DesktopAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DesktopAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DesktopAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof desktopAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(desktopAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('DesktopAdapter functional handler', () => {
       }
     });
 
+    it('fixture "normalize_ipc_events" -> ok', async () => {
+      if (typeof desktopAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_style_attrs" -> ok', async () => {
+      if (typeof desktopAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "{ \"style\": { \"width\": 200 }, \"aria-label\": \"Save\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "normalize_empty_props" -> error', async () => {
+      if (typeof desktopAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "normalize_invalid_json" -> error', async () => {
+      if (typeof desktopAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(desktopAdapterHandler.normalize({ adapter: "desktop-1", props: "<<<" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof desktopAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = desktopAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DesktopAdapter');
+    });
   });
 
   describe('invariant examples', () => {

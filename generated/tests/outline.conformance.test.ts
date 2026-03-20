@@ -26,7 +26,7 @@ describe('Outline functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.create({ node: 'test', parent: 'test' });
+      const program = outlineHandler.create({ node: "chapter-1", parent: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.create({ node: 'test', parent: 'test' });
+      const program = outlineHandler.create({ node: "chapter-1", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.create({ node: 'test', parent: 'test' });
+      const program = outlineHandler.create({ node: "chapter-1", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.create({ node: 'test', parent: 'test' });
+      const program = outlineHandler.create({ node: "chapter-1", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.create({ node: 'test', parent: 'test' });
+      const program = outlineHandler.create({ node: "chapter-1", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.create !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.create({ node: 'test', parent: 'test' }), storage);
+        const result = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "create_root" -> ok', async () => {
+      if (typeof outlineHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.create({ node: "chapter-1", parent: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_child" -> ok', async () => {
+      if (typeof outlineHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.create({ node: "section-1", parent: "chapter-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_node" -> error', async () => {
+      if (typeof outlineHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.create({ node: "", parent: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('indent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.indent({ node: 'test' });
+      const program = outlineHandler.indent({ node: "section-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.indent({ node: 'test' });
+      const program = outlineHandler.indent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.indent({ node: 'test' });
+      const program = outlineHandler.indent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.indent({ node: 'test' });
+      const program = outlineHandler.indent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.indent({ node: 'test' });
+      const program = outlineHandler.indent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.indent !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.indent({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.indent({ node: "section-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "indent_node" -> ok', async () => {
+      if (typeof outlineHandler.indent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.indent({ node: "section-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "indent_missing" -> error', async () => {
+      if (typeof outlineHandler.indent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.indent({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('outdent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.outdent({ node: 'test' });
+      const program = outlineHandler.outdent({ node: "section-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.outdent({ node: 'test' });
+      const program = outlineHandler.outdent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.outdent({ node: 'test' });
+      const program = outlineHandler.outdent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.outdent({ node: 'test' });
+      const program = outlineHandler.outdent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.outdent({ node: 'test' });
+      const program = outlineHandler.outdent({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.outdent !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.outdent({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.outdent({ node: "section-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "outdent_node" -> ok', async () => {
+      if (typeof outlineHandler.outdent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.outdent({ node: "section-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "outdent_missing" -> error', async () => {
+      if (typeof outlineHandler.outdent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.outdent({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('moveUp', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.moveUp({ node: 'test' });
+      const program = outlineHandler.moveUp({ node: "section-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.moveUp({ node: 'test' });
+      const program = outlineHandler.moveUp({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.moveUp({ node: 'test' });
+      const program = outlineHandler.moveUp({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.moveUp({ node: 'test' });
+      const program = outlineHandler.moveUp({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.moveUp({ node: 'test' });
+      const program = outlineHandler.moveUp({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.moveUp !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.moveUp({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.moveUp({ node: "section-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "move_up_node" -> ok', async () => {
+      if (typeof outlineHandler.moveUp !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.moveUp({ node: "section-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "move_up_missing" -> error', async () => {
+      if (typeof outlineHandler.moveUp !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.moveUp({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('moveDown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.moveDown({ node: 'test' });
+      const program = outlineHandler.moveDown({ node: "section-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.moveDown({ node: 'test' });
+      const program = outlineHandler.moveDown({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.moveDown({ node: 'test' });
+      const program = outlineHandler.moveDown({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.moveDown({ node: 'test' });
+      const program = outlineHandler.moveDown({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.moveDown({ node: 'test' });
+      const program = outlineHandler.moveDown({ node: "section-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.moveDown !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.moveDown({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.moveDown({ node: "section-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "move_down_node" -> ok', async () => {
+      if (typeof outlineHandler.moveDown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.moveDown({ node: "section-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "move_down_missing" -> error', async () => {
+      if (typeof outlineHandler.moveDown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.moveDown({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('collapse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.collapse({ node: 'test' });
+      const program = outlineHandler.collapse({ node: "chapter-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.collapse({ node: 'test' });
+      const program = outlineHandler.collapse({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.collapse({ node: 'test' });
+      const program = outlineHandler.collapse({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.collapse({ node: 'test' });
+      const program = outlineHandler.collapse({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.collapse({ node: 'test' });
+      const program = outlineHandler.collapse({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.collapse !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.collapse({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.collapse({ node: "chapter-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +447,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "collapse_node" -> ok', async () => {
+      if (typeof outlineHandler.collapse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.collapse({ node: "chapter-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "collapse_missing" -> error', async () => {
+      if (typeof outlineHandler.collapse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.collapse({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('expand', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.expand({ node: 'test' });
+      const program = outlineHandler.expand({ node: "chapter-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +473,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.expand({ node: 'test' });
+      const program = outlineHandler.expand({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.expand({ node: 'test' });
+      const program = outlineHandler.expand({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.expand({ node: 'test' });
+      const program = outlineHandler.expand({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +500,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.expand({ node: 'test' });
+      const program = outlineHandler.expand({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +509,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.expand !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.expand({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.expand({ node: "chapter-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +519,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "expand_node" -> ok', async () => {
+      if (typeof outlineHandler.expand !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.expand({ node: "chapter-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "expand_missing" -> error', async () => {
+      if (typeof outlineHandler.expand !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.expand({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reparent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.reparent({ node: 'test', newParent: 'test' });
+      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +545,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.reparent({ node: 'test', newParent: 'test' });
+      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.reparent({ node: 'test', newParent: 'test' });
+      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.reparent({ node: 'test', newParent: 'test' });
+      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +572,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.reparent({ node: 'test', newParent: 'test' });
+      const program = outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +581,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.reparent !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.reparent({ node: 'test', newParent: 'test' }), storage);
+        const result = await interpret(outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +591,25 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "reparent_node" -> ok', async () => {
+      if (typeof outlineHandler.reparent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.reparent({ node: "section-1", newParent: "chapter-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reparent_missing" -> error', async () => {
+      if (typeof outlineHandler.reparent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.reparent({ node: "nonexistent", newParent: "chapter-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getChildren', () => {
     it('builds a valid StorageProgram', () => {
-      const program = outlineHandler.getChildren({ node: 'test' });
+      const program = outlineHandler.getChildren({ node: "chapter-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +617,21 @@ describe('Outline functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = outlineHandler.getChildren({ node: 'test' });
+      const program = outlineHandler.getChildren({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = outlineHandler.getChildren({ node: 'test' });
+      const program = outlineHandler.getChildren({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = outlineHandler.getChildren({ node: 'test' });
+      const program = outlineHandler.getChildren({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +644,7 @@ describe('Outline functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = outlineHandler.getChildren({ node: 'test' });
+      const program = outlineHandler.getChildren({ node: "chapter-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +653,7 @@ describe('Outline functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof outlineHandler.getChildren !== 'function') return;
       try {
-        const result = await interpret(outlineHandler.getChildren({ node: 'test' }), storage);
+        const result = await interpret(outlineHandler.getChildren({ node: "chapter-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,6 +663,38 @@ describe('Outline functional handler', () => {
       }
     });
 
+    it('fixture "get_children" -> ok', async () => {
+      if (typeof outlineHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.getChildren({ node: "chapter-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_children_missing" -> error', async () => {
+      if (typeof outlineHandler.getChildren !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(outlineHandler.getChildren({ node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof outlineHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = outlineHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Outline');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Publisher functional handler', () => {
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' });
+      const program = publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Publisher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' });
+      const program = publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' });
+      const program = publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' });
+      const program = publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Publisher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' });
+      const program = publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Publisher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof publisherHandler.package !== 'function') return;
       try {
-        const result = await interpret(publisherHandler.package({ source_path: 'test-source_path', kind: 'test-kind', manifest: 'test' }), storage);
+        const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Publisher functional handler', () => {
       }
     });
 
+    it('fixture "package_library" -> ok', async () => {
+      if (typeof publisherHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_invalid_kind" -> error', async () => {
+      if (typeof publisherHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "unknown-kind", manifest: {"module_id":"auth","version":"1.0.0","dependencies":[]} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('sign', () => {
     it('builds a valid StorageProgram', () => {
-      const program = publisherHandler.sign({ publication: 'test' });
+      const program = publisherHandler.sign({ publication: "pub-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Publisher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = publisherHandler.sign({ publication: 'test' });
+      const program = publisherHandler.sign({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = publisherHandler.sign({ publication: 'test' });
+      const program = publisherHandler.sign({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = publisherHandler.sign({ publication: 'test' });
+      const program = publisherHandler.sign({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Publisher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = publisherHandler.sign({ publication: 'test' });
+      const program = publisherHandler.sign({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Publisher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof publisherHandler.sign !== 'function') return;
       try {
-        const result = await interpret(publisherHandler.sign({ publication: 'test' }), storage);
+        const result = await interpret(publisherHandler.sign({ publication: "pub-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Publisher functional handler', () => {
       }
     });
 
+    it('fixture "sign_existing" -> ok', async () => {
+      if (typeof publisherHandler.sign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.sign({ publication: "pub-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sign_missing" -> error', async () => {
+      if (typeof publisherHandler.sign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.sign({ publication: "pub-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('attest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' });
+      const program = publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Publisher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' });
+      const program = publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' });
+      const program = publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' });
+      const program = publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Publisher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' });
+      const program = publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Publisher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof publisherHandler.attest !== 'function') return;
       try {
-        const result = await interpret(publisherHandler.attest({ publication: 'test', builder: 'test-builder', source_repo: 'test-source_repo', source_commit: 'test-source_commit' }), storage);
+        const result = await interpret(publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Publisher functional handler', () => {
       }
     });
 
+    it('fixture "attest_ci_build" -> ok', async () => {
+      if (typeof publisherHandler.attest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "attest_missing_pub" -> error', async () => {
+      if (typeof publisherHandler.attest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.attest({ publication: "pub-nonexistent", builder: "ci", source_repo: "repo", source_commit: "000" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('generateSbom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = publisherHandler.generateSbom({ publication: 'test' });
+      const program = publisherHandler.generateSbom({ publication: "pub-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Publisher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = publisherHandler.generateSbom({ publication: 'test' });
+      const program = publisherHandler.generateSbom({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = publisherHandler.generateSbom({ publication: 'test' });
+      const program = publisherHandler.generateSbom({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = publisherHandler.generateSbom({ publication: 'test' });
+      const program = publisherHandler.generateSbom({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Publisher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = publisherHandler.generateSbom({ publication: 'test' });
+      const program = publisherHandler.generateSbom({ publication: "pub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Publisher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof publisherHandler.generateSbom !== 'function') return;
       try {
-        const result = await interpret(publisherHandler.generateSbom({ publication: 'test' }), storage);
+        const result = await interpret(publisherHandler.generateSbom({ publication: "pub-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Publisher functional handler', () => {
       }
     });
 
+    it('fixture "generate_sbom_existing" -> ok', async () => {
+      if (typeof publisherHandler.generateSbom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.generateSbom({ publication: "pub-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_sbom_missing" -> error', async () => {
+      if (typeof publisherHandler.generateSbom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.generateSbom({ publication: "pub-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upload', () => {
     it('builds a valid StorageProgram', () => {
-      const program = publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' });
+      const program = publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Publisher functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' });
+      const program = publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' });
+      const program = publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' });
+      const program = publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Publisher functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' });
+      const program = publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Publisher functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof publisherHandler.upload !== 'function') return;
       try {
-        const result = await interpret(publisherHandler.upload({ publication: 'test', registry_url: 'test-registry_url' }), storage);
+        const result = await interpret(publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Publisher functional handler', () => {
       }
     });
 
+    it('fixture "upload_to_registry" -> ok', async () => {
+      if (typeof publisherHandler.upload !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upload_missing_pub" -> error', async () => {
+      if (typeof publisherHandler.upload !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(publisherHandler.upload({ publication: "pub-nonexistent", registry_url: "https://registry.example.com/api/v1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof publisherHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = publisherHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Publisher');
+    });
   });
 
   describe('invariant examples', () => {

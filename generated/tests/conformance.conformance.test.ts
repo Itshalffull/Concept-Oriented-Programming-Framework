@@ -26,7 +26,7 @@ describe('Conformance functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' });
+      const program = conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Conformance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conformanceHandler.generate !== 'function') return;
       try {
-        const result = await interpret(conformanceHandler.generate({ concept: 'test-concept', specPath: 'test-specPath' }), storage);
+        const result = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Conformance functional handler', () => {
       }
     });
 
+    it('fixture "generate_password" -> ok', async () => {
+      if (typeof conformanceHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_missing_concept" -> specError', async () => {
+      if (typeof conformanceHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.generate({ concept: "", specPath: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('specError');
+    });
+
+    it('fixture "generate_missing_spec" -> specError', async () => {
+      if (typeof conformanceHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.generate({ concept: "password", specPath: "" }), storage);
+      expect(result.variant).toBe('specError');
+    });
+
   });
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' });
+      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' });
+      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' });
+      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' });
+      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' });
+      const program = conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Conformance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conformanceHandler.verify !== 'function') return;
       try {
-        const result = await interpret(conformanceHandler.verify({ suite: 'test', language: 'test-language', artifactLocation: 'test-artifactLocation' }), storage);
+        const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Conformance functional handler', () => {
       }
     });
 
+    it('fixture "verify_ts" -> ok', async () => {
+      if (typeof conformanceHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_rust" -> ok', async () => {
+      if (typeof conformanceHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "rust", artifactLocation: ".clef-artifacts/rust/password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_missing_suite" -> failure', async () => {
+      if (typeof conformanceHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.verify({ suite: "csuite-nonexistent", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
+      expect(result.variant).toBe('failure');
+    });
+
   });
 
   describe('registerDeviation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' });
+      const program = conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Conformance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
       try {
-        const result = await interpret(conformanceHandler.registerDeviation({ concept: 'test-concept', language: 'test-language', requirement: 'test-requirement', reason: 'test-reason' }), storage);
+        const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('Conformance functional handler', () => {
       }
     });
 
+    it('fixture "deviation_solidity" -> ok', async () => {
+      if (typeof conformanceHandler.registerDeviation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deviation_swift" -> ok', async () => {
+      if (typeof conformanceHandler.registerDeviation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.registerDeviation({ concept: "auth", language: "swift", requirement: "req-auth-002", reason: "Swift throws instead of returning error variant" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('matrix', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.matrix({ concepts: 'test' });
+      const program = conformanceHandler.matrix({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.matrix({ concepts: 'test' });
+      const program = conformanceHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.matrix({ concepts: 'test' });
+      const program = conformanceHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.matrix({ concepts: 'test' });
+      const program = conformanceHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.matrix({ concepts: 'test' });
+      const program = conformanceHandler.matrix({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('Conformance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conformanceHandler.matrix !== 'function') return;
       try {
-        const result = await interpret(conformanceHandler.matrix({ concepts: 'test' }), storage);
+        const result = await interpret(conformanceHandler.matrix({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('Conformance functional handler', () => {
       }
     });
 
+    it('fixture "matrix_all" -> ok', async () => {
+      if (typeof conformanceHandler.matrix !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.matrix({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "matrix_filtered" -> ok', async () => {
+      if (typeof conformanceHandler.matrix !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.matrix({ concepts: ["password","auth"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('traceability', () => {
     it('builds a valid StorageProgram', () => {
-      const program = conformanceHandler.traceability({ concept: 'test-concept' });
+      const program = conformanceHandler.traceability({ concept: "password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('Conformance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = conformanceHandler.traceability({ concept: 'test-concept' });
+      const program = conformanceHandler.traceability({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = conformanceHandler.traceability({ concept: 'test-concept' });
+      const program = conformanceHandler.traceability({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = conformanceHandler.traceability({ concept: 'test-concept' });
+      const program = conformanceHandler.traceability({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('Conformance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = conformanceHandler.traceability({ concept: 'test-concept' });
+      const program = conformanceHandler.traceability({ concept: "password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('Conformance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof conformanceHandler.traceability !== 'function') return;
       try {
-        const result = await interpret(conformanceHandler.traceability({ concept: 'test-concept' }), storage);
+        const result = await interpret(conformanceHandler.traceability({ concept: "password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,38 @@ describe('Conformance functional handler', () => {
       }
     });
 
+    it('fixture "traceability_password" -> ok', async () => {
+      if (typeof conformanceHandler.traceability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.traceability({ concept: "password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traceability_missing" -> ok', async () => {
+      if (typeof conformanceHandler.traceability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(conformanceHandler.traceability({ concept: "nonexistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conformanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conformanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Conformance');
+    });
   });
 
   describe('invariant examples', () => {

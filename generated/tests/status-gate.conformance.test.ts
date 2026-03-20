@@ -26,7 +26,7 @@ describe('StatusGate functional handler', () => {
 
   describe('report', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.report !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.report({ target: 'test-target', context: 'test-context', status: 'test-status', details: 'test-details', provider: 'test-provider', url: 'test-url' }), storage);
+        const result = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_report" -> ok', async () => {
+      if (typeof statusGateHandler.report !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "github_report" -> ok', async () => {
+      if (typeof statusGateHandler.report !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.report({ target: "abc123def456", context: "clef/verify", status: "passing", details: "All checks green", provider: "github", url: "https://score.example.com/run/42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_target" -> provider_error', async () => {
+      if (typeof statusGateHandler.report !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.report({ target: "", context: "clef/verify", status: "passing", details: "No target", provider: "exit-code", url: "" }), storage);
+      expect(result.variant).toBe('provider_error');
+    });
+
   });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' });
+      const program = statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' });
+      const program = statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' });
+      const program = statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' });
+      const program = statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' });
+      const program = statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.update !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.update({ gate: 'test', status: 'test-status', details: 'test-details' }), storage);
+        const result = await interpret(statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_update" -> ok', async () => {
+      if (typeof statusGateHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.update({ gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "not_found_update" -> not_found', async () => {
+      if (typeof statusGateHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.update({ gate: "gate-nonexistent-000000", status: "failing", details: "Missing" }), storage);
+      expect(result.variant).toBe('not_found');
+    });
+
   });
 
   describe('complete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' });
+      const program = statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' });
+      const program = statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' });
+      const program = statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' });
+      const program = statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' });
+      const program = statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.complete !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.complete({ gate: 'test', final_status: 'test-final_status', details: 'test-details' }), storage);
+        const result = await interpret(statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_complete" -> ok', async () => {
+      if (typeof statusGateHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.complete({ gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "not_found_complete" -> not_found', async () => {
+      if (typeof statusGateHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.complete({ gate: "gate-nonexistent-000000", final_status: "passing", details: "Done" }), storage);
+      expect(result.variant).toBe('not_found');
+    });
+
   });
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.configure({ provider: "github", url: "https://api.github.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.configure({ provider: "github", url: "https://api.github.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.configure({ provider: "github", url: "https://api.github.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.configure({ provider: "github", url: "https://api.github.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' });
+      const program = statusGateHandler.configure({ provider: "github", url: "https://api.github.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.configure !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.configure({ provider: 'test-provider', url: 'test-url' }), storage);
+        const result = await interpret(statusGateHandler.configure({ provider: "github", url: "https://api.github.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_configure" -> ok', async () => {
+      if (typeof statusGateHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.configure({ provider: "github", url: "https://api.github.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "exit_code_configure" -> ok', async () => {
+      if (typeof statusGateHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.configure({ provider: "exit-code", url: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get_status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.get_status({ gate: 'test' });
+      const program = statusGateHandler.get_status({ gate: "gate-1710000000-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.get_status({ gate: 'test' });
+      const program = statusGateHandler.get_status({ gate: "gate-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.get_status({ gate: 'test' });
+      const program = statusGateHandler.get_status({ gate: "gate-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.get_status({ gate: 'test' });
+      const program = statusGateHandler.get_status({ gate: "gate-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.get_status({ gate: 'test' });
+      const program = statusGateHandler.get_status({ gate: "gate-1710000000-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.get_status !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.get_status({ gate: 'test' }), storage);
+        const result = await interpret(statusGateHandler.get_status({ gate: "gate-1710000000-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_get_status" -> ok', async () => {
+      if (typeof statusGateHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.get_status({ gate: "gate-1710000000-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "not_found_status" -> not_found', async () => {
+      if (typeof statusGateHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.get_status({ gate: "gate-nonexistent-000000" }), storage);
+      expect(result.variant).toBe('not_found');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = statusGateHandler.list({ target: 'test-target' });
+      const program = statusGateHandler.list({ target: "abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = statusGateHandler.list({ target: 'test-target' });
+      const program = statusGateHandler.list({ target: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = statusGateHandler.list({ target: 'test-target' });
+      const program = statusGateHandler.list({ target: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = statusGateHandler.list({ target: 'test-target' });
+      const program = statusGateHandler.list({ target: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('StatusGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = statusGateHandler.list({ target: 'test-target' });
+      const program = statusGateHandler.list({ target: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('StatusGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof statusGateHandler.list !== 'function') return;
       try {
-        const result = await interpret(statusGateHandler.list({ target: 'test-target' }), storage);
+        const result = await interpret(statusGateHandler.list({ target: "abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('StatusGate functional handler', () => {
       }
     });
 
+    it('fixture "valid_list" -> ok', async () => {
+      if (typeof statusGateHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.list({ target: "abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_target_list" -> ok', async () => {
+      if (typeof statusGateHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(statusGateHandler.list({ target: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof statusGateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = statusGateHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StatusGate');
+    });
   });
 
   describe('invariant examples', () => {

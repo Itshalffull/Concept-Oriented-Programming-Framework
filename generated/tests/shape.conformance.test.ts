@@ -26,7 +26,7 @@ describe('Shape functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.configure({ name: 'test-name', config: 'test-config' });
+      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.configure({ name: 'test-name', config: 'test-config' });
+      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.configure({ name: 'test-name', config: 'test-config' });
+      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.configure({ name: 'test-name', config: 'test-config' });
+      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.configure({ name: 'test-name', config: 'test-config' });
+      const program = shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Shape functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shapeHandler.configure !== 'function') return;
       try {
-        const result = await interpret(shapeHandler.configure({ name: 'test-name', config: 'test-config' }), storage);
+        const result = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Shape functional handler', () => {
       }
     });
 
+    it('fixture "configure_rounded" -> ok', async () => {
+      if (typeof shapeHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_pill" -> ok', async () => {
+      if (typeof shapeHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.resolve({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.resolve({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.resolve({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.resolve({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.resolve({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.resolve({ shapeId: "shape-1", element: "button" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Shape functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(shapeHandler.resolve({ shapeId: 'test', element: 'test-element' }), storage);
+        const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Shape functional handler', () => {
       }
     });
 
+    it('fixture "resolve_button" -> ok', async () => {
+      if (typeof shapeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_card" -> ok', async () => {
+      if (typeof shapeHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "card" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('computeRadius', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Shape functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shapeHandler.computeRadius !== 'function') return;
       try {
-        const result = await interpret(shapeHandler.computeRadius({ shapeId: 'test', element: 'test-element' }), storage);
+        const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Shape functional handler', () => {
       }
     });
 
+    it('fixture "radius_chip" -> ok', async () => {
+      if (typeof shapeHandler.computeRadius !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "radius_dialog" -> ok', async () => {
+      if (typeof shapeHandler.computeRadius !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "dialog" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('computeClipPath', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Shape functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Shape functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' });
+      const program = shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Shape functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shapeHandler.computeClipPath !== 'function') return;
       try {
-        const result = await interpret(shapeHandler.computeClipPath({ shapeId: 'test', element: 'test-element' }), storage);
+        const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Shape functional handler', () => {
       }
     });
 
+    it('fixture "clip_avatar" -> ok', async () => {
+      if (typeof shapeHandler.computeClipPath !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clip_badge" -> ok', async () => {
+      if (typeof shapeHandler.computeClipPath !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "badge" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof shapeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = shapeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Shape');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

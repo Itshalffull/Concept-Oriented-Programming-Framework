@@ -19,7 +19,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.create !== 'function') return;
       try {
-        const result = await storageProgramHandler.create({ program: 'test' }, storage);
+        const result = await storageProgramHandler.create({ program: "prog-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "create_new" -> ok', async () => {
+      if (typeof storageProgramHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.create({ program: "prog-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate" -> error', async () => {
+      if (typeof storageProgramHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.create({ program: "prog-1" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.get !== 'function') return;
       try {
-        const result = await storageProgramHandler.get({ program: 'test', relation: 'test-relation', key: 'test-key', bindAs: 'test-bindAs' }, storage);
+        const result = await storageProgramHandler.get({ program: "prog-1", relation: "users", key: "u1", bindAs: "user" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_user" -> ok', async () => {
+      if (typeof storageProgramHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.get({ program: "prog-1", relation: "users", key: "u1", bindAs: "user" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.get({ program: "nonexistent", relation: "users", key: "u1", bindAs: "user" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.find !== 'function') return;
       try {
-        const result = await storageProgramHandler.find({ program: 'test', relation: 'test-relation', criteria: 'test-criteria', bindAs: 'test-bindAs' }, storage);
+        const result = await storageProgramHandler.find({ program: "prog-1", relation: "users", criteria: "{\"role\":\"admin\"}", bindAs: "admins" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_by_criteria" -> ok', async () => {
+      if (typeof storageProgramHandler.find !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.find({ program: "prog-1", relation: "users", criteria: "{\"role\":\"admin\"}", bindAs: "admins" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.find !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.find({ program: "nonexistent", relation: "users", criteria: "{}", bindAs: "result" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.put !== 'function') return;
       try {
-        const result = await storageProgramHandler.put({ program: 'test', relation: 'test-relation', key: 'test-key', value: 'test-value' }, storage);
+        const result = await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "put_record" -> ok', async () => {
+      if (typeof storageProgramHandler.put !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "put_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.put !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.put({ program: "nonexistent", relation: "users", key: "u1", value: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.del !== 'function') return;
       try {
-        const result = await storageProgramHandler.del({ program: 'test', relation: 'test-relation', key: 'test-key' }, storage);
+        const result = await storageProgramHandler.del({ program: "prog-1", relation: "users", key: "u1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "del_record" -> ok', async () => {
+      if (typeof storageProgramHandler.del !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.del({ program: "prog-1", relation: "users", key: "u1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "del_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.del !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.del({ program: "nonexistent", relation: "users", key: "u1" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +169,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.branch !== 'function') return;
       try {
-        const result = await storageProgramHandler.branch({ program: 'test', condition: 'test-condition', thenBranch: 'test', elseBranch: 'test' }, storage);
+        const result = await storageProgramHandler.branch({ program: "prog-1", condition: "user != null", thenBranch: "prog-then", elseBranch: "prog-else" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "branch_conditional" -> ok', async () => {
+      if (typeof storageProgramHandler.branch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.branch({ program: "prog-1", condition: "user != null", thenBranch: "prog-then", elseBranch: "prog-else" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "branch_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.branch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.branch({ program: "nonexistent", condition: "true", thenBranch: "prog-then", elseBranch: "prog-else" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +199,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.pure !== 'function') return;
       try {
-        const result = await storageProgramHandler.pure({ program: 'test', variant: 'test-variant', output: 'test-output' }, storage);
+        const result = await storageProgramHandler.pure({ program: "prog-1", variant: "ok", output: "{\"message\":\"done\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "pure_ok" -> ok', async () => {
+      if (typeof storageProgramHandler.pure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.pure({ program: "prog-1", variant: "ok", output: "{\"message\":\"done\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pure_missing_program" -> error', async () => {
+      if (typeof storageProgramHandler.pure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.pure({ program: "nonexistent", variant: "ok", output: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +229,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.compose !== 'function') return;
       try {
-        const result = await storageProgramHandler.compose({ first: 'test', second: 'test', bindAs: 'test-bindAs' }, storage);
+        const result = await storageProgramHandler.compose({ first: "prog-a", second: "prog-b", bindAs: "result" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -139,6 +237,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compose_programs" -> ok', async () => {
+      if (typeof storageProgramHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.compose({ first: "prog-a", second: "prog-b", bindAs: "result" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_missing" -> error', async () => {
+      if (typeof storageProgramHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.compose({ first: "nonexistent", second: "prog-b", bindAs: "result" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -147,7 +259,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.getLens !== 'function') return;
       try {
-        const result = await storageProgramHandler.getLens({ program: 'test', lens: 'test-lens', bindAs: 'test-bindAs' }, storage);
+        const result = await storageProgramHandler.getLens({ program: "prog-1", lens: "users.u1.email", bindAs: "email" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -155,6 +267,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_lens_read" -> ok', async () => {
+      if (typeof storageProgramHandler.getLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.getLens({ program: "prog-1", lens: "users.u1.email", bindAs: "email" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_lens_missing" -> error', async () => {
+      if (typeof storageProgramHandler.getLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.getLens({ program: "nonexistent", lens: "users.u1.email", bindAs: "email" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -163,7 +289,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.putLens !== 'function') return;
       try {
-        const result = await storageProgramHandler.putLens({ program: 'test', lens: 'test-lens', value: 'test-value' }, storage);
+        const result = await storageProgramHandler.putLens({ program: "prog-1", lens: "users.u1.email", value: "alice@example.com" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -171,6 +297,20 @@ describe('StorageProgram imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "put_lens_write" -> ok', async () => {
+      if (typeof storageProgramHandler.putLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.putLens({ program: "prog-1", lens: "users.u1.email", value: "alice@example.com" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "put_lens_missing" -> error', async () => {
+      if (typeof storageProgramHandler.putLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.putLens({ program: "nonexistent", lens: "users.u1.email", value: "alice@example.com" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -179,7 +319,7 @@ describe('StorageProgram imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageProgramHandler.modifyLens !== 'function') return;
       try {
-        const result = await storageProgramHandler.modifyLens({ program: 'test', lens: 'test-lens', fn: 'test-fn' }, storage);
+        const result = await storageProgramHandler.modifyLens({ program: "prog-1", lens: "users.u1.name", fn: "toUpperCase" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -189,6 +329,37 @@ describe('StorageProgram imperative handler', () => {
       }
     });
 
+    it('fixture "modify_lens" -> ok', async () => {
+      if (typeof storageProgramHandler.modifyLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.modifyLens({ program: "prog-1", lens: "users.u1.name", fn: "toUpperCase" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "modify_lens_missing" -> error', async () => {
+      if (typeof storageProgramHandler.modifyLens !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await storageProgramHandler.modifyLens({ program: "nonexistent", lens: "users.u1.name", fn: "toUpperCase" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof storageProgramHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = storageProgramHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StorageProgram');
+    });
   });
 
   describe('invariant examples', () => {

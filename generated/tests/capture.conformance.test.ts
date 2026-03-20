@@ -26,7 +26,7 @@ describe('Capture functional handler', () => {
 
   describe('clip', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' });
+      const program = captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' });
+      const program = captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' });
+      const program = captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' });
+      const program = captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' });
+      const program = captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Capture functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof captureHandler.clip !== 'function') return;
       try {
-        const result = await interpret(captureHandler.clip({ url: 'test-url', mode: 'test-mode', metadata: 'test-metadata' }), storage);
+        const result = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Capture functional handler', () => {
       }
     });
 
+    it('fixture "clip_article" -> ok', async () => {
+      if (typeof captureHandler.clip !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clip_bookmark" -> ok', async () => {
+      if (typeof captureHandler.clip !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.clip({ url: "https://news.example.com/story/42", mode: "bookmark", metadata: "{\"tags\":[\"tech\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clip_empty_url" -> error', async () => {
+      if (typeof captureHandler.clip !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.clip({ url: "", mode: "web_article", metadata: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('import', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.import({ file: 'test-file', options: 'test-options' });
+      const program = captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.import({ file: 'test-file', options: 'test-options' });
+      const program = captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.import({ file: 'test-file', options: 'test-options' });
+      const program = captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.import({ file: 'test-file', options: 'test-options' });
+      const program = captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.import({ file: 'test-file', options: 'test-options' });
+      const program = captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Capture functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof captureHandler.import !== 'function') return;
       try {
-        const result = await interpret(captureHandler.import({ file: 'test-file', options: 'test-options' }), storage);
+        const result = await interpret(captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Capture functional handler', () => {
       }
     });
 
+    it('fixture "import_csv" -> ok', async () => {
+      if (typeof captureHandler.import !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "import_pdf" -> ok', async () => {
+      if (typeof captureHandler.import !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.import({ file: "whitepaper.pdf", options: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "import_empty" -> error', async () => {
+      if (typeof captureHandler.import !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.import({ file: "", options: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' });
+      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' });
+      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' });
+      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' });
+      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' });
+      const program = captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Capture functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof captureHandler.subscribe !== 'function') return;
       try {
-        const result = await interpret(captureHandler.subscribe({ sourceId: 'test-sourceId', schedule: 'test-schedule', mode: 'test-mode' }), storage);
+        const result = await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,32 @@ describe('Capture functional handler', () => {
       }
     });
 
+    it('fixture "subscribe_feed" -> ok', async () => {
+      if (typeof captureHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_rss" -> ok', async () => {
+      if (typeof captureHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_bad_schedule" -> error', async () => {
+      if (typeof captureHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('detectChanges', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' });
+      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' });
+      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' });
+      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' });
+      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' });
+      const program = captureHandler.detectChanges({ subscriptionId: "sub-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('Capture functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof captureHandler.detectChanges !== 'function') return;
       try {
-        const result = await interpret(captureHandler.detectChanges({ subscriptionId: 'test-subscriptionId' }), storage);
+        const result = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('Capture functional handler', () => {
       }
     });
 
+    it('fixture "detect_existing" -> ok', async () => {
+      if (typeof captureHandler.detectChanges !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_missing" -> notfound', async () => {
+      if (typeof captureHandler.detectChanges !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('markReady', () => {
     it('builds a valid StorageProgram', () => {
-      const program = captureHandler.markReady({ itemId: 'test-itemId' });
+      const program = captureHandler.markReady({ itemId: "cap-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('Capture functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = captureHandler.markReady({ itemId: 'test-itemId' });
+      const program = captureHandler.markReady({ itemId: "cap-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = captureHandler.markReady({ itemId: 'test-itemId' });
+      const program = captureHandler.markReady({ itemId: "cap-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = captureHandler.markReady({ itemId: 'test-itemId' });
+      const program = captureHandler.markReady({ itemId: "cap-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('Capture functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = captureHandler.markReady({ itemId: 'test-itemId' });
+      const program = captureHandler.markReady({ itemId: "cap-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('Capture functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof captureHandler.markReady !== 'function') return;
       try {
-        const result = await interpret(captureHandler.markReady({ itemId: 'test-itemId' }), storage);
+        const result = await interpret(captureHandler.markReady({ itemId: "cap-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +389,38 @@ describe('Capture functional handler', () => {
       }
     });
 
+    it('fixture "mark_existing" -> ok', async () => {
+      if (typeof captureHandler.markReady !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.markReady({ itemId: "cap-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mark_missing" -> notfound', async () => {
+      if (typeof captureHandler.markReady !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(captureHandler.markReady({ itemId: "cap-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof captureHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = captureHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Capture');
+    });
   });
 
   describe('invariant examples', () => {

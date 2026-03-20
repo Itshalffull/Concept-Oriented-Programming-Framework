@@ -26,7 +26,7 @@ describe('Supermajority functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true });
+      const program = supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Supermajority functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true });
+      const program = supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true });
+      const program = supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true });
+      const program = supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Supermajority functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true });
+      const program = supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Supermajority functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof supermajorityHandler.configure !== 'function') return;
       try {
-        const result = await interpret(supermajorityHandler.configure({ threshold: 1, roundingMode: 'test-roundingMode', abstentionsCount: true }), storage);
+        const result = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Supermajority functional handler', () => {
       }
     });
 
+    it('fixture "two_thirds" -> ok', async () => {
+      if (typeof supermajorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(supermajorityHandler.configure({ threshold: "0.6667", roundingMode: "floor", abstentionsCount: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "three_quarters_with_abstentions" -> ok', async () => {
+      if (typeof supermajorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(supermajorityHandler.configure({ threshold: "0.75", roundingMode: "ceil", abstentionsCount: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_low_threshold" -> error', async () => {
+      if (typeof supermajorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(supermajorityHandler.configure({ threshold: "0.3", roundingMode: "floor", abstentionsCount: "false" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Supermajority functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Supermajority functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Supermajority functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof supermajorityHandler.count !== 'function') return;
       try {
-        const result = await interpret(supermajorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' }), storage);
+        const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('Supermajority functional handler', () => {
       }
     });
 
+    it('fixture "supermajority_reached" -> ok', async () => {
+      if (typeof supermajorityHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_ballots" -> error', async () => {
+      if (typeof supermajorityHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(supermajorityHandler.count({ config: "supermaj-001", ballots: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof supermajorityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = supermajorityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Supermajority');
+    });
   });
 
   describe('invariant examples', () => {

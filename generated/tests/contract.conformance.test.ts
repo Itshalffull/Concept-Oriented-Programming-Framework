@@ -19,7 +19,7 @@ describe('Contract imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractHandler.define !== 'function') return;
       try {
-        const result = await contractHandler.define({ name: 'test-name', source_concept: 'test-source_concept', target_concept: 'test-target_concept', assumptions: 'test', guarantees: 'test' }, storage);
+        const result = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('Contract imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_define" -> ok', async () => {
+      if (typeof contractHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> invalid', async () => {
+      if (typeof contractHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.define({ name: "", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[]", guarantees: "[]" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +49,7 @@ describe('Contract imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractHandler.verify !== 'function') return;
       try {
-        const result = await contractHandler.verify({ contract: 'test' }, storage);
+        const result = await contractHandler.verify({ id: "ct-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('Contract imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_verify" -> ok', async () => {
+      if (typeof contractHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.verify({ id: "ct-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_missing" -> notfound', async () => {
+      if (typeof contractHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.verify({ id: "nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +79,7 @@ describe('Contract imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractHandler.compose !== 'function') return;
       try {
-        const result = await contractHandler.compose({ contracts: 'test' }, storage);
+        const result = await contractHandler.compose({ contract_ids: "[\"ct-001\",\"ct-002\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('Contract imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_compose" -> ok', async () => {
+      if (typeof contractHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.compose({ contract_ids: "[\"ct-001\",\"ct-002\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_single" -> invalid', async () => {
+      if (typeof contractHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.compose({ contract_ids: "[\"ct-001\"]" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -67,7 +109,7 @@ describe('Contract imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractHandler.discharge !== 'function') return;
       try {
-        const result = await contractHandler.discharge({ contract: 'test', assumption_ref: 'test-assumption_ref', evidence_ref: 'test-evidence_ref' }, storage);
+        const result = await contractHandler.discharge({ id: "ct-001", assumption_ref: "user-exists-before-password" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('Contract imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_discharge" -> ok', async () => {
+      if (typeof contractHandler.discharge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.discharge({ id: "ct-001", assumption_ref: "user-exists-before-password" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discharge_missing" -> notfound', async () => {
+      if (typeof contractHandler.discharge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.discharge({ id: "nonexistent", assumption_ref: "some-assumption" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +139,7 @@ describe('Contract imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractHandler.list !== 'function') return;
       try {
-        const result = await contractHandler.list({ source_concept: 'test', target_concept: 'test' }, storage);
+        const result = await contractHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('Contract imperative handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof contractHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_source" -> ok', async () => {
+      if (typeof contractHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contractHandler.list({ source_concept: "clef/concept/User" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contractHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contractHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Contract');
+    });
   });
 
   describe('invariant examples', () => {
@@ -113,10 +200,10 @@ describe('Contract imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string(), guarantees: fc.string() }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string() }) }),
-              fc.record({ action: fc.constant('compose'), input: fc.record({ contracts: fc.string() }) }),
-              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string({ minLength: 1, maxLength: 50 }), guarantees: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ contract_ids: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discharge'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ source_concept: fc.string(), target_concept: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -143,10 +230,10 @@ describe('Contract imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string(), guarantees: fc.string() }) }),
-              fc.record({ action: fc.constant('verify'), input: fc.record({ contract: fc.string() }) }),
-              fc.record({ action: fc.constant('compose'), input: fc.record({ contracts: fc.string() }) }),
-              fc.record({ action: fc.constant('discharge'), input: fc.record({ contract: fc.string(), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }), evidence_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string({ minLength: 1, maxLength: 50 }), guarantees: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('verify'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ contract_ids: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('discharge'), input: fc.record({ id: fc.string({ minLength: 1, maxLength: 50 }), assumption_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ source_concept: fc.string(), target_concept: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -185,7 +272,7 @@ describe('Contract imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string(), guarantees: fc.string() }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source_concept: fc.string({ minLength: 1, maxLength: 50 }), target_concept: fc.string({ minLength: 1, maxLength: 50 }), assumptions: fc.string({ minLength: 1, maxLength: 50 }), guarantees: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await contractHandler.define(input as Record<string, unknown>, storage);

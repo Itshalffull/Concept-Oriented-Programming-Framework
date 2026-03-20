@@ -26,7 +26,7 @@ describe('RuntimeDiscovery functional handler', () => {
 
   describe('scan', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeDiscoveryHandler.scan({ directory: 'test-directory' });
+      const program = runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeDiscoveryHandler.scan({ directory: 'test-directory' });
+      const program = runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeDiscoveryHandler.scan({ directory: 'test-directory' });
+      const program = runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeDiscoveryHandler.scan({ directory: 'test-directory' });
+      const program = runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeDiscoveryHandler.scan({ directory: 'test-directory' });
+      const program = runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeDiscoveryHandler.scan !== 'function') return;
       try {
-        const result = await interpret(runtimeDiscoveryHandler.scan({ directory: 'test-directory' }), storage);
+        const result = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -78,6 +78,27 @@ describe('RuntimeDiscovery functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_scan" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.scan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.scan({ directory: "/app/clef-base" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_directory" -> empty', async () => {
+      if (typeof runtimeDiscoveryHandler.scan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.scan({ directory: "/tmp/empty-project" }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
+    it('fixture "nonexistent_scan" -> io_error', async () => {
+      if (typeof runtimeDiscoveryHandler.scan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.scan({ directory: "/nonexistent/path" }), storage);
+      expect(result.variant).toBe('io_error');
     });
 
   });
@@ -138,11 +159,18 @@ describe('RuntimeDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_list_projects" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.listProjects !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.listProjects({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listRuntimes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeDiscoveryHandler.listRuntimes({ project: 'test' });
+      const program = runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeDiscoveryHandler.listRuntimes({ project: 'test' });
+      const program = runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeDiscoveryHandler.listRuntimes({ project: 'test' });
+      const program = runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeDiscoveryHandler.listRuntimes({ project: 'test' });
+      const program = runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeDiscoveryHandler.listRuntimes({ project: 'test' });
+      const program = runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeDiscoveryHandler.listRuntimes !== 'function') return;
       try {
-        const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: 'test' }), storage);
+        const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('RuntimeDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_list_runtimes" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.listRuntimes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "proj-app-clef-base" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_project_runtimes" -> notfound', async () => {
+      if (typeof runtimeDiscoveryHandler.listRuntimes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.listRuntimes({ project: "proj-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('resolveEndpoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeDiscoveryHandler.resolveEndpoint !== 'function') return;
       try {
-        const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: 'test', runtime: 'test-runtime' }), storage);
+        const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,32 @@ describe('RuntimeDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve_endpoint" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.resolveEndpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_runtime_endpoint" -> notfound', async () => {
+      if (typeof runtimeDiscoveryHandler.resolveEndpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-app-clef-base", runtime: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "unknown_project_endpoint" -> notfound', async () => {
+      if (typeof runtimeDiscoveryHandler.resolveEndpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.resolveEndpoint({ project: "proj-nonexistent", runtime: "api" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('resolveCredentials', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeDiscoveryHandler.resolveCredentials !== 'function') return;
       try {
-        const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ project: 'test', runtime: 'test-runtime' }), storage);
+        const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('RuntimeDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve_creds" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.resolveCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ project: "proj-app-clef-base", runtime: "api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_project_creds" -> notfound', async () => {
+      if (typeof runtimeDiscoveryHandler.resolveCredentials !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.resolveCredentials({ project: "proj-nonexistent", runtime: "api" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('selectRuntime', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('RuntimeDiscovery functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' });
+      const program = runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('RuntimeDiscovery functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeDiscoveryHandler.selectRuntime !== 'function') return;
       try {
-        const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ project: 'test', runtime: 'test-runtime' }), storage);
+        const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('RuntimeDiscovery functional handler', () => {
       }
     });
 
+    it('fixture "valid_select" -> ok', async () => {
+      if (typeof runtimeDiscoveryHandler.selectRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ project: "proj-app-clef-base", runtime: "api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_select" -> notfound', async () => {
+      if (typeof runtimeDiscoveryHandler.selectRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeDiscoveryHandler.selectRuntime({ project: "proj-nonexistent", runtime: "api" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof runtimeDiscoveryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = runtimeDiscoveryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RuntimeDiscovery');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('Notification functional handler', () => {
 
   describe('registerChannel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' });
+      const program = notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' });
+      const program = notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' });
+      const program = notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' });
+      const program = notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' });
+      const program = notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.registerChannel !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.registerChannel({ name: 'test-name', config: 'test-config' }), storage);
+        const result = await interpret(notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "register_email_channel" -> ok', async () => {
+      if (typeof notificationHandler.registerChannel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof notificationHandler.registerChannel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.registerChannel({ name: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('defineTemplate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' });
+      const program = notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' });
+      const program = notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' });
+      const program = notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' });
+      const program = notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' });
+      const program = notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.defineTemplate !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.defineTemplate({ notification: 'test', template: 'test-template' }), storage);
+        const result = await interpret(notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "define_welcome_template" -> ok', async () => {
+      if (typeof notificationHandler.defineTemplate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_empty_template" -> error', async () => {
+      if (typeof notificationHandler.defineTemplate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.defineTemplate({ notification: "welcome", template: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.subscribe !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.subscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' }), storage);
+        const result = await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "subscribe_user_email" -> ok', async () => {
+      if (typeof notificationHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_empty_user" -> error', async () => {
+      if (typeof notificationHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.subscribe({ user: "", eventType: "order_shipped", channel: "email" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unsubscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' });
+      const program = notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.unsubscribe !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.unsubscribe({ user: 'test-user', eventType: 'test-eventType', channel: 'test-channel' }), storage);
+        const result = await interpret(notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "unsubscribe_existing" -> ok', async () => {
+      if (typeof notificationHandler.unsubscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsubscribe_nonexistent" -> notfound', async () => {
+      if (typeof notificationHandler.unsubscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.unsubscribe({ user: "user-42", eventType: "unknown_event", channel: "email" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('notify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' });
+      const program = notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' });
+      const program = notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' });
+      const program = notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' });
+      const program = notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' });
+      const program = notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.notify !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.notify({ notification: 'test', user: 'test-user', template: 'test-template', data: 'test-data' }), storage);
+        const result = await interpret(notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "notify_order_shipped" -> ok', async () => {
+      if (typeof notificationHandler.notify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "notify_missing_template" -> error', async () => {
+      if (typeof notificationHandler.notify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.notify({ notification: "notif-002", user: "user-42", template: "", data: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('markRead', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.markRead({ notification: 'test' });
+      const program = notificationHandler.markRead({ notification: "notif-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.markRead({ notification: 'test' });
+      const program = notificationHandler.markRead({ notification: "notif-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.markRead({ notification: 'test' });
+      const program = notificationHandler.markRead({ notification: "notif-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.markRead({ notification: 'test' });
+      const program = notificationHandler.markRead({ notification: "notif-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.markRead({ notification: 'test' });
+      const program = notificationHandler.markRead({ notification: "notif-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.markRead !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.markRead({ notification: 'test' }), storage);
+        const result = await interpret(notificationHandler.markRead({ notification: "notif-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "mark_read_existing" -> ok', async () => {
+      if (typeof notificationHandler.markRead !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.markRead({ notification: "notif-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mark_read_nonexistent" -> notfound', async () => {
+      if (typeof notificationHandler.markRead !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.markRead({ notification: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getUnread', () => {
     it('builds a valid StorageProgram', () => {
-      const program = notificationHandler.getUnread({ user: 'test-user' });
+      const program = notificationHandler.getUnread({ user: "user-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('Notification functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = notificationHandler.getUnread({ user: 'test-user' });
+      const program = notificationHandler.getUnread({ user: "user-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = notificationHandler.getUnread({ user: 'test-user' });
+      const program = notificationHandler.getUnread({ user: "user-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = notificationHandler.getUnread({ user: 'test-user' });
+      const program = notificationHandler.getUnread({ user: "user-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('Notification functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = notificationHandler.getUnread({ user: 'test-user' });
+      const program = notificationHandler.getUnread({ user: "user-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('Notification functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof notificationHandler.getUnread !== 'function') return;
       try {
-        const result = await interpret(notificationHandler.getUnread({ user: 'test-user' }), storage);
+        const result = await interpret(notificationHandler.getUnread({ user: "user-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('Notification functional handler', () => {
       }
     });
 
+    it('fixture "get_unread_valid" -> ok', async () => {
+      if (typeof notificationHandler.getUnread !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.getUnread({ user: "user-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unread_empty_user" -> error', async () => {
+      if (typeof notificationHandler.getUnread !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(notificationHandler.getUnread({ user: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof notificationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = notificationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Notification');
+    });
   });
 
   describe('invariant examples', () => {

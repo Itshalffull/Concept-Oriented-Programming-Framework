@@ -19,7 +19,7 @@ describe('FeatureFlag imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof featureFlagHandler.enable !== 'function') return;
       try {
-        const result = await featureFlagHandler.enable({ flag: 'test' }, storage);
+        const result = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('FeatureFlag imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "enable_existing_flag" -> ok', async () => {
+      if (typeof featureFlagHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.enable({ flag: "flag-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enable_nonexistent_flag" -> error', async () => {
+      if (typeof featureFlagHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.enable({ flag: "flag-nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('FeatureFlag imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof featureFlagHandler.disable !== 'function') return;
       try {
-        const result = await featureFlagHandler.disable({ flag: 'test' }, storage);
+        const result = await featureFlagHandler.disable({ flag: "flag-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('FeatureFlag imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "disable_existing_flag" -> ok', async () => {
+      if (typeof featureFlagHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.disable({ flag: "flag-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disable_nonexistent_flag" -> error', async () => {
+      if (typeof featureFlagHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.disable({ flag: "flag-nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('FeatureFlag imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof featureFlagHandler.unify !== 'function') return;
       try {
-        const result = await featureFlagHandler.unify({ flags: 'test' }, storage);
+        const result = await featureFlagHandler.unify({ flags: ["flag-1","flag-2"] }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +89,37 @@ describe('FeatureFlag imperative handler', () => {
       }
     });
 
+    it('fixture "unify_compatible_flags" -> ok', async () => {
+      if (typeof featureFlagHandler.unify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.unify({ flags: ["flag-1","flag-2"] }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unify_empty_flags" -> error', async () => {
+      if (typeof featureFlagHandler.unify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await featureFlagHandler.unify({ flags: [] }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof featureFlagHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = featureFlagHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FeatureFlag');
+    });
   });
 
   describe('invariant examples', () => {

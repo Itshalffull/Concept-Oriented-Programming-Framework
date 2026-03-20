@@ -26,7 +26,7 @@ describe('ScopeGraph functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' });
+      const program = scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' });
+      const program = scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' });
+      const program = scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' });
+      const program = scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' });
+      const program = scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScopeGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
       try {
-        const result = await interpret(scopeGraphHandler.build({ file: 'test-file', tree: 'test-tree' }), storage);
+        const result = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ScopeGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_build" -> ok', async () => {
+      if (typeof scopeGraphHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_empty_tree" -> ok', async () => {
+      if (typeof scopeGraphHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_file" -> error', async () => {
+      if (typeof scopeGraphHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.build({ file: "", tree: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveReference', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' });
+      const program = scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' });
+      const program = scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' });
+      const program = scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' });
+      const program = scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' });
+      const program = scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ScopeGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scopeGraphHandler.resolveReference !== 'function') return;
       try {
-        const result = await interpret(scopeGraphHandler.resolveReference({ graph: 'test', scope: 'test-scope', name: 'test-name' }), storage);
+        const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('ScopeGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve_ref" -> ok', async () => {
+      if (typeof scopeGraphHandler.resolveReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_ref_unknown" -> error', async () => {
+      if (typeof scopeGraphHandler.resolveReference !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-999", scope: "scope-1", name: "unknown" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('visibleSymbols', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' });
+      const program = scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' });
+      const program = scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' });
+      const program = scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' });
+      const program = scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' });
+      const program = scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ScopeGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       try {
-        const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: 'test', scope: 'test-scope' }), storage);
+        const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('ScopeGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_visible" -> ok', async () => {
+      if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "visible_no_graph" -> error', async () => {
+      if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-999", scope: "scope-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveCrossFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scopeGraphHandler.resolveCrossFile({ graph: 'test' });
+      const program = scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scopeGraphHandler.resolveCrossFile({ graph: 'test' });
+      const program = scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scopeGraphHandler.resolveCrossFile({ graph: 'test' });
+      const program = scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scopeGraphHandler.resolveCrossFile({ graph: 'test' });
+      const program = scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scopeGraphHandler.resolveCrossFile({ graph: 'test' });
+      const program = scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('ScopeGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
       try {
-        const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: 'test' }), storage);
+        const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('ScopeGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_cross_file" -> ok', async () => {
+      if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cross_file_no_graph" -> error', async () => {
+      if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scopeGraphHandler.get({ graph: 'test' });
+      const program = scopeGraphHandler.get({ graph: "scope-graph-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scopeGraphHandler.get({ graph: 'test' });
+      const program = scopeGraphHandler.get({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scopeGraphHandler.get({ graph: 'test' });
+      const program = scopeGraphHandler.get({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scopeGraphHandler.get({ graph: 'test' });
+      const program = scopeGraphHandler.get({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('ScopeGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scopeGraphHandler.get({ graph: 'test' });
+      const program = scopeGraphHandler.get({ graph: "scope-graph-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('ScopeGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scopeGraphHandler.get !== 'function') return;
       try {
-        const result = await interpret(scopeGraphHandler.get({ graph: 'test' }), storage);
+        const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('ScopeGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof scopeGraphHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof scopeGraphHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scopeGraphHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scopeGraphHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScopeGraph');
+    });
   });
 
   describe('invariant examples', () => {

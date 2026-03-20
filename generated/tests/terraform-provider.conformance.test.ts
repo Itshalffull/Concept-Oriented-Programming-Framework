@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { terraformProviderHandler } from '../../handlers/ts/deploy/terraform-provider.handler.js';
+import { terraformProviderHandler } from '../../handlers/ts/app/terraform-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('TerraformProvider functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.generate({ plan: 'test-plan' });
+      const program = terraformProviderHandler.generate({ plan: "dp-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.generate({ plan: 'test-plan' });
+      const program = terraformProviderHandler.generate({ plan: "dp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.generate({ plan: 'test-plan' });
+      const program = terraformProviderHandler.generate({ plan: "dp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.generate({ plan: 'test-plan' });
+      const program = terraformProviderHandler.generate({ plan: "dp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.generate({ plan: 'test-plan' });
+      const program = terraformProviderHandler.generate({ plan: "dp-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TerraformProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof terraformProviderHandler.generate !== 'function') return;
       try {
-        const result = await interpret(terraformProviderHandler.generate({ plan: 'test-plan' }), storage);
+        const result = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('TerraformProvider functional handler', () => {
       }
     });
 
+    it('fixture "generate_plan" -> ok', async () => {
+      if (typeof terraformProviderHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_complex_plan" -> ok', async () => {
+      if (typeof terraformProviderHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.generate({ plan: "dp-multi-region-002" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_empty_plan" -> error', async () => {
+      if (typeof terraformProviderHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.generate({ plan: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.preview({ workspace: 'test' });
+      const program = terraformProviderHandler.preview({ workspace: "ws-prod-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.preview({ workspace: 'test' });
+      const program = terraformProviderHandler.preview({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.preview({ workspace: 'test' });
+      const program = terraformProviderHandler.preview({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.preview({ workspace: 'test' });
+      const program = terraformProviderHandler.preview({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.preview({ workspace: 'test' });
+      const program = terraformProviderHandler.preview({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('TerraformProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof terraformProviderHandler.preview !== 'function') return;
       try {
-        const result = await interpret(terraformProviderHandler.preview({ workspace: 'test' }), storage);
+        const result = await interpret(terraformProviderHandler.preview({ workspace: "ws-prod-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('TerraformProvider functional handler', () => {
       }
     });
 
+    it('fixture "preview_workspace" -> ok', async () => {
+      if (typeof terraformProviderHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.preview({ workspace: "ws-prod-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_nonexistent" -> error', async () => {
+      if (typeof terraformProviderHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.preview({ workspace: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.apply({ workspace: 'test' });
+      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.apply({ workspace: 'test' });
+      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.apply({ workspace: 'test' });
+      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.apply({ workspace: 'test' });
+      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.apply({ workspace: 'test' });
+      const program = terraformProviderHandler.apply({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('TerraformProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof terraformProviderHandler.apply !== 'function') return;
       try {
-        const result = await interpret(terraformProviderHandler.apply({ workspace: 'test' }), storage);
+        const result = await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('TerraformProvider functional handler', () => {
       }
     });
 
+    it('fixture "apply_workspace" -> ok', async () => {
+      if (typeof terraformProviderHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_nonexistent" -> error', async () => {
+      if (typeof terraformProviderHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.apply({ workspace: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('teardown', () => {
     it('builds a valid StorageProgram', () => {
-      const program = terraformProviderHandler.teardown({ workspace: 'test' });
+      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = terraformProviderHandler.teardown({ workspace: 'test' });
+      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = terraformProviderHandler.teardown({ workspace: 'test' });
+      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = terraformProviderHandler.teardown({ workspace: 'test' });
+      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('TerraformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = terraformProviderHandler.teardown({ workspace: 'test' });
+      const program = terraformProviderHandler.teardown({ workspace: "ws-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('TerraformProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       try {
-        const result = await interpret(terraformProviderHandler.teardown({ workspace: 'test' }), storage);
+        const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('TerraformProvider functional handler', () => {
       }
     });
 
+    it('fixture "teardown_workspace" -> ok', async () => {
+      if (typeof terraformProviderHandler.teardown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "teardown_nonexistent" -> error', async () => {
+      if (typeof terraformProviderHandler.teardown !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(terraformProviderHandler.teardown({ workspace: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof terraformProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = terraformProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TerraformProvider');
+    });
   });
 
   describe('invariant examples', () => {

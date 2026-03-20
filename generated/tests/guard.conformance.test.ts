@@ -26,7 +26,7 @@ describe('Guard functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' });
+      const program = guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' });
+      const program = guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' });
+      const program = guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' });
+      const program = guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' });
+      const program = guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Guard functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof guardHandler.register !== 'function') return;
       try {
-        const result = await interpret(guardHandler.register({ name: 'test-name', checkType: 'test-checkType', condition: 'test-condition', targetAction: 'test-targetAction' }), storage);
+        const result = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Guard functional handler', () => {
       }
     });
 
+    it('fixture "register_balance_guard" -> ok', async () => {
+      if (typeof guardHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.register({ name: "balance-check", targetAction: "transfer", checkType: "Pre", condition: "balance > amount" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_rate_limit" -> ok', async () => {
+      if (typeof guardHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.register({ name: "rate-limiter", targetAction: "execute", checkType: "Both", condition: "requests_per_minute < 100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof guardHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.register({ name: "", targetAction: "transfer", checkType: "Pre", condition: "true" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkPre', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.checkPre({ guard: 'test', context: 'test-context' });
+      const program = guardHandler.checkPre({ guard: "guard-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.checkPre({ guard: 'test', context: 'test-context' });
+      const program = guardHandler.checkPre({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.checkPre({ guard: 'test', context: 'test-context' });
+      const program = guardHandler.checkPre({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.checkPre({ guard: 'test', context: 'test-context' });
+      const program = guardHandler.checkPre({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.checkPre({ guard: 'test', context: 'test-context' });
+      const program = guardHandler.checkPre({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Guard functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof guardHandler.checkPre !== 'function') return;
       try {
-        const result = await interpret(guardHandler.checkPre({ guard: 'test', context: 'test-context' }), storage);
+        const result = await interpret(guardHandler.checkPre({ guard: "guard-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Guard functional handler', () => {
       }
     });
 
+    it('fixture "checkpre_allowed" -> ok', async () => {
+      if (typeof guardHandler.checkPre !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.checkPre({ guard: "guard-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "checkpre_disabled" -> error', async () => {
+      if (typeof guardHandler.checkPre !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.checkPre({ guard: "guard-disabled-001" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkPost', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' });
+      const program = guardHandler.checkPost({ guard: "guard-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' });
+      const program = guardHandler.checkPost({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' });
+      const program = guardHandler.checkPost({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' });
+      const program = guardHandler.checkPost({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' });
+      const program = guardHandler.checkPost({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Guard functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof guardHandler.checkPost !== 'function') return;
       try {
-        const result = await interpret(guardHandler.checkPost({ guard: 'test', context: 'test-context', result: 'test-result' }), storage);
+        const result = await interpret(guardHandler.checkPost({ guard: "guard-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Guard functional handler', () => {
       }
     });
 
+    it('fixture "checkpost_passed" -> ok', async () => {
+      if (typeof guardHandler.checkPost !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.checkPost({ guard: "guard-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "checkpost_disabled" -> error', async () => {
+      if (typeof guardHandler.checkPost !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.checkPost({ guard: "guard-disabled-001" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('enable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.enable({ guard: 'test' });
+      const program = guardHandler.enable({ guard: "guard-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.enable({ guard: 'test' });
+      const program = guardHandler.enable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.enable({ guard: 'test' });
+      const program = guardHandler.enable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.enable({ guard: 'test' });
+      const program = guardHandler.enable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.enable({ guard: 'test' });
+      const program = guardHandler.enable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Guard functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof guardHandler.enable !== 'function') return;
       try {
-        const result = await interpret(guardHandler.enable({ guard: 'test' }), storage);
+        const result = await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Guard functional handler', () => {
       }
     });
 
+    it('fixture "enable_guard" -> ok', async () => {
+      if (typeof guardHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.enable({ guard: "guard-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enable_not_found" -> error', async () => {
+      if (typeof guardHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.enable({ guard: "guard-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('disable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = guardHandler.disable({ guard: 'test' });
+      const program = guardHandler.disable({ guard: "guard-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Guard functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = guardHandler.disable({ guard: 'test' });
+      const program = guardHandler.disable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = guardHandler.disable({ guard: 'test' });
+      const program = guardHandler.disable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = guardHandler.disable({ guard: 'test' });
+      const program = guardHandler.disable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Guard functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = guardHandler.disable({ guard: 'test' });
+      const program = guardHandler.disable({ guard: "guard-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Guard functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof guardHandler.disable !== 'function') return;
       try {
-        const result = await interpret(guardHandler.disable({ guard: 'test' }), storage);
+        const result = await interpret(guardHandler.disable({ guard: "guard-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Guard functional handler', () => {
       }
     });
 
+    it('fixture "disable_guard" -> ok', async () => {
+      if (typeof guardHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.disable({ guard: "guard-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disable_not_found" -> error', async () => {
+      if (typeof guardHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(guardHandler.disable({ guard: "guard-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof guardHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = guardHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Guard');
+    });
   });
 
   describe('invariant examples', () => {
@@ -332,9 +427,9 @@ describe('Guard functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string() }) }),
+              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ guard: fc.string() }) }),
             ),
@@ -363,9 +458,9 @@ describe('Guard functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPre'), input: fc.record({ guard: fc.string() }) }),
+              fc.record({ action: fc.constant('checkPost'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('enable'), input: fc.record({ guard: fc.string() }) }),
               fc.record({ action: fc.constant('disable'), input: fc.record({ guard: fc.string() }) }),
             ),
@@ -406,7 +501,7 @@ describe('Guard functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targetAction: fc.string({ minLength: 1, maxLength: 50 }), checkType: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = guardHandler.register(input as Record<string, unknown>);

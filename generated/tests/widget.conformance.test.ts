@@ -26,7 +26,7 @@ describe('Widget functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' });
+      const program = widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Widget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' });
+      const program = widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' });
+      const program = widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' });
+      const program = widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Widget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' });
+      const program = widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Widget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetHandler.register !== 'function') return;
       try {
-        const result = await interpret(widgetHandler.register({ widget: 'test', name: 'test-name', ast: 'test-ast', category: 'test-category' }), storage);
+        const result = await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Widget functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof widgetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.register({ name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_ast" -> invalid', async () => {
+      if (typeof widgetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.register({ name: "broken-widget", ast: "not-valid-json", category: "general" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetHandler.get({ widget: 'test' });
+      const program = widgetHandler.get({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Widget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetHandler.get({ widget: 'test' });
+      const program = widgetHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetHandler.get({ widget: 'test' });
+      const program = widgetHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetHandler.get({ widget: 'test' });
+      const program = widgetHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Widget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetHandler.get({ widget: 'test' });
+      const program = widgetHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Widget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetHandler.get !== 'function') return;
       try {
-        const result = await interpret(widgetHandler.get({ widget: 'test' }), storage);
+        const result = await interpret(widgetHandler.get({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Widget functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof widgetHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.get({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_widget" -> notfound', async () => {
+      if (typeof widgetHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.get({ widget: "nonexistent-widget" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetHandler.list({ category: 'test' });
+      const program = widgetHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Widget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetHandler.list({ category: 'test' });
+      const program = widgetHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetHandler.list({ category: 'test' });
+      const program = widgetHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetHandler.list({ category: 'test' });
+      const program = widgetHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Widget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetHandler.list({ category: 'test' });
+      const program = widgetHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Widget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetHandler.list !== 'function') return;
       try {
-        const result = await interpret(widgetHandler.list({ category: 'test' }), storage);
+        const result = await interpret(widgetHandler.list({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Widget functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof widgetHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_category" -> ok', async () => {
+      if (typeof widgetHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.list({ category: "overlay" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('unregister', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetHandler.unregister({ widget: 'test' });
+      const program = widgetHandler.unregister({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Widget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetHandler.unregister({ widget: 'test' });
+      const program = widgetHandler.unregister({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetHandler.unregister({ widget: 'test' });
+      const program = widgetHandler.unregister({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetHandler.unregister({ widget: 'test' });
+      const program = widgetHandler.unregister({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Widget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetHandler.unregister({ widget: 'test' });
+      const program = widgetHandler.unregister({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Widget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetHandler.unregister !== 'function') return;
       try {
-        const result = await interpret(widgetHandler.unregister({ widget: 'test' }), storage);
+        const result = await interpret(widgetHandler.unregister({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Widget functional handler', () => {
       }
     });
 
+    it('fixture "valid_unregister" -> ok', async () => {
+      if (typeof widgetHandler.unregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.unregister({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_unregister" -> notfound', async () => {
+      if (typeof widgetHandler.unregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetHandler.unregister({ widget: "nonexistent-widget" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Widget');
+    });
   });
 
   describe('invariant examples', () => {

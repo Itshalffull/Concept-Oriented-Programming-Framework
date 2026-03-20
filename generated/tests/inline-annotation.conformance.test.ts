@@ -26,7 +26,7 @@ describe('InlineAnnotation functional handler', () => {
 
   describe('annotate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' });
+      const program = inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' });
+      const program = inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' });
+      const program = inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' });
+      const program = inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' });
+      const program = inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.annotate !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.annotate({ contentRef: 'test-contentRef', changeType: 'test-changeType', scope: 'test', author: 'test-author' }), storage);
+        const result = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "annotate_insertion" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "annotate_invalid_type" -> error', async () => {
+      if (typeof inlineAnnotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.annotate({ contentRef: "doc-readme", changeType: "unsupported-type", scope: "content", author: "bob" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('accept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.accept({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.accept !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.accept({ annotationId: 'test' }), storage);
+        const result = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "accept_pending" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.accept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "accept_nonexistent" -> error', async () => {
+      if (typeof inlineAnnotationHandler.accept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.accept({ annotationId: "inline-annotation-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reject', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.reject({ annotationId: 'test' });
+      const program = inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.reject !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.reject({ annotationId: 'test' }), storage);
+        const result = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "reject_pending" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reject_nonexistent" -> error', async () => {
+      if (typeof inlineAnnotationHandler.reject !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.reject({ annotationId: "inline-annotation-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('acceptAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: 'test-contentRef' }), storage);
+        const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "accept_all_for_doc" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: "doc-readme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "accept_all_empty_ref" -> error', async () => {
+      if (typeof inlineAnnotationHandler.acceptAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.acceptAll({ contentRef: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rejectAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: 'test-contentRef' }), storage);
+        const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "reject_all_for_doc" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: "doc-readme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reject_all_empty_ref" -> error', async () => {
+      if (typeof inlineAnnotationHandler.rejectAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.rejectAll({ contentRef: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('toggleTracking', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true });
+      const program = inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true });
+      const program = inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true });
+      const program = inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true });
+      const program = inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true });
+      const program = inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.toggleTracking !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: 'test-contentRef', enabled: true }), storage);
+        const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "enable_tracking" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.toggleTracking !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disable_tracking" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.toggleTracking !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.toggleTracking({ contentRef: "doc-readme", enabled: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listPending', () => {
     it('builds a valid StorageProgram', () => {
-      const program = inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.listPending({ contentRef: "doc-readme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.listPending({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.listPending({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.listPending({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('InlineAnnotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' });
+      const program = inlineAnnotationHandler.listPending({ contentRef: "doc-readme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('InlineAnnotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof inlineAnnotationHandler.listPending !== 'function') return;
       try {
-        const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: 'test-contentRef' }), storage);
+        const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: "doc-readme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +512,38 @@ describe('InlineAnnotation functional handler', () => {
       }
     });
 
+    it('fixture "list_pending_existing" -> ok', async () => {
+      if (typeof inlineAnnotationHandler.listPending !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: "doc-readme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_pending_empty_ref" -> error', async () => {
+      if (typeof inlineAnnotationHandler.listPending !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(inlineAnnotationHandler.listPending({ contentRef: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof inlineAnnotationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = inlineAnnotationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InlineAnnotation');
+    });
   });
 
   describe('invariant examples', () => {

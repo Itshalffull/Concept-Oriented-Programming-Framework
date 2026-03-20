@@ -26,7 +26,7 @@ describe('Lockfile functional handler', () => {
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' });
+      const program = lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' });
+      const program = lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' });
+      const program = lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' });
+      const program = lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' });
+      const program = lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Lockfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lockfileHandler.write !== 'function') return;
       try {
-        const result = await interpret(lockfileHandler.write({ project_hash: 'test-project_hash', entries: 'test', metadata: 'test' }), storage);
+        const result = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Lockfile functional handler', () => {
       }
     });
 
+    it('fixture "write_valid_lockfile" -> ok', async () => {
+      if (typeof lockfileHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_circular_ref" -> error', async () => {
+      if (typeof lockfileHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.write({ project_hash: "sha256:hash", entries: [{"module_id":"self-ref","version":"1.0.0","content_hash":"sha256:abc","artifact_url":"url","integrity":"sha256:abc","features_enabled":[],"dependencies":["self-ref"]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('read', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.read({ lockfile: 'test' });
+      const program = lockfileHandler.read({ lockfile: "lock-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.read({ lockfile: 'test' });
+      const program = lockfileHandler.read({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.read({ lockfile: 'test' });
+      const program = lockfileHandler.read({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.read({ lockfile: 'test' });
+      const program = lockfileHandler.read({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.read({ lockfile: 'test' });
+      const program = lockfileHandler.read({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Lockfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lockfileHandler.read !== 'function') return;
       try {
-        const result = await interpret(lockfileHandler.read({ lockfile: 'test' }), storage);
+        const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Lockfile functional handler', () => {
       }
     });
 
+    it('fixture "read_existing_lockfile" -> ok', async () => {
+      if (typeof lockfileHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_nonexistent_lockfile" -> error', async () => {
+      if (typeof lockfileHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.read({ lockfile: "lock-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.verify({ lockfile: 'test' });
+      const program = lockfileHandler.verify({ lockfile: "lock-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.verify({ lockfile: 'test' });
+      const program = lockfileHandler.verify({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.verify({ lockfile: 'test' });
+      const program = lockfileHandler.verify({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.verify({ lockfile: 'test' });
+      const program = lockfileHandler.verify({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.verify({ lockfile: 'test' });
+      const program = lockfileHandler.verify({ lockfile: "lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Lockfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lockfileHandler.verify !== 'function') return;
       try {
-        const result = await interpret(lockfileHandler.verify({ lockfile: 'test' }), storage);
+        const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Lockfile functional handler', () => {
       }
     });
 
+    it('fixture "verify_valid_lockfile" -> ok', async () => {
+      if (typeof lockfileHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_nonexistent_lockfile" -> error', async () => {
+      if (typeof lockfileHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.verify({ lockfile: "lock-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' });
+      const program = lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' });
+      const program = lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' });
+      const program = lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' });
+      const program = lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Lockfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' });
+      const program = lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Lockfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof lockfileHandler.diff !== 'function') return;
       try {
-        const result = await interpret(lockfileHandler.diff({ old_lockfile: 'test', new_lockfile: 'test' }), storage);
+        const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Lockfile functional handler', () => {
       }
     });
 
+    it('fixture "diff_two_lockfiles" -> ok', async () => {
+      if (typeof lockfileHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_missing_lockfile" -> error', async () => {
+      if (typeof lockfileHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-nonexistent", new_lockfile: "lock-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lockfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lockfileHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Lockfile');
+    });
   });
 
   describe('invariant examples', () => {

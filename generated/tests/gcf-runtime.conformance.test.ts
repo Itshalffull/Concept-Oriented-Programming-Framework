@@ -26,7 +26,7 @@ describe('GcfRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' });
+      const program = gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' });
+      const program = gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' });
+      const program = gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' });
+      const program = gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' });
+      const program = gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GcfRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gcfRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(gcfRuntimeHandler.provision({ concept: 'test-concept', projectId: 'test-projectId', region: 'test-region', runtime: 'test-runtime', triggerType: 'test-triggerType' }), storage);
+        const result = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('GcfRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_http" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_pubsub" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.provision({ concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof gcfRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.provision({ concept: "", projectId: "proj", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' });
+      const program = gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' });
+      const program = gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' });
+      const program = gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' });
+      const program = gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' });
+      const program = gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('GcfRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gcfRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(gcfRuntimeHandler.deploy({ function: 'test', sourceArchive: 'test-sourceArchive' }), storage);
+        const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('GcfRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_gcs" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_function" -> error', async () => {
+      if (typeof gcfRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.deploy({ function: "", sourceArchive: "gs://bucket/code.zip" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 });
+      const program = gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 });
+      const program = gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 });
+      const program = gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 });
+      const program = gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 });
+      const program = gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('GcfRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: 'test', weight: 1 }), storage);
+        const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('GcfRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_split" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_no_function" -> error', async () => {
+      if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "", weight: "50" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' });
+      const program = gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('GcfRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(gcfRuntimeHandler.rollback({ function: 'test', targetVersion: 'test-targetVersion' }), storage);
+        const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('GcfRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_to_v1" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_version" -> error', async () => {
+      if (typeof gcfRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gcfRuntimeHandler.destroy({ function: 'test' });
+      const program = gcfRuntimeHandler.destroy({ function: "gcf-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gcfRuntimeHandler.destroy({ function: 'test' });
+      const program = gcfRuntimeHandler.destroy({ function: "gcf-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gcfRuntimeHandler.destroy({ function: 'test' });
+      const program = gcfRuntimeHandler.destroy({ function: "gcf-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gcfRuntimeHandler.destroy({ function: 'test' });
+      const program = gcfRuntimeHandler.destroy({ function: "gcf-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('GcfRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gcfRuntimeHandler.destroy({ function: 'test' });
+      const program = gcfRuntimeHandler.destroy({ function: "gcf-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('GcfRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(gcfRuntimeHandler.destroy({ function: 'test' }), storage);
+        const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('GcfRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof gcfRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof gcfRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gcfRuntimeHandler.destroy({ function: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof gcfRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = gcfRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GcfRuntime');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('ConfigSync functional handler', () => {
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = configSyncHandler.export({ config: 'test' });
+      const program = configSyncHandler.export({ config: "site-settings" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = configSyncHandler.export({ config: 'test' });
+      const program = configSyncHandler.export({ config: "site-settings" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = configSyncHandler.export({ config: 'test' });
+      const program = configSyncHandler.export({ config: "site-settings" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = configSyncHandler.export({ config: 'test' });
+      const program = configSyncHandler.export({ config: "site-settings" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = configSyncHandler.export({ config: 'test' });
+      const program = configSyncHandler.export({ config: "site-settings" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ConfigSync functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof configSyncHandler.export !== 'function') return;
       try {
-        const result = await interpret(configSyncHandler.export({ config: 'test' }), storage);
+        const result = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ConfigSync functional handler', () => {
       }
     });
 
+    it('fixture "export_site_config" -> ok', async () => {
+      if (typeof configSyncHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.export({ config: "site-settings" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_empty_config" -> error', async () => {
+      if (typeof configSyncHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.export({ config: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('import', () => {
     it('builds a valid StorageProgram', () => {
-      const program = configSyncHandler.import({ config: 'test', data: 'test-data' });
+      const program = configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = configSyncHandler.import({ config: 'test', data: 'test-data' });
+      const program = configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = configSyncHandler.import({ config: 'test', data: 'test-data' });
+      const program = configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = configSyncHandler.import({ config: 'test', data: 'test-data' });
+      const program = configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = configSyncHandler.import({ config: 'test', data: 'test-data' });
+      const program = configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ConfigSync functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof configSyncHandler.import !== 'function') return;
       try {
-        const result = await interpret(configSyncHandler.import({ config: 'test', data: 'test-data' }), storage);
+        const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ConfigSync functional handler', () => {
       }
     });
 
+    it('fixture "import_valid" -> ok', async () => {
+      if (typeof configSyncHandler.import !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "import_empty_data" -> error', async () => {
+      if (typeof configSyncHandler.import !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.import({ config: "site-settings", data: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('override', () => {
     it('builds a valid StorageProgram', () => {
-      const program = configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' });
+      const program = configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' });
+      const program = configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' });
+      const program = configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' });
+      const program = configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' });
+      const program = configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ConfigSync functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof configSyncHandler.override !== 'function') return;
       try {
-        const result = await interpret(configSyncHandler.override({ config: 'test', layer: 'test-layer', values: 'test-values' }), storage);
+        const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ConfigSync functional handler', () => {
       }
     });
 
+    it('fixture "override_production" -> ok', async () => {
+      if (typeof configSyncHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "override_empty_layer" -> error', async () => {
+      if (typeof configSyncHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.override({ config: "site-settings", layer: "", values: "debug=true" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = configSyncHandler.diff({ configA: 'test', configB: 'test' });
+      const program = configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = configSyncHandler.diff({ configA: 'test', configB: 'test' });
+      const program = configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = configSyncHandler.diff({ configA: 'test', configB: 'test' });
+      const program = configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = configSyncHandler.diff({ configA: 'test', configB: 'test' });
+      const program = configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ConfigSync functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = configSyncHandler.diff({ configA: 'test', configB: 'test' });
+      const program = configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ConfigSync functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof configSyncHandler.diff !== 'function') return;
       try {
-        const result = await interpret(configSyncHandler.diff({ configA: 'test', configB: 'test' }), storage);
+        const result = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('ConfigSync functional handler', () => {
       }
     });
 
+    it('fixture "diff_two_configs" -> ok', async () => {
+      if (typeof configSyncHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.diff({ configA: "site-settings", configB: "site-settings-v2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_same_config" -> error', async () => {
+      if (typeof configSyncHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(configSyncHandler.diff({ configA: "", configB: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof configSyncHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = configSyncHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConfigSync');
+    });
   });
 
   describe('invariant examples', () => {

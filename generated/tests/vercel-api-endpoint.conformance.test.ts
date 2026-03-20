@@ -19,7 +19,7 @@ describe('VercelApiEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof vercelApiEndpointHandler.register !== 'function') return;
       try {
-        const result = await vercelApiEndpointHandler.register({ name: 'test-name', apiToken: 'test-apiToken', teamId: 'test-teamId' }, storage);
+        const result = await vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-prod-abc123", teamId: "team_acme" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,34 @@ describe('VercelApiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "vercel_with_team" -> ok', async () => {
+      if (typeof vercelApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-prod-abc123", teamId: "team_acme" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "vercel_personal" -> ok', async () => {
+      if (typeof vercelApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.register({ name: "vercel-personal", apiToken: "vt-dev-xyz789", teamId: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof vercelApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.register({ name: "", apiToken: "vt-test", teamId: "team-123" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof vercelApiEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await vercelApiEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await vercelApiEndpointHandler.resolve({ name: "vercel-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('VercelApiEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof vercelApiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.resolve({ name: "vercel-api" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof vercelApiEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +96,30 @@ describe('VercelApiEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof vercelApiEndpointHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await vercelApiEndpointHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof vercelApiEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = vercelApiEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VercelApiEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

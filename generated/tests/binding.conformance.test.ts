@@ -26,7 +26,7 @@ describe('Binding functional handler', () => {
 
   describe('bind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' });
+      const program = bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Binding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' });
+      const program = bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' });
+      const program = bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' });
+      const program = bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Binding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' });
+      const program = bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Binding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bindingHandler.bind !== 'function') return;
       try {
-        const result = await interpret(bindingHandler.bind({ binding: 'test', concept: 'test', mode: 'test-mode' }), storage);
+        const result = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Binding functional handler', () => {
       }
     });
 
+    it('fixture "valid_bind_coupled" -> ok', async () => {
+      if (typeof bindingHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid_bind_rest" -> ok', async () => {
+      if (typeof bindingHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.bind({ binding: "B-2", concept: "User", mode: "rest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_mode" -> error', async () => {
+      if (typeof bindingHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.bind({ binding: "B-3", concept: "Article", mode: "websocket" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('sync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bindingHandler.sync({ binding: 'test' });
+      const program = bindingHandler.sync({ binding: "B-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Binding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bindingHandler.sync({ binding: 'test' });
+      const program = bindingHandler.sync({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bindingHandler.sync({ binding: 'test' });
+      const program = bindingHandler.sync({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bindingHandler.sync({ binding: 'test' });
+      const program = bindingHandler.sync({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Binding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bindingHandler.sync({ binding: 'test' });
+      const program = bindingHandler.sync({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Binding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bindingHandler.sync !== 'function') return;
       try {
-        const result = await interpret(bindingHandler.sync({ binding: 'test' }), storage);
+        const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Binding functional handler', () => {
       }
     });
 
+    it('fixture "valid_sync" -> ok', async () => {
+      if (typeof bindingHandler.sync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_nonexistent" -> error', async () => {
+      if (typeof bindingHandler.sync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.sync({ binding: "B-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' });
+      const program = bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Binding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' });
+      const program = bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' });
+      const program = bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' });
+      const program = bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Binding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' });
+      const program = bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Binding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       try {
-        const result = await interpret(bindingHandler.invoke({ binding: 'test', action: 'test-action', input: 'test-input' }), storage);
+        const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Binding functional handler', () => {
       }
     });
 
+    it('fixture "valid_invoke" -> ok', async () => {
+      if (typeof bindingHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invoke_nonexistent" -> error', async () => {
+      if (typeof bindingHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.invoke({ binding: "B-999", action: "create", input: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unbind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bindingHandler.unbind({ binding: 'test' });
+      const program = bindingHandler.unbind({ binding: "B-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Binding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bindingHandler.unbind({ binding: 'test' });
+      const program = bindingHandler.unbind({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bindingHandler.unbind({ binding: 'test' });
+      const program = bindingHandler.unbind({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bindingHandler.unbind({ binding: 'test' });
+      const program = bindingHandler.unbind({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Binding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bindingHandler.unbind({ binding: 'test' });
+      const program = bindingHandler.unbind({ binding: "B-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Binding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bindingHandler.unbind !== 'function') return;
       try {
-        const result = await interpret(bindingHandler.unbind({ binding: 'test' }), storage);
+        const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('Binding functional handler', () => {
       }
     });
 
+    it('fixture "valid_unbind" -> ok', async () => {
+      if (typeof bindingHandler.unbind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unbind_nonexistent" -> error', async () => {
+      if (typeof bindingHandler.unbind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bindingHandler.unbind({ binding: "B-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof bindingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = bindingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Binding');
+    });
   });
 
   describe('invariant examples', () => {

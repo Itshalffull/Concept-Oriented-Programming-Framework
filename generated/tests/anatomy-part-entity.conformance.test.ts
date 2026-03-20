@@ -19,7 +19,7 @@ describe('AnatomyPartEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof anatomyPartEntityHandler.register !== 'function') return;
       try {
-        const result = await anatomyPartEntityHandler.register({ widget: 'test-widget', name: 'test-name', role: 'test-role', required: 'test-required' }, storage);
+        const result = await anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('AnatomyPartEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_dialog_root" -> ok', async () => {
+      if (typeof anatomyPartEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.register({ widget: "dialog", name: "root", role: "container", required: "true" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_widget" -> error', async () => {
+      if (typeof anatomyPartEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.register({ widget: "", name: "root", role: "container", required: "true" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('AnatomyPartEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof anatomyPartEntityHandler.findByRole !== 'function') return;
       try {
-        const result = await anatomyPartEntityHandler.findByRole({ role: 'test-role' }, storage);
+        const result = await anatomyPartEntityHandler.findByRole({ role: "container" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('AnatomyPartEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_containers" -> ok', async () => {
+      if (typeof anatomyPartEntityHandler.findByRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findByRole({ role: "container" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_role" -> error', async () => {
+      if (typeof anatomyPartEntityHandler.findByRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findByRole({ role: "nonexistent-role" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('AnatomyPartEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToField !== 'function') return;
       try {
-        const result = await anatomyPartEntityHandler.findBoundToField({ field: 'test-field' }, storage);
+        const result = await anatomyPartEntityHandler.findBoundToField({ field: "title" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('AnatomyPartEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_title_bindings" -> ok', async () => {
+      if (typeof anatomyPartEntityHandler.findBoundToField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findBoundToField({ field: "title" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unbound_field" -> error', async () => {
+      if (typeof anatomyPartEntityHandler.findBoundToField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findBoundToField({ field: "nonexistent-field" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('AnatomyPartEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof anatomyPartEntityHandler.findBoundToAction !== 'function') return;
       try {
-        const result = await anatomyPartEntityHandler.findBoundToAction({ action: 'test-action' }, storage);
+        const result = await anatomyPartEntityHandler.findBoundToAction({ action: "submit" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('AnatomyPartEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_submit_bindings" -> ok', async () => {
+      if (typeof anatomyPartEntityHandler.findBoundToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findBoundToAction({ action: "submit" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unbound_action" -> error', async () => {
+      if (typeof anatomyPartEntityHandler.findBoundToAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.findBoundToAction({ action: "nonexistent-action" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('AnatomyPartEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof anatomyPartEntityHandler.get !== 'function') return;
       try {
-        const result = await anatomyPartEntityHandler.get({ part: 'test' }, storage);
+        const result = await anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('AnatomyPartEntity imperative handler', () => {
       }
     });
 
+    it('fixture "get_existing_part" -> ok', async () => {
+      if (typeof anatomyPartEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.get({ part: "anatomy-part-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent_part" -> error', async () => {
+      if (typeof anatomyPartEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await anatomyPartEntityHandler.get({ part: "nonexistent-part" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof anatomyPartEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = anatomyPartEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AnatomyPartEntity');
+    });
   });
 
   describe('invariant examples', () => {

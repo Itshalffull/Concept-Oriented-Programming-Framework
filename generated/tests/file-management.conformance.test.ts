@@ -26,7 +26,7 @@ describe('FileManagement functional handler', () => {
 
   describe('upload', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' });
+      const program = fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' });
+      const program = fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' });
+      const program = fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' });
+      const program = fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' });
+      const program = fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FileManagement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileManagementHandler.upload !== 'function') return;
       try {
-        const result = await interpret(fileManagementHandler.upload({ file: 'test', data: 'test-data', mimeType: 'test-mimeType' }), storage);
+        const result = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('FileManagement functional handler', () => {
       }
     });
 
+    it('fixture "upload_pdf" -> ok', async () => {
+      if (typeof fileManagementHandler.upload !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upload_image" -> ok', async () => {
+      if (typeof fileManagementHandler.upload !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.upload({ file: "logo.png", data: "iVBORw0KGgo=", mimeType: "image/png" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upload_duplicate" -> error', async () => {
+      if (typeof fileManagementHandler.upload !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.upload({ file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addUsage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('FileManagement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileManagementHandler.addUsage !== 'function') return;
       try {
-        const result = await interpret(fileManagementHandler.addUsage({ file: 'test', entity: 'test-entity' }), storage);
+        const result = await interpret(fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('FileManagement functional handler', () => {
       }
     });
 
+    it('fixture "add_usage_ok" -> ok', async () => {
+      if (typeof fileManagementHandler.addUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.addUsage({ file: "report.pdf", entity: "article-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_usage_missing" -> notfound', async () => {
+      if (typeof fileManagementHandler.addUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.addUsage({ file: "ghost.txt", entity: "article-1" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('removeUsage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' });
+      const program = fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('FileManagement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileManagementHandler.removeUsage !== 'function') return;
       try {
-        const result = await interpret(fileManagementHandler.removeUsage({ file: 'test', entity: 'test-entity' }), storage);
+        const result = await interpret(fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +229,20 @@ describe('FileManagement functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "remove_usage_ok" -> ok', async () => {
+      if (typeof fileManagementHandler.removeUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.removeUsage({ file: "report.pdf", entity: "article-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_usage_missing" -> notfound', async () => {
+      if (typeof fileManagementHandler.removeUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.removeUsage({ file: "ghost.txt", entity: "article-1" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -254,11 +303,18 @@ describe('FileManagement functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof fileManagementHandler.garbageCollect !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.garbageCollect({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileManagementHandler.getFile({ file: 'test' });
+      const program = fileManagementHandler.getFile({ file: "report.pdf" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileManagementHandler.getFile({ file: 'test' });
+      const program = fileManagementHandler.getFile({ file: "report.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileManagementHandler.getFile({ file: 'test' });
+      const program = fileManagementHandler.getFile({ file: "report.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileManagementHandler.getFile({ file: 'test' });
+      const program = fileManagementHandler.getFile({ file: "report.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('FileManagement functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileManagementHandler.getFile({ file: 'test' });
+      const program = fileManagementHandler.getFile({ file: "report.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('FileManagement functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileManagementHandler.getFile !== 'function') return;
       try {
-        const result = await interpret(fileManagementHandler.getFile({ file: 'test' }), storage);
+        const result = await interpret(fileManagementHandler.getFile({ file: "report.pdf" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('FileManagement functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof fileManagementHandler.getFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.getFile({ file: "report.pdf" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> notfound', async () => {
+      if (typeof fileManagementHandler.getFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileManagementHandler.getFile({ file: "ghost.txt" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fileManagementHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fileManagementHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FileManagement');
+    });
   });
 
   describe('invariant examples', () => {

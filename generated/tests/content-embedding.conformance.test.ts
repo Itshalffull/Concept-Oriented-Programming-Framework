@@ -19,7 +19,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentEmbeddingHandler.index !== 'function') return;
       try {
-        const result = await contentEmbeddingHandler.index({ entity_id: 'test-entity_id', source_type: 'test-source_type', text: 'test-text', model: 'test-model' }, storage);
+        const result = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ContentEmbedding imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "index_page" -> ok', async () => {
+      if (typeof contentEmbeddingHandler.index !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "Introduction to concept-oriented programming", model: "text-embedding-3-small" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_model" -> error', async () => {
+      if (typeof contentEmbeddingHandler.index !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.index({ entity_id: "node-42", source_type: "page", text: "some content", model: "nonexistent-model" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentEmbeddingHandler.remove !== 'function') return;
       try {
-        const result = await contentEmbeddingHandler.remove({ entity_id: 'test-entity_id' }, storage);
+        const result = await contentEmbeddingHandler.remove({ entity_id: "node-42" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ContentEmbedding imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "remove_existing" -> ok', async () => {
+      if (typeof contentEmbeddingHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.remove({ entity_id: "node-42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_missing" -> error', async () => {
+      if (typeof contentEmbeddingHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.remove({ entity_id: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentEmbeddingHandler.get !== 'function') return;
       try {
-        const result = await contentEmbeddingHandler.get({ entity_id: 'test-entity_id' }, storage);
+        const result = await contentEmbeddingHandler.get({ entity_id: "node-42" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('ContentEmbedding imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof contentEmbeddingHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.get({ entity_id: "node-42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof contentEmbeddingHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.get({ entity_id: "node-999" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('ContentEmbedding imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
       try {
-        const result = await contentEmbeddingHandler.searchSimilar({ entity_id: 'test-entity_id', topK: 1, source_type: 'test-source_type' }, storage);
+        const result = await contentEmbeddingHandler.searchSimilar({ entity_id: "node-42", topK: "5", source_type: "page" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('ContentEmbedding imperative handler', () => {
       }
     });
 
+    it('fixture "search_pages" -> ok', async () => {
+      if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.searchSimilar({ entity_id: "node-42", topK: "5", source_type: "page" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "search_no_entity" -> error', async () => {
+      if (typeof contentEmbeddingHandler.searchSimilar !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await contentEmbeddingHandler.searchSimilar({ entity_id: "", topK: "5", source_type: "page" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentEmbeddingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentEmbeddingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContentEmbedding');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('FileArtifact functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' });
+      const program = fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' });
+      const program = fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' });
+      const program = fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' });
+      const program = fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' });
+      const program = fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FileArtifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileArtifactHandler.register !== 'function') return;
       try {
-        const result = await interpret(fileArtifactHandler.register({ node: 'test-node', role: 'test-role', language: 'test-language' }), storage);
+        const result = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('FileArtifact functional handler', () => {
       }
     });
 
+    it('fixture "register_source" -> ok', async () => {
+      if (typeof fileArtifactHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_node" -> error', async () => {
+      if (typeof fileArtifactHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setProvenance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' });
+      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' });
+      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' });
+      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' });
+      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' });
+      const program = fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('FileArtifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileArtifactHandler.setProvenance !== 'function') return;
       try {
-        const result = await interpret(fileArtifactHandler.setProvenance({ artifact: 'test', spec: 'test-spec', generator: 'test-generator' }), storage);
+        const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('FileArtifact functional handler', () => {
       }
     });
 
+    it('fixture "set_provenance" -> ok', async () => {
+      if (typeof fileArtifactHandler.setProvenance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_provenance_missing" -> error', async () => {
+      if (typeof fileArtifactHandler.setProvenance !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "nonexistent", spec: "x.concept", generator: "gen" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.findByRole({ role: 'test-role' });
+      const program = fileArtifactHandler.findByRole({ role: "source" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.findByRole({ role: 'test-role' });
+      const program = fileArtifactHandler.findByRole({ role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.findByRole({ role: 'test-role' });
+      const program = fileArtifactHandler.findByRole({ role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.findByRole({ role: 'test-role' });
+      const program = fileArtifactHandler.findByRole({ role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.findByRole({ role: 'test-role' });
+      const program = fileArtifactHandler.findByRole({ role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('FileArtifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       try {
-        const result = await interpret(fileArtifactHandler.findByRole({ role: 'test-role' }), storage);
+        const result = await interpret(fileArtifactHandler.findByRole({ role: "source" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('FileArtifact functional handler', () => {
       }
     });
 
+    it('fixture "find_source" -> ok', async () => {
+      if (typeof fileArtifactHandler.findByRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.findByRole({ role: "source" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_role" -> error', async () => {
+      if (typeof fileArtifactHandler.findByRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.findByRole({ role: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findGeneratedFrom', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' });
+      const program = fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' });
+      const program = fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' });
+      const program = fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' });
+      const program = fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' });
+      const program = fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('FileArtifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileArtifactHandler.findGeneratedFrom !== 'function') return;
       try {
-        const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: 'test-spec' }), storage);
+        const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('FileArtifact functional handler', () => {
       }
     });
 
+    it('fixture "find_generated" -> ok', async () => {
+      if (typeof fileArtifactHandler.findGeneratedFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_generated_empty" -> error', async () => {
+      if (typeof fileArtifactHandler.findGeneratedFrom !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileArtifactHandler.get({ artifact: 'test' });
+      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileArtifactHandler.get({ artifact: 'test' });
+      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileArtifactHandler.get({ artifact: 'test' });
+      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileArtifactHandler.get({ artifact: 'test' });
+      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('FileArtifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileArtifactHandler.get({ artifact: 'test' });
+      const program = fileArtifactHandler.get({ artifact: "artifact-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('FileArtifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileArtifactHandler.get !== 'function') return;
       try {
-        const result = await interpret(fileArtifactHandler.get({ artifact: 'test' }), storage);
+        const result = await interpret(fileArtifactHandler.get({ artifact: "artifact-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('FileArtifact functional handler', () => {
       }
     });
 
+    it('fixture "get_artifact" -> ok', async () => {
+      if (typeof fileArtifactHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.get({ artifact: "artifact-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof fileArtifactHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileArtifactHandler.get({ artifact: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fileArtifactHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fileArtifactHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FileArtifact');
+    });
   });
 
   describe('invariant examples', () => {

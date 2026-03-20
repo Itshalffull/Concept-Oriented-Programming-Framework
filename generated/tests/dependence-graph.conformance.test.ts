@@ -26,7 +26,7 @@ describe('DependenceGraph functional handler', () => {
 
   describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' });
+      const program = dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' });
+      const program = dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' });
+      const program = dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' });
+      const program = dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' });
+      const program = dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.compute !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.compute({ scopeRef: 'test-scopeRef' }), storage);
+        const result = await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "file_scope" -> ok', async () => {
+      if (typeof dependenceGraphHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.compute({ scopeRef: "src/handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "module_scope" -> ok', async () => {
+      if (typeof dependenceGraphHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.compute({ scopeRef: "clef::runtime" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "project_scope" -> ok', async () => {
+      if (typeof dependenceGraphHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.compute({ scopeRef: "my-project" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_scope" -> unsupportedLanguage', async () => {
+      if (typeof dependenceGraphHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.compute({ scopeRef: "" }), storage);
+      expect(result.variant).toBe('unsupportedLanguage');
+    });
+
   });
 
   describe('queryDependents', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.queryDependents !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' }), storage);
+        const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "all_kinds" -> ok', async () => {
+      if (typeof dependenceGraphHandler.queryDependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "data_deps_only" -> ok', async () => {
+      if (typeof dependenceGraphHandler.queryDependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.queryDependents({ symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('queryDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' });
+      const program = dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.queryDependencies !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: 'test-symbol', edgeKinds: 'test-edgeKinds' }), storage);
+        const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "all_kinds" -> ok', async () => {
+      if (typeof dependenceGraphHandler.queryDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: "clef/state-field/Article/title", edgeKinds: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "call_only" -> ok', async () => {
+      if (typeof dependenceGraphHandler.queryDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.queryDependencies({ symbol: "clef/action/Article/publish", edgeKinds: "call" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('sliceForward', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.sliceForward !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: 'test-criterion' }), storage);
+        const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_forward" -> ok', async () => {
+      if (typeof dependenceGraphHandler.sliceForward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: "clef/state-field/Article/title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "action_criterion" -> ok', async () => {
+      if (typeof dependenceGraphHandler.sliceForward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.sliceForward({ criterion: "clef/action/Article/publish" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('sliceBackward', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' });
+      const program = dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.sliceBackward !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: 'test-criterion' }), storage);
+        const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,25 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_backward" -> ok', async () => {
+      if (typeof dependenceGraphHandler.sliceBackward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: "clef/state-field/Article/title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "output_criterion" -> ok', async () => {
+      if (typeof dependenceGraphHandler.sliceBackward !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.sliceBackward({ criterion: "clef/output/report.json" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('impactAnalysis', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' });
+      const program = dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +408,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' });
+      const program = dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' });
+      const program = dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' });
+      const program = dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +435,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' });
+      const program = dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +444,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.impactAnalysis !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: 'test-changed' }), storage);
+        const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +454,25 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "single_change" -> ok', async () => {
+      if (typeof dependenceGraphHandler.impactAnalysis !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/state-field/Article/title\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "multi_change" -> ok', async () => {
+      if (typeof dependenceGraphHandler.impactAnalysis !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.impactAnalysis({ changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dependenceGraphHandler.get({ graph: 'test' });
+      const program = dependenceGraphHandler.get({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +480,21 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dependenceGraphHandler.get({ graph: 'test' });
+      const program = dependenceGraphHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dependenceGraphHandler.get({ graph: 'test' });
+      const program = dependenceGraphHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dependenceGraphHandler.get({ graph: 'test' });
+      const program = dependenceGraphHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +507,7 @@ describe('DependenceGraph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dependenceGraphHandler.get({ graph: 'test' });
+      const program = dependenceGraphHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +516,7 @@ describe('DependenceGraph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof dependenceGraphHandler.get !== 'function') return;
       try {
-        const result = await interpret(dependenceGraphHandler.get({ graph: 'test' }), storage);
+        const result = await interpret(dependenceGraphHandler.get({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,6 +526,38 @@ describe('DependenceGraph functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof dependenceGraphHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.get({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_graph" -> notfound', async () => {
+      if (typeof dependenceGraphHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dependenceGraphHandler.get({ graph: "dependence-graph-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof dependenceGraphHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = dependenceGraphHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DependenceGraph');
+    });
   });
 
   describe('invariant examples', () => {

@@ -29,13 +29,20 @@ describe('ShellProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof shellProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await shellProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('executes without crashing', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       try {
-        const result = await shellProviderHandler.execute({ command: 'test-command', args: 'test-args', env: 'test-env', cwd: 'test-cwd', timeout: 1 }, storage);
+        const result = await shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +50,27 @@ describe('ShellProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "echo_hello" -> ok', async () => {
+      if (typeof shellProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "ls_home" -> ok', async () => {
+      if (typeof shellProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await shellProviderHandler.execute({ command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: "10000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_executable" -> error', async () => {
+      if (typeof shellProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await shellProviderHandler.execute({ command: "/nonexistent/binary", args: "", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -61,6 +89,30 @@ describe('ShellProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof shellProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await shellProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof shellProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = shellProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ShellProvider');
+    });
   });
 
   describe('invariant examples', () => {

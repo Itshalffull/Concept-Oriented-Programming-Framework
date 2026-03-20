@@ -26,7 +26,7 @@ describe('Weight functional handler', () => {
 
   describe('updateWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 });
+      const program = weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Weight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 });
+      const program = weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 });
+      const program = weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 });
+      const program = weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Weight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 });
+      const program = weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Weight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof weightHandler.updateWeight !== 'function') return;
       try {
-        const result = await interpret(weightHandler.updateWeight({ participant: 'test-participant', source: 'test-source', value: 1 }), storage);
+        const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Weight functional handler', () => {
       }
     });
 
+    it('fixture "update_stake" -> ok', async () => {
+      if (typeof weightHandler.updateWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_negative" -> error', async () => {
+      if (typeof weightHandler.updateWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "-1.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('snapshot', () => {
     it('builds a valid StorageProgram', () => {
-      const program = weightHandler.snapshot({ time: 'test' });
+      const program = weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Weight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = weightHandler.snapshot({ time: 'test' });
+      const program = weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = weightHandler.snapshot({ time: 'test' });
+      const program = weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = weightHandler.snapshot({ time: 'test' });
+      const program = weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Weight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = weightHandler.snapshot({ time: 'test' });
+      const program = weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Weight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof weightHandler.snapshot !== 'function') return;
       try {
-        const result = await interpret(weightHandler.snapshot({ time: 'test' }), storage);
+        const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Weight functional handler', () => {
       }
     });
 
+    it('fixture "snap_governance" -> ok', async () => {
+      if (typeof weightHandler.snapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "snap_empty_participants" -> error', async () => {
+      if (typeof weightHandler.snapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-43", participants: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' });
+      const program = weightHandler.getWeight({ participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Weight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' });
+      const program = weightHandler.getWeight({ participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' });
+      const program = weightHandler.getWeight({ participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' });
+      const program = weightHandler.getWeight({ participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Weight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' });
+      const program = weightHandler.getWeight({ participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Weight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof weightHandler.getWeight !== 'function') return;
       try {
-        const result = await interpret(weightHandler.getWeight({ participant: 'test-participant', atTime: 'test' }), storage);
+        const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Weight functional handler', () => {
       }
     });
 
+    it('fixture "get_alice_weight" -> ok', async () => {
+      if (typeof weightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown_weight" -> error', async () => {
+      if (typeof weightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.getWeight({ participant: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getWeightFromSnapshot', () => {
     it('builds a valid StorageProgram', () => {
-      const program = weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' });
+      const program = weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Weight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' });
+      const program = weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' });
+      const program = weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' });
+      const program = weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Weight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' });
+      const program = weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Weight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
       try {
-        const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshotId: 'test', participant: 'test-participant' }), storage);
+        const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Weight functional handler', () => {
       }
     });
 
+    it('fixture "get_from_snapshot" -> ok', async () => {
+      if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_from_missing_snapshot" -> error', async () => {
+      if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-missing", participant: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof weightHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = weightHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Weight');
+    });
   });
 
   describe('invariant examples', () => {
@@ -262,7 +336,8 @@ describe('Weight functional handler', () => {
       const updateWeightResult0 = await interpret(weightHandler.updateWeight({ participant: {"type":"variable","name":"p"}, source: {"type":"variable","name":"_"}, value: {"type":"variable","name":"v"} }), storage);
       expect(updateWeightResult0.variant).toBe("updated");
       const weight = updateWeightResult0.output["weight"];
-      const thenResult0 = await interpret(weightHandler.getWeight({ participant: {"type":"variable","name":"p"}, atTime: {"type":"variable","name":"_"} }), storage);
+      const newTotal = updateWeightResult0.output["newTotal"];
+      const thenResult0 = await interpret(weightHandler.getWeight({ participant: {"type":"variable","name":"p"} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });
 
@@ -275,9 +350,9 @@ describe('Weight functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ time: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), atTime: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('snapshot'), input: fc.record({ snapshotRef: fc.string(), participants: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshot: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -305,9 +380,9 @@ describe('Weight functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('updateWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
-              fc.record({ action: fc.constant('snapshot'), input: fc.record({ time: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), atTime: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshotId: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('snapshot'), input: fc.record({ snapshotRef: fc.string(), participants: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getWeightFromSnapshot'), input: fc.record({ snapshot: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

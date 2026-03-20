@@ -19,7 +19,7 @@ describe('Lens imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.create !== 'function') return;
       try {
-        const result = await lensHandler.create({ lens: 'test', relation: 'test-relation', key: 'test-key', field: 'test-field' }, storage);
+        const result = await lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('Lens imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "create_field_lens" -> ok', async () => {
+      if (typeof lensHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_relation_lens" -> ok', async () => {
+      if (typeof lensHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_relation" -> error', async () => {
+      if (typeof lensHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.create({ lens: "lens-bad", relation: "", key: "", field: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('Lens imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.fromRelation !== 'function') return;
       try {
-        const result = await lensHandler.fromRelation({ lens: 'test', relation: 'test-relation' }, storage);
+        const result = await lensHandler.fromRelation({ lens: "lens-users-rel", relation: "users" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('Lens imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "from_users_relation" -> ok', async () => {
+      if (typeof lensHandler.fromRelation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.fromRelation({ lens: "lens-users-rel", relation: "users" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "from_empty_relation" -> error', async () => {
+      if (typeof lensHandler.fromRelation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.fromRelation({ lens: "lens-bad", relation: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('Lens imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.compose !== 'function') return;
       try {
-        const result = await lensHandler.compose({ outer: 'test', inner: 'test' }, storage);
+        const result = await lensHandler.compose({ outer: "lens-users-rel", inner: "lens-user-email" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('Lens imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compose_valid" -> ok', async () => {
+      if (typeof lensHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.compose({ outer: "lens-users-rel", inner: "lens-user-email" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_missing" -> error', async () => {
+      if (typeof lensHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.compose({ outer: "nonexistent", inner: "lens-user-email" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('Lens imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.get !== 'function') return;
       try {
-        const result = await lensHandler.get({ lens: 'test' }, storage);
+        const result = await lensHandler.get({ lens: "lens-user-email" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('Lens imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof lensHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.get({ lens: "lens-user-email" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof lensHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.get({ lens: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +146,7 @@ describe('Lens imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.decompose !== 'function') return;
       try {
-        const result = await lensHandler.decompose({ lens: 'test' }, storage);
+        const result = await lensHandler.decompose({ lens: "lens-user-email" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,13 +156,27 @@ describe('Lens imperative handler', () => {
       }
     });
 
+    it('fixture "decompose_existing" -> ok', async () => {
+      if (typeof lensHandler.decompose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.decompose({ lens: "lens-user-email" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "decompose_missing" -> error', async () => {
+      if (typeof lensHandler.decompose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.decompose({ lens: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('executes without crashing', async () => {
       if (typeof lensHandler.validate !== 'function') return;
       try {
-        const result = await lensHandler.validate({ lens: 'test', conceptSpec: 'test-conceptSpec' }, storage);
+        const result = await lensHandler.validate({ lens: "lens-user-email", conceptSpec: "{\"state\":{\"users\":\"set U\",\"email\":\"U -> String\"}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +184,20 @@ describe('Lens imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "validate_valid" -> ok', async () => {
+      if (typeof lensHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.validate({ lens: "lens-user-email", conceptSpec: "{\"state\":{\"users\":\"set U\",\"email\":\"U -> String\"}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing_lens" -> error', async () => {
+      if (typeof lensHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.validate({ lens: "nonexistent", conceptSpec: "{\"state\":{\"users\":\"set U\"}}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -125,6 +216,30 @@ describe('Lens imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof lensHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lensHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lensHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Lens');
+    });
   });
 
   describe('invariant examples', () => {

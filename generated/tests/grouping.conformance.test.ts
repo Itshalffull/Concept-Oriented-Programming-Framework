@@ -26,7 +26,7 @@ describe('Grouping functional handler', () => {
 
   describe('group', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupingHandler.group({ items: 'test', config: 'test-config' });
+      const program = groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Grouping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupingHandler.group({ items: 'test', config: 'test-config' });
+      const program = groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupingHandler.group({ items: 'test', config: 'test-config' });
+      const program = groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupingHandler.group({ items: 'test', config: 'test-config' });
+      const program = groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Grouping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupingHandler.group({ items: 'test', config: 'test-config' });
+      const program = groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Grouping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupingHandler.group !== 'function') return;
       try {
-        const result = await interpret(groupingHandler.group({ items: 'test', config: 'test-config' }), storage);
+        const result = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Grouping functional handler', () => {
       }
     });
 
+    it('fixture "per_concept_strategy" -> ok', async () => {
+      if (typeof groupingHandler.group !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.group({ items: ["Order","Product","User"], config: "per-concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "by_crud_strategy" -> ok', async () => {
+      if (typeof groupingHandler.group !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.group({ items: ["createOrder","getUser","deleteProduct"], config: "by-crud" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_strategy" -> error', async () => {
+      if (typeof groupingHandler.group !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.group({ items: ["A"], config: "nonexistent-strategy" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "empty_items" -> error', async () => {
+      if (typeof groupingHandler.group !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.group({ items: [], config: "per-concept" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('classify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = groupingHandler.classify({ actionName: 'test-actionName' });
+      const program = groupingHandler.classify({ actionName: "createOrder" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Grouping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = groupingHandler.classify({ actionName: 'test-actionName' });
+      const program = groupingHandler.classify({ actionName: "createOrder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = groupingHandler.classify({ actionName: 'test-actionName' });
+      const program = groupingHandler.classify({ actionName: "createOrder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = groupingHandler.classify({ actionName: 'test-actionName' });
+      const program = groupingHandler.classify({ actionName: "createOrder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Grouping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = groupingHandler.classify({ actionName: 'test-actionName' });
+      const program = groupingHandler.classify({ actionName: "createOrder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Grouping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof groupingHandler.classify !== 'function') return;
       try {
-        const result = await interpret(groupingHandler.classify({ actionName: 'test-actionName' }), storage);
+        const result = await interpret(groupingHandler.classify({ actionName: "createOrder" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,45 @@ describe('Grouping functional handler', () => {
       }
     });
 
+    it('fixture "classify_create" -> ok', async () => {
+      if (typeof groupingHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.classify({ actionName: "createOrder" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "classify_read" -> ok', async () => {
+      if (typeof groupingHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.classify({ actionName: "getUser" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_action" -> error', async () => {
+      if (typeof groupingHandler.classify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(groupingHandler.classify({ actionName: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof groupingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = groupingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Grouping');
+    });
   });
 
   describe('invariant examples', () => {

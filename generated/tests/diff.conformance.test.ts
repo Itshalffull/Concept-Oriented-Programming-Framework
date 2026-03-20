@@ -26,7 +26,7 @@ describe('Diff functional handler', () => {
 
   describe('registerProvider', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' });
+      const program = diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Diff functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' });
+      const program = diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' });
+      const program = diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' });
+      const program = diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Diff functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' });
+      const program = diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Diff functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diffHandler.registerProvider !== 'function') return;
       try {
-        const result = await interpret(diffHandler.registerProvider({ name: 'test-name', contentTypes: 'test' }), storage);
+        const result = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Diff functional handler', () => {
       }
     });
 
+    it('fixture "register_myers" -> ok', async () => {
+      if (typeof diffHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.registerProvider({ name: "myers", contentTypes: ["text/plain"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof diffHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.registerProvider({ name: "", contentTypes: ["text/plain"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diff', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' });
+      const program = diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Diff functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' });
+      const program = diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' });
+      const program = diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' });
+      const program = diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Diff functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' });
+      const program = diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Diff functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diffHandler.diff !== 'function') return;
       try {
-        const result = await interpret(diffHandler.diff({ contentA: 'test', contentB: 'test', algorithm: 'test' }), storage);
+        const result = await interpret(diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('Diff functional handler', () => {
       }
     });
 
+    it('fixture "diff_two_files" -> ok', async () => {
+      if (typeof diffHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.diff({ contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "identical_content" -> ok', async () => {
+      if (typeof diffHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.diff({ contentA: "same", contentB: "same", algorithm: "myers" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_algorithm" -> error', async () => {
+      if (typeof diffHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.diff({ contentA: "a", contentB: "b", algorithm: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('patch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = diffHandler.patch({ content: 'test', editScript: 'test' });
+      const program = diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Diff functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = diffHandler.patch({ content: 'test', editScript: 'test' });
+      const program = diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = diffHandler.patch({ content: 'test', editScript: 'test' });
+      const program = diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = diffHandler.patch({ content: 'test', editScript: 'test' });
+      const program = diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Diff functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = diffHandler.patch({ content: 'test', editScript: 'test' });
+      const program = diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Diff functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof diffHandler.patch !== 'function') return;
       try {
-        const result = await interpret(diffHandler.patch({ content: 'test', editScript: 'test' }), storage);
+        const result = await interpret(diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Diff functional handler', () => {
       }
     });
 
+    it('fixture "apply_patch" -> ok', async () => {
+      if (typeof diffHandler.patch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.patch({ content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_script" -> error', async () => {
+      if (typeof diffHandler.patch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(diffHandler.patch({ content: "hello", editScript: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof diffHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = diffHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Diff');
+    });
   });
 
   describe('invariant examples', () => {

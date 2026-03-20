@@ -26,7 +26,7 @@ describe('WidgetResolver functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WidgetResolver functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetResolverHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(widgetResolverHandler.resolve({ resolver: 'test', element: 'test-element', context: 'test-context' }), storage);
+        const result = await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('WidgetResolver functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve" -> ok', async () => {
+      if (typeof widgetResolverHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.resolve({ element: "single-choice", context: "{\"platform\":\"browser\",\"viewport\":\"desktop\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "entity_resolve" -> ok', async () => {
+      if (typeof widgetResolverHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.resolve({ element: "entity-detail", context: "{\"concept\":\"Approval\",\"fields\":[{\"name\":\"status\",\"type\":\"String\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_match_resolve" -> none', async () => {
+      if (typeof widgetResolverHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.resolve({ element: "nonexistent-element", context: "{}" }), storage);
+      expect(result.variant).toBe('none');
+    });
+
   });
 
   describe('resolveAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' });
+      const program = widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' });
+      const program = widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' });
+      const program = widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' });
+      const program = widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' });
+      const program = widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('WidgetResolver functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetResolverHandler.resolveAll !== 'function') return;
       try {
-        const result = await interpret(widgetResolverHandler.resolveAll({ resolver: 'test', elements: 'test-elements', context: 'test-context' }), storage);
+        const result = await interpret(widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('WidgetResolver functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolveAll" -> ok', async () => {
+      if (typeof widgetResolverHandler.resolveAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.resolveAll({ elements: "[\"single-choice\",\"text-edit\"]", context: "{\"platform\":\"browser\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_elements" -> ok', async () => {
+      if (typeof widgetResolverHandler.resolveAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.resolveAll({ elements: "[]", context: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('override', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' });
+      const program = widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' });
+      const program = widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' });
+      const program = widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' });
+      const program = widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' });
+      const program = widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('WidgetResolver functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetResolverHandler.override !== 'function') return;
       try {
-        const result = await interpret(widgetResolverHandler.override({ resolver: 'test', element: 'test-element', widget: 'test-widget' }), storage);
+        const result = await interpret(widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('WidgetResolver functional handler', () => {
       }
     });
 
+    it('fixture "valid_override" -> ok', async () => {
+      if (typeof widgetResolverHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.override({ element: "single-choice", widget: "custom-picker" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_params" -> invalid', async () => {
+      if (typeof widgetResolverHandler.override !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.override({ element: "", widget: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('setWeights', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' });
+      const program = widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' });
+      const program = widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' });
+      const program = widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' });
+      const program = widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' });
+      const program = widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('WidgetResolver functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetResolverHandler.setWeights !== 'function') return;
       try {
-        const result = await interpret(widgetResolverHandler.setWeights({ resolver: 'test', weights: 'test-weights' }), storage);
+        const result = await interpret(widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,32 @@ describe('WidgetResolver functional handler', () => {
       }
     });
 
+    it('fixture "valid_weights" -> ok', async () => {
+      if (typeof widgetResolverHandler.setWeights !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.4,\"conditionMatch\":0.3,\"popularity\":0.2,\"recency\":0.1}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bad_sum" -> invalid', async () => {
+      if (typeof widgetResolverHandler.setWeights !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.setWeights({ weights: "{\"specificity\":0.5,\"conditionMatch\":0.8}" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "bad_json" -> invalid', async () => {
+      if (typeof widgetResolverHandler.setWeights !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.setWeights({ weights: "not-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('explain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('WidgetResolver functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' });
+      const program = widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('WidgetResolver functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetResolverHandler.explain !== 'function') return;
       try {
-        const result = await interpret(widgetResolverHandler.explain({ resolver: 'test', element: 'test-element', context: 'test-context' }), storage);
+        const result = await interpret(widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,38 @@ describe('WidgetResolver functional handler', () => {
       }
     });
 
+    it('fixture "valid_explain" -> ok', async () => {
+      if (typeof widgetResolverHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.explain({ element: "single-choice", context: "{\"platform\":\"browser\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_resolver" -> notfound', async () => {
+      if (typeof widgetResolverHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetResolverHandler.explain({ resolver: "nonexistent-resolver", element: "single-choice", context: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetResolverHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetResolverHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetResolver');
+    });
   });
 
   describe('invariant examples', () => {

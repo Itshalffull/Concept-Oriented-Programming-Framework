@@ -19,7 +19,7 @@ describe('StakeThreshold imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeThresholdHandler.configure !== 'function') return;
       try {
-        const result = await stakeThresholdHandler.configure({ minimumStake: 1, slashOnViolation: true }, storage);
+        const result = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('StakeThreshold imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "configure_eth_stake" -> ok', async () => {
+      if (typeof stakeThresholdHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_zero_stake" -> error', async () => {
+      if (typeof stakeThresholdHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.configure({ minimumStake: "0.0", token: "ETH" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('StakeThreshold imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeThresholdHandler.deposit !== 'function') return;
       try {
-        const result = await stakeThresholdHandler.deposit({ config: 'test', participant: 'test-participant', amount: 1 }, storage);
+        const result = await stakeThresholdHandler.deposit({ config: "stake-cfg-1", candidate: "alice", amount: "100.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +59,27 @@ describe('StakeThreshold imperative handler', () => {
       }
     });
 
+    it('fixture "deposit_hundred" -> ok', async () => {
+      if (typeof stakeThresholdHandler.deposit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.deposit({ config: "stake-cfg-1", candidate: "alice", amount: "100.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deposit_negative" -> error', async () => {
+      if (typeof stakeThresholdHandler.deposit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.deposit({ config: "stake-cfg-1", candidate: "alice", amount: "-10.0" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
-  describe('checkEligibility', () => {
+  describe('check', () => {
     it('executes without crashing', async () => {
-      if (typeof stakeThresholdHandler.checkEligibility !== 'function') return;
+      if (typeof stakeThresholdHandler.check !== 'function') return;
       try {
-        const result = await stakeThresholdHandler.checkEligibility({ config: 'test', participant: 'test-participant' }, storage);
+        const result = await stakeThresholdHandler.check({ config: "stake-cfg-1", candidate: "alice" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('StakeThreshold imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "check_qualified" -> ok', async () => {
+      if (typeof stakeThresholdHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.check({ config: "stake-cfg-1", candidate: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_missing_config" -> error', async () => {
+      if (typeof stakeThresholdHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.check({ config: "nonexistent", candidate: "alice" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('StakeThreshold imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof stakeThresholdHandler.slash !== 'function') return;
       try {
-        const result = await stakeThresholdHandler.slash({ config: 'test', participant: 'test-participant', reason: 'test-reason' }, storage);
+        const result = await stakeThresholdHandler.slash({ config: "stake-cfg-1", candidate: "alice", amount: "50.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('StakeThreshold imperative handler', () => {
       }
     });
 
+    it('fixture "slash_partial" -> ok', async () => {
+      if (typeof stakeThresholdHandler.slash !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.slash({ config: "stake-cfg-1", candidate: "alice", amount: "50.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "slash_no_balance" -> error', async () => {
+      if (typeof stakeThresholdHandler.slash !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await stakeThresholdHandler.slash({ config: "stake-cfg-1", candidate: "unknown-user", amount: "10.0" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof stakeThresholdHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = stakeThresholdHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StakeThreshold');
+    });
   });
 
   describe('invariant examples', () => {
@@ -99,10 +172,10 @@ describe('StakeThreshold imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), slashOnViolation: fc.boolean() }) }),
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), lockPeriodDays: fc.string() }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -128,10 +201,10 @@ describe('StakeThreshold imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), slashOnViolation: fc.boolean() }) }),
-              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
-              fc.record({ action: fc.constant('checkEligibility'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), reason: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ minimumStake: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), lockPeriodDays: fc.string() }) }),
+              fc.record({ action: fc.constant('deposit'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('slash'), input: fc.record({ config: fc.string(), candidate: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -169,7 +242,7 @@ describe('StakeThreshold imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ minimumStake: fc.string(), slashOnViolation: fc.boolean() }),
+          fc.record({ minimumStake: fc.string(), token: fc.string({ minLength: 1, maxLength: 50 }), lockPeriodDays: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await stakeThresholdHandler.configure(input as Record<string, unknown>, storage);

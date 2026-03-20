@@ -26,7 +26,7 @@ describe('McpTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('McpTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(mcpTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('McpTarget functional handler', () => {
       }
     });
 
+    it('fixture "generate_agent" -> ok', async () => {
+      if (typeof mcpTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.generate({ projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_default_config" -> ok', async () => {
+      if (typeof mcpTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_empty_projection" -> error', async () => {
+      if (typeof mcpTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpTargetHandler.validate({ tool: 'test' });
+      const program = mcpTargetHandler.validate({ tool: "mcp-agent-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpTargetHandler.validate({ tool: 'test' });
+      const program = mcpTargetHandler.validate({ tool: "mcp-agent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpTargetHandler.validate({ tool: 'test' });
+      const program = mcpTargetHandler.validate({ tool: "mcp-agent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpTargetHandler.validate({ tool: 'test' });
+      const program = mcpTargetHandler.validate({ tool: "mcp-agent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpTargetHandler.validate({ tool: 'test' });
+      const program = mcpTargetHandler.validate({ tool: "mcp-agent-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('McpTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(mcpTargetHandler.validate({ tool: 'test' }), storage);
+        const result = await interpret(mcpTargetHandler.validate({ tool: "mcp-agent-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('McpTarget functional handler', () => {
       }
     });
 
+    it('fixture "validate_existing" -> ok', async () => {
+      if (typeof mcpTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.validate({ tool: "mcp-agent-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_unknown" -> error', async () => {
+      if (typeof mcpTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.validate({ tool: "mcp-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listTools', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mcpTargetHandler.listTools({ concept: 'test-concept' });
+      const program = mcpTargetHandler.listTools({ concept: "Agent" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mcpTargetHandler.listTools({ concept: 'test-concept' });
+      const program = mcpTargetHandler.listTools({ concept: "Agent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mcpTargetHandler.listTools({ concept: 'test-concept' });
+      const program = mcpTargetHandler.listTools({ concept: "Agent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mcpTargetHandler.listTools({ concept: 'test-concept' });
+      const program = mcpTargetHandler.listTools({ concept: "Agent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('McpTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mcpTargetHandler.listTools({ concept: 'test-concept' });
+      const program = mcpTargetHandler.listTools({ concept: "Agent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('McpTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof mcpTargetHandler.listTools !== 'function') return;
       try {
-        const result = await interpret(mcpTargetHandler.listTools({ concept: 'test-concept' }), storage);
+        const result = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,45 @@ describe('McpTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_tools_agent" -> ok', async () => {
+      if (typeof mcpTargetHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.listTools({ concept: "Agent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_tools_score" -> ok', async () => {
+      if (typeof mcpTargetHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.listTools({ concept: "ScoreApi" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_tools_empty" -> error', async () => {
+      if (typeof mcpTargetHandler.listTools !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mcpTargetHandler.listTools({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof mcpTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = mcpTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('McpTarget');
+    });
   });
 
   describe('invariant examples', () => {

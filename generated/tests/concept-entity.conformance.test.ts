@@ -19,7 +19,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.register !== 'function') return;
       try {
-        const result = await conceptEntityHandler.register({ name: 'test-name', source: 'test-source', ast: 'test-ast' }, storage);
+        const result = await conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_article" -> ok', async () => {
+      if (typeof conceptEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof conceptEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.register({ name: "", source: "specs/empty.concept", ast: "{}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.get !== 'function') return;
       try {
-        const result = await conceptEntityHandler.get({ name: 'test-name' }, storage);
+        const result = await conceptEntityHandler.get({ name: "Article" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_article" -> ok', async () => {
+      if (typeof conceptEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.get({ name: "Article" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof conceptEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.get({ name: "Nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.findByCapability !== 'function') return;
       try {
-        const result = await conceptEntityHandler.findByCapability({ capability: 'test-capability' }, storage);
+        const result = await conceptEntityHandler.findByCapability({ capability: "persistent-storage" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_persistent_storage" -> ok', async () => {
+      if (typeof conceptEntityHandler.findByCapability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.findByCapability({ capability: "persistent-storage" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_capability" -> error', async () => {
+      if (typeof conceptEntityHandler.findByCapability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.findByCapability({ capability: "quantum-compute" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.findBySuite !== 'function') return;
       try {
-        const result = await conceptEntityHandler.findBySuite({ suite: 'test-suite' }, storage);
+        const result = await conceptEntityHandler.findBySuite({ suite: "governance" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_governance_suite" -> ok', async () => {
+      if (typeof conceptEntityHandler.findBySuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.findBySuite({ suite: "governance" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_suite" -> error', async () => {
+      if (typeof conceptEntityHandler.findBySuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.findBySuite({ suite: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
       try {
-        const result = await conceptEntityHandler.generatedArtifacts({ entity: 'test' }, storage);
+        const result = await conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "artifacts_for_article" -> ok', async () => {
+      if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "artifacts_nonexistent" -> error', async () => {
+      if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.generatedArtifacts({ entity: "nonexistent-entity" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +169,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
       try {
-        const result = await conceptEntityHandler.participatingSyncs({ entity: 'test' }, storage);
+        const result = await conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('ConceptEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "syncs_for_article" -> ok', async () => {
+      if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "syncs_nonexistent" -> error', async () => {
+      if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.participatingSyncs({ entity: "nonexistent-entity" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +199,7 @@ describe('ConceptEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
       try {
-        const result = await conceptEntityHandler.checkCompatibility({ a: 'test', b: 'test' }, storage);
+        const result = await conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -125,6 +209,37 @@ describe('ConceptEntity imperative handler', () => {
       }
     });
 
+    it('fixture "compatible_concepts" -> ok', async () => {
+      if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "incompatible_missing" -> error', async () => {
+      if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await conceptEntityHandler.checkCompatibility({ a: "nonexistent-a", b: "nonexistent-b" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conceptEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conceptEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConceptEntity');
+    });
   });
 
   describe('invariant examples', () => {

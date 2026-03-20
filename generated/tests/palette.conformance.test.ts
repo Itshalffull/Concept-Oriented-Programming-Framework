@@ -26,7 +26,7 @@ describe('Palette functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' });
+      const program = paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Palette functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' });
+      const program = paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' });
+      const program = paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' });
+      const program = paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Palette functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' });
+      const program = paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Palette functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof paletteHandler.generate !== 'function') return;
       try {
-        const result = await interpret(paletteHandler.generate({ palette: 'test', name: 'test-name', seed: 'test-seed' }), storage);
+        const result = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Palette functional handler', () => {
       }
     });
 
+    it('fixture "generate_blue" -> ok', async () => {
+      if (typeof paletteHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.generate({ palette: "C-1", name: "blue", seed: "#3b82f6" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_emerald" -> ok', async () => {
+      if (typeof paletteHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.generate({ palette: "C-2", name: "emerald", seed: "#10b981" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_empty_seed" -> invalid', async () => {
+      if (typeof paletteHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.generate({ palette: "C-3", name: "empty", seed: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "generate_invalid_color" -> invalid', async () => {
+      if (typeof paletteHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.generate({ palette: "C-4", name: "bad", seed: "not-a-color" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('assignRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = paletteHandler.assignRole({ palette: 'test', role: 'test-role' });
+      const program = paletteHandler.assignRole({ palette: "C-1", role: "primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Palette functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = paletteHandler.assignRole({ palette: 'test', role: 'test-role' });
+      const program = paletteHandler.assignRole({ palette: "C-1", role: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = paletteHandler.assignRole({ palette: 'test', role: 'test-role' });
+      const program = paletteHandler.assignRole({ palette: "C-1", role: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = paletteHandler.assignRole({ palette: 'test', role: 'test-role' });
+      const program = paletteHandler.assignRole({ palette: "C-1", role: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Palette functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = paletteHandler.assignRole({ palette: 'test', role: 'test-role' });
+      const program = paletteHandler.assignRole({ palette: "C-1", role: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Palette functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof paletteHandler.assignRole !== 'function') return;
       try {
-        const result = await interpret(paletteHandler.assignRole({ palette: 'test', role: 'test-role' }), storage);
+        const result = await interpret(paletteHandler.assignRole({ palette: "C-1", role: "primary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,32 @@ describe('Palette functional handler', () => {
       }
     });
 
+    it('fixture "assign_primary" -> ok', async () => {
+      if (typeof paletteHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.assignRole({ palette: "C-1", role: "primary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_accent" -> ok', async () => {
+      if (typeof paletteHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.assignRole({ palette: "C-2", role: "accent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_unknown_palette" -> notfound', async () => {
+      if (typeof paletteHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.assignRole({ palette: "C-nonexistent", role: "primary" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('checkContrast', () => {
     it('builds a valid StorageProgram', () => {
-      const program = paletteHandler.checkContrast({ foreground: 'test', background: 'test' });
+      const program = paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('Palette functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = paletteHandler.checkContrast({ foreground: 'test', background: 'test' });
+      const program = paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = paletteHandler.checkContrast({ foreground: 'test', background: 'test' });
+      const program = paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = paletteHandler.checkContrast({ foreground: 'test', background: 'test' });
+      const program = paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('Palette functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = paletteHandler.checkContrast({ foreground: 'test', background: 'test' });
+      const program = paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('Palette functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof paletteHandler.checkContrast !== 'function') return;
       try {
-        const result = await interpret(paletteHandler.checkContrast({ foreground: 'test', background: 'test' }), storage);
+        const result = await interpret(paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +245,38 @@ describe('Palette functional handler', () => {
       }
     });
 
+    it('fixture "contrast_blue_white" -> ok', async () => {
+      if (typeof paletteHandler.checkContrast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.checkContrast({ foreground: "C-1", background: "C-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "contrast_unknown_fg" -> notfound', async () => {
+      if (typeof paletteHandler.checkContrast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(paletteHandler.checkContrast({ foreground: "C-nonexistent", background: "C-2" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof paletteHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = paletteHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Palette');
+    });
   });
 
   describe('invariant examples', () => {

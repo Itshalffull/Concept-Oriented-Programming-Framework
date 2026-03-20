@@ -26,7 +26,7 @@ describe('DeployPlan functional handler', () => {
 
   describe('plan', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' });
+      const program = deployPlanHandler.plan({ manifest: "my-app", environment: "staging" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' });
+      const program = deployPlanHandler.plan({ manifest: "my-app", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' });
+      const program = deployPlanHandler.plan({ manifest: "my-app", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' });
+      const program = deployPlanHandler.plan({ manifest: "my-app", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' });
+      const program = deployPlanHandler.plan({ manifest: "my-app", environment: "staging" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeployPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployPlanHandler.plan !== 'function') return;
       try {
-        const result = await interpret(deployPlanHandler.plan({ manifest: 'test-manifest', environment: 'test-environment' }), storage);
+        const result = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('DeployPlan functional handler', () => {
       }
     });
 
+    it('fixture "plan_valid" -> ok', async () => {
+      if (typeof deployPlanHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "staging" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "plan_production" -> ok', async () => {
+      if (typeof deployPlanHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "plan_empty_manifest" -> error', async () => {
+      if (typeof deployPlanHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.plan({ manifest: "", environment: "staging" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "plan_empty_env" -> error', async () => {
+      if (typeof deployPlanHandler.plan !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.plan({ manifest: "my-app", environment: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployPlanHandler.validate({ plan: 'test' });
+      const program = deployPlanHandler.validate({ plan: "dp-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployPlanHandler.validate({ plan: 'test' });
+      const program = deployPlanHandler.validate({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployPlanHandler.validate({ plan: 'test' });
+      const program = deployPlanHandler.validate({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployPlanHandler.validate({ plan: 'test' });
+      const program = deployPlanHandler.validate({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployPlanHandler.validate({ plan: 'test' });
+      const program = deployPlanHandler.validate({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('DeployPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployPlanHandler.validate !== 'function') return;
       try {
-        const result = await interpret(deployPlanHandler.validate({ plan: 'test' }), storage);
+        const result = await interpret(deployPlanHandler.validate({ plan: "dp-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('DeployPlan functional handler', () => {
       }
     });
 
+    it('fixture "validate_plan" -> ok', async () => {
+      if (typeof deployPlanHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.validate({ plan: "dp-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> error', async () => {
+      if (typeof deployPlanHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.validate({ plan: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployPlanHandler.execute({ plan: 'test' });
+      const program = deployPlanHandler.execute({ plan: "dp-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployPlanHandler.execute({ plan: 'test' });
+      const program = deployPlanHandler.execute({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployPlanHandler.execute({ plan: 'test' });
+      const program = deployPlanHandler.execute({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployPlanHandler.execute({ plan: 'test' });
+      const program = deployPlanHandler.execute({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployPlanHandler.execute({ plan: 'test' });
+      const program = deployPlanHandler.execute({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('DeployPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployPlanHandler.execute !== 'function') return;
       try {
-        const result = await interpret(deployPlanHandler.execute({ plan: 'test' }), storage);
+        const result = await interpret(deployPlanHandler.execute({ plan: "dp-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('DeployPlan functional handler', () => {
       }
     });
 
+    it('fixture "execute_plan" -> ok', async () => {
+      if (typeof deployPlanHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.execute({ plan: "dp-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_missing" -> error', async () => {
+      if (typeof deployPlanHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.execute({ plan: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployPlanHandler.rollback({ plan: 'test' });
+      const program = deployPlanHandler.rollback({ plan: "dp-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployPlanHandler.rollback({ plan: 'test' });
+      const program = deployPlanHandler.rollback({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployPlanHandler.rollback({ plan: 'test' });
+      const program = deployPlanHandler.rollback({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployPlanHandler.rollback({ plan: 'test' });
+      const program = deployPlanHandler.rollback({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployPlanHandler.rollback({ plan: 'test' });
+      const program = deployPlanHandler.rollback({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('DeployPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployPlanHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(deployPlanHandler.rollback({ plan: 'test' }), storage);
+        const result = await interpret(deployPlanHandler.rollback({ plan: "dp-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,25 @@ describe('DeployPlan functional handler', () => {
       }
     });
 
+    it('fixture "rollback_plan" -> ok', async () => {
+      if (typeof deployPlanHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.rollback({ plan: "dp-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing" -> error', async () => {
+      if (typeof deployPlanHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.rollback({ plan: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployPlanHandler.status({ plan: 'test' });
+      const program = deployPlanHandler.status({ plan: "dp-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployPlanHandler.status({ plan: 'test' });
+      const program = deployPlanHandler.status({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployPlanHandler.status({ plan: 'test' });
+      const program = deployPlanHandler.status({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployPlanHandler.status({ plan: 'test' });
+      const program = deployPlanHandler.status({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('DeployPlan functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployPlanHandler.status({ plan: 'test' });
+      const program = deployPlanHandler.status({ plan: "dp-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('DeployPlan functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployPlanHandler.status !== 'function') return;
       try {
-        const result = await interpret(deployPlanHandler.status({ plan: 'test' }), storage);
+        const result = await interpret(deployPlanHandler.status({ plan: "dp-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +382,38 @@ describe('DeployPlan functional handler', () => {
       }
     });
 
+    it('fixture "status_plan" -> ok', async () => {
+      if (typeof deployPlanHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.status({ plan: "dp-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "status_missing" -> error', async () => {
+      if (typeof deployPlanHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployPlanHandler.status({ plan: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deployPlanHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deployPlanHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeployPlan');
+    });
   });
 
   describe('invariant examples', () => {

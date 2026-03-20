@@ -19,7 +19,7 @@ describe('ChangeStream imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof changeStreamHandler.append !== 'function') return;
       try {
-        const result = await changeStreamHandler.append({ type: 'test-type', before: 'test', after: 'test', source: 'test-source' }, storage);
+        const result = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('ChangeStream imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "append_insert" -> ok', async () => {
+      if (typeof changeStreamHandler.append !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "append_update" -> ok', async () => {
+      if (typeof changeStreamHandler.append !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "append_invalid_type" -> error', async () => {
+      if (typeof changeStreamHandler.append !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.append({ type: "bogus", before: null, after: null, source: "test" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('ChangeStream imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
       try {
-        const result = await changeStreamHandler.subscribe({ fromOffset: 'test' }, storage);
+        const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('ChangeStream imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "subscribe_from_start" -> ok', async () => {
+      if (typeof changeStreamHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_from_head" -> ok', async () => {
+      if (typeof changeStreamHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.subscribe({ fromOffset: null }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -51,7 +86,7 @@ describe('ChangeStream imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       try {
-        const result = await changeStreamHandler.read({ subscriptionId: 'test-subscriptionId', maxCount: 1 }, storage);
+        const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('ChangeStream imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "read_batch" -> ok', async () => {
+      if (typeof changeStreamHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_missing_sub" -> error', async () => {
+      if (typeof changeStreamHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.read({ subscriptionId: "", maxCount: "10" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('ChangeStream imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       try {
-        const result = await changeStreamHandler.acknowledge({ consumer: 'test-consumer', offset: 1 }, storage);
+        const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('ChangeStream imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "ack_offset" -> ok', async () => {
+      if (typeof changeStreamHandler.acknowledge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "ack_empty_consumer" -> error', async () => {
+      if (typeof changeStreamHandler.acknowledge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.acknowledge({ consumer: "", offset: "1" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +146,7 @@ describe('ChangeStream imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
       try {
-        const result = await changeStreamHandler.replay({ from: 1, to: 'test' }, storage);
+        const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +156,37 @@ describe('ChangeStream imperative handler', () => {
       }
     });
 
+    it('fixture "replay_range" -> ok', async () => {
+      if (typeof changeStreamHandler.replay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "replay_invalid" -> error', async () => {
+      if (typeof changeStreamHandler.replay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await changeStreamHandler.replay({ from: "99999", to: null }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof changeStreamHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = changeStreamHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ChangeStream');
+    });
   });
 
   describe('invariant examples', () => {

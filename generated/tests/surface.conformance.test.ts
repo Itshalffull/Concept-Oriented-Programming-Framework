@@ -26,7 +26,7 @@ describe('Surface functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' });
+      const program = surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' });
+      const program = surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' });
+      const program = surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' });
+      const program = surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' });
+      const program = surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.create !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.create({ surface: 'test', kind: 'test-kind', mountPoint: 'test' }), storage);
+        const result = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "browser_dom" -> ok', async () => {
+      if (typeof surfaceHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "terminal_surface" -> ok', async () => {
+      if (typeof surfaceHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported_kind" -> unsupported', async () => {
+      if (typeof surfaceHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.create({ surface: "surface-3", kind: "hologram", mountPoint: null }), storage);
+      expect(result.variant).toBe('unsupported');
+    });
+
   });
 
   describe('attach', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' });
+      const program = surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' });
+      const program = surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' });
+      const program = surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' });
+      const program = surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' });
+      const program = surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.attach !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.attach({ surface: 'test', renderer: 'test-renderer' }), storage);
+        const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "attach_react" -> ok', async () => {
+      if (typeof surfaceHandler.attach !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "incompatible_renderer" -> incompatible', async () => {
+      if (typeof surfaceHandler.attach !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "terminal-only-adapter" }), storage);
+      expect(result.variant).toBe('incompatible');
+    });
+
   });
 
   describe('resize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.resize({ surface: 'test', width: 1, height: 1 });
+      const program = surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.resize({ surface: 'test', width: 1, height: 1 });
+      const program = surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.resize({ surface: 'test', width: 1, height: 1 });
+      const program = surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.resize({ surface: 'test', width: 1, height: 1 });
+      const program = surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.resize({ surface: 'test', width: 1, height: 1 });
+      const program = surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.resize !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.resize({ surface: 'test', width: 1, height: 1 }), storage);
+        const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "resize_desktop" -> ok', async () => {
+      if (typeof surfaceHandler.resize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resize_unknown_surface" -> notfound', async () => {
+      if (typeof surfaceHandler.resize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.resize({ surface: "surface-nonexistent", width: "800", height: "600" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('mount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' });
+      const program = surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' });
+      const program = surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' });
+      const program = surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' });
+      const program = surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' });
+      const program = surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.mount !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.mount({ surface: 'test', tree: 'test-tree', zone: 'test' }), storage);
+        const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "mount_root" -> ok', async () => {
+      if (typeof surfaceHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mount_no_adapter" -> error', async () => {
+      if (typeof surfaceHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.mount({ surface: "surface-no-adapter", tree: "<App />", zone: null }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unmount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.unmount({ surface: 'test', zone: 'test' });
+      const program = surfaceHandler.unmount({ surface: "surface-1", zone: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.unmount({ surface: 'test', zone: 'test' });
+      const program = surfaceHandler.unmount({ surface: "surface-1", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.unmount({ surface: 'test', zone: 'test' });
+      const program = surfaceHandler.unmount({ surface: "surface-1", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.unmount({ surface: 'test', zone: 'test' });
+      const program = surfaceHandler.unmount({ surface: "surface-1", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.unmount({ surface: 'test', zone: 'test' });
+      const program = surfaceHandler.unmount({ surface: "surface-1", zone: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.unmount({ surface: 'test', zone: 'test' }), storage);
+        const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "unmount_root" -> ok', async () => {
+      if (typeof surfaceHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unmount_missing_zone" -> notfound', async () => {
+      if (typeof surfaceHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: "nonexistent-zone" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceHandler.destroy({ surface: 'test' });
+      const program = surfaceHandler.destroy({ surface: "surface-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Surface functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceHandler.destroy({ surface: 'test' });
+      const program = surfaceHandler.destroy({ surface: "surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceHandler.destroy({ surface: 'test' });
+      const program = surfaceHandler.destroy({ surface: "surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceHandler.destroy({ surface: 'test' });
+      const program = surfaceHandler.destroy({ surface: "surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Surface functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceHandler.destroy({ surface: 'test' });
+      const program = surfaceHandler.destroy({ surface: "surface-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Surface functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(surfaceHandler.destroy({ surface: 'test' }), storage);
+        const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('Surface functional handler', () => {
       }
     });
 
+    it('fixture "destroy_existing" -> ok', async () => {
+      if (typeof surfaceHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_nonexistent" -> notfound', async () => {
+      if (typeof surfaceHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceHandler.destroy({ surface: "surface-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof surfaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = surfaceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Surface');
+    });
   });
 
   describe('invariant examples', () => {

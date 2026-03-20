@@ -26,7 +26,7 @@ describe('Permission functional handler', () => {
 
   describe('grant', () => {
     it('builds a valid StorageProgram', () => {
-      const program = permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' });
+      const program = permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Permission functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' });
+      const program = permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' });
+      const program = permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' });
+      const program = permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Permission functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' });
+      const program = permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Permission functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof permissionHandler.grant !== 'function') return;
       try {
-        const result = await interpret(permissionHandler.grant({ who: 'test-who', where: 'test-where', what: 'test-what', condition: 'test', grantedBy: 'test-grantedBy' }), storage);
+        const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Permission functional handler', () => {
       }
     });
 
+    it('fixture "grant_read_articles" -> ok', async () => {
+      if (typeof permissionHandler.grant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "grant_empty_who" -> error', async () => {
+      if (typeof permissionHandler.grant !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.grant({ who: "", where: "articles", what: "read", grantedBy: "admin" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('revoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = permissionHandler.revoke({ permission: 'test' });
+      const program = permissionHandler.revoke({ permission: "alice:articles:read" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Permission functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = permissionHandler.revoke({ permission: 'test' });
+      const program = permissionHandler.revoke({ permission: "alice:articles:read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = permissionHandler.revoke({ permission: 'test' });
+      const program = permissionHandler.revoke({ permission: "alice:articles:read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = permissionHandler.revoke({ permission: 'test' });
+      const program = permissionHandler.revoke({ permission: "alice:articles:read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Permission functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = permissionHandler.revoke({ permission: 'test' });
+      const program = permissionHandler.revoke({ permission: "alice:articles:read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Permission functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof permissionHandler.revoke !== 'function') return;
       try {
-        const result = await interpret(permissionHandler.revoke({ permission: 'test' }), storage);
+        const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Permission functional handler', () => {
       }
     });
 
+    it('fixture "revoke_existing" -> ok', async () => {
+      if (typeof permissionHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "revoke_nonexistent" -> error', async () => {
+      if (typeof permissionHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.revoke({ permission: "nonexistent:perm:key" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' });
+      const program = permissionHandler.check({ who: "alice", where: "articles", what: "read" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Permission functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' });
+      const program = permissionHandler.check({ who: "alice", where: "articles", what: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' });
+      const program = permissionHandler.check({ who: "alice", where: "articles", what: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' });
+      const program = permissionHandler.check({ who: "alice", where: "articles", what: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Permission functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' });
+      const program = permissionHandler.check({ who: "alice", where: "articles", what: "read" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Permission functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof permissionHandler.check !== 'function') return;
       try {
-        const result = await interpret(permissionHandler.check({ who: 'test-who', where: 'test-where', what: 'test-what' }), storage);
+        const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('Permission functional handler', () => {
       }
     });
 
+    it('fixture "check_allowed" -> ok', async () => {
+      if (typeof permissionHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_denied" -> error', async () => {
+      if (typeof permissionHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(permissionHandler.check({ who: "unknown-user", where: "articles", what: "delete" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof permissionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = permissionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Permission');
+    });
   });
 
   describe('invariant examples', () => {

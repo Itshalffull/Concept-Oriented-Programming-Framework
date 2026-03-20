@@ -19,7 +19,7 @@ describe('DeadBranchProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof deadBranchProviderHandler.analyze !== 'function') return;
       try {
-        const result = await deadBranchProviderHandler.analyze({ program: 'test-program', constraints: 'test-constraints' }, storage);
+        const result = await deadBranchProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":false,\"thenBranch\":{\"instructions\":[]},\"elseBranch\":{\"instructions\":[]}}]}", constraints: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('DeadBranchProvider imperative handler', () => {
       }
     });
 
+    it('fixture "false_condition" -> ok', async () => {
+      if (typeof deadBranchProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await deadBranchProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":false,\"thenBranch\":{\"instructions\":[]},\"elseBranch\":{\"instructions\":[]}}]}", constraints: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_branches" -> ok', async () => {
+      if (typeof deadBranchProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await deadBranchProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}]}", constraints: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_program" -> error', async () => {
+      if (typeof deadBranchProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await deadBranchProviderHandler.analyze({ program: "", constraints: "{}" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deadBranchProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deadBranchProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeadBranchProvider');
+    });
   });
 
   describe('invariant examples', () => {

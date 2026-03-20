@@ -26,7 +26,7 @@ describe('Property functional handler', () => {
 
   describe('set', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' });
+      const program = propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' });
+      const program = propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' });
+      const program = propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' });
+      const program = propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' });
+      const program = propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Property functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof propertyHandler.set !== 'function') return;
       try {
-        const result = await interpret(propertyHandler.set({ entity: 'test', key: 'test-key', value: 'test-value' }), storage);
+        const result = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Property functional handler', () => {
       }
     });
 
+    it('fixture "set_title" -> ok', async () => {
+      if (typeof propertyHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_empty_entity" -> error', async () => {
+      if (typeof propertyHandler.set !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.set({ entity: "", key: "title", value: "Hello" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.get({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.get({ entity: "page-1", key: "title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.get({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.get({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.get({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.get({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.get({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.get({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.get({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.get({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Property functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof propertyHandler.get !== 'function') return;
       try {
-        const result = await interpret(propertyHandler.get({ entity: 'test', key: 'test-key' }), storage);
+        const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Property functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof propertyHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof propertyHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.get({ entity: "nonexistent", key: "title" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.delete({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.delete({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.delete({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.delete({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.delete({ entity: 'test', key: 'test-key' });
+      const program = propertyHandler.delete({ entity: "page-1", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Property functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
       try {
-        const result = await interpret(propertyHandler.delete({ entity: 'test', key: 'test-key' }), storage);
+        const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Property functional handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof propertyHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> error', async () => {
+      if (typeof propertyHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.delete({ entity: "nonexistent", key: "title" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = propertyHandler.listAll({ entity: 'test' });
+      const program = propertyHandler.listAll({ entity: "page-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Property functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = propertyHandler.listAll({ entity: 'test' });
+      const program = propertyHandler.listAll({ entity: "page-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = propertyHandler.listAll({ entity: 'test' });
+      const program = propertyHandler.listAll({ entity: "page-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = propertyHandler.listAll({ entity: 'test' });
+      const program = propertyHandler.listAll({ entity: "page-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Property functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = propertyHandler.listAll({ entity: 'test' });
+      const program = propertyHandler.listAll({ entity: "page-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Property functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       try {
-        const result = await interpret(propertyHandler.listAll({ entity: 'test' }), storage);
+        const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Property functional handler', () => {
       }
     });
 
+    it('fixture "list_all_props" -> ok', async () => {
+      if (typeof propertyHandler.listAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty_entity" -> error', async () => {
+      if (typeof propertyHandler.listAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(propertyHandler.listAll({ entity: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof propertyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = propertyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Property');
+    });
   });
 
   describe('invariant examples', () => {

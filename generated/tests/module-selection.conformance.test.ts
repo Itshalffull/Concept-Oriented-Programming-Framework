@@ -26,7 +26,7 @@ describe('ModuleSelection functional handler', () => {
 
   describe('begin', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' });
+      const program = moduleSelectionHandler.begin({ template_name: "social", profile_name: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' });
+      const program = moduleSelectionHandler.begin({ template_name: "social", profile_name: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' });
+      const program = moduleSelectionHandler.begin({ template_name: "social", profile_name: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' });
+      const program = moduleSelectionHandler.begin({ template_name: "social", profile_name: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' });
+      const program = moduleSelectionHandler.begin({ template_name: "social", profile_name: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.begin !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.begin({ template_name: 'test', profile_name: 'test' }), storage);
+        const result = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "begin_with_template" -> ok', async () => {
+      if (typeof moduleSelectionHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.begin({ template_name: "social", profile_name: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "begin_with_profile" -> ok', async () => {
+      if (typeof moduleSelectionHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: "fullstack" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "begin_empty" -> ok', async () => {
+      if (typeof moduleSelectionHandler.begin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.begin({ template_name: null, profile_name: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('addConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' });
+      const program = moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' });
+      const program = moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' });
+      const program = moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' });
+      const program = moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' });
+      const program = moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.addConcept !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.addConcept({ selection: 'test', module_id: 'test-module_id', features: 'test' }), storage);
+        const result = await interpret(moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_add_concept" -> ok', async () => {
+      if (typeof moduleSelectionHandler.addConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addConcept({ selection: "sel-1", module_id: "Article", features: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_concept_nonexistent_selection" -> error', async () => {
+      if (typeof moduleSelectionHandler.addConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addConcept({ selection: "sel-999", module_id: "Article", features: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.removeConcept !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.removeConcept({ selection: 'test', module_id: 'test-module_id' }), storage);
+        const result = await interpret(moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove_concept" -> ok', async () => {
+      if (typeof moduleSelectionHandler.removeConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.removeConcept({ selection: "sel-1", module_id: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_concept_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.removeConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.removeConcept({ selection: "sel-999", module_id: "Article" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('chooseHandler', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' });
+      const program = moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' });
+      const program = moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' });
+      const program = moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' });
+      const program = moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' });
+      const program = moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.chooseHandler !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: 'test', concept_module: 'test-concept_module', handler_module: 'test-handler_module' }), storage);
+        const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_choose_handler" -> ok', async () => {
+      if (typeof moduleSelectionHandler.chooseHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "choose_handler_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.chooseHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.chooseHandler({ selection: "sel-999", concept_module: "User", handler_module: "UserTsHandler" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addWidget', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' });
+      const program = moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.addWidget !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.addWidget({ selection: 'test', module_id: 'test-module_id' }), storage);
+        const result = await interpret(moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_add_widget" -> ok', async () => {
+      if (typeof moduleSelectionHandler.addWidget !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addWidget({ selection: "sel-1", module_id: "DataTableWidget" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_widget_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.addWidget !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addWidget({ selection: "sel-999", module_id: "DataTableWidget" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('selectTheme', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' });
+      const program = moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' });
+      const program = moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' });
+      const program = moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' });
+      const program = moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' });
+      const program = moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.selectTheme !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.selectTheme({ selection: 'test', theme_module: 'test-theme_module' }), storage);
+        const result = await interpret(moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +447,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_select_theme" -> ok', async () => {
+      if (typeof moduleSelectionHandler.selectTheme !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.selectTheme({ selection: "sel-1", theme_module: "MaterialTheme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "select_theme_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.selectTheme !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.selectTheme({ selection: "sel-999", theme_module: "MaterialTheme" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addDerived', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' });
+      const program = moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +473,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' });
+      const program = moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' });
+      const program = moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' });
+      const program = moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +500,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' });
+      const program = moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +509,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.addDerived !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.addDerived({ selection: 'test', name: 'test-name', composes: 'test' }), storage);
+        const result = await interpret(moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +519,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_add_derived" -> ok', async () => {
+      if (typeof moduleSelectionHandler.addDerived !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_derived_missing" -> error', async () => {
+      if (typeof moduleSelectionHandler.addDerived !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.addDerived({ selection: "sel-1", name: "BadDerived", composes: "[\"NonExistent\"]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('finalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.finalize({ selection: 'test' });
+      const program = moduleSelectionHandler.finalize({ selection: "sel-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +545,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.finalize({ selection: 'test' });
+      const program = moduleSelectionHandler.finalize({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.finalize({ selection: 'test' });
+      const program = moduleSelectionHandler.finalize({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.finalize({ selection: 'test' });
+      const program = moduleSelectionHandler.finalize({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +572,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.finalize({ selection: 'test' });
+      const program = moduleSelectionHandler.finalize({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +581,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.finalize !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.finalize({ selection: 'test' }), storage);
+        const result = await interpret(moduleSelectionHandler.finalize({ selection: "sel-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +591,25 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_finalize" -> ok', async () => {
+      if (typeof moduleSelectionHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.finalize({ selection: "sel-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "finalize_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.finalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.finalize({ selection: "sel-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = moduleSelectionHandler.preview({ selection: 'test' });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +617,21 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = moduleSelectionHandler.preview({ selection: 'test' });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = moduleSelectionHandler.preview({ selection: 'test' });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = moduleSelectionHandler.preview({ selection: 'test' });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +644,7 @@ describe('ModuleSelection functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = moduleSelectionHandler.preview({ selection: 'test' });
+      const program = moduleSelectionHandler.preview({ selection: "sel-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +653,7 @@ describe('ModuleSelection functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof moduleSelectionHandler.preview !== 'function') return;
       try {
-        const result = await interpret(moduleSelectionHandler.preview({ selection: 'test' }), storage);
+        const result = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,6 +663,38 @@ describe('ModuleSelection functional handler', () => {
       }
     });
 
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof moduleSelectionHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.preview({ selection: "sel-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_nonexistent" -> error', async () => {
+      if (typeof moduleSelectionHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(moduleSelectionHandler.preview({ selection: "sel-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof moduleSelectionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = moduleSelectionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ModuleSelection');
+    });
   });
 
   describe('invariant examples', () => {

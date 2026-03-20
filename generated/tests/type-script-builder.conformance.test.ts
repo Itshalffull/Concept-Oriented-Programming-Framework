@@ -26,7 +26,7 @@ describe('TypeScriptBuilder functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' });
+      const program = typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TypeScriptBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeScriptBuilderHandler.build !== 'function') return;
       try {
-        const result = await interpret(typeScriptBuilderHandler.build({ source: 'test-source', toolchainPath: 'test-toolchainPath', platform: 'test-platform', config: 'test' }), storage);
+        const result = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('TypeScriptBuilder functional handler', () => {
       }
     });
 
+    it('fixture "build_node_release" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_browser_debug" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_source" -> error', async () => {
+      if (typeof typeScriptBuilderHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.build({ source: "", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' });
+      const program = typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('TypeScriptBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       try {
-        const result = await interpret(typeScriptBuilderHandler.test({ build: 'test', toolchainPath: 'test-toolchainPath', invocation: 'test', testType: 'test' }), storage);
+        const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('TypeScriptBuilder functional handler', () => {
       }
     });
 
+    it('fixture "test_unit" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_with_invocation" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing_build" -> error', async () => {
+      if (typeof typeScriptBuilderHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.test({ build: "", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('package', () => {
     it('builds a valid StorageProgram', () => {
-      const program = typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('TypeScriptBuilder functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' });
+      const program = typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('TypeScriptBuilder functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       try {
-        const result = await interpret(typeScriptBuilderHandler.package({ build: 'test', format: 'test-format' }), storage);
+        const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +236,27 @@ describe('TypeScriptBuilder functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "package_npm" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_bundle" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "bundle" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "package_invalid_format" -> error', async () => {
+      if (typeof typeScriptBuilderHandler.package !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "zip" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +317,31 @@ describe('TypeScriptBuilder functional handler', () => {
       }
     });
 
+    it('fixture "register_valid" -> ok', async () => {
+      if (typeof typeScriptBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(typeScriptBuilderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof typeScriptBuilderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = typeScriptBuilderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TypeScriptBuilder');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('DestinationCatalog functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' });
+      const program = destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' });
+      const program = destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' });
+      const program = destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' });
+      const program = destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' });
+      const program = destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DestinationCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof destinationCatalogHandler.register !== 'function') return;
       try {
-        const result = await interpret(destinationCatalogHandler.register({ destination: 'test', name: 'test-name', targetConcept: 'test-targetConcept', targetView: 'test-targetView', href: 'test-href', icon: 'test-icon', group: 'test-group' }), storage);
+        const result = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('DestinationCatalog functional handler', () => {
       }
     });
 
+    it('fixture "register_dashboard" -> ok', async () => {
+      if (typeof destinationCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.register({ destination: "dest-1", name: "dashboard", targetConcept: "AppShell", targetView: "dashboard", href: "/admin", icon: "home", group: "Content" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_articles" -> ok', async () => {
+      if (typeof destinationCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.register({ destination: "dest-2", name: "articles", targetConcept: "ArticleList", targetView: "list", href: "/articles", icon: "file-text", group: "Content" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolveByName', () => {
     it('builds a valid StorageProgram', () => {
-      const program = destinationCatalogHandler.resolveByName({ name: 'test-name' });
+      const program = destinationCatalogHandler.resolveByName({ name: "dashboard" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = destinationCatalogHandler.resolveByName({ name: 'test-name' });
+      const program = destinationCatalogHandler.resolveByName({ name: "dashboard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = destinationCatalogHandler.resolveByName({ name: 'test-name' });
+      const program = destinationCatalogHandler.resolveByName({ name: "dashboard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = destinationCatalogHandler.resolveByName({ name: 'test-name' });
+      const program = destinationCatalogHandler.resolveByName({ name: "dashboard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = destinationCatalogHandler.resolveByName({ name: 'test-name' });
+      const program = destinationCatalogHandler.resolveByName({ name: "dashboard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('DestinationCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof destinationCatalogHandler.resolveByName !== 'function') return;
       try {
-        const result = await interpret(destinationCatalogHandler.resolveByName({ name: 'test-name' }), storage);
+        const result = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('DestinationCatalog functional handler', () => {
       }
     });
 
+    it('fixture "resolve_dashboard" -> ok', async () => {
+      if (typeof destinationCatalogHandler.resolveByName !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.resolveByName({ name: "dashboard" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown_name" -> notfound', async () => {
+      if (typeof destinationCatalogHandler.resolveByName !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.resolveByName({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('resolveByHref', () => {
     it('builds a valid StorageProgram', () => {
-      const program = destinationCatalogHandler.resolveByHref({ href: 'test-href' });
+      const program = destinationCatalogHandler.resolveByHref({ href: "/admin" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = destinationCatalogHandler.resolveByHref({ href: 'test-href' });
+      const program = destinationCatalogHandler.resolveByHref({ href: "/admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = destinationCatalogHandler.resolveByHref({ href: 'test-href' });
+      const program = destinationCatalogHandler.resolveByHref({ href: "/admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = destinationCatalogHandler.resolveByHref({ href: 'test-href' });
+      const program = destinationCatalogHandler.resolveByHref({ href: "/admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('DestinationCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = destinationCatalogHandler.resolveByHref({ href: 'test-href' });
+      const program = destinationCatalogHandler.resolveByHref({ href: "/admin" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('DestinationCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
       try {
-        const result = await interpret(destinationCatalogHandler.resolveByHref({ href: 'test-href' }), storage);
+        const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/admin" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,27 @@ describe('DestinationCatalog functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_admin_href" -> ok', async () => {
+      if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/admin" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nested_href" -> ok', async () => {
+      if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/articles/42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown_href" -> notfound', async () => {
+      if (typeof destinationCatalogHandler.resolveByHref !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.resolveByHref({ href: "/nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -254,6 +303,31 @@ describe('DestinationCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof destinationCatalogHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(destinationCatalogHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof destinationCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = destinationCatalogHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DestinationCatalog');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('ContentStorage functional handler', () => {
 
   describe('save', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.save({ record: 'test', data: 'test-data' });
+      const program = contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.save({ record: 'test', data: 'test-data' });
+      const program = contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.save({ record: 'test', data: 'test-data' });
+      const program = contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.save({ record: 'test', data: 'test-data' });
+      const program = contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.save({ record: 'test', data: 'test-data' });
+      const program = contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ContentStorage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       try {
-        const result = await interpret(contentStorageHandler.save({ record: 'test', data: 'test-data' }), storage);
+        const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ContentStorage functional handler', () => {
       }
     });
 
+    it('fixture "save_record" -> ok', async () => {
+      if (typeof contentStorageHandler.save !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "save_empty_record" -> error', async () => {
+      if (typeof contentStorageHandler.save !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.save({ record: "", data: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('load', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.load({ record: 'test' });
+      const program = contentStorageHandler.load({ record: "user-profile-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.load({ record: 'test' });
+      const program = contentStorageHandler.load({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.load({ record: 'test' });
+      const program = contentStorageHandler.load({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.load({ record: 'test' });
+      const program = contentStorageHandler.load({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.load({ record: 'test' });
+      const program = contentStorageHandler.load({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ContentStorage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStorageHandler.load !== 'function') return;
       try {
-        const result = await interpret(contentStorageHandler.load({ record: 'test' }), storage);
+        const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ContentStorage functional handler', () => {
       }
     });
 
+    it('fixture "load_existing" -> ok', async () => {
+      if (typeof contentStorageHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "load_missing" -> error', async () => {
+      if (typeof contentStorageHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.load({ record: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.delete({ record: 'test' });
+      const program = contentStorageHandler.delete({ record: "user-profile-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.delete({ record: 'test' });
+      const program = contentStorageHandler.delete({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.delete({ record: 'test' });
+      const program = contentStorageHandler.delete({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.delete({ record: 'test' });
+      const program = contentStorageHandler.delete({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.delete({ record: 'test' });
+      const program = contentStorageHandler.delete({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ContentStorage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       try {
-        const result = await interpret(contentStorageHandler.delete({ record: 'test' }), storage);
+        const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ContentStorage functional handler', () => {
       }
     });
 
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof contentStorageHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> error', async () => {
+      if (typeof contentStorageHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.delete({ record: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.query({ filter: 'test-filter' });
+      const program = contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.query({ filter: 'test-filter' });
+      const program = contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.query({ filter: 'test-filter' });
+      const program = contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.query({ filter: 'test-filter' });
+      const program = contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.query({ filter: 'test-filter' });
+      const program = contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ContentStorage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStorageHandler.query !== 'function') return;
       try {
-        const result = await interpret(contentStorageHandler.query({ filter: 'test-filter' }), storage);
+        const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ContentStorage functional handler', () => {
       }
     });
 
+    it('fixture "query_by_type" -> ok', async () => {
+      if (typeof contentStorageHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_empty" -> error', async () => {
+      if (typeof contentStorageHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.query({ filter: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('generateSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.generateSchema({ record: 'test' });
+      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentStorageHandler.generateSchema({ record: 'test' });
+      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentStorageHandler.generateSchema({ record: 'test' });
+      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentStorageHandler.generateSchema({ record: 'test' });
+      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ContentStorage functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentStorageHandler.generateSchema({ record: 'test' });
+      const program = contentStorageHandler.generateSchema({ record: "user-profile-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ContentStorage functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       try {
-        const result = await interpret(contentStorageHandler.generateSchema({ record: 'test' }), storage);
+        const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('ContentStorage functional handler', () => {
       }
     });
 
+    it('fixture "gen_schema" -> ok', async () => {
+      if (typeof contentStorageHandler.generateSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "gen_schema_missing" -> error', async () => {
+      if (typeof contentStorageHandler.generateSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentStorageHandler.generateSchema({ record: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentStorageHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentStorageHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContentStorage');
+    });
   });
 
   describe('invariant examples', () => {

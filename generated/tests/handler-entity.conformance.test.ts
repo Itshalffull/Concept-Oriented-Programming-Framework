@@ -26,7 +26,7 @@ describe('HandlerEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' });
+      const program = handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' });
+      const program = handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' });
+      const program = handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' });
+      const program = handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' });
+      const program = handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.register({ concept: 'test-concept', sourceFile: 'test-sourceFile', language: 'test-language', ast: 'test-ast' }), storage);
+        const result = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_article_handler" -> ok', async () => {
+      if (typeof handlerEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.register({ concept: "Article", sourceFile: "handlers/ts/article.handler.ts", language: "typescript", ast: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_concept" -> error', async () => {
+      if (typeof handlerEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.register({ concept: "", sourceFile: "handlers/ts/empty.handler.ts", language: "typescript", ast: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' });
+      const program = handlerEntityHandler.get({ concept: "Article", language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' });
+      const program = handlerEntityHandler.get({ concept: "Article", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' });
+      const program = handlerEntityHandler.get({ concept: "Article", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' });
+      const program = handlerEntityHandler.get({ concept: "Article", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' });
+      const program = handlerEntityHandler.get({ concept: "Article", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.get({ concept: 'test-concept', language: 'test-language' }), storage);
+        const result = await interpret(handlerEntityHandler.get({ concept: "Article", language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_article_ts" -> ok', async () => {
+      if (typeof handlerEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.get({ concept: "Article", language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof handlerEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.get({ concept: "Nonexistent", language: "typescript" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getByFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' });
+      const program = handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' });
+      const program = handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' });
+      const program = handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' });
+      const program = handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' });
+      const program = handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.getByFile !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.getByFile({ sourceFile: 'test-sourceFile' }), storage);
+        const result = await interpret(handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_by_article_file" -> ok', async () => {
+      if (typeof handlerEntityHandler.getByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getByFile({ sourceFile: "handlers/ts/article.handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_by_unknown_file" -> error', async () => {
+      if (typeof handlerEntityHandler.getByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getByFile({ sourceFile: "nonexistent/handler.ts" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = handlerEntityHandler.findByConcept({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = handlerEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = handlerEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = handlerEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = handlerEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(handlerEntityHandler.findByConcept({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_article_handlers" -> ok', async () => {
+      if (typeof handlerEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByConcept({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_nonexistent_concept" -> error', async () => {
+      if (typeof handlerEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByConcept({ concept: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByLanguage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.findByLanguage({ language: 'test-language' });
+      const program = handlerEntityHandler.findByLanguage({ language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.findByLanguage({ language: 'test-language' });
+      const program = handlerEntityHandler.findByLanguage({ language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.findByLanguage({ language: 'test-language' });
+      const program = handlerEntityHandler.findByLanguage({ language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.findByLanguage({ language: 'test-language' });
+      const program = handlerEntityHandler.findByLanguage({ language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.findByLanguage({ language: 'test-language' });
+      const program = handlerEntityHandler.findByLanguage({ language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.findByLanguage({ language: 'test-language' }), storage);
+        const result = await interpret(handlerEntityHandler.findByLanguage({ language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_typescript_handlers" -> ok', async () => {
+      if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByLanguage({ language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_language" -> error', async () => {
+      if (typeof handlerEntityHandler.findByLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByLanguage({ language: "cobol" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getActionMethod', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.getActionMethod({ handler: 'test', actionName: 'test-actionName' }), storage);
+        const result = await interpret(handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_create_method" -> ok', async () => {
+      if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_method" -> error', async () => {
+      if (typeof handlerEntityHandler.getActionMethod !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getActionMethod({ handler: "handler-001", actionName: "nonexistentAction" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('implementationGaps', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.implementationGaps({ concept: 'test-concept' });
+      const program = handlerEntityHandler.implementationGaps({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.implementationGaps({ concept: 'test-concept' });
+      const program = handlerEntityHandler.implementationGaps({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.implementationGaps({ concept: 'test-concept' });
+      const program = handlerEntityHandler.implementationGaps({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.implementationGaps({ concept: 'test-concept' });
+      const program = handlerEntityHandler.implementationGaps({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.implementationGaps({ concept: 'test-concept' });
+      const program = handlerEntityHandler.implementationGaps({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.implementationGaps !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.implementationGaps({ concept: 'test-concept' }), storage);
+        const result = await interpret(handlerEntityHandler.implementationGaps({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +512,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "gaps_article" -> ok', async () => {
+      if (typeof handlerEntityHandler.implementationGaps !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.implementationGaps({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "gaps_no_handler" -> error', async () => {
+      if (typeof handlerEntityHandler.implementationGaps !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.implementationGaps({ concept: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: 'test' });
+      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +538,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: 'test' });
+      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: 'test' });
+      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: 'test' });
+      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +565,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getDependencies({ handler: 'test' });
+      const program = handlerEntityHandler.getDependencies({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +574,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.getDependencies !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.getDependencies({ handler: 'test' }), storage);
+        const result = await interpret(handlerEntityHandler.getDependencies({ handler: "handler-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +584,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "deps_article" -> ok', async () => {
+      if (typeof handlerEntityHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "handler-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deps_nonexistent" -> error', async () => {
+      if (typeof handlerEntityHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getDependencies({ handler: "nonexistent-handler" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getStorageUsage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: 'test' });
+      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +610,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: 'test' });
+      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: 'test' });
+      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: 'test' });
+      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +637,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.getStorageUsage({ handler: 'test' });
+      const program = handlerEntityHandler.getStorageUsage({ handler: "handler-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +646,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: 'test' }), storage);
+        const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "handler-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +656,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "storage_article" -> ok', async () => {
+      if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "handler-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "storage_nonexistent" -> error', async () => {
+      if (typeof handlerEntityHandler.getStorageUsage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.getStorageUsage({ handler: "nonexistent-handler" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveStackFrame', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +682,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +709,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +718,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.resolveStackFrame !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.resolveStackFrame({ file: 'test-file', line: 1, col: 1 }), storage);
+        const result = await interpret(handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +728,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "resolve_handler_frame" -> ok', async () => {
+      if (typeof handlerEntityHandler.resolveStackFrame !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveStackFrame({ file: "handlers/ts/article.handler.ts", line: "15", col: "4" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_external_frame" -> error', async () => {
+      if (typeof handlerEntityHandler.resolveStackFrame !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveStackFrame({ file: "node_modules/express/index.js", line: "100", col: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveToAstNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +754,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +781,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 });
+      const program = handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +790,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: 'test', line: 1, col: 1 }), storage);
+        const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,11 +800,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "resolve_ast_valid" -> ok', async () => {
+      if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "10", col: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_ast_out_of_range" -> error', async () => {
+      if (typeof handlerEntityHandler.resolveToAstNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveToAstNode({ handler: "handler-001", line: "99999", col: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveStackTrace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -672,21 +826,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -699,7 +853,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -708,7 +862,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' }), storage);
+        const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -718,11 +872,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "resolve_trace" -> ok', async () => {
+      if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_empty_trace" -> error', async () => {
+      if (typeof handlerEntityHandler.resolveStackTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.resolveStackTrace({ stackTrace: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToVariantReturn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -730,21 +898,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -757,7 +925,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -766,7 +934,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: 'test', actionName: 'test-actionName' }), storage);
+        const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -776,11 +944,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "trace_create_returns" -> ok', async () => {
+      if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing_action" -> error', async () => {
+      if (typeof handlerEntityHandler.traceToVariantReturn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.traceToVariantReturn({ handler: "handler-001", actionName: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToStorageCalls', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -788,21 +970,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -815,7 +997,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -824,7 +1006,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: 'test', actionName: 'test-actionName' }), storage);
+        const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -834,11 +1016,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "trace_create_storage" -> ok', async () => {
+      if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing_storage" -> error', async () => {
+      if (typeof handlerEntityHandler.traceToStorageCalls !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.traceToStorageCalls({ handler: "handler-001", actionName: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('diffFromSpec', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.diffFromSpec({ concept: 'test-concept' });
+      const program = handlerEntityHandler.diffFromSpec({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -846,21 +1042,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.diffFromSpec({ concept: 'test-concept' });
+      const program = handlerEntityHandler.diffFromSpec({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.diffFromSpec({ concept: 'test-concept' });
+      const program = handlerEntityHandler.diffFromSpec({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.diffFromSpec({ concept: 'test-concept' });
+      const program = handlerEntityHandler.diffFromSpec({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -873,7 +1069,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.diffFromSpec({ concept: 'test-concept' });
+      const program = handlerEntityHandler.diffFromSpec({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -882,7 +1078,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.diffFromSpec !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.diffFromSpec({ concept: 'test-concept' }), storage);
+        const result = await interpret(handlerEntityHandler.diffFromSpec({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -892,11 +1088,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "diff_article" -> ok', async () => {
+      if (typeof handlerEntityHandler.diffFromSpec !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.diffFromSpec({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "diff_no_handler" -> error', async () => {
+      if (typeof handlerEntityHandler.diffFromSpec !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.diffFromSpec({ concept: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByError', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' });
+      const program = handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -904,21 +1114,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' });
+      const program = handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' });
+      const program = handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' });
+      const program = handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -931,7 +1141,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' });
+      const program = handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -940,7 +1150,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.findByError !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: 'test-errorSymbol', since: 'test-since' }), storage);
+        const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -950,11 +1160,25 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_article_errors" -> ok', async () => {
+      if (typeof handlerEntityHandler.findByError !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: "clef/concept/Article", since: "2026-01-01" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_errors" -> error', async () => {
+      if (typeof handlerEntityHandler.findByError !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.findByError({ errorSymbol: "nonexistent/symbol", since: "2026-01-01" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('sourceForAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -962,21 +1186,21 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -989,7 +1213,7 @@ describe('HandlerEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' });
+      const program = handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -998,7 +1222,7 @@ describe('HandlerEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof handlerEntityHandler.sourceForAction !== 'function') return;
       try {
-        const result = await interpret(handlerEntityHandler.sourceForAction({ concept: 'test-concept', actionName: 'test-actionName' }), storage);
+        const result = await interpret(handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1008,6 +1232,38 @@ describe('HandlerEntity functional handler', () => {
       }
     });
 
+    it('fixture "source_article_create" -> ok', async () => {
+      if (typeof handlerEntityHandler.sourceForAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.sourceForAction({ concept: "Article", actionName: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "source_no_handler" -> error', async () => {
+      if (typeof handlerEntityHandler.sourceForAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(handlerEntityHandler.sourceForAction({ concept: "Nonexistent", actionName: "create" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof handlerEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = handlerEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('HandlerEntity');
+    });
   });
 
   describe('invariant examples', () => {

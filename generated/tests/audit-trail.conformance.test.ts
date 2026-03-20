@@ -26,7 +26,7 @@ describe('AuditTrail functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' });
+      const program = auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' });
+      const program = auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' });
+      const program = auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' });
+      const program = auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' });
+      const program = auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AuditTrail functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditTrailHandler.record !== 'function') return;
       try {
-        const result = await interpret(auditTrailHandler.record({ eventType: 'test-eventType', actor: 'test-actor', action: 'test-action', details: 'test-details', sourceRef: 'test' }), storage);
+        const result = await interpret(auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AuditTrail functional handler', () => {
       }
     });
 
+    it('fixture "record_governance_action" -> ok', async () => {
+      if (typeof auditTrailHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_missing_event_type" -> error', async () => {
+      if (typeof auditTrailHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.record({ eventType: "", actor: "admin@example.com", action: "update_rule", details: "Changed threshold" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('query', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' });
+      const program = auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' });
+      const program = auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' });
+      const program = auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' });
+      const program = auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' });
+      const program = auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AuditTrail functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditTrailHandler.query !== 'function') return;
       try {
-        const result = await interpret(auditTrailHandler.query({ eventType: 'test', actor: 'test', fromTime: 'test', toTime: 'test' }), storage);
+        const result = await interpret(auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AuditTrail functional handler', () => {
       }
     });
 
+    it('fixture "query_by_actor" -> ok', async () => {
+      if (typeof auditTrailHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_no_matches" -> no_results', async () => {
+      if (typeof auditTrailHandler.query !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.query({ eventType: "nonexistent_type", actor: "nobody@example.com" }), storage);
+      expect(result.variant).toBe('no_results');
+    });
+
   });
 
   describe('verifyIntegrity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = auditTrailHandler.verifyIntegrity({ entry: 'test' });
+      const program = auditTrailHandler.verifyIntegrity({ entry: "audit-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = auditTrailHandler.verifyIntegrity({ entry: 'test' });
+      const program = auditTrailHandler.verifyIntegrity({ entry: "audit-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = auditTrailHandler.verifyIntegrity({ entry: 'test' });
+      const program = auditTrailHandler.verifyIntegrity({ entry: "audit-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = auditTrailHandler.verifyIntegrity({ entry: 'test' });
+      const program = auditTrailHandler.verifyIntegrity({ entry: "audit-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AuditTrail functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = auditTrailHandler.verifyIntegrity({ entry: 'test' });
+      const program = auditTrailHandler.verifyIntegrity({ entry: "audit-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AuditTrail functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof auditTrailHandler.verifyIntegrity !== 'function') return;
       try {
-        const result = await interpret(auditTrailHandler.verifyIntegrity({ entry: 'test' }), storage);
+        const result = await interpret(auditTrailHandler.verifyIntegrity({ entry: "audit-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('AuditTrail functional handler', () => {
       }
     });
 
+    it('fixture "verify_valid_entry" -> ok', async () => {
+      if (typeof auditTrailHandler.verifyIntegrity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.verifyIntegrity({ entry: "audit-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_tampered_entry" -> tampered', async () => {
+      if (typeof auditTrailHandler.verifyIntegrity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(auditTrailHandler.verifyIntegrity({ entry: "audit-tampered" }), storage);
+      expect(result.variant).toBe('tampered');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof auditTrailHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = auditTrailHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AuditTrail');
+    });
   });
 
   describe('invariant examples', () => {

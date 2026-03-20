@@ -26,7 +26,7 @@ describe('EqualWeight functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = equalWeightHandler.configure({ weightValue: 1 });
+      const program = equalWeightHandler.configure({ weightPerPerson: "1.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = equalWeightHandler.configure({ weightValue: 1 });
+      const program = equalWeightHandler.configure({ weightPerPerson: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = equalWeightHandler.configure({ weightValue: 1 });
+      const program = equalWeightHandler.configure({ weightPerPerson: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = equalWeightHandler.configure({ weightValue: 1 });
+      const program = equalWeightHandler.configure({ weightPerPerson: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = equalWeightHandler.configure({ weightValue: 1 });
+      const program = equalWeightHandler.configure({ weightPerPerson: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EqualWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof equalWeightHandler.configure !== 'function') return;
       try {
-        const result = await interpret(equalWeightHandler.configure({ weightValue: 1 }), storage);
+        const result = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('EqualWeight functional handler', () => {
       }
     });
 
+    it('fixture "configure_default" -> ok', async () => {
+      if (typeof equalWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(equalWeightHandler.configure({ weightPerPerson: "1.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_custom" -> ok', async () => {
+      if (typeof equalWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(equalWeightHandler.configure({ weightPerPerson: "5.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' });
+      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' });
+      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' });
+      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' });
+      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('EqualWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' });
+      const program = equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('EqualWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof equalWeightHandler.getWeight !== 'function') return;
       try {
-        const result = await interpret(equalWeightHandler.getWeight({ config: 'test', participant: 'test-participant' }), storage);
+        const result = await interpret(equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,12 +152,44 @@ describe('EqualWeight functional handler', () => {
       }
     });
 
+    it('fixture "get_alice" -> ok', async () => {
+      if (typeof equalWeightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_empty_participant" -> error', async () => {
+      if (typeof equalWeightHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(equalWeightHandler.getWeight({ config: "ew-cfg-001", participant: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof equalWeightHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = equalWeightHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EqualWeight');
+    });
   });
 
   describe('invariant examples', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(equalWeightHandler.configure({ weightValue: {"type":"literal","value":1} }), storage);
+      const configureResult0 = await interpret(equalWeightHandler.configure({ weightPerPerson: {"type":"literal","value":1} }), storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
       const thenResult0 = await interpret(equalWeightHandler.getWeight({ config: {"type":"variable","name":"ew"}, participant: {"type":"variable","name":"_"} }), storage);
@@ -153,12 +199,12 @@ describe('EqualWeight functional handler', () => {
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-weightValue', async () => {
+    it('always: valid-weightPerPerson', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ weightValue: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ weightPerPerson: fc.string() }) }),
               fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -181,12 +227,12 @@ describe('EqualWeight functional handler', () => {
       );
     });
 
-    it('never: orphaned-weightValue', async () => {
+    it('never: orphaned-weightPerPerson', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ weightValue: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ weightPerPerson: fc.string() }) }),
               fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -200,7 +246,7 @@ describe('EqualWeight functional handler', () => {
                   const program = actionFn.call(equalWeightHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
-                  // Never: orphaned-weightValue
+                  // Never: orphaned-weightPerPerson
                 } catch { /* handler may throw on random inputs */ }
               }
             }
@@ -226,7 +272,7 @@ describe('EqualWeight functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ weightValue: fc.string() }),
+          fc.record({ weightPerPerson: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = equalWeightHandler.configure(input as Record<string, unknown>);

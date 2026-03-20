@@ -29,13 +29,20 @@ describe('OnnxProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof onnxProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('load', () => {
     it('executes without crashing', async () => {
       if (typeof onnxProviderHandler.load !== 'function') return;
       try {
-        const result = await onnxProviderHandler.load({ name: 'test-name', modelPath: 'test-modelPath', device: 'test-device', options: 'test-options' }, storage);
+        const result = await onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('OnnxProvider imperative handler', () => {
       }
     });
 
+    it('fixture "load_codebert" -> ok', async () => {
+      if (typeof onnxProviderHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.load({ name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "load_gpu_model" -> ok', async () => {
+      if (typeof onnxProviderHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.load({ name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('infer', () => {
     it('executes without crashing', async () => {
       if (typeof onnxProviderHandler.infer !== 'function') return;
       try {
-        const result = await onnxProviderHandler.infer({ session: 'test-session', inputs: 'test-inputs', options: 'test-options' }, storage);
+        const result = await onnxProviderHandler.infer({ session: "codebert", inputs: "[[1,2,3]]", options: "{}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,20 @@ describe('OnnxProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "infer_codebert" -> ok', async () => {
+      if (typeof onnxProviderHandler.infer !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.infer({ session: "codebert", inputs: "[[1,2,3]]", options: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "infer_unknown_session" -> notFound', async () => {
+      if (typeof onnxProviderHandler.infer !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.infer({ session: "nonexistent", inputs: "[]", options: "{}" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -77,6 +112,30 @@ describe('OnnxProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof onnxProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await onnxProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof onnxProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = onnxProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('OnnxProvider');
+    });
   });
 
   describe('invariant examples', () => {

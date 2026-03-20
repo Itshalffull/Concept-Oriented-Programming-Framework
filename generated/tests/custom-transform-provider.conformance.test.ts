@@ -80,11 +80,18 @@ describe('CustomTransformProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof customTransformProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customTransformProviderHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' });
+      const program = customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('CustomTransformProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' });
+      const program = customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' });
+      const program = customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' });
+      const program = customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('CustomTransformProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' });
+      const program = customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('CustomTransformProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof customTransformProviderHandler.apply !== 'function') return;
       try {
-        const result = await interpret(customTransformProviderHandler.apply({ program: 'test-program', spec: 'test-spec' }), storage);
+        const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,45 @@ describe('CustomTransformProvider functional handler', () => {
       }
     });
 
+    it('fixture "replace_focus_strategy" -> ok', async () => {
+      if (typeof customTransformProviderHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"focus\",\"strategy\":\"roving\"}]}", spec: "{\"match\":{\"tag\":\"focus\",\"strategy\":\"roving\"},\"replace\":{\"strategy\":\"trap\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_matches" -> ok', async () => {
+      if (typeof customTransformProviderHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customTransformProviderHandler.apply({ program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"match\":{\"tag\":\"nonexistent\"},\"replace\":{}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_program_json" -> error', async () => {
+      if (typeof customTransformProviderHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customTransformProviderHandler.apply({ program: "bad-json", spec: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof customTransformProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = customTransformProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CustomTransformProvider');
+    });
   });
 
   describe('invariant examples', () => {

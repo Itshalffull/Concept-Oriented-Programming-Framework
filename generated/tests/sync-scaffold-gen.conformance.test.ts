@@ -26,7 +26,7 @@ describe('SyncScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SyncScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SyncScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SyncScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(syncScaffoldGenHandler.generate({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' }), storage);
+        const result = await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SyncScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_sync" -> ok', async () => {
+      if (typeof syncScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_sync" -> ok', async () => {
+      if (typeof syncScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncScaffoldGenHandler.generate({ name: "SimpleSync", trigger: {"concept":"Order","action":"place"}, conditions: [], effects: [], thenBlocks: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SyncScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SyncScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' });
+      const program = syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SyncScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof syncScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(syncScaffoldGenHandler.preview({ name: 'test-name', trigger: 'test', conditions: 'test', effects: 'test', thenBlocks: 'test' }), storage);
+        const result = await interpret(syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,13 @@ describe('SyncScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof syncScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,6 +217,31 @@ describe('SyncScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof syncScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(syncScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof syncScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = syncScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SyncScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

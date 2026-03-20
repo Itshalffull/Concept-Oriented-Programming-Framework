@@ -26,7 +26,7 @@ describe('WatchKitAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WatchKitAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WatchKitAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WatchKitAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof watchKitAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(watchKitAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,59 @@ describe('WatchKitAdapter functional handler', () => {
       }
     });
 
+    it('fixture "button_tap" -> ok', async () => {
+      if (typeof watchKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_style" -> ok', async () => {
+      if (typeof watchKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-2", props: "{ \"style\": { \"fontSize\": 14 } }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_theme" -> ok', async () => {
+      if (typeof watchKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-accent\\\":\\\"#FF6600\\\"}}\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof watchKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "bad_json" -> error', async () => {
+      if (typeof watchKitAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(watchKitAdapterHandler.normalize({ adapter: "wk-1", props: "<<<invalid>>>" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof watchKitAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = watchKitAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WatchKitAdapter');
+    });
   });
 
   describe('invariant examples', () => {

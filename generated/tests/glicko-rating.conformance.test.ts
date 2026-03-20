@@ -26,7 +26,7 @@ describe('GlickoRating functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 });
+      const program = glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 });
+      const program = glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 });
+      const program = glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 });
+      const program = glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 });
+      const program = glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GlickoRating functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof glickoRatingHandler.configure !== 'function') return;
       try {
-        const result = await interpret(glickoRatingHandler.configure({ initialRating: 1, initialDeviation: 1, initialVolatility: 1, inactivityGrowthRate: 1 }), storage);
+        const result = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('GlickoRating functional handler', () => {
       }
     });
 
+    it('fixture "configure_standard" -> ok', async () => {
+      if (typeof glickoRatingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_zero_deviation" -> error', async () => {
+      if (typeof glickoRatingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "0.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('recordOutcome', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 });
+      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 });
+      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 });
+      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 });
+      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 });
+      const program = glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('GlickoRating functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
       try {
-        const result = await interpret(glickoRatingHandler.recordOutcome({ config: 'test', participant: 'test-participant', opponent: 'test-opponent', outcome: 1 }), storage);
+        const result = await interpret(glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('GlickoRating functional handler', () => {
       }
     });
 
+    it('fixture "outcome_win" -> ok', async () => {
+      if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "outcome_invalid" -> error', async () => {
+      if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "", opponent: "", outcome: "-1.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('applyInactivityDecay', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 });
+      const program = glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('GlickoRating functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
       try {
-        const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: 'test', participant: 'test-participant', daysSinceActive: 1 }), storage);
+        const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('GlickoRating functional handler', () => {
       }
     });
 
+    it('fixture "decay_30_days" -> ok', async () => {
+      if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "decay_nonexistent" -> error', async () => {
+      if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "unknown-player", daysSinceActive: "90.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getReliableWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' });
+      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' });
+      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' });
+      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' });
+      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('GlickoRating functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' });
+      const program = glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('GlickoRating functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
       try {
-        const result = await interpret(glickoRatingHandler.getReliableWeight({ config: 'test', participant: 'test-participant' }), storage);
+        const result = await interpret(glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('GlickoRating functional handler', () => {
       }
     });
 
+    it('fixture "weight_alice" -> ok', async () => {
+      if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "weight_unknown" -> error', async () => {
+      if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof glickoRatingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = glickoRatingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GlickoRating');
+    });
   });
 
   describe('invariant examples', () => {

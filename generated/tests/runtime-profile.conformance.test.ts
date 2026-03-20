@@ -26,7 +26,7 @@ describe('RuntimeProfile functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' });
+      const program = runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RuntimeProfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' });
+      const program = runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' });
+      const program = runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' });
+      const program = runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RuntimeProfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' });
+      const program = runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RuntimeProfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeProfileHandler.register !== 'function') return;
       try {
-        const result = await interpret(runtimeProfileHandler.register({ profile: 'test', name: 'test-name', shellId: 'test-shellId', navigatorId: 'test-navigatorId', transportId: 'test-transportId', platformAdapterId: 'test-platformAdapterId', platform: 'test-platform', router: 'test-router', baseUrl: 'test-baseUrl', retryPolicy: 'test-retryPolicy', authMode: 'test' }), storage);
+        const result = await interpret(runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('RuntimeProfile functional handler', () => {
       }
     });
 
+    it('fixture "register_web_profile" -> ok', async () => {
+      if (typeof runtimeProfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_mobile_profile" -> ok', async () => {
+      if (typeof runtimeProfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeProfileHandler.register({ profile: "R-2", name: "mobile-staging", shellId: "S-2", navigatorId: "N-2", transportId: "P-2", platformAdapterId: "D-2", platform: "mobile", router: "stack", baseUrl: "https://m.example.com", retryPolicy: "{ \"maxRetries\": 1 }", authMode: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = runtimeProfileHandler.resolve({ name: 'test-name' });
+      const program = runtimeProfileHandler.resolve({ name: "web-production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('RuntimeProfile functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = runtimeProfileHandler.resolve({ name: 'test-name' });
+      const program = runtimeProfileHandler.resolve({ name: "web-production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = runtimeProfileHandler.resolve({ name: 'test-name' });
+      const program = runtimeProfileHandler.resolve({ name: "web-production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = runtimeProfileHandler.resolve({ name: 'test-name' });
+      const program = runtimeProfileHandler.resolve({ name: "web-production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('RuntimeProfile functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = runtimeProfileHandler.resolve({ name: 'test-name' });
+      const program = runtimeProfileHandler.resolve({ name: "web-production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('RuntimeProfile functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof runtimeProfileHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(runtimeProfileHandler.resolve({ name: 'test-name' }), storage);
+        const result = await interpret(runtimeProfileHandler.resolve({ name: "web-production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,20 @@ describe('RuntimeProfile functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_web" -> ok', async () => {
+      if (typeof runtimeProfileHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeProfileHandler.resolve({ name: "web-production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> notfound', async () => {
+      if (typeof runtimeProfileHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeProfileHandler.resolve({ name: "nonexistent-profile" }), storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -196,6 +224,31 @@ describe('RuntimeProfile functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof runtimeProfileHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(runtimeProfileHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof runtimeProfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = runtimeProfileHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RuntimeProfile');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

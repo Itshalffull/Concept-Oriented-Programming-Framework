@@ -26,7 +26,7 @@ describe('SuiteManifestEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' });
+      const program = suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.register({ name: 'test-name', source: 'test-source', manifest: 'test-manifest' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_identity" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.register({ name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.register({ name: "content", source: "repertoire/concepts/content/suite.yaml", manifest: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.register({ name: "", source: "suite.yaml", manifest: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.get({ name: 'test-name' });
+      const program = suiteManifestEntityHandler.get({ name: "identity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.get({ name: 'test-name' });
+      const program = suiteManifestEntityHandler.get({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.get({ name: 'test-name' });
+      const program = suiteManifestEntityHandler.get({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.get({ name: 'test-name' });
+      const program = suiteManifestEntityHandler.get({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.get({ name: 'test-name' });
+      const program = suiteManifestEntityHandler.get({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.get({ name: 'test-name' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.get({ name: "identity" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('SuiteManifestEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_identity" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.get({ name: "identity" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.get({ name: "nonexistent-suite" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,11 +231,25 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "list_all_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.listAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.listAll({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.listAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.listAll({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = suiteManifestEntityHandler.findByConcept({ concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = suiteManifestEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = suiteManifestEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = suiteManifestEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = suiteManifestEntityHandler.findByConcept({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.findByConcept({ concept: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,32 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_user" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findByConcept({ concept: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_concept" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findByConcept({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findByConcept({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findBySync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.findBySync({ sync: 'test-sync' });
+      const program = suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +336,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.findBySync({ sync: 'test-sync' });
+      const program = suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.findBySync({ sync: 'test-sync' });
+      const program = suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.findBySync({ sync: 'test-sync' });
+      const program = suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +363,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.findBySync({ sync: 'test-sync' });
+      const program = suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +372,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.findBySync !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.findBySync({ sync: 'test-sync' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +382,32 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_auth_sync" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findBySync({ sync: "auth-on-login" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty_sync" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findBySync({ sync: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "find_sync" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.findBySync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.findBySync({ sync: "onUserCreate" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('concepts', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.concepts({ suite: 'test' });
+      const program = suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +415,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.concepts({ suite: 'test' });
+      const program = suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.concepts({ suite: 'test' });
+      const program = suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.concepts({ suite: 'test' });
+      const program = suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +442,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.concepts({ suite: 'test' });
+      const program = suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +451,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.concepts !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.concepts({ suite: 'test' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +461,25 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "concepts_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.concepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.concepts({ suite: "suite-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "concepts_missing" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.concepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.concepts({ suite: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('syncs', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.syncs({ suite: 'test' });
+      const program = suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +487,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.syncs({ suite: 'test' });
+      const program = suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.syncs({ suite: 'test' });
+      const program = suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.syncs({ suite: 'test' });
+      const program = suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +514,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.syncs({ suite: 'test' });
+      const program = suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +523,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.syncs !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.syncs({ suite: 'test' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -426,6 +531,20 @@ describe('SuiteManifestEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "syncs_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.syncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.syncs({ suite: "suite-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "syncs_missing" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.syncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.syncs({ suite: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -486,11 +605,18 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "dep_graph_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.dependencyGraph !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.dependencyGraph({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('transitiveDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +624,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +651,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +660,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.transitiveDependencies !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ suite: 'test' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +670,25 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "transitive_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.transitiveDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ suite: "suite-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "transitive_missing" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.transitiveDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.transitiveDependencies({ suite: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validateDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteManifestEntityHandler.validateDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +696,21 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteManifestEntityHandler.validateDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteManifestEntityHandler.validateDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteManifestEntityHandler.validateDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +723,7 @@ describe('SuiteManifestEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteManifestEntityHandler.validateDependencies({ suite: 'test' });
+      const program = suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +732,7 @@ describe('SuiteManifestEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteManifestEntityHandler.validateDependencies !== 'function') return;
       try {
-        const result = await interpret(suiteManifestEntityHandler.validateDependencies({ suite: 'test' }), storage);
+        const result = await interpret(suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -600,6 +740,20 @@ describe('SuiteManifestEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "validate_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.validateDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.validateDependencies({ suite: "suite-uuid-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> error', async () => {
+      if (typeof suiteManifestEntityHandler.validateDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.validateDependencies({ suite: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -660,6 +814,31 @@ describe('SuiteManifestEntity functional handler', () => {
       }
     });
 
+    it('fixture "cross_suite_valid" -> ok', async () => {
+      if (typeof suiteManifestEntityHandler.crossSuiteConflicts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteManifestEntityHandler.crossSuiteConflicts({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof suiteManifestEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = suiteManifestEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SuiteManifestEntity');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('AppInstallation functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 });
+      const program = appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AppInstallation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 });
+      const program = appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 });
+      const program = appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 });
+      const program = appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AppInstallation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 });
+      const program = appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AppInstallation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appInstallationHandler.register !== 'function') return;
       try {
-        const result = await interpret(appInstallationHandler.register({ installation: 'test', name: 'test-name', version: 'test-version', status: 'test-status', registry: 'test-registry', description: 'test', concepts: 1, syncs: 1 }), storage);
+        const result = await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AppInstallation functional handler', () => {
       }
     });
 
+    it('fixture "register_core_suite" -> ok', async () => {
+      if (typeof appInstallationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_installation" -> error', async () => {
+      if (typeof appInstallationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appInstallationHandler.register({ installation: "", name: "", version: "", status: "", registry: "", concepts: "0", syncs: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = appInstallationHandler.list({ status: 'test' });
+      const program = appInstallationHandler.list({ status: "active" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AppInstallation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = appInstallationHandler.list({ status: 'test' });
+      const program = appInstallationHandler.list({ status: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = appInstallationHandler.list({ status: 'test' });
+      const program = appInstallationHandler.list({ status: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = appInstallationHandler.list({ status: 'test' });
+      const program = appInstallationHandler.list({ status: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AppInstallation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = appInstallationHandler.list({ status: 'test' });
+      const program = appInstallationHandler.list({ status: "active" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AppInstallation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof appInstallationHandler.list !== 'function') return;
       try {
-        const result = await interpret(appInstallationHandler.list({ status: 'test' }), storage);
+        const result = await interpret(appInstallationHandler.list({ status: "active" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,38 @@ describe('AppInstallation functional handler', () => {
       }
     });
 
+    it('fixture "list_active" -> ok', async () => {
+      if (typeof appInstallationHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appInstallationHandler.list({ status: "active" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof appInstallationHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(appInstallationHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof appInstallationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = appInstallationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AppInstallation');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

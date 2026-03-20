@@ -19,7 +19,7 @@ describe('VariantEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof variantEntityHandler.register !== 'function') return;
       try {
-        const result = await variantEntityHandler.register({ action: 'test-action', tag: 'test-tag', fields: 'test-fields' }, storage);
+        const result = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('VariantEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_ok" -> ok', async () => {
+      if (typeof variantEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_error" -> ok', async () => {
+      if (typeof variantEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_action" -> error', async () => {
+      if (typeof variantEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.register({ action: "", tag: "ok", fields: "[]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('VariantEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       try {
-        const result = await variantEntityHandler.matchingSyncs({ variant: 'test' }, storage);
+        const result = await variantEntityHandler.matchingSyncs({ variant: "variant-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('VariantEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "matching_valid" -> ok', async () => {
+      if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.matchingSyncs({ variant: "variant-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "matching_missing" -> error', async () => {
+      if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.matchingSyncs({ variant: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('VariantEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof variantEntityHandler.isDead !== 'function') return;
       try {
-        const result = await variantEntityHandler.isDead({ variant: 'test' }, storage);
+        const result = await variantEntityHandler.isDead({ variant: "variant-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('VariantEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "dead_check_valid" -> ok', async () => {
+      if (typeof variantEntityHandler.isDead !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.isDead({ variant: "variant-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dead_check_missing" -> error', async () => {
+      if (typeof variantEntityHandler.isDead !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.isDead({ variant: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('VariantEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof variantEntityHandler.get !== 'function') return;
       try {
-        const result = await variantEntityHandler.get({ variant: 'test' }, storage);
+        const result = await variantEntityHandler.get({ variant: "variant-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +126,37 @@ describe('VariantEntity imperative handler', () => {
       }
     });
 
+    it('fixture "get_valid" -> ok', async () => {
+      if (typeof variantEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.get({ variant: "variant-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof variantEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantEntityHandler.get({ variant: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof variantEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = variantEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VariantEntity');
+    });
   });
 
   describe('invariant examples', () => {

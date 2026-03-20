@@ -26,7 +26,7 @@ describe('Query functional handler', () => {
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.parse({ query: 'test', expression: 'test-expression' });
+      const program = queryHandler.parse({ query: "q-001", expression: "status = 'active'" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.parse({ query: 'test', expression: 'test-expression' });
+      const program = queryHandler.parse({ query: "q-001", expression: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.parse({ query: 'test', expression: 'test-expression' });
+      const program = queryHandler.parse({ query: "q-001", expression: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.parse({ query: 'test', expression: 'test-expression' });
+      const program = queryHandler.parse({ query: "q-001", expression: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.parse({ query: 'test', expression: 'test-expression' });
+      const program = queryHandler.parse({ query: "q-001", expression: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.parse !== 'function') return;
       try {
-        const result = await interpret(queryHandler.parse({ query: 'test', expression: 'test-expression' }), storage);
+        const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "parse_status_filter" -> ok', async () => {
+      if (typeof queryHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "parse_complex" -> ok', async () => {
+      if (typeof queryHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.parse({ query: "q-002", expression: "age > 18 AND role = 'admin'" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "parse_empty_expression" -> error', async () => {
+      if (typeof queryHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.parse({ query: "q-003", expression: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.execute({ query: 'test' });
+      const program = queryHandler.execute({ query: "q-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.execute({ query: 'test' });
+      const program = queryHandler.execute({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.execute({ query: 'test' });
+      const program = queryHandler.execute({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.execute({ query: 'test' });
+      const program = queryHandler.execute({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.execute({ query: 'test' });
+      const program = queryHandler.execute({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.execute !== 'function') return;
       try {
-        const result = await interpret(queryHandler.execute({ query: 'test' }), storage);
+        const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "execute_parsed" -> ok', async () => {
+      if (typeof queryHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_missing" -> error', async () => {
+      if (typeof queryHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.execute({ query: "q-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.subscribe({ query: 'test' });
+      const program = queryHandler.subscribe({ query: "q-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.subscribe({ query: 'test' });
+      const program = queryHandler.subscribe({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.subscribe({ query: 'test' });
+      const program = queryHandler.subscribe({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.subscribe({ query: 'test' });
+      const program = queryHandler.subscribe({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.subscribe({ query: 'test' });
+      const program = queryHandler.subscribe({ query: "q-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.subscribe !== 'function') return;
       try {
-        const result = await interpret(queryHandler.subscribe({ query: 'test' }), storage);
+        const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "subscribe_parsed" -> ok', async () => {
+      if (typeof queryHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_missing" -> error', async () => {
+      if (typeof queryHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.subscribe({ query: "q-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addFilter', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.addFilter({ query: 'test', filter: 'test-filter' });
+      const program = queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.addFilter({ query: 'test', filter: 'test-filter' });
+      const program = queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.addFilter({ query: 'test', filter: 'test-filter' });
+      const program = queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.addFilter({ query: 'test', filter: 'test-filter' });
+      const program = queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.addFilter({ query: 'test', filter: 'test-filter' });
+      const program = queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.addFilter !== 'function') return;
       try {
-        const result = await interpret(queryHandler.addFilter({ query: 'test', filter: 'test-filter' }), storage);
+        const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "add_status_filter" -> ok', async () => {
+      if (typeof queryHandler.addFilter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_filter_missing" -> error', async () => {
+      if (typeof queryHandler.addFilter !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.addFilter({ query: "q-nonexistent", filter: "status = 'active'" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addSort', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.addSort({ query: 'test', sort: 'test-sort' });
+      const program = queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.addSort({ query: 'test', sort: 'test-sort' });
+      const program = queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.addSort({ query: 'test', sort: 'test-sort' });
+      const program = queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.addSort({ query: 'test', sort: 'test-sort' });
+      const program = queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.addSort({ query: 'test', sort: 'test-sort' });
+      const program = queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.addSort !== 'function') return;
       try {
-        const result = await interpret(queryHandler.addSort({ query: 'test', sort: 'test-sort' }), storage);
+        const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "add_date_sort" -> ok', async () => {
+      if (typeof queryHandler.addSort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_sort_missing" -> error', async () => {
+      if (typeof queryHandler.addSort !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.addSort({ query: "q-nonexistent", sort: "name ASC" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setScope', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queryHandler.setScope({ query: 'test', scope: 'test-scope' });
+      const program = queryHandler.setScope({ query: "q-001", scope: "organization/acme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Query functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queryHandler.setScope({ query: 'test', scope: 'test-scope' });
+      const program = queryHandler.setScope({ query: "q-001", scope: "organization/acme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queryHandler.setScope({ query: 'test', scope: 'test-scope' });
+      const program = queryHandler.setScope({ query: "q-001", scope: "organization/acme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queryHandler.setScope({ query: 'test', scope: 'test-scope' });
+      const program = queryHandler.setScope({ query: "q-001", scope: "organization/acme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Query functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queryHandler.setScope({ query: 'test', scope: 'test-scope' });
+      const program = queryHandler.setScope({ query: "q-001", scope: "organization/acme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Query functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queryHandler.setScope !== 'function') return;
       try {
-        const result = await interpret(queryHandler.setScope({ query: 'test', scope: 'test-scope' }), storage);
+        const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('Query functional handler', () => {
       }
     });
 
+    it('fixture "set_org_scope" -> ok', async () => {
+      if (typeof queryHandler.setScope !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_scope_missing" -> error', async () => {
+      if (typeof queryHandler.setScope !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryHandler.setScope({ query: "q-nonexistent", scope: "global" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof queryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = queryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Query');
+    });
   });
 
   describe('invariant examples', () => {

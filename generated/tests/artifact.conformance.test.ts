@@ -26,7 +26,7 @@ describe('Artifact functional handler', () => {
 
   describe('build', () => {
     it('builds a valid StorageProgram', () => {
-      const program = artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' });
+      const program = artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Artifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' });
+      const program = artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' });
+      const program = artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' });
+      const program = artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Artifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' });
+      const program = artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Artifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof artifactHandler.build !== 'function') return;
       try {
-        const result = await interpret(artifactHandler.build({ concept: 'test-concept', spec: 'test-spec', implementation: 'test-implementation', deps: 'test' }), storage);
+        const result = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Artifact functional handler', () => {
       }
     });
 
+    it('fixture "build_user_concept" -> ok', async () => {
+      if (typeof artifactHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "build_missing_spec" -> error', async () => {
+      if (typeof artifactHandler.build !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.build({ concept: "User", spec: "", implementation: "", deps: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('store', () => {
     it('builds a valid StorageProgram', () => {
-      const program = artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' });
+      const program = artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Artifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' });
+      const program = artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' });
+      const program = artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' });
+      const program = artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Artifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' });
+      const program = artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Artifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof artifactHandler.store !== 'function') return;
       try {
-        const result = await interpret(artifactHandler.store({ hash: 'test-hash', location: 'test-location', concept: 'test-concept', language: 'test-language', platform: 'test-platform', metadata: 'test' }), storage);
+        const result = await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Artifact functional handler', () => {
       }
     });
 
+    it('fixture "store_artifact" -> ok', async () => {
+      if (typeof artifactHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "store_empty_hash" -> error', async () => {
+      if (typeof artifactHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.store({ hash: "", location: "", concept: "", language: "", platform: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = artifactHandler.resolve({ hash: 'test-hash' });
+      const program = artifactHandler.resolve({ hash: "sha256-00000abcdef0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Artifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = artifactHandler.resolve({ hash: 'test-hash' });
+      const program = artifactHandler.resolve({ hash: "sha256-00000abcdef0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = artifactHandler.resolve({ hash: 'test-hash' });
+      const program = artifactHandler.resolve({ hash: "sha256-00000abcdef0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = artifactHandler.resolve({ hash: 'test-hash' });
+      const program = artifactHandler.resolve({ hash: "sha256-00000abcdef0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Artifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = artifactHandler.resolve({ hash: 'test-hash' });
+      const program = artifactHandler.resolve({ hash: "sha256-00000abcdef0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Artifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof artifactHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(artifactHandler.resolve({ hash: 'test-hash' }), storage);
+        const result = await interpret(artifactHandler.resolve({ hash: "sha256-00000abcdef0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Artifact functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof artifactHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.resolve({ hash: "sha256-00000abcdef0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof artifactHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.resolve({ hash: "sha256-doesnotexist" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('gc', () => {
     it('builds a valid StorageProgram', () => {
-      const program = artifactHandler.gc({ olderThan: 'test', keepVersions: 1 });
+      const program = artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Artifact functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = artifactHandler.gc({ olderThan: 'test', keepVersions: 1 });
+      const program = artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = artifactHandler.gc({ olderThan: 'test', keepVersions: 1 });
+      const program = artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = artifactHandler.gc({ olderThan: 'test', keepVersions: 1 });
+      const program = artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Artifact functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = artifactHandler.gc({ olderThan: 'test', keepVersions: 1 });
+      const program = artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Artifact functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof artifactHandler.gc !== 'function') return;
       try {
-        const result = await interpret(artifactHandler.gc({ olderThan: 'test', keepVersions: 1 }), storage);
+        const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Artifact functional handler', () => {
       }
     });
 
+    it('fixture "gc_old_artifacts" -> ok', async () => {
+      if (typeof artifactHandler.gc !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "gc_negative_keep" -> error', async () => {
+      if (typeof artifactHandler.gc !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof artifactHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = artifactHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Artifact');
+    });
   });
 
   describe('invariant examples', () => {

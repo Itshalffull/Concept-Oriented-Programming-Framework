@@ -26,7 +26,7 @@ describe('Patch functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' });
+      const program = patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Patch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' });
+      const program = patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' });
+      const program = patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' });
+      const program = patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Patch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' });
+      const program = patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Patch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof patchHandler.create !== 'function') return;
       try {
-        const result = await interpret(patchHandler.create({ base: 'test-base', target: 'test-target', effect: 'test' }), storage);
+        const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Patch functional handler', () => {
       }
     });
 
+    it('fixture "create_patch" -> ok', async () => {
+      if (typeof patchHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_effect" -> error', async () => {
+      if (typeof patchHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = patchHandler.apply({ patchId: 'test', content: 'test' });
+      const program = patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Patch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = patchHandler.apply({ patchId: 'test', content: 'test' });
+      const program = patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = patchHandler.apply({ patchId: 'test', content: 'test' });
+      const program = patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = patchHandler.apply({ patchId: 'test', content: 'test' });
+      const program = patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Patch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = patchHandler.apply({ patchId: 'test', content: 'test' });
+      const program = patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Patch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof patchHandler.apply !== 'function') return;
       try {
-        const result = await interpret(patchHandler.apply({ patchId: 'test', content: 'test' }), storage);
+        const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Patch functional handler', () => {
       }
     });
 
+    it('fixture "apply_existing" -> ok', async () => {
+      if (typeof patchHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_missing" -> error', async () => {
+      if (typeof patchHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.apply({ patchId: "patch-nonexistent", content: "hello" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invert', () => {
     it('builds a valid StorageProgram', () => {
-      const program = patchHandler.invert({ patchId: 'test' });
+      const program = patchHandler.invert({ patchId: "patch-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Patch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = patchHandler.invert({ patchId: 'test' });
+      const program = patchHandler.invert({ patchId: "patch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = patchHandler.invert({ patchId: 'test' });
+      const program = patchHandler.invert({ patchId: "patch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = patchHandler.invert({ patchId: 'test' });
+      const program = patchHandler.invert({ patchId: "patch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Patch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = patchHandler.invert({ patchId: 'test' });
+      const program = patchHandler.invert({ patchId: "patch-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Patch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof patchHandler.invert !== 'function') return;
       try {
-        const result = await interpret(patchHandler.invert({ patchId: 'test' }), storage);
+        const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Patch functional handler', () => {
       }
     });
 
+    it('fixture "invert_existing" -> ok', async () => {
+      if (typeof patchHandler.invert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invert_missing" -> error', async () => {
+      if (typeof patchHandler.invert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.invert({ patchId: "patch-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('compose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = patchHandler.compose({ first: 'test', second: 'test' });
+      const program = patchHandler.compose({ first: "patch-1", second: "patch-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Patch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = patchHandler.compose({ first: 'test', second: 'test' });
+      const program = patchHandler.compose({ first: "patch-1", second: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = patchHandler.compose({ first: 'test', second: 'test' });
+      const program = patchHandler.compose({ first: "patch-1", second: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = patchHandler.compose({ first: 'test', second: 'test' });
+      const program = patchHandler.compose({ first: "patch-1", second: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Patch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = patchHandler.compose({ first: 'test', second: 'test' });
+      const program = patchHandler.compose({ first: "patch-1", second: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Patch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof patchHandler.compose !== 'function') return;
       try {
-        const result = await interpret(patchHandler.compose({ first: 'test', second: 'test' }), storage);
+        const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Patch functional handler', () => {
       }
     });
 
+    it('fixture "compose_sequential" -> ok', async () => {
+      if (typeof patchHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_missing" -> error', async () => {
+      if (typeof patchHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.compose({ first: "patch-nonexistent", second: "patch-2" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('commute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = patchHandler.commute({ p1: 'test', p2: 'test' });
+      const program = patchHandler.commute({ p1: "patch-1", p2: "patch-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Patch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = patchHandler.commute({ p1: 'test', p2: 'test' });
+      const program = patchHandler.commute({ p1: "patch-1", p2: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = patchHandler.commute({ p1: 'test', p2: 'test' });
+      const program = patchHandler.commute({ p1: "patch-1", p2: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = patchHandler.commute({ p1: 'test', p2: 'test' });
+      const program = patchHandler.commute({ p1: "patch-1", p2: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Patch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = patchHandler.commute({ p1: 'test', p2: 'test' });
+      const program = patchHandler.commute({ p1: "patch-1", p2: "patch-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Patch functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof patchHandler.commute !== 'function') return;
       try {
-        const result = await interpret(patchHandler.commute({ p1: 'test', p2: 'test' }), storage);
+        const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Patch functional handler', () => {
       }
     });
 
+    it('fixture "commute_independent" -> ok', async () => {
+      if (typeof patchHandler.commute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "commute_missing" -> error', async () => {
+      if (typeof patchHandler.commute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.commute({ p1: "patch-nonexistent", p2: "patch-2" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof patchHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = patchHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Patch');
+    });
   });
 
   describe('invariant examples', () => {

@@ -80,11 +80,18 @@ describe('AddWinsResolution functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof addWinsResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(addWinsResolutionHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('attemptResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('AddWinsResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('AddWinsResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('AddWinsResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof addWinsResolutionHandler.attemptResolve !== 'function') return;
       try {
-        const result = await interpret(addWinsResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' }), storage);
+        const result = await interpret(addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('AddWinsResolution functional handler', () => {
       }
     });
 
+    it('fixture "resolve_set_union" -> ok', async () => {
+      if (typeof addWinsResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(addWinsResolutionHandler.attemptResolve({ base: null, v1: "[\"tag-a\", \"tag-b\"]", v2: "[\"tag-b\", \"tag-c\"]", context: "tags" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_non_set" -> error', async () => {
+      if (typeof addWinsResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(addWinsResolutionHandler.attemptResolve({ base: null, v1: "not-a-json-array", v2: "also-not-json", context: "binary-file" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof addWinsResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = addWinsResolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AddWinsResolution');
+    });
   });
 
   describe('invariant examples', () => {

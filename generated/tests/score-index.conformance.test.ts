@@ -26,7 +26,7 @@ describe('ScoreIndex functional handler', () => {
 
   describe('upsertConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertConcept !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertConcept({ name: 'test-name', purpose: 'test-purpose', actions: 'test', stateFields: 'test', file: 'test-file' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_user" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertConcept({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertSync !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertSync({ name: 'test-name', annotation: 'test-annotation', triggers: 'test', effects: 'test', file: 'test-file' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_sync" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSync({ name: "onUserCreate", annotation: "eager", file: "/specs/syncs.sync" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_sync_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSync({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertSymbol', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' });
+      const program = scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' });
+      const program = scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' });
+      const program = scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' });
+      const program = scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' });
+      const program = scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertSymbol !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertSymbol({ name: 'test-name', kind: 'test-kind', file: 'test-file', line: 1, scope: 'test-scope' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_fn" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertSymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSymbol({ name: "handleCreate", kind: "function", file: "/src/handler.ts", line: "42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_sym_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertSymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSymbol({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' });
+      const program = scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' });
+      const program = scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' });
+      const program = scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' });
+      const program = scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' });
+      const program = scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertFile !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertFile({ path: 'test-path', language: 'test-language', role: 'test-role', definitions: 'test' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_file" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertFile({ path: "/src/handler.ts", language: "typescript", role: "source" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_file_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertFile({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertHandler', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 });
+      const program = scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 });
+      const program = scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 });
+      const program = scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 });
+      const program = scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 });
+      const program = scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertHandler !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertHandler({ concept: 'test-concept', language: 'test-language', file: 'test-file', actions: 'test', lineCount: 1 }), storage);
+        const result = await interpret(scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_handler" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertHandler({ concept: "Flag", language: "typescript", file: "/handlers/ts/flag.handler.ts", lineCount: "80" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_handler_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertHandler({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertWidgetImpl', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' });
+      const program = scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' });
+      const program = scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' });
+      const program = scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' });
+      const program = scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' });
+      const program = scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertWidgetImpl !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ widget: 'test-widget', framework: 'test-framework', file: 'test-file', component: 'test-component' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_widget" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertWidgetImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ widget: "dialog", framework: "react", file: "/generated/Dialog.tsx", component: "Dialog" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_widget_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertWidgetImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertWidgetImpl({ widget: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertThemeImpl', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 });
+      const program = scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 });
+      const program = scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 });
+      const program = scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 });
+      const program = scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 });
+      const program = scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertThemeImpl !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertThemeImpl({ theme: 'test-theme', platform: 'test-platform', file: 'test-file', tokenCount: 1 }), storage);
+        const result = await interpret(scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +512,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_theme" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertThemeImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertThemeImpl({ theme: "light", platform: "css", file: "/generated/light.css", tokenCount: "42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_theme_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertThemeImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertThemeImpl({ theme: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertDeployment', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +538,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +565,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +574,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertDeployment !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertDeployment({ name: 'test-name', app: 'test-app', runtimes: 'test', file: 'test-file' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +584,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_deploy" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertDeployment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertDeployment({ name: "conduit-prod", app: "conduit", file: "/deploy/prod.yaml" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_deploy_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertDeployment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertDeployment({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertSuiteManifest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +610,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +637,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' });
+      const program = scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +646,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertSuiteManifest !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ name: 'test-name', version: 'test-version', concepts: 'test', syncs: 'test', file: 'test-file' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -544,11 +656,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_suite" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertSuiteManifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ name: "identity", version: "1.0.0", file: "/suites/identity/suite.yaml" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_suite_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertSuiteManifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertSuiteManifest({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upsertInterface', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' });
+      const program = scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -556,21 +682,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' });
+      const program = scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' });
+      const program = scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' });
+      const program = scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -583,7 +709,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' });
+      const program = scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -592,7 +718,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.upsertInterface !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.upsertInterface({ name: 'test-name', targets: 'test', endpointCount: 1, file: 'test-file' }), storage);
+        const result = await interpret(scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -602,11 +728,25 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "upsert_iface" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertInterface !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertInterface({ name: "conduit-api", endpointCount: "12", file: "/interfaces/api.yaml" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_iface_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertInterface !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertInterface({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeByFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreIndexHandler.removeByFile({ path: 'test-path' });
+      const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +754,21 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreIndexHandler.removeByFile({ path: 'test-path' });
+      const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreIndexHandler.removeByFile({ path: 'test-path' });
+      const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreIndexHandler.removeByFile({ path: 'test-path' });
+      const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +781,7 @@ describe('ScoreIndex functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreIndexHandler.removeByFile({ path: 'test-path' });
+      const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +790,7 @@ describe('ScoreIndex functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreIndexHandler.removeByFile !== 'function') return;
       try {
-        const result = await interpret(scoreIndexHandler.removeByFile({ path: 'test-path' }), storage);
+        const result = await interpret(scoreIndexHandler.removeByFile({ path: "/src/handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -658,6 +798,20 @@ describe('ScoreIndex functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "remove_file" -> ok', async () => {
+      if (typeof scoreIndexHandler.removeByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.removeByFile({ path: "/src/handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_empty" -> ok', async () => {
+      if (typeof scoreIndexHandler.removeByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.removeByFile({ path: "" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -718,6 +872,13 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof scoreIndexHandler.clear !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.clear({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('stats', () => {
@@ -776,6 +937,31 @@ describe('ScoreIndex functional handler', () => {
       }
     });
 
+    it('fixture "valid_2" -> ok', async () => {
+      if (typeof scoreIndexHandler.stats !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.stats({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreIndexHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreIndexHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreIndex');
+    });
   });
 
   describe('invariant examples', () => {

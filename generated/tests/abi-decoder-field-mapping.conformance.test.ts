@@ -26,7 +26,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' });
+      const program = abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' });
+      const program = abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' });
+      const program = abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' });
+      const program = abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' });
+      const program = abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof abiDecoderFieldMappingHandler.apply !== 'function') return;
       try {
-        const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: 'test-data', mapper: 'test-mapper', contract: 'test-contract' }), storage);
+        const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "apply_valid" -> ok', async () => {
+      if (typeof abiDecoderFieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_missing_mapper" -> notfound', async () => {
+      if (typeof abiDecoderFieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00", mapper: "nonexistent", contract: "0xAbC123" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "apply_no_data" -> error', async () => {
+      if (typeof abiDecoderFieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.apply({ data: "", mapper: "abi-map-1", contract: "0xAbC123" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' });
+      const program = abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
       try {
-        const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: 'test-data', mapper: 'test-mapper' }), storage);
+        const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "reverse_valid" -> ok', async () => {
+      if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reverse_missing_mapper" -> notfound', async () => {
+      if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{}", mapper: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "reverse_bad_json" -> error', async () => {
+      if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "not-json", mapper: "abi-map-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' });
+      const program = abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' });
+      const program = abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' });
+      const program = abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' });
+      const program = abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' });
+      const program = abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
       try {
-        const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: 'test-contract_abi', entity_schema: 'test-entity_schema', field_rules: 'test-field_rules' }), storage);
+        const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,45 @@ describe('AbiDecoderFieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "register_valid" -> ok', async () => {
+      if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_no_abi" -> invalid', async () => {
+      if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "", entity_schema: "TokenBalance", field_rules: "{}" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "register_bad_abi" -> invalid', async () => {
+      if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "not-json", entity_schema: "TokenBalance", field_rules: "{}" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof abiDecoderFieldMappingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = abiDecoderFieldMappingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AbiDecoderFieldMapping');
+    });
   });
 
   describe('invariant examples', () => {

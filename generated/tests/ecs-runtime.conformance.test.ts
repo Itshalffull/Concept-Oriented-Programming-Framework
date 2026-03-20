@@ -26,7 +26,7 @@ describe('EcsRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' });
+      const program = ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' });
+      const program = ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' });
+      const program = ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' });
+      const program = ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' });
+      const program = ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EcsRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ecsRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(ecsRuntimeHandler.provision({ concept: 'test-concept', cpu: 1, memory: 1, cluster: 'test-cluster' }), storage);
+        const result = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('EcsRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_fargate" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_large" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_no_cluster" -> error', async () => {
+      if (typeof ecsRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.provision({ concept: "ApiGateway", cpu: "256", memory: "512", cluster: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' });
+      const program = ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('EcsRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ecsRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(ecsRuntimeHandler.deploy({ service: 'test', imageUri: 'test-imageUri' }), storage);
+        const result = await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('EcsRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_ecr" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_service" -> error', async () => {
+      if (typeof ecsRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.deploy({ service: "", imageUri: "ecr.aws/app:latest" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 });
+      const program = ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('EcsRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: 'test', weight: 1 }), storage);
+        const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('EcsRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_canary" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_no_service" -> error', async () => {
+      if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "", weight: "50" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' });
+      const program = ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('EcsRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(ecsRuntimeHandler.rollback({ service: 'test', targetTaskDefinition: 'test-targetTaskDefinition' }), storage);
+        const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('EcsRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_previous_td" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_empty_td" -> error', async () => {
+      if (typeof ecsRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ecsRuntimeHandler.destroy({ service: 'test' });
+      const program = ecsRuntimeHandler.destroy({ service: "svc-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ecsRuntimeHandler.destroy({ service: 'test' });
+      const program = ecsRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ecsRuntimeHandler.destroy({ service: 'test' });
+      const program = ecsRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ecsRuntimeHandler.destroy({ service: 'test' });
+      const program = ecsRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('EcsRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ecsRuntimeHandler.destroy({ service: 'test' });
+      const program = ecsRuntimeHandler.destroy({ service: "svc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('EcsRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ecsRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(ecsRuntimeHandler.destroy({ service: 'test' }), storage);
+        const result = await interpret(ecsRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('EcsRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof ecsRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof ecsRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ecsRuntimeHandler.destroy({ service: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof ecsRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = ecsRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EcsRuntime');
+    });
   });
 
   describe('invariant examples', () => {

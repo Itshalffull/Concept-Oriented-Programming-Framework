@@ -19,7 +19,7 @@ describe('Installer imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof installerHandler.stage !== 'function') return;
       try {
-        const result = await installerHandler.stage({ lockfile_entries: 'test', project_root: 'test-project_root' }, storage);
+        const result = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('Installer imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "stage_single_module" -> ok', async () => {
+      if (typeof installerHandler.stage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.stage({ lockfile_entries: [{"module_id":"auth","version":"1.0.0","content_hash":"sha256:abc123","target_path":"node_modules/auth","kind":"library"}], project_root: "/workspace/my-project" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stage_empty_entries" -> error', async () => {
+      if (typeof installerHandler.stage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.stage({ lockfile_entries: [], project_root: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('Installer imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof installerHandler.activate !== 'function') return;
       try {
-        const result = await installerHandler.activate({ installation: 'test' }, storage);
+        const result = await installerHandler.activate({ installation: "inst-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('Installer imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "activate_staged" -> ok', async () => {
+      if (typeof installerHandler.activate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.activate({ installation: "inst-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "activate_missing" -> error', async () => {
+      if (typeof installerHandler.activate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.activate({ installation: "inst-nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('Installer imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof installerHandler.rollback !== 'function') return;
       try {
-        const result = await installerHandler.rollback({ installation: 'test' }, storage);
+        const result = await installerHandler.rollback({ installation: "inst-2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('Installer imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "rollback_with_previous" -> ok', async () => {
+      if (typeof installerHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.rollback({ installation: "inst-2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_no_previous" -> error', async () => {
+      if (typeof installerHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.rollback({ installation: "inst-1" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('Installer imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof installerHandler.clean !== 'function') return;
       try {
-        const result = await installerHandler.clean({ keep_generations: 1 }, storage);
+        const result = await installerHandler.clean({ keep_generations: "2" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +119,37 @@ describe('Installer imperative handler', () => {
       }
     });
 
+    it('fixture "clean_keep_two" -> ok', async () => {
+      if (typeof installerHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.clean({ keep_generations: "2" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clean_keep_zero" -> ok', async () => {
+      if (typeof installerHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await installerHandler.clean({ keep_generations: "0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof installerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = installerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Installer');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('GoSdkTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GoSdkTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GoSdkTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GoSdkTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof goSdkTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(goSdkTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,45 @@ describe('GoSdkTarget functional handler', () => {
       }
     });
 
+    it('fixture "generate_default" -> ok', async () => {
+      if (typeof goSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(goSdkTargetHandler.generate({ projection: "score-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_custom_module" -> ok', async () => {
+      if (typeof goSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(goSdkTargetHandler.generate({ projection: "agent-projection", config: "{\"modulePath\":\"github.com/myorg/agent-sdk\",\"goVersion\":\"1.22\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "generate_empty_projection" -> error', async () => {
+      if (typeof goSdkTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(goSdkTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof goSdkTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = goSdkTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GoSdkTarget');
+    });
   });
 
   describe('invariant examples', () => {

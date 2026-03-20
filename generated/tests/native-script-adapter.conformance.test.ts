@@ -26,7 +26,7 @@ describe('NativeScriptAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('NativeScriptAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('NativeScriptAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' });
+      const program = nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('NativeScriptAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: 'test', props: 'test-props' }), storage);
+        const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,59 @@ describe('NativeScriptAdapter functional handler', () => {
       }
     });
 
+    it('fixture "tap_and_class" -> ok', async () => {
+      if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "grid_layout" -> ok', async () => {
+      if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"*,*\\\"}\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "aria_label" -> ok', async () => {
+      if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-3", props: "{ \"aria-label\": \"Submit\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_props" -> error', async () => {
+      if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "malformed_json" -> error', async () => {
+      if (typeof nativeScriptAdapterHandler.normalize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nativeScriptAdapterHandler.normalize({ adapter: "ns-1", props: "{broken" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof nativeScriptAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = nativeScriptAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('NativeScriptAdapter');
+    });
   });
 
   describe('invariant examples', () => {

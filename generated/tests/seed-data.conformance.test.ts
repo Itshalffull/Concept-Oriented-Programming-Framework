@@ -26,7 +26,7 @@ describe('SeedData functional handler', () => {
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = seedDataHandler.discover({ base_path: 'test-base_path' });
+      const program = seedDataHandler.discover({ base_path: "/project/seeds" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SeedData functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = seedDataHandler.discover({ base_path: 'test-base_path' });
+      const program = seedDataHandler.discover({ base_path: "/project/seeds" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = seedDataHandler.discover({ base_path: 'test-base_path' });
+      const program = seedDataHandler.discover({ base_path: "/project/seeds" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = seedDataHandler.discover({ base_path: 'test-base_path' });
+      const program = seedDataHandler.discover({ base_path: "/project/seeds" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SeedData functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = seedDataHandler.discover({ base_path: 'test-base_path' });
+      const program = seedDataHandler.discover({ base_path: "/project/seeds" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SeedData functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof seedDataHandler.discover !== 'function') return;
       try {
-        const result = await interpret(seedDataHandler.discover({ base_path: 'test-base_path' }), storage);
+        const result = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SeedData functional handler', () => {
       }
     });
 
+    it('fixture "valid_discover" -> ok', async () => {
+      if (typeof seedDataHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_empty_path" -> error', async () => {
+      if (typeof seedDataHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.discover({ base_path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' });
+      const program = seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SeedData functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' });
+      const program = seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' });
+      const program = seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' });
+      const program = seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SeedData functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' });
+      const program = seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SeedData functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       try {
-        const result = await interpret(seedDataHandler.register({ source_path: 'test-source_path', concept_uri: 'test-concept_uri', action_name: 'test-action_name', entries: 'test' }), storage);
+        const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('SeedData functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof seedDataHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_interactor" -> ok', async () => {
+      if (typeof seedDataHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> error', async () => {
+      if (typeof seedDataHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = seedDataHandler.apply({ seed: 'test' });
+      const program = seedDataHandler.apply({ seed: "seed-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('SeedData functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = seedDataHandler.apply({ seed: 'test' });
+      const program = seedDataHandler.apply({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = seedDataHandler.apply({ seed: 'test' });
+      const program = seedDataHandler.apply({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = seedDataHandler.apply({ seed: 'test' });
+      const program = seedDataHandler.apply({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('SeedData functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = seedDataHandler.apply({ seed: 'test' });
+      const program = seedDataHandler.apply({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('SeedData functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof seedDataHandler.apply !== 'function') return;
       try {
-        const result = await interpret(seedDataHandler.apply({ seed: 'test' }), storage);
+        const result = await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +229,20 @@ describe('SeedData functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_apply" -> ok', async () => {
+      if (typeof seedDataHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_nonexistent" -> error', async () => {
+      if (typeof seedDataHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.apply({ seed: "seed-999" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +303,13 @@ describe('SeedData functional handler', () => {
       }
     });
 
+    it('fixture "valid_apply_all" -> ok', async () => {
+      if (typeof seedDataHandler.applyAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.applyAll({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('status', () => {
@@ -312,11 +368,18 @@ describe('SeedData functional handler', () => {
       }
     });
 
+    it('fixture "valid_status" -> ok', async () => {
+      if (typeof seedDataHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.status({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('reset', () => {
     it('builds a valid StorageProgram', () => {
-      const program = seedDataHandler.reset({ seed: 'test' });
+      const program = seedDataHandler.reset({ seed: "seed-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +387,21 @@ describe('SeedData functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = seedDataHandler.reset({ seed: 'test' });
+      const program = seedDataHandler.reset({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = seedDataHandler.reset({ seed: 'test' });
+      const program = seedDataHandler.reset({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = seedDataHandler.reset({ seed: 'test' });
+      const program = seedDataHandler.reset({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +414,7 @@ describe('SeedData functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = seedDataHandler.reset({ seed: 'test' });
+      const program = seedDataHandler.reset({ seed: "seed-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +423,7 @@ describe('SeedData functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof seedDataHandler.reset !== 'function') return;
       try {
-        const result = await interpret(seedDataHandler.reset({ seed: 'test' }), storage);
+        const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +433,38 @@ describe('SeedData functional handler', () => {
       }
     });
 
+    it('fixture "valid_reset" -> ok', async () => {
+      if (typeof seedDataHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reset_nonexistent" -> error', async () => {
+      if (typeof seedDataHandler.reset !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.reset({ seed: "seed-999" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof seedDataHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = seedDataHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SeedData');
+    });
   });
 
   describe('invariant examples', () => {

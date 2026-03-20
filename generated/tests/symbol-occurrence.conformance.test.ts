@@ -26,7 +26,7 @@ describe('SymbolOccurrence functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' });
+      const program = symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' });
+      const program = symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' });
+      const program = symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' });
+      const program = symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' });
+      const program = symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolOccurrenceHandler.record !== 'function') return;
       try {
-        const result = await interpret(symbolOccurrenceHandler.record({ symbol: 'test-symbol', file: 'test-file', startRow: 1, startCol: 1, endRow: 1, endCol: 1, startByte: 1, endByte: 1, role: 'test-role' }), storage);
+        const result = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SymbolOccurrence functional handler', () => {
       }
     });
 
+    it('fixture "valid_record_def" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid_record_ref" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('findDefinitions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' });
+      const program = symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' });
+      const program = symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' });
+      const program = symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' });
+      const program = symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' });
+      const program = symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
       try {
-        const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SymbolOccurrence functional handler', () => {
       }
     });
 
+    it('fixture "valid_find_defs" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_defs_no_results" -> error', async () => {
+      if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/NonExistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findReferences', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' });
+      const program = symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' });
+      const program = symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' });
+      const program = symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' });
+      const program = symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' });
+      const program = symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       try {
-        const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: 'test-symbol', roleFilter: 'test-roleFilter' }), storage);
+        const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,32 @@ describe('SymbolOccurrence functional handler', () => {
       }
     });
 
+    it('fixture "valid_find_refs" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_refs_filtered" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "reference" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_refs_no_results" -> error', async () => {
+      if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/NonExistent", roleFilter: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findAtPosition', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 });
+      const program = symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 });
+      const program = symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 });
+      const program = symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 });
+      const program = symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 });
+      const program = symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       try {
-        const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: 'test-file', row: 1, col: 1 }), storage);
+        const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('SymbolOccurrence functional handler', () => {
       }
     });
 
+    it('fixture "valid_find_at_pos" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_at_empty_pos" -> error', async () => {
+      if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "src/empty.ts", row: "1", col: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findInFile', () => {
     it('builds a valid StorageProgram', () => {
-      const program = symbolOccurrenceHandler.findInFile({ file: 'test-file' });
+      const program = symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = symbolOccurrenceHandler.findInFile({ file: 'test-file' });
+      const program = symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = symbolOccurrenceHandler.findInFile({ file: 'test-file' });
+      const program = symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = symbolOccurrenceHandler.findInFile({ file: 'test-file' });
+      const program = symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('SymbolOccurrence functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = symbolOccurrenceHandler.findInFile({ file: 'test-file' });
+      const program = symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('SymbolOccurrence functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       try {
-        const result = await interpret(symbolOccurrenceHandler.findInFile({ file: 'test-file' }), storage);
+        const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('SymbolOccurrence functional handler', () => {
       }
     });
 
+    it('fixture "valid_find_in_file" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_in_empty_file" -> ok', async () => {
+      if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "src/no-symbols.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof symbolOccurrenceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = symbolOccurrenceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SymbolOccurrence');
+    });
   });
 
   describe('invariant examples', () => {

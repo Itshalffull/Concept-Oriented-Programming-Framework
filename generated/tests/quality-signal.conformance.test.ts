@@ -26,7 +26,7 @@ describe('QualitySignal functional handler', () => {
 
   describe('record', () => {
     it('builds a valid StorageProgram', () => {
-      const program = qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' });
+      const program = qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' });
+      const program = qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' });
+      const program = qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' });
+      const program = qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' });
+      const program = qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('QualitySignal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof qualitySignalHandler.record !== 'function') return;
       try {
-        const result = await interpret(qualitySignalHandler.record({ target_symbol: 'test-target_symbol', dimension: 'test-dimension', status: 'test-status', severity: 'test-severity', summary: 'test', artifact_path: 'test', artifact_hash: 'test', run_ref: 'test' }), storage);
+        const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('QualitySignal functional handler', () => {
       }
     });
 
+    it('fixture "record_pass" -> ok', async () => {
+      if (typeof qualitySignalHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "record_with_artifact" -> ok', async () => {
+      if (typeof qualitySignalHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_dimension" -> validationError', async () => {
+      if (typeof qualitySignalHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "magic", status: "pass", severity: "gate" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
+    it('fixture "invalid_status" -> validationError', async () => {
+      if (typeof qualitySignalHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "excellent", severity: "gate" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
+    it('fixture "missing_required" -> validationError', async () => {
+      if (typeof qualitySignalHandler.record !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.record({ target_symbol: "", dimension: "", status: "", severity: "" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
   });
 
   describe('latest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' });
+      const program = qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' });
+      const program = qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' });
+      const program = qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' });
+      const program = qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' });
+      const program = qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('QualitySignal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof qualitySignalHandler.latest !== 'function') return;
       try {
-        const result = await interpret(qualitySignalHandler.latest({ target_symbol: 'test-target_symbol', dimension: 'test-dimension' }), storage);
+        const result = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,32 @@ describe('QualitySignal functional handler', () => {
       }
     });
 
+    it('fixture "latest_unit" -> ok', async () => {
+      if (typeof qualitySignalHandler.latest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "latest_invalid_dimension" -> validationError', async () => {
+      if (typeof qualitySignalHandler.latest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "imaginary" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
+    it('fixture "latest_missing_target" -> validationError', async () => {
+      if (typeof qualitySignalHandler.latest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.latest({ target_symbol: "", dimension: "unit" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
   });
 
   describe('rollup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' });
+      const program = qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +206,21 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' });
+      const program = qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' });
+      const program = qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' });
+      const program = qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +233,7 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' });
+      const program = qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +242,7 @@ describe('QualitySignal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof qualitySignalHandler.rollup !== 'function') return;
       try {
-        const result = await interpret(qualitySignalHandler.rollup({ target_symbols: 'test', dimensions: 'test' }), storage);
+        const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +252,32 @@ describe('QualitySignal functional handler', () => {
       }
     });
 
+    it('fixture "rollup_single" -> ok', async () => {
+      if (typeof qualitySignalHandler.rollup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollup_multiple" -> ok', async () => {
+      if (typeof qualitySignalHandler.rollup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password","clef/concept/Auth"], dimensions: ["unit","formal"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollup_empty_targets" -> validationError', async () => {
+      if (typeof qualitySignalHandler.rollup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.rollup({ target_symbols: [] }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
   });
 
   describe('explain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' });
+      const program = qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +285,21 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' });
+      const program = qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' });
+      const program = qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' });
+      const program = qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +312,7 @@ describe('QualitySignal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' });
+      const program = qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +321,7 @@ describe('QualitySignal functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof qualitySignalHandler.explain !== 'function') return;
       try {
-        const result = await interpret(qualitySignalHandler.explain({ target_symbol: 'test-target_symbol', dimensions: 'test' }), storage);
+        const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +331,45 @@ describe('QualitySignal functional handler', () => {
       }
     });
 
+    it('fixture "explain_all_dims" -> ok', async () => {
+      if (typeof qualitySignalHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "explain_filtered" -> ok', async () => {
+      if (typeof qualitySignalHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Auth", dimensions: ["unit","conformance"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "explain_missing_target" -> validationError', async () => {
+      if (typeof qualitySignalHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(qualitySignalHandler.explain({ target_symbol: "" }), storage);
+      expect(result.variant).toBe('validationError');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof qualitySignalHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = qualitySignalHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('QualitySignal');
+    });
   });
 
   describe('invariant examples', () => {

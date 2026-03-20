@@ -26,7 +26,7 @@ describe('BordaCount functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bordaCountHandler.configure({ pointScheme: 'test-pointScheme' });
+      const program = bordaCountHandler.configure({ pointScheme: "Standard" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bordaCountHandler.configure({ pointScheme: 'test-pointScheme' });
+      const program = bordaCountHandler.configure({ pointScheme: "Standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bordaCountHandler.configure({ pointScheme: 'test-pointScheme' });
+      const program = bordaCountHandler.configure({ pointScheme: "Standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bordaCountHandler.configure({ pointScheme: 'test-pointScheme' });
+      const program = bordaCountHandler.configure({ pointScheme: "Standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bordaCountHandler.configure({ pointScheme: 'test-pointScheme' });
+      const program = bordaCountHandler.configure({ pointScheme: "Standard" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('BordaCount functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bordaCountHandler.configure !== 'function') return;
       try {
-        const result = await interpret(bordaCountHandler.configure({ pointScheme: 'test-pointScheme' }), storage);
+        const result = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('BordaCount functional handler', () => {
       }
     });
 
+    it('fixture "standard_scheme" -> ok', async () => {
+      if (typeof bordaCountHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dowdall_scheme" -> ok', async () => {
+      if (typeof bordaCountHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bordaCountHandler.configure({ pointScheme: "Dowdall" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_scheme" -> error', async () => {
+      if (typeof bordaCountHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bordaCountHandler.configure({ pointScheme: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' });
+      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' });
+      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' });
+      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' });
+      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('BordaCount functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' });
+      const program = bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('BordaCount functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       try {
-        const result = await interpret(bordaCountHandler.count({ config: 'test', rankedBallots: 'test-rankedBallots', weights: 'test-weights' }), storage);
+        const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('BordaCount functional handler', () => {
       }
     });
 
+    it('fixture "borda_three_voters" -> ok', async () => {
+      if (typeof bordaCountHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "borda_no_ballots" -> error', async () => {
+      if (typeof bordaCountHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof bordaCountHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = bordaCountHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('BordaCount');
+    });
   });
 
   describe('invariant examples', () => {

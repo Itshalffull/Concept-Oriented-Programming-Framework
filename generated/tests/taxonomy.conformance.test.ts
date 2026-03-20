@@ -26,7 +26,7 @@ describe('Taxonomy functional handler', () => {
 
   describe('createVocabulary', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' });
+      const program = taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' });
+      const program = taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' });
+      const program = taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' });
+      const program = taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' });
+      const program = taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Taxonomy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       try {
-        const result = await interpret(taxonomyHandler.createVocabulary({ vocab: 'test', name: 'test-name' }), storage);
+        const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Taxonomy functional handler', () => {
       }
     });
 
+    it('fixture "create_topics_vocab" -> ok', async () => {
+      if (typeof taxonomyHandler.createVocabulary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_vocab" -> error', async () => {
+      if (typeof taxonomyHandler.createVocabulary !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "", name: "unnamed" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addTerm', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' });
+      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' });
+      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' });
+      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' });
+      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' });
+      const program = taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Taxonomy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       try {
-        const result = await interpret(taxonomyHandler.addTerm({ vocab: 'test', term: 'test-term', parent: 'test' }), storage);
+        const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('Taxonomy functional handler', () => {
       }
     });
 
+    it('fixture "add_root_term" -> ok', async () => {
+      if (typeof taxonomyHandler.addTerm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_child_term" -> ok', async () => {
+      if (typeof taxonomyHandler.addTerm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "physics", parent: "science" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_term_missing_vocab" -> error', async () => {
+      if (typeof taxonomyHandler.addTerm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: "nonexistent", term: "orphan", parent: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setParent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' });
+      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' });
+      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' });
+      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' });
+      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' });
+      const program = taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Taxonomy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
       try {
-        const result = await interpret(taxonomyHandler.setParent({ vocab: 'test', term: 'test-term', parent: 'test-parent' }), storage);
+        const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Taxonomy functional handler', () => {
       }
     });
 
+    it('fixture "reassign_parent" -> ok', async () => {
+      if (typeof taxonomyHandler.setParent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_parent_missing_vocab" -> error', async () => {
+      if (typeof taxonomyHandler.setParent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.setParent({ vocab: "nonexistent", term: "orphan", parent: "root" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('tagEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Taxonomy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
       try {
-        const result = await interpret(taxonomyHandler.tagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' }), storage);
+        const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Taxonomy functional handler', () => {
       }
     });
 
+    it('fixture "tag_page_with_term" -> ok', async () => {
+      if (typeof taxonomyHandler.tagEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tag_missing_vocab" -> error', async () => {
+      if (typeof taxonomyHandler.tagEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "nonexistent", term: "science" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('untagEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Taxonomy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' });
+      const program = taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Taxonomy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
       try {
-        const result = await interpret(taxonomyHandler.untagEntity({ entity: 'test-entity', vocab: 'test', term: 'test-term' }), storage);
+        const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Taxonomy functional handler', () => {
       }
     });
 
+    it('fixture "untag_page" -> ok', async () => {
+      if (typeof taxonomyHandler.untagEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "untag_missing_vocab" -> error', async () => {
+      if (typeof taxonomyHandler.untagEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "nonexistent", term: "science" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof taxonomyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = taxonomyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Taxonomy');
+    });
   });
 
   describe('invariant examples', () => {

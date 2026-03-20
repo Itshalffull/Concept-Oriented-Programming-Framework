@@ -26,7 +26,7 @@ describe('Flag functional handler', () => {
 
   describe('flag', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Flag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Flag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Flag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flagHandler.flag !== 'function') return;
       try {
-        const result = await interpret(flagHandler.flag({ flagging: 'test', flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' }), storage);
+        const result = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Flag functional handler', () => {
       }
     });
 
+    it('fixture "flag_bookmark" -> ok', async () => {
+      if (typeof flagHandler.flag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.flag({ flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "flag_empty_flagging" -> error', async () => {
+      if (typeof flagHandler.flag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.flag({ flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unflag', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flagHandler.unflag({ flagging: 'test' });
+      const program = flagHandler.unflag({ flagging: "flag-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Flag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flagHandler.unflag({ flagging: 'test' });
+      const program = flagHandler.unflag({ flagging: "flag-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flagHandler.unflag({ flagging: 'test' });
+      const program = flagHandler.unflag({ flagging: "flag-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flagHandler.unflag({ flagging: 'test' });
+      const program = flagHandler.unflag({ flagging: "flag-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Flag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flagHandler.unflag({ flagging: 'test' });
+      const program = flagHandler.unflag({ flagging: "flag-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Flag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flagHandler.unflag !== 'function') return;
       try {
-        const result = await interpret(flagHandler.unflag({ flagging: 'test' }), storage);
+        const result = await interpret(flagHandler.unflag({ flagging: "flag-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Flag functional handler', () => {
       }
     });
 
+    it('fixture "unflag_existing" -> ok', async () => {
+      if (typeof flagHandler.unflag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.unflag({ flagging: "flag-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unflag_missing" -> error', async () => {
+      if (typeof flagHandler.unflag !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.unflag({ flagging: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('isFlagged', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Flag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Flag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' });
+      const program = flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Flag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flagHandler.isFlagged !== 'function') return;
       try {
-        const result = await interpret(flagHandler.isFlagged({ flagType: 'test-flagType', entity: 'test-entity', user: 'test-user' }), storage);
+        const result = await interpret(flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Flag functional handler', () => {
       }
     });
 
+    it('fixture "is_flagged_check" -> ok', async () => {
+      if (typeof flagHandler.isFlagged !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.isFlagged({ flagType: "bookmark", entity: "article-42", user: "user-7" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "is_flagged_empty_type" -> error', async () => {
+      if (typeof flagHandler.isFlagged !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.isFlagged({ flagType: "", entity: "article-42", user: "user-7" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getCount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' });
+      const program = flagHandler.getCount({ flagType: "like", entity: "article-42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Flag functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' });
+      const program = flagHandler.getCount({ flagType: "like", entity: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' });
+      const program = flagHandler.getCount({ flagType: "like", entity: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' });
+      const program = flagHandler.getCount({ flagType: "like", entity: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Flag functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' });
+      const program = flagHandler.getCount({ flagType: "like", entity: "article-42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Flag functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof flagHandler.getCount !== 'function') return;
       try {
-        const result = await interpret(flagHandler.getCount({ flagType: 'test-flagType', entity: 'test-entity' }), storage);
+        const result = await interpret(flagHandler.getCount({ flagType: "like", entity: "article-42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Flag functional handler', () => {
       }
     });
 
+    it('fixture "get_count_likes" -> ok', async () => {
+      if (typeof flagHandler.getCount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.getCount({ flagType: "like", entity: "article-42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_count_empty" -> error', async () => {
+      if (typeof flagHandler.getCount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(flagHandler.getCount({ flagType: "", entity: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof flagHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = flagHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Flag');
+    });
   });
 
   describe('invariant examples', () => {

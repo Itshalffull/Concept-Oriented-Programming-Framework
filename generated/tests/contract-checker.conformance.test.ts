@@ -26,7 +26,7 @@ describe('ContractChecker functional handler', () => {
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' });
+      const program = contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' });
+      const program = contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' });
+      const program = contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' });
+      const program = contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' });
+      const program = contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ContractChecker functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractCheckerHandler.check !== 'function') return;
       try {
-        const result = await interpret(contractCheckerHandler.check({ checker: 'test', widget: 'test-widget', concept: 'test-concept', contractVersion: 'test' }), storage);
+        const result = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ContractChecker functional handler', () => {
       }
     });
 
+    it('fixture "valid_check" -> ok', async () => {
+      if (typeof contractCheckerHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_version" -> ok', async () => {
+      if (typeof contractCheckerHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.check({ widget: "approval-detail", concept: "Approval", contractVersion: "2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_widget" -> notfound', async () => {
+      if (typeof contractCheckerHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.check({ widget: "nonexistent-widget", concept: "Approval" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('checkAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' });
+      const program = contractCheckerHandler.checkAll({ concept: "Approval" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' });
+      const program = contractCheckerHandler.checkAll({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' });
+      const program = contractCheckerHandler.checkAll({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' });
+      const program = contractCheckerHandler.checkAll({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' });
+      const program = contractCheckerHandler.checkAll({ concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ContractChecker functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractCheckerHandler.checkAll !== 'function') return;
       try {
-        const result = await interpret(contractCheckerHandler.checkAll({ checker: 'test', concept: 'test-concept' }), storage);
+        const result = await interpret(contractCheckerHandler.checkAll({ concept: "Approval" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('ContractChecker functional handler', () => {
       }
     });
 
+    it('fixture "valid_checkAll" -> ok', async () => {
+      if (typeof contractCheckerHandler.checkAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.checkAll({ concept: "Approval" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_concept" -> notfound', async () => {
+      if (typeof contractCheckerHandler.checkAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.checkAll({ concept: "" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('checkSuite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' });
+      const program = contractCheckerHandler.checkSuite({ suite: "governance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' });
+      const program = contractCheckerHandler.checkSuite({ suite: "governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' });
+      const program = contractCheckerHandler.checkSuite({ suite: "governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' });
+      const program = contractCheckerHandler.checkSuite({ suite: "governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' });
+      const program = contractCheckerHandler.checkSuite({ suite: "governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('ContractChecker functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractCheckerHandler.checkSuite !== 'function') return;
       try {
-        const result = await interpret(contractCheckerHandler.checkSuite({ checker: 'test', suite: 'test-suite' }), storage);
+        const result = await interpret(contractCheckerHandler.checkSuite({ suite: "governance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('ContractChecker functional handler', () => {
       }
     });
 
+    it('fixture "valid_checkSuite" -> ok', async () => {
+      if (typeof contractCheckerHandler.checkSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.checkSuite({ suite: "governance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_suite" -> notfound', async () => {
+      if (typeof contractCheckerHandler.checkSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.checkSuite({ suite: "" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('suggest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' });
+      const program = contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' });
+      const program = contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' });
+      const program = contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' });
+      const program = contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('ContractChecker functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' });
+      const program = contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('ContractChecker functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contractCheckerHandler.suggest !== 'function') return;
       try {
-        const result = await interpret(contractCheckerHandler.suggest({ checker: 'test', widget: 'test-widget', concept: 'test-concept' }), storage);
+        const result = await interpret(contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('ContractChecker functional handler', () => {
       }
     });
 
+    it('fixture "valid_suggest" -> ok', async () => {
+      if (typeof contractCheckerHandler.suggest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.suggest({ widget: "approval-detail", concept: "Approval" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_widget_suggest" -> notfound', async () => {
+      if (typeof contractCheckerHandler.suggest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contractCheckerHandler.suggest({ widget: "nonexistent-widget", concept: "Approval" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contractCheckerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contractCheckerHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ContractChecker');
+    });
   });
 
   describe('invariant examples', () => {

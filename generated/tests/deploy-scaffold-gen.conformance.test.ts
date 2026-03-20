@@ -26,7 +26,7 @@ describe('DeployScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeployScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeployScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeployScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(deployScaffoldGenHandler.generate({ appName: 'test-appName', runtimes: 'test', concepts: 'test' }), storage);
+        const result = await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DeployScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof deployScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_generate" -> ok', async () => {
+      if (typeof deployScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: [], concepts: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_app_name" -> error', async () => {
+      if (typeof deployScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: [], concepts: [] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DeployScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DeployScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' });
+      const program = deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DeployScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deployScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(deployScaffoldGenHandler.preview({ appName: 'test-appName', runtimes: 'test', concepts: 'test' }), storage);
+        const result = await interpret(deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('DeployScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof deployScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_preview" -> error', async () => {
+      if (typeof deployScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.preview({ appName: "", runtimes: [], concepts: [] }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('DeployScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof deployScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deployScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deployScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deployScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeployScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

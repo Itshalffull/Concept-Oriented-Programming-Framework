@@ -26,7 +26,7 @@ describe('Frame functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 });
+      const program = frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 });
+      const program = frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 });
+      const program = frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 });
+      const program = frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 });
+      const program = frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Frame functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameHandler.create !== 'function') return;
       try {
-        const result = await interpret(frameHandler.create({ canvas: 'test-canvas', name: 'test-name', x: 1, y: 1, width: 1, height: 1 }), storage);
+        const result = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Frame functional handler', () => {
       }
     });
 
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof frameHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.create({ canvas: "c1", name: "Group A", x: "0", y: "0", width: "400", height: "300" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "labeled_frame" -> ok', async () => {
+      if (typeof frameHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.create({ canvas: "c1", name: "Sidebar", x: "50", y: "100", width: "200", height: "600" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.resize({ frame: 'test', width: 1, height: 1 });
+      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.resize({ frame: 'test', width: 1, height: 1 });
+      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.resize({ frame: 'test', width: 1, height: 1 });
+      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.resize({ frame: 'test', width: 1, height: 1 });
+      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.resize({ frame: 'test', width: 1, height: 1 });
+      const program = frameHandler.resize({ frame: "frame-1", width: "500", height: "400" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Frame functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameHandler.resize !== 'function') return;
       try {
-        const result = await interpret(frameHandler.resize({ frame: 'test', width: 1, height: 1 }), storage);
+        const result = await interpret(frameHandler.resize({ frame: "frame-1", width: "500", height: "400" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Frame functional handler', () => {
       }
     });
 
+    it('fixture "valid_resize" -> ok', async () => {
+      if (typeof frameHandler.resize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.resize({ frame: "frame-1", width: "500", height: "400" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resize_missing" -> notFound', async () => {
+      if (typeof frameHandler.resize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.resize({ frame: "nonexistent", width: "100", height: "100" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('addItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.addItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Frame functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameHandler.addItem !== 'function') return;
       try {
-        const result = await interpret(frameHandler.addItem({ frame: 'test', item_id: 'test-item_id' }), storage);
+        const result = await interpret(frameHandler.addItem({ frame: "frame-1", item_id: "item1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Frame functional handler', () => {
       }
     });
 
+    it('fixture "valid_add_item" -> ok', async () => {
+      if (typeof frameHandler.addItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.addItem({ frame: "frame-1", item_id: "item1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_missing_frame" -> notFound', async () => {
+      if (typeof frameHandler.addItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.addItem({ frame: "nonexistent", item_id: "item1" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('removeItem', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' });
+      const program = frameHandler.removeItem({ frame: "frame-1", item_id: "item1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Frame functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameHandler.removeItem !== 'function') return;
       try {
-        const result = await interpret(frameHandler.removeItem({ frame: 'test', item_id: 'test-item_id' }), storage);
+        const result = await interpret(frameHandler.removeItem({ frame: "frame-1", item_id: "item1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Frame functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove_item" -> ok', async () => {
+      if (typeof frameHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.removeItem({ frame: "frame-1", item_id: "item1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_from_missing_frame" -> notFound', async () => {
+      if (typeof frameHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.removeItem({ frame: "nonexistent", item_id: "item1" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('setBackground', () => {
     it('builds a valid StorageProgram', () => {
-      const program = frameHandler.setBackground({ frame: 'test', color: 'test-color' });
+      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Frame functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = frameHandler.setBackground({ frame: 'test', color: 'test-color' });
+      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = frameHandler.setBackground({ frame: 'test', color: 'test-color' });
+      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = frameHandler.setBackground({ frame: 'test', color: 'test-color' });
+      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Frame functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = frameHandler.setBackground({ frame: 'test', color: 'test-color' });
+      const program = frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Frame functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof frameHandler.setBackground !== 'function') return;
       try {
-        const result = await interpret(frameHandler.setBackground({ frame: 'test', color: 'test-color' }), storage);
+        const result = await interpret(frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Frame functional handler', () => {
       }
     });
 
+    it('fixture "valid_background" -> ok', async () => {
+      if (typeof frameHandler.setBackground !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.setBackground({ frame: "frame-1", color: "#f0f0f0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "background_missing_frame" -> notFound', async () => {
+      if (typeof frameHandler.setBackground !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(frameHandler.setBackground({ frame: "nonexistent", color: "red" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof frameHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = frameHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Frame');
+    });
   });
 
   describe('invariant examples', () => {

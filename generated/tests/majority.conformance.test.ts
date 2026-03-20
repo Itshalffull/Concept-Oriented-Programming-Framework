@@ -26,7 +26,7 @@ describe('Majority functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' });
+      const program = majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Majority functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' });
+      const program = majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' });
+      const program = majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' });
+      const program = majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Majority functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' });
+      const program = majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Majority functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof majorityHandler.configure !== 'function') return;
       try {
-        const result = await interpret(majorityHandler.configure({ threshold: 1, binaryOnly: true, tieBreaker: 'test' }), storage);
+        const result = await interpret(majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Majority functional handler', () => {
       }
     });
 
+    it('fixture "standard_majority" -> ok', async () => {
+      if (typeof majorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(majorityHandler.configure({ threshold: "0.5", binaryOnly: "true", tieBreaker: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_tiebreaker" -> ok', async () => {
+      if (typeof majorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(majorityHandler.configure({ threshold: "0.5", binaryOnly: "false", tieBreaker: "chair-decides" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_threshold" -> error', async () => {
+      if (typeof majorityHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(majorityHandler.configure({ threshold: "-0.1", binaryOnly: "true", tieBreaker: null }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Majority functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Majority functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' });
+      const program = majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Majority functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof majorityHandler.count !== 'function') return;
       try {
-        const result = await interpret(majorityHandler.count({ config: 'test', ballots: 'test-ballots', weights: 'test-weights' }), storage);
+        const result = await interpret(majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('Majority functional handler', () => {
       }
     });
 
+    it('fixture "clear_winner" -> ok', async () => {
+      if (typeof majorityHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(majorityHandler.count({ config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_ballots" -> error', async () => {
+      if (typeof majorityHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(majorityHandler.count({ config: "maj-001", ballots: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof majorityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = majorityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Majority');
+    });
   });
 
   describe('invariant examples', () => {

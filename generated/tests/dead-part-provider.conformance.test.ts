@@ -26,7 +26,7 @@ describe('DeadPartProvider functional handler', () => {
 
   describe('analyze', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' });
+      const program = deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' });
+      const program = deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' });
+      const program = deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' });
+      const program = deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' });
+      const program = deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeadPartProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deadPartProviderHandler.analyze !== 'function') return;
       try {
-        const result = await interpret(deadPartProviderHandler.analyze({ analysis: 'test', program: 'test-program', parts: 'test', instructions: 'test' }), storage);
+        const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DeadPartProvider functional handler', () => {
       }
     });
 
+    it('fixture "all_parts_used" -> ok', async () => {
+      if (typeof deadPartProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-1", program: "card-widget", parts: ["root","label"], instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"},{\"tag\":\"bind\",\"part\":\"label\",\"attr\":\"text\",\"expr\":\"name\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "has_dead_part" -> ok', async () => {
+      if (typeof deadPartProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-2", program: "bloated-widget", parts: ["root","unused"], instructions: "[{\"tag\":\"text\",\"part\":\"root\",\"content\":\"hello\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "malformed_instructions" -> error', async () => {
+      if (typeof deadPartProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deadPartProviderHandler.analyze({ analysis: "dpa-3", program: "bad-widget", parts: ["root"], instructions: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getResults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: 'test' });
+      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: 'test' });
+      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: 'test' });
+      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: 'test' });
+      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DeadPartProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deadPartProviderHandler.getResults({ analysis: 'test' });
+      const program = deadPartProviderHandler.getResults({ analysis: "dpa-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DeadPartProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deadPartProviderHandler.getResults !== 'function') return;
       try {
-        const result = await interpret(deadPartProviderHandler.getResults({ analysis: 'test' }), storage);
+        const result = await interpret(deadPartProviderHandler.getResults({ analysis: "dpa-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('DeadPartProvider functional handler', () => {
       }
     });
 
+    it('fixture "existing_analysis" -> ok', async () => {
+      if (typeof deadPartProviderHandler.getResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deadPartProviderHandler.getResults({ analysis: "dpa-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_analysis" -> notfound', async () => {
+      if (typeof deadPartProviderHandler.getResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deadPartProviderHandler.getResults({ analysis: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deadPartProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deadPartProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeadPartProvider');
+    });
   });
 
   describe('invariant examples', () => {

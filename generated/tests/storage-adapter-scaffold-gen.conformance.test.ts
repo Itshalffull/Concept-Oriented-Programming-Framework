@@ -26,7 +26,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: 'test-name', backend: 'test-backend' }), storage);
+        const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_sqlite" -> ok', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid_postgresql" -> ok', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "postgresql" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_backend" -> error', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "couchdb" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' });
+      const program = storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof storageAdapterScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(storageAdapterScaffoldGenHandler.preview({ name: 'test-name', backend: 'test-backend' }), storage);
+        const result = await interpret(storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_preview_backend" -> error', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "mongodb" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(storageAdapterScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof storageAdapterScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = storageAdapterScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StorageAdapterScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

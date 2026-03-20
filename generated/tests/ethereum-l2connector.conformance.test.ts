@@ -26,7 +26,7 @@ describe('EthereumL2Connector functional handler', () => {
 
   describe('read', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' });
+      const program = ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' });
+      const program = ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' });
+      const program = ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' });
+      const program = ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' });
+      const program = ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
       try {
-        const result = await interpret(ethereumL2ConnectorHandler.read({ connector: 'test', query: 'test-query' }), storage);
+        const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('EthereumL2Connector functional handler', () => {
       }
     });
 
+    it('fixture "read_owner" -> ok', async () => {
+      if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_missing" -> notfound', async () => {
+      if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-missing", query: "{\"method\":\"getOwner\"}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "read_bad_query" -> error', async () => {
+      if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' });
+      const program = ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' });
+      const program = ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' });
+      const program = ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' });
+      const program = ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' });
+      const program = ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       try {
-        const result = await interpret(ethereumL2ConnectorHandler.write({ connector: 'test', data: 'test-data' }), storage);
+        const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('EthereumL2Connector functional handler', () => {
       }
     });
 
+    it('fixture "write_transfer" -> ok', async () => {
+      if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_missing" -> notfound', async () => {
+      if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-missing", data: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "write_bad_data" -> error', async () => {
+      if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ethereumL2ConnectorHandler.test({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ethereumL2ConnectorHandler.test({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ethereumL2ConnectorHandler.test({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ethereumL2ConnectorHandler.test({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ethereumL2ConnectorHandler.test({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
       try {
-        const result = await interpret(ethereumL2ConnectorHandler.test({ connector: 'test' }), storage);
+        const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('EthereumL2Connector functional handler', () => {
       }
     });
 
+    it('fixture "test_connected" -> ok', async () => {
+      if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing" -> unreachable', async () => {
+      if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-missing" }), storage);
+      expect(result.variant).toBe('unreachable');
+    });
+
   });
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = ethereumL2ConnectorHandler.discover({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = ethereumL2ConnectorHandler.discover({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = ethereumL2ConnectorHandler.discover({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = ethereumL2ConnectorHandler.discover({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('EthereumL2Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = ethereumL2ConnectorHandler.discover({ connector: 'test' });
+      const program = ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('EthereumL2Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof ethereumL2ConnectorHandler.discover !== 'function') return;
       try {
-        const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: 'test' }), storage);
+        const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('EthereumL2Connector functional handler', () => {
       }
     });
 
+    it('fixture "discover_existing" -> ok', async () => {
+      if (typeof ethereumL2ConnectorHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_missing" -> notfound', async () => {
+      if (typeof ethereumL2ConnectorHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof ethereumL2ConnectorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = ethereumL2ConnectorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EthereumL2Connector');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('PessimisticLock functional handler', () => {
 
   describe('checkOut', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' });
+      const program = pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' });
+      const program = pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' });
+      const program = pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' });
+      const program = pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' });
+      const program = pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.checkOut !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.checkOut({ resource: 'test-resource', holder: 'test-holder', duration: 'test', reason: 'test' }), storage);
+        const result = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "checkout_with_duration" -> ok', async () => {
+      if (typeof pessimisticLockHandler.checkOut !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.checkOut({ resource: "design-doc.pdf", holder: "alice@example.com", duration: "3600", reason: "Editing design document" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "checkout_no_resource" -> error', async () => {
+      if (typeof pessimisticLockHandler.checkOut !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.checkOut({ resource: "", holder: "bob@example.com", duration: null, reason: null }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkIn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: 'test' });
+      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: 'test' });
+      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: 'test' });
+      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: 'test' });
+      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.checkIn({ lockId: 'test' });
+      const program = pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.checkIn !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.checkIn({ lockId: 'test' }), storage);
+        const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "checkin_existing_lock" -> ok', async () => {
+      if (typeof pessimisticLockHandler.checkIn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "checkin_nonexistent" -> error', async () => {
+      if (typeof pessimisticLockHandler.checkIn !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.checkIn({ lockId: "pessimistic-lock-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('breakLock', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' });
+      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' });
+      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' });
+      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' });
+      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' });
+      const program = pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.breakLock !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.breakLock({ lockId: 'test', breaker: 'test-breaker', reason: 'test-reason' }), storage);
+        const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "break_existing_lock" -> ok', async () => {
+      if (typeof pessimisticLockHandler.breakLock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-1", breaker: "admin@example.com", reason: "Emergency release for blocked deployment" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "break_nonexistent_lock" -> error', async () => {
+      if (typeof pessimisticLockHandler.breakLock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.breakLock({ lockId: "pessimistic-lock-nonexistent", breaker: "admin@example.com", reason: "cleanup" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('renew', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 });
+      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 });
+      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 });
+      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 });
+      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 });
+      const program = pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.renew !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.renew({ lockId: 'test', additionalDuration: 1 }), storage);
+        const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "renew_existing_lock" -> ok', async () => {
+      if (typeof pessimisticLockHandler.renew !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-1", additionalDuration: "1800" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "renew_nonexistent" -> error', async () => {
+      if (typeof pessimisticLockHandler.renew !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.renew({ lockId: "pessimistic-lock-nonexistent", additionalDuration: "600" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('queryLocks', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.queryLocks({ resource: 'test' });
+      const program = pessimisticLockHandler.queryLocks({ resource: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.queryLocks({ resource: 'test' });
+      const program = pessimisticLockHandler.queryLocks({ resource: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.queryLocks({ resource: 'test' });
+      const program = pessimisticLockHandler.queryLocks({ resource: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.queryLocks({ resource: 'test' });
+      const program = pessimisticLockHandler.queryLocks({ resource: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.queryLocks({ resource: 'test' });
+      const program = pessimisticLockHandler.queryLocks({ resource: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.queryLocks({ resource: 'test' }), storage);
+        const result = await interpret(pessimisticLockHandler.queryLocks({ resource: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "query_all_locks" -> ok', async () => {
+      if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.queryLocks({ resource: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_locks_by_resource" -> ok', async () => {
+      if (typeof pessimisticLockHandler.queryLocks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.queryLocks({ resource: "design-doc.pdf" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('queryQueue', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pessimisticLockHandler.queryQueue({ resource: 'test-resource' });
+      const program = pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pessimisticLockHandler.queryQueue({ resource: 'test-resource' });
+      const program = pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pessimisticLockHandler.queryQueue({ resource: 'test-resource' });
+      const program = pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pessimisticLockHandler.queryQueue({ resource: 'test-resource' });
+      const program = pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('PessimisticLock functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pessimisticLockHandler.queryQueue({ resource: 'test-resource' });
+      const program = pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('PessimisticLock functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
       try {
-        const result = await interpret(pessimisticLockHandler.queryQueue({ resource: 'test-resource' }), storage);
+        const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('PessimisticLock functional handler', () => {
       }
     });
 
+    it('fixture "query_queue_existing" -> ok', async () => {
+      if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "design-doc.pdf" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "query_queue_empty_resource" -> error', async () => {
+      if (typeof pessimisticLockHandler.queryQueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pessimisticLockHandler.queryQueue({ resource: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof pessimisticLockHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = pessimisticLockHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PessimisticLock');
+    });
   });
 
   describe('invariant examples', () => {

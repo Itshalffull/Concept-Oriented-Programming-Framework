@@ -19,7 +19,7 @@ describe('ProgramAnalysis imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programAnalysisHandler.registerProvider !== 'function') return;
       try {
-        const result = await programAnalysisHandler.registerProvider({ name: 'test-name', kind: 'test-kind' }, storage);
+        const result = await programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ProgramAnalysis imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_structural" -> ok', async () => {
+      if (typeof programAnalysisHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.registerProvider({ name: "read-write-sets", kind: "structural" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof programAnalysisHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.registerProvider({ name: "", kind: "structural" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ProgramAnalysis imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programAnalysisHandler.run !== 'function') return;
       try {
-        const result = await programAnalysisHandler.run({ program: 'test-program', provider: 'test-provider' }, storage);
+        const result = await programAnalysisHandler.run({ program: "get(users, u1)", provider: "read-write-sets" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +59,27 @@ describe('ProgramAnalysis imperative handler', () => {
       }
     });
 
+    it('fixture "run_analysis" -> ok', async () => {
+      if (typeof programAnalysisHandler.run !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.run({ program: "get(users, u1)", provider: "read-write-sets" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "run_missing_provider" -> error', async () => {
+      if (typeof programAnalysisHandler.run !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.run({ program: "get(users, u1)", provider: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('runAll', () => {
     it('executes without crashing', async () => {
       if (typeof programAnalysisHandler.runAll !== 'function') return;
       try {
-        const result = await programAnalysisHandler.runAll({ program: 'test-program' }, storage);
+        const result = await programAnalysisHandler.runAll({ program: "get(users, u1)" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('ProgramAnalysis imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "run_all" -> ok', async () => {
+      if (typeof programAnalysisHandler.runAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.runAll({ program: "get(users, u1)" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "run_all_empty" -> error', async () => {
+      if (typeof programAnalysisHandler.runAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.runAll({ program: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -77,6 +119,30 @@ describe('ProgramAnalysis imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof programAnalysisHandler.listProviders !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programAnalysisHandler.listProviders({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof programAnalysisHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = programAnalysisHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProgramAnalysis');
+    });
   });
 
   describe('invariant examples', () => {

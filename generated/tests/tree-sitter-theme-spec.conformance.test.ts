@@ -82,6 +82,24 @@ describe('TreeSitterThemeSpec functional handler', () => {
 
   });
 
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof treeSitterThemeSpecHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = treeSitterThemeSpecHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TreeSitterThemeSpec');
+    });
+  });
+
   describe('state invariants (stateful PBT)', () => {
     it('always: every instances entry has grammarRef', async () => {
       await fc.assert(

@@ -26,7 +26,7 @@ describe('Metric functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' });
+      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' });
+      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' });
+      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' });
+      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' });
+      const program = metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Metric functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof metricHandler.define !== 'function') return;
       try {
-        const result = await interpret(metricHandler.define({ name: 'test-name', unit: 'test', source: 'test-source' }), storage);
+        const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Metric functional handler', () => {
       }
     });
 
+    it('fixture "define_revenue" -> ok', async () => {
+      if (typeof metricHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_empty_name" -> error', async () => {
+      if (typeof metricHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.update({ metric: 'test', value: 1 });
+      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.update({ metric: 'test', value: 1 });
+      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.update({ metric: 'test', value: 1 });
+      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.update({ metric: 'test', value: 1 });
+      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.update({ metric: 'test', value: 1 });
+      const program = metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Metric functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof metricHandler.update !== 'function') return;
       try {
-        const result = await interpret(metricHandler.update({ metric: 'test', value: 1 }), storage);
+        const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Metric functional handler', () => {
       }
     });
 
+    it('fixture "update_revenue" -> ok', async () => {
+      if (typeof metricHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_nonexistent" -> error', async () => {
+      if (typeof metricHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.update({ metric: "metric-nonexistent", value: "0.0", source: "manual" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setThreshold', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 });
+      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 });
+      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 });
+      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 });
+      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 });
+      const program = metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Metric functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       try {
-        const result = await interpret(metricHandler.setThreshold({ metric: 'test', level: 'test-level', operator: 'test-operator', value: 1 }), storage);
+        const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Metric functional handler', () => {
       }
     });
 
+    it('fixture "set_revenue_threshold" -> ok', async () => {
+      if (typeof metricHandler.setThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_threshold_nonexistent" -> error', async () => {
+      if (typeof metricHandler.setThreshold !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.setThreshold({ metric: "metric-nonexistent", threshold: "0.0", alertOnBreach: "false" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = metricHandler.evaluate({ metric: 'test' });
+      const program = metricHandler.evaluate({ metric: "metric-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Metric functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = metricHandler.evaluate({ metric: 'test' });
+      const program = metricHandler.evaluate({ metric: "metric-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = metricHandler.evaluate({ metric: 'test' });
+      const program = metricHandler.evaluate({ metric: "metric-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = metricHandler.evaluate({ metric: 'test' });
+      const program = metricHandler.evaluate({ metric: "metric-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Metric functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = metricHandler.evaluate({ metric: 'test' });
+      const program = metricHandler.evaluate({ metric: "metric-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Metric functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(metricHandler.evaluate({ metric: 'test' }), storage);
+        const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,15 +296,47 @@ describe('Metric functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_existing" -> ok', async () => {
+      if (typeof metricHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_nonexistent" -> error', async () => {
+      if (typeof metricHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(metricHandler.evaluate({ metric: "metric-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof metricHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = metricHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Metric');
+    });
   });
 
   describe('invariant examples', () => {
     it("define-then-update", async () => {
       const storage = createInMemoryStorage();
-      const defineResult0 = await interpret(metricHandler.define({ name: {"type":"variable","name":"_"}, unit: {"type":"variable","name":"_"}, source: {"type":"variable","name":"_"} }), storage);
+      const defineResult0 = await interpret(metricHandler.define({ name: {"type":"variable","name":"_"}, unit: {"type":"variable","name":"_"}, aggregation: {"type":"variable","name":"_"} }), storage);
       expect(defineResult0.variant).toBe("defined");
       const metric = defineResult0.output["metric"];
-      const thenResult0 = await interpret(metricHandler.update({ metric: {"type":"variable","name":"me"}, value: {"type":"literal","value":50} }), storage);
+      const thenResult0 = await interpret(metricHandler.update({ metric: {"type":"variable","name":"me"}, value: {"type":"literal","value":50}, source: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("updated");
     });
 
@@ -274,9 +348,9 @@ describe('Metric functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string() }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), threshold: fc.string(), alertOnBreach: fc.boolean() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -304,9 +378,9 @@ describe('Metric functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string() }) }),
-              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), level: fc.string({ minLength: 1, maxLength: 50 }), operator: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ metric: fc.string(), value: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setThreshold'), input: fc.record({ metric: fc.string(), threshold: fc.string(), alertOnBreach: fc.boolean() }) }),
               fc.record({ action: fc.constant('evaluate'), input: fc.record({ metric: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -346,7 +420,7 @@ describe('Metric functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = metricHandler.define(input as Record<string, unknown>);

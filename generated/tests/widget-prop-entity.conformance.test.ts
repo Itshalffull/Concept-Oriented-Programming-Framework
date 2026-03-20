@@ -26,7 +26,7 @@ describe('WidgetPropEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' });
+      const program = widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' });
+      const program = widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' });
+      const program = widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' });
+      const program = widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' });
+      const program = widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WidgetPropEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetPropEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(widgetPropEntityHandler.register({ widget: 'test-widget', name: 'test-name', typeExpr: 'test-typeExpr', defaultValue: 'test-defaultValue' }), storage);
+        const result = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('WidgetPropEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_close_escape" -> ok', async () => {
+      if (typeof widgetPropEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_widget" -> error', async () => {
+      if (typeof widgetPropEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.register({ widget: "", name: "x", typeExpr: "String", defaultValue: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByWidget', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetPropEntityHandler.findByWidget({ widget: 'test-widget' });
+      const program = widgetPropEntityHandler.findByWidget({ widget: "dialog" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetPropEntityHandler.findByWidget({ widget: 'test-widget' });
+      const program = widgetPropEntityHandler.findByWidget({ widget: "dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetPropEntityHandler.findByWidget({ widget: 'test-widget' });
+      const program = widgetPropEntityHandler.findByWidget({ widget: "dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetPropEntityHandler.findByWidget({ widget: 'test-widget' });
+      const program = widgetPropEntityHandler.findByWidget({ widget: "dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetPropEntityHandler.findByWidget({ widget: 'test-widget' });
+      const program = widgetPropEntityHandler.findByWidget({ widget: "dialog" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('WidgetPropEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetPropEntityHandler.findByWidget !== 'function') return;
       try {
-        const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: 'test-widget' }), storage);
+        const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: "dialog" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('WidgetPropEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_dialog" -> ok', async () => {
+      if (typeof widgetPropEntityHandler.findByWidget !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: "dialog" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof widgetPropEntityHandler.findByWidget !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToField', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetPropEntityHandler.traceToField({ prop: 'test' });
+      const program = widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetPropEntityHandler.traceToField({ prop: 'test' });
+      const program = widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetPropEntityHandler.traceToField({ prop: 'test' });
+      const program = widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetPropEntityHandler.traceToField({ prop: 'test' });
+      const program = widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetPropEntityHandler.traceToField({ prop: 'test' });
+      const program = widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('WidgetPropEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetPropEntityHandler.traceToField !== 'function') return;
       try {
-        const result = await interpret(widgetPropEntityHandler.traceToField({ prop: 'test' }), storage);
+        const result = await interpret(widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('WidgetPropEntity functional handler', () => {
       }
     });
 
+    it('fixture "trace_prop" -> ok', async () => {
+      if (typeof widgetPropEntityHandler.traceToField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing" -> error', async () => {
+      if (typeof widgetPropEntityHandler.traceToField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.traceToField({ prop: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetPropEntityHandler.get({ prop: 'test' });
+      const program = widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetPropEntityHandler.get({ prop: 'test' });
+      const program = widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetPropEntityHandler.get({ prop: 'test' });
+      const program = widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetPropEntityHandler.get({ prop: 'test' });
+      const program = widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('WidgetPropEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetPropEntityHandler.get({ prop: 'test' });
+      const program = widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('WidgetPropEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetPropEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(widgetPropEntityHandler.get({ prop: 'test' }), storage);
+        const result = await interpret(widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('WidgetPropEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_prop" -> ok', async () => {
+      if (typeof widgetPropEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof widgetPropEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetPropEntityHandler.get({ prop: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetPropEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetPropEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetPropEntity');
+    });
   });
 
   describe('invariant examples', () => {

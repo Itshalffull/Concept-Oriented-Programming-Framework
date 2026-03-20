@@ -26,7 +26,7 @@ describe('Host functional handler', () => {
 
   describe('mount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' });
+      const program = hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' });
+      const program = hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' });
+      const program = hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' });
+      const program = hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' });
+      const program = hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.mount !== 'function') return;
       try {
-        const result = await interpret(hostHandler.mount({ host: 'test', concept: 'test-concept', view: 'test-view', level: 1, zone: 'test' }), storage);
+        const result = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "mount_article_list" -> ok', async () => {
+      if (typeof hostHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.mount({ host: "W-1", concept: "urn:app/Article", view: "list", level: "page", zone: "primary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mount_settings" -> ok', async () => {
+      if (typeof hostHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.mount({ host: "W-2", concept: "urn:app/Settings", view: "form", level: "modal", zone: "overlay" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mount_missing_concept" -> invalid', async () => {
+      if (typeof hostHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.mount({ host: "W-3", concept: "", view: "list", level: "page", zone: "main" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "mount_missing_view" -> invalid', async () => {
+      if (typeof hostHandler.mount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.mount({ host: "W-4", concept: "urn:app/Article", view: "", level: "page", zone: "main" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('ready', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.ready({ host: 'test' });
+      const program = hostHandler.ready({ host: "W-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.ready({ host: 'test' });
+      const program = hostHandler.ready({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.ready({ host: 'test' });
+      const program = hostHandler.ready({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.ready({ host: 'test' });
+      const program = hostHandler.ready({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.ready({ host: 'test' });
+      const program = hostHandler.ready({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.ready !== 'function') return;
       try {
-        const result = await interpret(hostHandler.ready({ host: 'test' }), storage);
+        const result = await interpret(hostHandler.ready({ host: "W-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "ready_existing" -> ok', async () => {
+      if (typeof hostHandler.ready !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.ready({ host: "W-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "ready_unknown" -> invalid', async () => {
+      if (typeof hostHandler.ready !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.ready({ host: "W-nonexistent" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('trackResource', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' });
+      const program = hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.trackResource !== 'function') return;
       try {
-        const result = await interpret(hostHandler.trackResource({ host: 'test', kind: 'test-kind', ref: 'test-ref' }), storage);
+        const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,32 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "track_binding" -> ok', async () => {
+      if (typeof hostHandler.trackResource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "binding", ref: "bind-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "track_machine" -> ok', async () => {
+      if (typeof hostHandler.trackResource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.trackResource({ host: "W-1", kind: "machine", ref: "machine-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "track_unknown_host" -> notfound', async () => {
+      if (typeof hostHandler.trackResource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.trackResource({ host: "W-nonexistent", kind: "binding", ref: "bind-1" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('unmount', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.unmount({ host: 'test' });
+      const program = hostHandler.unmount({ host: "W-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.unmount({ host: 'test' });
+      const program = hostHandler.unmount({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.unmount({ host: 'test' });
+      const program = hostHandler.unmount({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.unmount({ host: 'test' });
+      const program = hostHandler.unmount({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.unmount({ host: 'test' });
+      const program = hostHandler.unmount({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.unmount !== 'function') return;
       try {
-        const result = await interpret(hostHandler.unmount({ host: 'test' }), storage);
+        const result = await interpret(hostHandler.unmount({ host: "W-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "unmount_existing" -> ok', async () => {
+      if (typeof hostHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.unmount({ host: "W-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unmount_unknown" -> notfound', async () => {
+      if (typeof hostHandler.unmount !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.unmount({ host: "W-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('refresh', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.refresh({ host: 'test' });
+      const program = hostHandler.refresh({ host: "W-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.refresh({ host: 'test' });
+      const program = hostHandler.refresh({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.refresh({ host: 'test' });
+      const program = hostHandler.refresh({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.refresh({ host: 'test' });
+      const program = hostHandler.refresh({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.refresh({ host: 'test' });
+      const program = hostHandler.refresh({ host: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.refresh !== 'function') return;
       try {
-        const result = await interpret(hostHandler.refresh({ host: 'test' }), storage);
+        const result = await interpret(hostHandler.refresh({ host: "W-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +389,25 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "refresh_existing" -> ok', async () => {
+      if (typeof hostHandler.refresh !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.refresh({ host: "W-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "refresh_unknown" -> notfound', async () => {
+      if (typeof hostHandler.refresh !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.refresh({ host: "W-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('setError', () => {
     it('builds a valid StorageProgram', () => {
-      const program = hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' });
+      const program = hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +415,21 @@ describe('Host functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' });
+      const program = hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' });
+      const program = hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' });
+      const program = hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +442,7 @@ describe('Host functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' });
+      const program = hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +451,7 @@ describe('Host functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof hostHandler.setError !== 'function') return;
       try {
-        const result = await interpret(hostHandler.setError({ host: 'test', errorInfo: 'test-errorInfo' }), storage);
+        const result = await interpret(hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,12 +461,44 @@ describe('Host functional handler', () => {
       }
     });
 
+    it('fixture "set_error_info" -> ok', async () => {
+      if (typeof hostHandler.setError !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.setError({ host: "W-1", errorInfo: "RenderError: component failed to mount" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_error_unknown_host" -> notfound', async () => {
+      if (typeof hostHandler.setError !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(hostHandler.setError({ host: "W-nonexistent", errorInfo: "some error" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof hostHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = hostHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Host');
+    });
   });
 
   describe('invariant examples', () => {
     it("mount then unmount", async () => {
       const storage = createInMemoryStorage();
-      const mountResult0 = await interpret(hostHandler.mount({ host: {"type":"variable","name":"w"}, concept: {"type":"literal","value":"urn:app/Article"}, view: {"type":"literal","value":"list"}, level: {"type":"literal","value":0}, zone: {"type":"literal","value":"primary"} }), storage);
+      const mountResult0 = await interpret(hostHandler.mount({ host: {"type":"variable","name":"w"}, concept: {"type":"literal","value":"urn:app/Article"}, view: {"type":"literal","value":"list"}, level: {"type":"literal","value":"page"}, zone: {"type":"literal","value":"primary"} }), storage);
       expect(mountResult0.variant).toBe("ok");
       const host = mountResult0.output["host"];
       const thenResult0 = await interpret(hostHandler.unmount({ host: {"type":"variable","name":"w"} }), storage);
@@ -398,7 +521,7 @@ describe('Host functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ host: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), view: fc.string({ minLength: 1, maxLength: 50 }), level: fc.integer({ min: 1, max: 1000 }), zone: fc.string() }),
+          fc.record({ host: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), view: fc.string({ minLength: 1, maxLength: 50 }), level: fc.string({ minLength: 1, maxLength: 50 }), zone: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = hostHandler.mount(input as Record<string, unknown>);

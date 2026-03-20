@@ -26,7 +26,7 @@ describe('ProgramSlice functional handler', () => {
 
   describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' });
+      const program = programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' });
+      const program = programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' });
+      const program = programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' });
+      const program = programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' });
+      const program = programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ProgramSlice functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof programSliceHandler.compute !== 'function') return;
       try {
-        const result = await interpret(programSliceHandler.compute({ criterion: 'test-criterion', direction: 'test-direction' }), storage);
+        const result = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('ProgramSlice functional handler', () => {
       }
     });
 
+    it('fixture "forward_slice" -> ok', async () => {
+      if (typeof programSliceHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.compute({ criterion: "clef/state-field/Article/title", direction: "forward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "backward_slice" -> ok', async () => {
+      if (typeof programSliceHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.compute({ criterion: "clef/action/Article/publish", direction: "backward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_location" -> ok', async () => {
+      if (typeof programSliceHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.compute({ criterion: "myFunc@src/handler.ts:42:5", direction: "backward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_data" -> noDependenceData', async () => {
+      if (typeof programSliceHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.compute({ criterion: "nonexistent/symbol", direction: "forward" }), storage);
+      expect(result.variant).toBe('noDependenceData');
+    });
+
   });
 
   describe('filesInSlice', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programSliceHandler.filesInSlice({ slice: 'test' });
+      const program = programSliceHandler.filesInSlice({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programSliceHandler.filesInSlice({ slice: 'test' });
+      const program = programSliceHandler.filesInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programSliceHandler.filesInSlice({ slice: 'test' });
+      const program = programSliceHandler.filesInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programSliceHandler.filesInSlice({ slice: 'test' });
+      const program = programSliceHandler.filesInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programSliceHandler.filesInSlice({ slice: 'test' });
+      const program = programSliceHandler.filesInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('ProgramSlice functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof programSliceHandler.filesInSlice !== 'function') return;
       try {
-        const result = await interpret(programSliceHandler.filesInSlice({ slice: 'test' }), storage);
+        const result = await interpret(programSliceHandler.filesInSlice({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('ProgramSlice functional handler', () => {
       }
     });
 
+    it('fixture "valid_files" -> ok', async () => {
+      if (typeof programSliceHandler.filesInSlice !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.filesInSlice({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_slice" -> ok', async () => {
+      if (typeof programSliceHandler.filesInSlice !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.filesInSlice({ slice: "program-slice-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('symbolsInSlice', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programSliceHandler.symbolsInSlice({ slice: 'test' });
+      const program = programSliceHandler.symbolsInSlice({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programSliceHandler.symbolsInSlice({ slice: 'test' });
+      const program = programSliceHandler.symbolsInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programSliceHandler.symbolsInSlice({ slice: 'test' });
+      const program = programSliceHandler.symbolsInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programSliceHandler.symbolsInSlice({ slice: 'test' });
+      const program = programSliceHandler.symbolsInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programSliceHandler.symbolsInSlice({ slice: 'test' });
+      const program = programSliceHandler.symbolsInSlice({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('ProgramSlice functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
       try {
-        const result = await interpret(programSliceHandler.symbolsInSlice({ slice: 'test' }), storage);
+        const result = await interpret(programSliceHandler.symbolsInSlice({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('ProgramSlice functional handler', () => {
       }
     });
 
+    it('fixture "valid_symbols" -> ok', async () => {
+      if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.symbolsInSlice({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_slice" -> ok', async () => {
+      if (typeof programSliceHandler.symbolsInSlice !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.symbolsInSlice({ slice: "program-slice-empty" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = programSliceHandler.get({ slice: 'test' });
+      const program = programSliceHandler.get({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = programSliceHandler.get({ slice: 'test' });
+      const program = programSliceHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = programSliceHandler.get({ slice: 'test' });
+      const program = programSliceHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = programSliceHandler.get({ slice: 'test' });
+      const program = programSliceHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('ProgramSlice functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = programSliceHandler.get({ slice: 'test' });
+      const program = programSliceHandler.get({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('ProgramSlice functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof programSliceHandler.get !== 'function') return;
       try {
-        const result = await interpret(programSliceHandler.get({ slice: 'test' }), storage);
+        const result = await interpret(programSliceHandler.get({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +310,38 @@ describe('ProgramSlice functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof programSliceHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.get({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_slice" -> notfound', async () => {
+      if (typeof programSliceHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(programSliceHandler.get({ slice: "program-slice-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof programSliceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = programSliceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProgramSlice');
+    });
   });
 
   describe('invariant examples', () => {

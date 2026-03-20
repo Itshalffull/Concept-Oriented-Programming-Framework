@@ -26,7 +26,7 @@ describe('Annotation functional handler', () => {
 
   describe('annotate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' });
+      const program = annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Annotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' });
+      const program = annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' });
+      const program = annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' });
+      const program = annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Annotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' });
+      const program = annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Annotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof annotationHandler.annotate !== 'function') return;
       try {
-        const result = await interpret(annotationHandler.annotate({ concept: 'test-concept', scope: 'test-scope', content: 'test-content' }), storage);
+        const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Annotation functional handler', () => {
       }
     });
 
+    it('fixture "annotate_concept_level" -> ok', async () => {
+      if (typeof annotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "{\"tool-permissions\":[\"Read\",\"Bash\"],\"examples\":[\"score create MyScore\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "annotate_action_level" -> ok', async () => {
+      if (typeof annotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "listConcepts", metadata: "{\"examples\":[\"score list\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "annotate_invalid_metadata" -> error', async () => {
+      if (typeof annotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "concept", metadata: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "annotate_empty_scope" -> error', async () => {
+      if (typeof annotationHandler.annotate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.annotate({ concept: "ScoreApi", scope: "", metadata: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationHandler.resolve({ concept: 'test-concept' });
+      const program = annotationHandler.resolve({ concept: "ScoreApi" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Annotation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationHandler.resolve({ concept: 'test-concept' });
+      const program = annotationHandler.resolve({ concept: "ScoreApi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationHandler.resolve({ concept: 'test-concept' });
+      const program = annotationHandler.resolve({ concept: "ScoreApi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = annotationHandler.resolve({ concept: 'test-concept' });
+      const program = annotationHandler.resolve({ concept: "ScoreApi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Annotation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = annotationHandler.resolve({ concept: 'test-concept' });
+      const program = annotationHandler.resolve({ concept: "ScoreApi" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Annotation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof annotationHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(annotationHandler.resolve({ concept: 'test-concept' }), storage);
+        const result = await interpret(annotationHandler.resolve({ concept: "ScoreApi" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,38 @@ describe('Annotation functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof annotationHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.resolve({ concept: "ScoreApi" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> error', async () => {
+      if (typeof annotationHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationHandler.resolve({ concept: "NonExistentConcept" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof annotationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = annotationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Annotation');
+    });
   });
 
   describe('invariant examples', () => {
@@ -159,7 +219,7 @@ describe('Annotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -187,7 +247,7 @@ describe('Annotation functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('annotate'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -227,7 +287,7 @@ describe('Annotation functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = annotationHandler.annotate(input as Record<string, unknown>);

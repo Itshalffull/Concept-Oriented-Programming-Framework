@@ -26,7 +26,7 @@ describe('PlatformAdapter functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' });
+      const program = platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' });
+      const program = platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' });
+      const program = platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' });
+      const program = platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' });
+      const program = platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PlatformAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformAdapterHandler.register !== 'function') return;
       try {
-        const result = await interpret(platformAdapterHandler.register({ adapter: 'test', platform: 'test-platform', config: 'test-config' }), storage);
+        const result = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('PlatformAdapter functional handler', () => {
       }
     });
 
+    it('fixture "register_browser" -> ok', async () => {
+      if (typeof platformAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_mobile" -> ok', async () => {
+      if (typeof platformAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_invalid_platform" -> duplicate', async () => {
+      if (typeof platformAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.register({ adapter: "bad-adapter", platform: "vr", config: "{}" }), storage);
+      expect(result.variant).toBe('duplicate');
+    });
+
   });
 
   describe('mapNavigation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' });
+      const program = platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' });
+      const program = platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' });
+      const program = platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' });
+      const program = platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' });
+      const program = platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('PlatformAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       try {
-        const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: 'test', transition: 'test-transition' }), storage);
+        const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,39 @@ describe('PlatformAdapter functional handler', () => {
       }
     });
 
+    it('fixture "nav_push" -> ok', async () => {
+      if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nav_replace" -> ok', async () => {
+      if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nav_not_registered" -> unsupported', async () => {
+      if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "unknown-adapter", transition: "{ \"type\": \"push\" }" }), storage);
+      expect(result.variant).toBe('unsupported');
+    });
+
+    it('fixture "nav_invalid_json" -> unsupported', async () => {
+      if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "not-json" }), storage);
+      expect(result.variant).toBe('unsupported');
+    });
+
   });
 
   describe('mapZone', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' });
+      const program = platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' });
+      const program = platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' });
+      const program = platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' });
+      const program = platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' });
+      const program = platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('PlatformAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       try {
-        const result = await interpret(platformAdapterHandler.mapZone({ adapter: 'test', role: 'test-role' }), storage);
+        const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +245,32 @@ describe('PlatformAdapter functional handler', () => {
       }
     });
 
+    it('fixture "zone_persistent" -> ok', async () => {
+      if (typeof platformAdapterHandler.mapZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "zone_navigated" -> ok', async () => {
+      if (typeof platformAdapterHandler.mapZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "navigated" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "zone_not_registered" -> unmapped', async () => {
+      if (typeof platformAdapterHandler.mapZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.mapZone({ adapter: "unknown-adapter", role: "persistent" }), storage);
+      expect(result.variant).toBe('unmapped');
+    });
+
   });
 
   describe('handlePlatformEvent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' });
+      const program = platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +278,21 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' });
+      const program = platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' });
+      const program = platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' });
+      const program = platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +305,7 @@ describe('PlatformAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' });
+      const program = platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +314,7 @@ describe('PlatformAdapter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       try {
-        const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: 'test', event: 'test-event' }), storage);
+        const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +324,52 @@ describe('PlatformAdapter functional handler', () => {
       }
     });
 
+    it('fixture "event_popstate" -> ok', async () => {
+      if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "event_hashchange" -> ok', async () => {
+      if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "event_not_registered" -> ignored', async () => {
+      if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "unknown-adapter", event: "{ \"name\": \"popstate\" }" }), storage);
+      expect(result.variant).toBe('ignored');
+    });
+
+    it('fixture "event_invalid_json" -> ignored', async () => {
+      if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "bad-json" }), storage);
+      expect(result.variant).toBe('ignored');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof platformAdapterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = platformAdapterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PlatformAdapter');
+    });
   });
 
   describe('invariant examples', () => {

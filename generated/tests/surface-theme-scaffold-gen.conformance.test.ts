@@ -26,7 +26,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' }), storage);
+        const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_theme" -> ok', async () => {
+      if (typeof surfaceThemeScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "light_only" -> ok', async () => {
+      if (typeof surfaceThemeScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "minimal", primaryColor: "200", fontFamily: "system-ui", baseSize: "14", scale: "1.2", secondaryColor: null, borderRadius: "sm", mode: "light", extends: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' });
+      const program = surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(surfaceThemeScaffoldGenHandler.preview({ name: 'test-name', primaryColor: 'test-primaryColor', fontFamily: 'test-fontFamily', baseSize: 1, scale: 'test', secondaryColor: 'test', borderRadius: 'test', mode: 'test-mode', extends: 'test' }), storage);
+        const result = await interpret(surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,13 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof surfaceThemeScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,6 +217,31 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof surfaceThemeScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(surfaceThemeScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof surfaceThemeScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = surfaceThemeScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SurfaceThemeScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('EmbeddingCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.warm !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.warm({ path: 'test-path' }, storage);
+        const result = await embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('EmbeddingCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_path" -> ok', async () => {
+      if (typeof embeddingCacheHandler.warm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.warm({ path: "/var/cache/embeddings.json" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_path" -> error', async () => {
+      if (typeof embeddingCacheHandler.warm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.warm({ path: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('EmbeddingCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.lookup !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.lookup({ digest: 'test-digest' }, storage);
+        const result = await embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('EmbeddingCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "known_digest" -> ok', async () => {
+      if (typeof embeddingCacheHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.lookup({ digest: "sha256:abc123def456" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_digest" -> error', async () => {
+      if (typeof embeddingCacheHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.lookup({ digest: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('EmbeddingCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.put !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.put({ digest: 'test-digest', vector: 'test-vector', model: 'test-model', dimensions: 1, sourceKind: 'test-sourceKind', sourceKey: 'test-sourceKey' }, storage);
+        const result = await embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('EmbeddingCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "store_embedding" -> ok', async () => {
+      if (typeof embeddingCacheHandler.put !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "[0.1,0.2,0.3]", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_vector" -> error', async () => {
+      if (typeof embeddingCacheHandler.put !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.put({ digest: "sha256:abc123", vector: "", model: "text-embedding-ada-002", dimensions: "3", sourceKind: "concept", sourceKey: "UserProfile" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('EmbeddingCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.flush !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.flush({ path: 'test-path' }, storage);
+        const result = await embeddingCacheHandler.flush({ path: "/var/cache/embeddings.json" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,13 +119,27 @@ describe('EmbeddingCache imperative handler', () => {
       }
     });
 
+    it('fixture "flush_to_disk" -> ok', async () => {
+      if (typeof embeddingCacheHandler.flush !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.flush({ path: "/var/cache/embeddings.json" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_flush_path" -> error', async () => {
+      if (typeof embeddingCacheHandler.flush !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.flush({ path: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evict', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.evict !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.evict({ digest: 'test-digest' }, storage);
+        const result = await embeddingCacheHandler.evict({ digest: "sha256:def456" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('EmbeddingCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "evict_existing" -> ok', async () => {
+      if (typeof embeddingCacheHandler.evict !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.evict({ digest: "sha256:def456" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evict_empty" -> error', async () => {
+      if (typeof embeddingCacheHandler.evict !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.evict({ digest: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -109,13 +179,20 @@ describe('EmbeddingCache imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof embeddingCacheHandler.stats !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.stats({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('lookupWithConfig', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.lookupWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1 }, storage);
+        const result = await embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +200,20 @@ describe('EmbeddingCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "config_lookup" -> ok', async () => {
+      if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_model" -> error', async () => {
+      if (typeof embeddingCacheHandler.lookupWithConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.lookupWithConfig({ digest: "sha256:abc123", model: "", dimensions: "1536" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +222,7 @@ describe('EmbeddingCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
       try {
-        const result = await embeddingCacheHandler.putWithConfig({ digest: 'test-digest', model: 'test-model', dimensions: 1, vector: 'test-vector', sourceKind: 'test-sourceKind', sourceKey: 'test-sourceKey' }, storage);
+        const result = await embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -141,6 +232,37 @@ describe('EmbeddingCache imperative handler', () => {
       }
     });
 
+    it('fixture "store_with_config" -> ok', async () => {
+      if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.putWithConfig({ digest: "sha256:abc123", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1,0.2]", sourceKind: "concept", sourceKey: "User" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_digest" -> error', async () => {
+      if (typeof embeddingCacheHandler.putWithConfig !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await embeddingCacheHandler.putWithConfig({ digest: "", model: "text-embedding-ada-002", dimensions: "1536", vector: "[0.1]", sourceKind: "concept", sourceKey: "User" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof embeddingCacheHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = embeddingCacheHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EmbeddingCache');
+    });
   });
 
   describe('invariant examples', () => {

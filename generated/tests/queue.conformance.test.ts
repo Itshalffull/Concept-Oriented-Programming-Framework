@@ -26,7 +26,7 @@ describe('Queue functional handler', () => {
 
   describe('enqueue', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 });
+      const program = queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Queue functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 });
+      const program = queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 });
+      const program = queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 });
+      const program = queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Queue functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 });
+      const program = queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Queue functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queueHandler.enqueue !== 'function') return;
       try {
-        const result = await interpret(queueHandler.enqueue({ queue: 'test', item: 'test-item', priority: 1 }), storage);
+        const result = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Queue functional handler', () => {
       }
     });
 
+    it('fixture "enqueue_high_priority" -> ok', async () => {
+      if (typeof queueHandler.enqueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.enqueue({ queue: "email-queue", item: "send_welcome_email", priority: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enqueue_empty_queue" -> notfound', async () => {
+      if (typeof queueHandler.enqueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.enqueue({ queue: "", item: "task", priority: "1" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('claim', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queueHandler.claim({ queue: 'test', worker: 'test-worker' });
+      const program = queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Queue functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queueHandler.claim({ queue: 'test', worker: 'test-worker' });
+      const program = queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queueHandler.claim({ queue: 'test', worker: 'test-worker' });
+      const program = queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queueHandler.claim({ queue: 'test', worker: 'test-worker' });
+      const program = queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Queue functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queueHandler.claim({ queue: 'test', worker: 'test-worker' });
+      const program = queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Queue functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queueHandler.claim !== 'function') return;
       try {
-        const result = await interpret(queueHandler.claim({ queue: 'test', worker: 'test-worker' }), storage);
+        const result = await interpret(queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Queue functional handler', () => {
       }
     });
 
+    it('fixture "claim_from_queue" -> ok', async () => {
+      if (typeof queueHandler.claim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.claim({ queue: "email-queue", worker: "worker-alpha" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "claim_from_empty_queue" -> empty', async () => {
+      if (typeof queueHandler.claim !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.claim({ queue: "empty-queue", worker: "worker-alpha" }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
   });
 
   describe('process', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' });
+      const program = queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Queue functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' });
+      const program = queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' });
+      const program = queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' });
+      const program = queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Queue functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' });
+      const program = queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Queue functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queueHandler.process !== 'function') return;
       try {
-        const result = await interpret(queueHandler.process({ queue: 'test', itemId: 'test-itemId', result: 'test-result' }), storage);
+        const result = await interpret(queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Queue functional handler', () => {
       }
     });
 
+    it('fixture "process_item" -> ok', async () => {
+      if (typeof queueHandler.process !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.process({ queue: "email-queue", itemId: "item-1", result: "sent_successfully" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "process_missing_item" -> notfound', async () => {
+      if (typeof queueHandler.process !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.process({ queue: "email-queue", itemId: "nonexistent", result: "failed" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('release', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queueHandler.release({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.release({ queue: "email-queue", itemId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Queue functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queueHandler.release({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.release({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queueHandler.release({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.release({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queueHandler.release({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.release({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Queue functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queueHandler.release({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.release({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Queue functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queueHandler.release !== 'function') return;
       try {
-        const result = await interpret(queueHandler.release({ queue: 'test', itemId: 'test-itemId' }), storage);
+        const result = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Queue functional handler', () => {
       }
     });
 
+    it('fixture "release_claimed_item" -> ok', async () => {
+      if (typeof queueHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.release({ queue: "email-queue", itemId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "release_missing_item" -> notfound', async () => {
+      if (typeof queueHandler.release !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.release({ queue: "email-queue", itemId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = queueHandler.delete({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.delete({ queue: "email-queue", itemId: "item-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Queue functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = queueHandler.delete({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.delete({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = queueHandler.delete({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.delete({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = queueHandler.delete({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.delete({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Queue functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = queueHandler.delete({ queue: 'test', itemId: 'test-itemId' });
+      const program = queueHandler.delete({ queue: "email-queue", itemId: "item-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Queue functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof queueHandler.delete !== 'function') return;
       try {
-        const result = await interpret(queueHandler.delete({ queue: 'test', itemId: 'test-itemId' }), storage);
+        const result = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Queue functional handler', () => {
       }
     });
 
+    it('fixture "delete_existing_item" -> ok', async () => {
+      if (typeof queueHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "item-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing_item" -> notfound', async () => {
+      if (typeof queueHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queueHandler.delete({ queue: "email-queue", itemId: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof queueHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = queueHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Queue');
+    });
   });
 
   describe('invariant examples', () => {

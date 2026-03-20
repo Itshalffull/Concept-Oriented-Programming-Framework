@@ -26,7 +26,7 @@ describe('Shell functional handler', () => {
 
   describe('initialize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.initialize({ shell: 'test', zones: 'test-zones' });
+      const program = shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.initialize({ shell: 'test', zones: 'test-zones' });
+      const program = shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.initialize({ shell: 'test', zones: 'test-zones' });
+      const program = shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.initialize({ shell: 'test', zones: 'test-zones' });
+      const program = shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.initialize({ shell: 'test', zones: 'test-zones' });
+      const program = shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.initialize !== 'function') return;
       try {
-        const result = await interpret(shellHandler.initialize({ shell: 'test', zones: 'test-zones' }), storage);
+        const result = await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "init_two_zones" -> ok', async () => {
+      if (typeof shellHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "init_single_zone" -> ok', async () => {
+      if (typeof shellHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "init_invalid_json" -> invalid', async () => {
+      if (typeof shellHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.initialize({ shell: "S-3", zones: "not-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "init_empty_zones" -> invalid', async () => {
+      if (typeof shellHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.initialize({ shell: "S-4", zones: "[]" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('assignToZone', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' });
+      const program = shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' });
+      const program = shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' });
+      const program = shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' });
+      const program = shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' });
+      const program = shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.assignToZone !== 'function') return;
       try {
-        const result = await interpret(shellHandler.assignToZone({ shell: 'test', zone: 'test-zone', ref: 'test-ref' }), storage);
+        const result = await interpret(shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "assign_host_to_primary" -> ok', async () => {
+      if (typeof shellHandler.assignToZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_unknown_shell" -> notfound', async () => {
+      if (typeof shellHandler.assignToZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.assignToZone({ shell: "S-nonexistent", zone: "primary", ref: "host-1" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('adapt', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.adapt({ shell: 'test', config: 'test-config' });
+      const program = shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.adapt({ shell: 'test', config: 'test-config' });
+      const program = shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.adapt({ shell: 'test', config: 'test-config' });
+      const program = shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.adapt({ shell: 'test', config: 'test-config' });
+      const program = shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.adapt({ shell: 'test', config: 'test-config' });
+      const program = shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.adapt !== 'function') return;
       try {
-        const result = await interpret(shellHandler.adapt({ shell: 'test', config: 'test-config' }), storage);
+        const result = await interpret(shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,32 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "adapt_new_layout" -> ok', async () => {
+      if (typeof shellHandler.adapt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "adapt_unknown_shell" -> notfound', async () => {
+      if (typeof shellHandler.adapt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.adapt({ shell: "S-nonexistent", config: "{ \"zones\": [\"main\"] }" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "adapt_invalid_config" -> invalid', async () => {
+      if (typeof shellHandler.adapt !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.adapt({ shell: "S-1", config: "bad-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('clearZone', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.clearZone({ shell: 'test', zone: 'test-zone' });
+      const program = shellHandler.clearZone({ shell: "S-1", zone: "primary" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +271,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.clearZone({ shell: 'test', zone: 'test-zone' });
+      const program = shellHandler.clearZone({ shell: "S-1", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.clearZone({ shell: 'test', zone: 'test-zone' });
+      const program = shellHandler.clearZone({ shell: "S-1", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.clearZone({ shell: 'test', zone: 'test-zone' });
+      const program = shellHandler.clearZone({ shell: "S-1", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +298,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.clearZone({ shell: 'test', zone: 'test-zone' });
+      const program = shellHandler.clearZone({ shell: "S-1", zone: "primary" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +307,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.clearZone !== 'function') return;
       try {
-        const result = await interpret(shellHandler.clearZone({ shell: 'test', zone: 'test-zone' }), storage);
+        const result = await interpret(shellHandler.clearZone({ shell: "S-1", zone: "primary" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +317,25 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "clear_primary_zone" -> ok', async () => {
+      if (typeof shellHandler.clearZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.clearZone({ shell: "S-1", zone: "primary" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_unknown_shell" -> notfound', async () => {
+      if (typeof shellHandler.clearZone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.clearZone({ shell: "S-nonexistent", zone: "primary" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('pushOverlay', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' });
+      const program = shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +343,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' });
+      const program = shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' });
+      const program = shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' });
+      const program = shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +370,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' });
+      const program = shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +379,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.pushOverlay !== 'function') return;
       try {
-        const result = await interpret(shellHandler.pushOverlay({ shell: 'test', ref: 'test-ref' }), storage);
+        const result = await interpret(shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +389,25 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "push_modal" -> ok', async () => {
+      if (typeof shellHandler.pushOverlay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "push_no_ref" -> invalid', async () => {
+      if (typeof shellHandler.pushOverlay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.pushOverlay({ shell: "S-1", ref: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('popOverlay', () => {
     it('builds a valid StorageProgram', () => {
-      const program = shellHandler.popOverlay({ shell: 'test' });
+      const program = shellHandler.popOverlay({ shell: "S-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +415,21 @@ describe('Shell functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = shellHandler.popOverlay({ shell: 'test' });
+      const program = shellHandler.popOverlay({ shell: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = shellHandler.popOverlay({ shell: 'test' });
+      const program = shellHandler.popOverlay({ shell: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = shellHandler.popOverlay({ shell: 'test' });
+      const program = shellHandler.popOverlay({ shell: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +442,7 @@ describe('Shell functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = shellHandler.popOverlay({ shell: 'test' });
+      const program = shellHandler.popOverlay({ shell: "S-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +451,7 @@ describe('Shell functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof shellHandler.popOverlay !== 'function') return;
       try {
-        const result = await interpret(shellHandler.popOverlay({ shell: 'test' }), storage);
+        const result = await interpret(shellHandler.popOverlay({ shell: "S-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +461,38 @@ describe('Shell functional handler', () => {
       }
     });
 
+    it('fixture "pop_existing" -> ok', async () => {
+      if (typeof shellHandler.popOverlay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.popOverlay({ shell: "S-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pop_unknown_shell" -> empty', async () => {
+      if (typeof shellHandler.popOverlay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(shellHandler.popOverlay({ shell: "S-nonexistent" }), storage);
+      expect(result.variant).toBe('empty');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof shellHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = shellHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Shell');
+    });
   });
 
   describe('invariant examples', () => {

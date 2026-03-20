@@ -26,7 +26,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: 'test-name', protocol: 'test-protocol' }), storage);
+        const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "http_adapter" -> ok', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "websocket_adapter" -> ok', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "RealtimeTransport", protocol: "websocket" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_name" -> error', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.generate({ name: "", protocol: "http" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' });
+      const program = transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportAdapterScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(transportAdapterScaffoldGenHandler.preview({ name: 'test-name', protocol: 'test-protocol' }), storage);
+        const result = await interpret(transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +157,20 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "preview_http" -> ok', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "preview_empty_name" -> error', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.preview({ name: "", protocol: "http" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -196,6 +231,31 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportAdapterScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transportAdapterScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = transportAdapterScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TransportAdapterScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

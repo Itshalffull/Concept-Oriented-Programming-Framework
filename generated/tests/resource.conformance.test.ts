@@ -26,7 +26,7 @@ describe('Resource functional handler', () => {
 
   describe('upsert', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' });
+      const program = resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Resource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' });
+      const program = resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' });
+      const program = resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' });
+      const program = resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Resource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' });
+      const program = resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Resource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceHandler.upsert !== 'function') return;
       try {
-        const result = await interpret(resourceHandler.upsert({ locator: 'test-locator', kind: 'test-kind', digest: 'test-digest', lastModified: 'test', size: 'test' }), storage);
+        const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Resource functional handler', () => {
       }
     });
 
+    it('fixture "upsert_new" -> ok', async () => {
+      if (typeof resourceHandler.upsert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: "1024" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_changed" -> ok', async () => {
+      if (typeof resourceHandler.upsert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_unchanged" -> ok', async () => {
+      if (typeof resourceHandler.upsert !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.upsert({ locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceHandler.get({ locator: 'test-locator' });
+      const program = resourceHandler.get({ locator: "./specs/password.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Resource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceHandler.get({ locator: 'test-locator' });
+      const program = resourceHandler.get({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceHandler.get({ locator: 'test-locator' });
+      const program = resourceHandler.get({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceHandler.get({ locator: 'test-locator' });
+      const program = resourceHandler.get({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Resource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceHandler.get({ locator: 'test-locator' });
+      const program = resourceHandler.get({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Resource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceHandler.get !== 'function') return;
       try {
-        const result = await interpret(resourceHandler.get({ locator: 'test-locator' }), storage);
+        const result = await interpret(resourceHandler.get({ locator: "./specs/password.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Resource functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof resourceHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.get({ locator: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> notFound', async () => {
+      if (typeof resourceHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.get({ locator: "./specs/nonexistent.concept" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceHandler.list({ kind: 'test' });
+      const program = resourceHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Resource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceHandler.list({ kind: 'test' });
+      const program = resourceHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceHandler.list({ kind: 'test' });
+      const program = resourceHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceHandler.list({ kind: 'test' });
+      const program = resourceHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Resource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceHandler.list({ kind: 'test' });
+      const program = resourceHandler.list({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Resource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceHandler.list !== 'function') return;
       try {
-        const result = await interpret(resourceHandler.list({ kind: 'test' }), storage);
+        const result = await interpret(resourceHandler.list({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Resource functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof resourceHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_by_kind" -> ok', async () => {
+      if (typeof resourceHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.list({ kind: "concept-spec" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = resourceHandler.remove({ locator: 'test-locator' });
+      const program = resourceHandler.remove({ locator: "./specs/password.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Resource functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = resourceHandler.remove({ locator: 'test-locator' });
+      const program = resourceHandler.remove({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = resourceHandler.remove({ locator: 'test-locator' });
+      const program = resourceHandler.remove({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = resourceHandler.remove({ locator: 'test-locator' });
+      const program = resourceHandler.remove({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Resource functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = resourceHandler.remove({ locator: 'test-locator' });
+      const program = resourceHandler.remove({ locator: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Resource functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof resourceHandler.remove !== 'function') return;
       try {
-        const result = await interpret(resourceHandler.remove({ locator: 'test-locator' }), storage);
+        const result = await interpret(resourceHandler.remove({ locator: "./specs/password.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -252,6 +301,20 @@ describe('Resource functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "remove_existing" -> ok', async () => {
+      if (typeof resourceHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.remove({ locator: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_missing" -> notFound', async () => {
+      if (typeof resourceHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.remove({ locator: "./specs/nonexistent.concept" }), storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -312,6 +375,38 @@ describe('Resource functional handler', () => {
       }
     });
 
+    it('fixture "diff_concept" -> unknown', async () => {
+      if (typeof resourceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.diff({ locator: "./specs/password.concept", oldDigest: "sha256-abc123", newDigest: "sha256-def456" }), storage);
+      expect(result.variant).toBe('unknown');
+    });
+
+    it('fixture "diff_config" -> unknown', async () => {
+      if (typeof resourceHandler.diff !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(resourceHandler.diff({ locator: "./configs/build.yaml", oldDigest: "sha256-111", newDigest: "sha256-222" }), storage);
+      expect(result.variant).toBe('unknown');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof resourceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = resourceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Resource');
+    });
   });
 
   describe('invariant examples', () => {

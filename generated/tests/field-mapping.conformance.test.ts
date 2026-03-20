@@ -26,7 +26,7 @@ describe('FieldMapping functional handler', () => {
 
   describe('map', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' });
+      const program = fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' });
+      const program = fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' });
+      const program = fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' });
+      const program = fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' });
+      const program = fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldMappingHandler.map !== 'function') return;
       try {
-        const result = await interpret(fieldMappingHandler.map({ mappingId: 'test-mappingId', sourceField: 'test-sourceField', destField: 'test-destField', transform: 'test-transform' }), storage);
+        const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('FieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "map_title" -> ok', async () => {
+      if (typeof fieldMappingHandler.map !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "map_body_html" -> ok', async () => {
+      if (typeof fieldMappingHandler.map !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "map_missing" -> notfound', async () => {
+      if (typeof fieldMappingHandler.map !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.map({ mappingId: "map-missing", sourceField: "x", destField: "y", transform: "" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('FieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldMappingHandler.apply !== 'function') return;
       try {
-        const result = await interpret(fieldMappingHandler.apply({ record: 'test-record', mappingId: 'test-mappingId' }), storage);
+        const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('FieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "apply_record" -> ok', async () => {
+      if (typeof fieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_missing" -> notfound', async () => {
+      if (typeof fieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\"}", mappingId: "map-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+    it('fixture "apply_bad_json" -> error', async () => {
+      if (typeof fieldMappingHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.apply({ record: "not-json", mappingId: "map-1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reverse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('FieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldMappingHandler.reverse !== 'function') return;
       try {
-        const result = await interpret(fieldMappingHandler.reverse({ record: 'test-record', mappingId: 'test-mappingId' }), storage);
+        const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +238,25 @@ describe('FieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "reverse_record" -> ok', async () => {
+      if (typeof fieldMappingHandler.reverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reverse_missing" -> notfound', async () => {
+      if (typeof fieldMappingHandler.reverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.reverse({ record: "{}", mappingId: "map-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('autoDiscover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' });
+      const program = fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +264,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' });
+      const program = fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' });
+      const program = fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' });
+      const program = fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +291,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' });
+      const program = fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +300,7 @@ describe('FieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldMappingHandler.autoDiscover !== 'function') return;
       try {
-        const result = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: 'test-sourceSchema', destSchema: 'test-destSchema' }), storage);
+        const result = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +310,18 @@ describe('FieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "discover_schemas" -> ok', async () => {
+      if (typeof fieldMappingHandler.autoDiscover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fieldMappingHandler.validate({ mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.validate({ mappingId: "map-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fieldMappingHandler.validate({ mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.validate({ mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fieldMappingHandler.validate({ mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.validate({ mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fieldMappingHandler.validate({ mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.validate({ mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('FieldMapping functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fieldMappingHandler.validate({ mappingId: 'test-mappingId' });
+      const program = fieldMappingHandler.validate({ mappingId: "map-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('FieldMapping functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fieldMappingHandler.validate !== 'function') return;
       try {
-        const result = await interpret(fieldMappingHandler.validate({ mappingId: 'test-mappingId' }), storage);
+        const result = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('FieldMapping functional handler', () => {
       }
     });
 
+    it('fixture "validate_existing" -> ok', async () => {
+      if (typeof fieldMappingHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_missing" -> notfound', async () => {
+      if (typeof fieldMappingHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fieldMappingHandler.validate({ mappingId: "map-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fieldMappingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fieldMappingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FieldMapping');
+    });
   });
 
   describe('invariant examples', () => {

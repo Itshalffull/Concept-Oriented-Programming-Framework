@@ -80,11 +80,18 @@ describe('LatticeMerge functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof latticeMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(latticeMergeHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('LatticeMerge functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('LatticeMerge functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' });
+      const program = latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('LatticeMerge functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof latticeMergeHandler.execute !== 'function') return;
       try {
-        const result = await interpret(latticeMergeHandler.execute({ base: 'test', ours: 'test', theirs: 'test' }), storage);
+        const result = await interpret(latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('LatticeMerge functional handler', () => {
       }
     });
 
+    it('fixture "merge_g_counter" -> ok', async () => {
+      if (typeof latticeMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(latticeMergeHandler.execute({ base: "{\"type\":\"g-counter\",\"counters\":{\"a\":1}}", ours: "{\"type\":\"g-counter\",\"counters\":{\"a\":2}}", theirs: "{\"type\":\"g-counter\",\"counters\":{\"a\":1,\"b\":3}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_crdt_json" -> error', async () => {
+      if (typeof latticeMergeHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(latticeMergeHandler.execute({ base: "not-json", ours: "{\"type\":\"g-counter\"}", theirs: "{\"type\":\"g-counter\"}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof latticeMergeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = latticeMergeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LatticeMerge');
+    });
   });
 
   describe('invariant examples', () => {

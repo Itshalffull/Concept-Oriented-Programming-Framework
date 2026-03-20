@@ -19,7 +19,7 @@ describe('LensExtractionProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
       try {
-        const result = await lensExtractionProviderHandler.analyze({ program: 'test-program' }, storage);
+        const result = await lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('LensExtractionProvider imperative handler', () => {
       }
     });
 
+    it('fixture "program_with_get" -> ok', async () => {
+      if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}],\"terminated\":false,\"effects\":{\"reads\":[\"users\"],\"writes\":[]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "program_with_put" -> ok', async () => {
+      if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"orders\",\"key\":\"o1\",\"value\":{\"total\":100}}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[\"orders\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof lensExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await lensExtractionProviderHandler.analyze({ program: "not valid json{{{" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof lensExtractionProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = lensExtractionProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LensExtractionProvider');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('StateField functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' });
+      const program = stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' });
+      const program = stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' });
+      const program = stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' });
+      const program = stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' });
+      const program = stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('StateField functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stateFieldHandler.register !== 'function') return;
       try {
-        const result = await interpret(stateFieldHandler.register({ concept: 'test-concept', name: 'test-name', typeExpr: 'test-typeExpr' }), storage);
+        const result = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('StateField functional handler', () => {
       }
     });
 
+    it('fixture "register_title" -> ok', async () => {
+      if (typeof stateFieldHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_set" -> ok', async () => {
+      if (typeof stateFieldHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_concept" -> error', async () => {
+      if (typeof stateFieldHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.register({ concept: "", name: "title", typeExpr: "T -> String" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.findByConcept({ concept: 'test-concept' });
+      const program = stateFieldHandler.findByConcept({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.findByConcept({ concept: 'test-concept' });
+      const program = stateFieldHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.findByConcept({ concept: 'test-concept' });
+      const program = stateFieldHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.findByConcept({ concept: 'test-concept' });
+      const program = stateFieldHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.findByConcept({ concept: 'test-concept' });
+      const program = stateFieldHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('StateField functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stateFieldHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(stateFieldHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(stateFieldHandler.findByConcept({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('StateField functional handler', () => {
       }
     });
 
+    it('fixture "find_article" -> ok', async () => {
+      if (typeof stateFieldHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.findByConcept({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof stateFieldHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.findByConcept({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToGenerated', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: 'test' });
+      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: 'test' });
+      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: 'test' });
+      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: 'test' });
+      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.traceToGenerated({ field: 'test' });
+      const program = stateFieldHandler.traceToGenerated({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('StateField functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       try {
-        const result = await interpret(stateFieldHandler.traceToGenerated({ field: 'test' }), storage);
+        const result = await interpret(stateFieldHandler.traceToGenerated({ field: "state-field-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('StateField functional handler', () => {
       }
     });
 
+    it('fixture "trace_generated_valid" -> ok', async () => {
+      if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.traceToGenerated({ field: "state-field-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_generated_missing" -> error', async () => {
+      if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.traceToGenerated({ field: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceToStorage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.traceToStorage({ field: 'test' });
+      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.traceToStorage({ field: 'test' });
+      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.traceToStorage({ field: 'test' });
+      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.traceToStorage({ field: 'test' });
+      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.traceToStorage({ field: 'test' });
+      const program = stateFieldHandler.traceToStorage({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('StateField functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       try {
-        const result = await interpret(stateFieldHandler.traceToStorage({ field: 'test' }), storage);
+        const result = await interpret(stateFieldHandler.traceToStorage({ field: "state-field-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('StateField functional handler', () => {
       }
     });
 
+    it('fixture "trace_storage_valid" -> ok', async () => {
+      if (typeof stateFieldHandler.traceToStorage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.traceToStorage({ field: "state-field-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_storage_missing" -> error', async () => {
+      if (typeof stateFieldHandler.traceToStorage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.traceToStorage({ field: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stateFieldHandler.get({ field: 'test' });
+      const program = stateFieldHandler.get({ field: "state-field-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('StateField functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stateFieldHandler.get({ field: 'test' });
+      const program = stateFieldHandler.get({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stateFieldHandler.get({ field: 'test' });
+      const program = stateFieldHandler.get({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stateFieldHandler.get({ field: 'test' });
+      const program = stateFieldHandler.get({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('StateField functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stateFieldHandler.get({ field: 'test' });
+      const program = stateFieldHandler.get({ field: "state-field-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('StateField functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       try {
-        const result = await interpret(stateFieldHandler.get({ field: 'test' }), storage);
+        const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,45 @@ describe('StateField functional handler', () => {
       }
     });
 
+    it('fixture "get_valid" -> ok', async () => {
+      if (typeof stateFieldHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof stateFieldHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.get({ field: "nonexistent-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "get_field" -> ok', async () => {
+      if (typeof stateFieldHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof stateFieldHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = stateFieldHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('StateField');
+    });
   });
 
   describe('invariant examples', () => {

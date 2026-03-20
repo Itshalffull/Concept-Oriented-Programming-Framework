@@ -19,7 +19,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.create !== 'function') return;
       try {
-        const result = await targetProfileHandler.create({ name: 'test-name' }, storage);
+        const result = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_create" -> ok', async () => {
+      if (typeof targetProfileHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate" -> error', async () => {
+      if (typeof targetProfileHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.create({ name: "fullstack-ts" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setBackendLanguages !== 'function') return;
       try {
-        const result = await targetProfileHandler.setBackendLanguages({ profile: 'test', languages: 'test' }, storage);
+        const result = await targetProfileHandler.setBackendLanguages({ profileId: "profile-1", values: "[\"typescript\",\"rust\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_backend" -> ok', async () => {
+      if (typeof targetProfileHandler.setBackendLanguages !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setBackendLanguages({ profileId: "profile-1", values: "[\"typescript\",\"rust\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_backend_lang" -> error', async () => {
+      if (typeof targetProfileHandler.setBackendLanguages !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setBackendLanguages({ profileId: "profile-1", values: "[\"cobol\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setFrontendFrameworks !== 'function') return;
       try {
-        const result = await targetProfileHandler.setFrontendFrameworks({ profile: 'test', frameworks: 'test' }, storage);
+        const result = await targetProfileHandler.setFrontendFrameworks({ profileId: "profile-1", values: "[\"react\",\"svelte\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_frontend" -> ok', async () => {
+      if (typeof targetProfileHandler.setFrontendFrameworks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setFrontendFrameworks({ profileId: "profile-1", values: "[\"react\",\"svelte\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_frontend" -> error', async () => {
+      if (typeof targetProfileHandler.setFrontendFrameworks !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setFrontendFrameworks({ profileId: "profile-1", values: "[\"angular\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setApiInterfaces !== 'function') return;
       try {
-        const result = await targetProfileHandler.setApiInterfaces({ profile: 'test', interfaces: 'test' }, storage);
+        const result = await targetProfileHandler.setApiInterfaces({ profileId: "profile-1", values: "[\"rest\",\"graphql\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_api" -> ok', async () => {
+      if (typeof targetProfileHandler.setApiInterfaces !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setApiInterfaces({ profileId: "profile-1", values: "[\"rest\",\"graphql\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_api" -> error', async () => {
+      if (typeof targetProfileHandler.setApiInterfaces !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setApiInterfaces({ profileId: "profile-1", values: "[\"soap\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setSdkLanguages !== 'function') return;
       try {
-        const result = await targetProfileHandler.setSdkLanguages({ profile: 'test', languages: 'test' }, storage);
+        const result = await targetProfileHandler.setSdkLanguages({ profileId: "profile-1", values: "[\"typescript\",\"python\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +147,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_sdk" -> ok', async () => {
+      if (typeof targetProfileHandler.setSdkLanguages !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setSdkLanguages({ profileId: "profile-1", values: "[\"typescript\",\"python\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_sdk" -> error', async () => {
+      if (typeof targetProfileHandler.setSdkLanguages !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setSdkLanguages({ profileId: "profile-1", values: "[\"cobol\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +169,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setDeployTargets !== 'function') return;
       try {
-        const result = await targetProfileHandler.setDeployTargets({ profile: 'test', targets: 'test' }, storage);
+        const result = await targetProfileHandler.setDeployTargets({ profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +177,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_deploy" -> ok', async () => {
+      if (typeof targetProfileHandler.setDeployTargets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setDeployTargets({ profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_deploy" -> error', async () => {
+      if (typeof targetProfileHandler.setDeployTargets !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setDeployTargets({ profileId: "profile-1", values: "[\"azure-functions\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +199,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setStorageAdapters !== 'function') return;
       try {
-        const result = await targetProfileHandler.setStorageAdapters({ profile: 'test', adapters: 'test' }, storage);
+        const result = await targetProfileHandler.setStorageAdapters({ profileId: "profile-1", values: "[\"postgres\",\"memory\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -123,6 +207,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_storage" -> ok', async () => {
+      if (typeof targetProfileHandler.setStorageAdapters !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setStorageAdapters({ profileId: "profile-1", values: "[\"postgres\",\"memory\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_storage" -> error', async () => {
+      if (typeof targetProfileHandler.setStorageAdapters !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setStorageAdapters({ profileId: "profile-1", values: "[\"oracle\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -131,7 +229,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.setTransportAdapters !== 'function') return;
       try {
-        const result = await targetProfileHandler.setTransportAdapters({ profile: 'test', adapters: 'test' }, storage);
+        const result = await targetProfileHandler.setTransportAdapters({ profileId: "profile-1", values: "[\"http\",\"ws\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -139,6 +237,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_set_transport" -> ok', async () => {
+      if (typeof targetProfileHandler.setTransportAdapters !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setTransportAdapters({ profileId: "profile-1", values: "[\"http\",\"ws\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_transport" -> error', async () => {
+      if (typeof targetProfileHandler.setTransportAdapters !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.setTransportAdapters({ profileId: "profile-1", values: "[\"mqtt\"]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -147,7 +259,7 @@ describe('TargetProfile imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.validate !== 'function') return;
       try {
-        const result = await targetProfileHandler.validate({ profile: 'test' }, storage);
+        const result = await targetProfileHandler.validate({ profileId: "profile-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -157,13 +269,27 @@ describe('TargetProfile imperative handler', () => {
       }
     });
 
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof targetProfileHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.validate({ profileId: "profile-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_nonexistent" -> error', async () => {
+      if (typeof targetProfileHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.validate({ profileId: "profile-999" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deriveModules', () => {
     it('executes without crashing', async () => {
       if (typeof targetProfileHandler.deriveModules !== 'function') return;
       try {
-        const result = await targetProfileHandler.deriveModules({ profile: 'test' }, storage);
+        const result = await targetProfileHandler.deriveModules({ profileId: "profile-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -171,6 +297,20 @@ describe('TargetProfile imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_derive" -> ok', async () => {
+      if (typeof targetProfileHandler.deriveModules !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.deriveModules({ profileId: "profile-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "derive_nonexistent" -> error', async () => {
+      if (typeof targetProfileHandler.deriveModules !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.deriveModules({ profileId: "profile-999" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -189,6 +329,30 @@ describe('TargetProfile imperative handler', () => {
       }
     });
 
+    it('fixture "list_all_options" -> ok', async () => {
+      if (typeof targetProfileHandler.listOptions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await targetProfileHandler.listOptions({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof targetProfileHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = targetProfileHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('TargetProfile');
+    });
   });
 
   describe('invariant examples', () => {

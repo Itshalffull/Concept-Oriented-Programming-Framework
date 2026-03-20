@@ -26,7 +26,7 @@ describe('QuadraticWeight functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 });
+      const program = quadraticWeightHandler.configure({ baseSource: "token-balance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('QuadraticWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 });
+      const program = quadraticWeightHandler.configure({ baseSource: "token-balance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 });
+      const program = quadraticWeightHandler.configure({ baseSource: "token-balance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 });
+      const program = quadraticWeightHandler.configure({ baseSource: "token-balance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('QuadraticWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 });
+      const program = quadraticWeightHandler.configure({ baseSource: "token-balance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('QuadraticWeight functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof quadraticWeightHandler.configure !== 'function') return;
       try {
-        const result = await interpret(quadraticWeightHandler.configure({ tokenSource: 'test-tokenSource', scalingFactor: 1 }), storage);
+        const result = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('QuadraticWeight functional handler', () => {
       }
     });
 
+    it('fixture "configure_token" -> ok', async () => {
+      if (typeof quadraticWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_empty" -> error', async () => {
+      if (typeof quadraticWeightHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quadraticWeightHandler.configure({ baseSource: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
-  describe('computeWeight', () => {
+  describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 });
+      const program = quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('QuadraticWeight functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 });
+      const program = quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 });
+      const program = quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 });
+      const program = quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,16 +133,16 @@ describe('QuadraticWeight functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 });
+      const program = quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof quadraticWeightHandler.computeWeight !== 'function') return;
+      if (typeof quadraticWeightHandler.compute !== 'function') return;
       try {
-        const result = await interpret(quadraticWeightHandler.computeWeight({ config: 'test', balance: 1 }), storage);
+        const result = await interpret(quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,28 +152,60 @@ describe('QuadraticWeight functional handler', () => {
       }
     });
 
+    it('fixture "compute_hundred" -> ok', async () => {
+      if (typeof quadraticWeightHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compute_zero" -> error', async () => {
+      if (typeof quadraticWeightHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(quadraticWeightHandler.compute({ participant: "alice", balance: "0.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof quadraticWeightHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = quadraticWeightHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('QuadraticWeight');
+    });
   });
 
   describe('invariant examples', () => {
-    it("configure-then-computeWeight", async () => {
+    it("configure-then-compute", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(quadraticWeightHandler.configure({ tokenSource: {"type":"variable","name":"_"}, scalingFactor: {"type":"literal","value":1} }), storage);
+      const configureResult0 = await interpret(quadraticWeightHandler.configure({ baseSource: {"type":"literal","value":"token-balance"} }), storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
-      const thenResult0 = await interpret(quadraticWeightHandler.computeWeight({ config: {"type":"variable","name":"qw"}, balance: {"type":"literal","value":100} }), storage);
+      const thenResult0 = await interpret(quadraticWeightHandler.compute({ participant: {"type":"variable","name":"p"}, balance: {"type":"literal","value":100} }), storage);
       expect(thenResult0.variant).toBe("weight");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-tokenSource', async () => {
+    it('always: valid-baseSource', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 50 }), scalingFactor: fc.string() }) }),
-              fc.record({ action: fc.constant('computeWeight'), input: fc.record({ config: fc.string(), balance: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ baseSource: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), balance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -181,13 +227,13 @@ describe('QuadraticWeight functional handler', () => {
       );
     });
 
-    it('never: orphaned-scalingFactor', async () => {
+    it('never: orphaned-baseSource', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 50 }), scalingFactor: fc.string() }) }),
-              fc.record({ action: fc.constant('computeWeight'), input: fc.record({ config: fc.string(), balance: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ baseSource: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compute'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), balance: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -200,7 +246,7 @@ describe('QuadraticWeight functional handler', () => {
                   const program = actionFn.call(quadraticWeightHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
-                  // Never: orphaned-scalingFactor
+                  // Never: orphaned-baseSource
                 } catch { /* handler may throw on random inputs */ }
               }
             }
@@ -226,7 +272,7 @@ describe('QuadraticWeight functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ tokenSource: fc.string({ minLength: 1, maxLength: 50 }), scalingFactor: fc.string() }),
+          fc.record({ baseSource: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = quadraticWeightHandler.configure(input as Record<string, unknown>);

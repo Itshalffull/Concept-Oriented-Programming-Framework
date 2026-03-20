@@ -26,7 +26,7 @@ describe('EventBus functional handler', () => {
 
   describe('registerEventType', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' });
+      const program = eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' });
+      const program = eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' });
+      const program = eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' });
+      const program = eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' });
+      const program = eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.registerEventType({ name: 'test-name', schema: 'test-schema' }), storage);
+        const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_register_event" -> ok', async () => {
+      if (typeof eventBusHandler.registerEventType !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_login_event" -> ok', async () => {
+      if (typeof eventBusHandler.registerEventType !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.registerEventType({ name: "user.login", schema: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate_event" -> error', async () => {
+      if (typeof eventBusHandler.registerEventType !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('subscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 });
+      const program = eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 });
+      const program = eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 });
+      const program = eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 });
+      const program = eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 });
+      const program = eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.subscribe({ event: 'test-event', handler: 'test-handler', priority: 1 }), storage);
+        const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_subscribe" -> ok', async () => {
+      if (typeof eventBusHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "subscribe_low_priority" -> ok', async () => {
+      if (typeof eventBusHandler.subscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('unsubscribe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' });
+      const program = eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' });
+      const program = eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' });
+      const program = eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' });
+      const program = eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' });
+      const program = eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: 'test-subscriptionId' }), storage);
+        const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_unsubscribe" -> ok', async () => {
+      if (typeof eventBusHandler.unsubscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsubscribe_nonexistent" -> error', async () => {
+      if (typeof eventBusHandler.unsubscribe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "nonexistent-sub-id" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('dispatch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.dispatch({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.dispatch({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.dispatch({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.dispatch({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.dispatch({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.dispatch({ event: 'test', data: 'test-data' }), storage);
+        const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_dispatch" -> ok', async () => {
+      if (typeof eventBusHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dispatch_empty_data" -> ok', async () => {
+      if (typeof eventBusHandler.dispatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.dispatch({ event: "user.login", data: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('dispatchAsync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' });
+      const program = eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.dispatchAsync({ event: 'test', data: 'test-data' }), storage);
+        const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_dispatch_async" -> ok', async () => {
+      if (typeof eventBusHandler.dispatchAsync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dispatch_async_empty" -> ok', async () => {
+      if (typeof eventBusHandler.dispatchAsync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.login", data: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getHistory', () => {
     it('builds a valid StorageProgram', () => {
-      const program = eventBusHandler.getHistory({ event: 'test-event', limit: 1 });
+      const program = eventBusHandler.getHistory({ event: "user.created", limit: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('EventBus functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = eventBusHandler.getHistory({ event: 'test-event', limit: 1 });
+      const program = eventBusHandler.getHistory({ event: "user.created", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = eventBusHandler.getHistory({ event: 'test-event', limit: 1 });
+      const program = eventBusHandler.getHistory({ event: "user.created", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = eventBusHandler.getHistory({ event: 'test-event', limit: 1 });
+      const program = eventBusHandler.getHistory({ event: "user.created", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('EventBus functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = eventBusHandler.getHistory({ event: 'test-event', limit: 1 });
+      const program = eventBusHandler.getHistory({ event: "user.created", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('EventBus functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       try {
-        const result = await interpret(eventBusHandler.getHistory({ event: 'test-event', limit: 1 }), storage);
+        const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('EventBus functional handler', () => {
       }
     });
 
+    it('fixture "valid_get_history" -> ok', async () => {
+      if (typeof eventBusHandler.getHistory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_history_small_limit" -> ok', async () => {
+      if (typeof eventBusHandler.getHistory !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(eventBusHandler.getHistory({ event: "user.login", limit: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof eventBusHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = eventBusHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('EventBus');
+    });
   });
 
   describe('invariant examples', () => {

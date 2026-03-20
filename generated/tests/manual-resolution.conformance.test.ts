@@ -80,11 +80,18 @@ describe('ManualResolution functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof manualResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manualResolutionHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('attemptResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +99,21 @@ describe('ManualResolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +126,7 @@ describe('ManualResolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' });
+      const program = manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +135,7 @@ describe('ManualResolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof manualResolutionHandler.attemptResolve !== 'function') return;
       try {
-        const result = await interpret(manualResolutionHandler.attemptResolve({ base: 'test', v1: 'test', v2: 'test', context: 'test-context' }), storage);
+        const result = await interpret(manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +145,38 @@ describe('ManualResolution functional handler', () => {
       }
     });
 
+    it('fixture "escalate_to_human" -> ok', async () => {
+      if (typeof manualResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "escalate_with_base" -> error', async () => {
+      if (typeof manualResolutionHandler.attemptResolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(manualResolutionHandler.attemptResolve({ base: "original-content", v1: "edit-1", v2: "edit-2", context: "contract-clause" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof manualResolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = manualResolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ManualResolution');
+    });
   });
 
   describe('invariant examples', () => {

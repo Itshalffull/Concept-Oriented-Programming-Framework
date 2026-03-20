@@ -26,7 +26,7 @@ describe('WidgetGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' });
+      const program = widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WidgetGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' });
+      const program = widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' });
+      const program = widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' });
+      const program = widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WidgetGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' });
+      const program = widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WidgetGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(widgetGenHandler.generate({ gen: 'test', target: 'test-target', widgetAst: 'test-widgetAst' }), storage);
+        const result = await interpret(widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,52 @@ describe('WidgetGen functional handler', () => {
       }
     });
 
+    it('fixture "react_widget" -> ok', async () => {
+      if (typeof widgetGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenHandler.generate({ gen: "wg-1", target: "react", widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"anatomy\":[{\"name\":\"root\",\"role\":\"container\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "vue_widget" -> ok', async () => {
+      if (typeof widgetGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenHandler.generate({ gen: "wg-2", target: "vue", widgetAst: "{\"name\":\"Card\",\"props\":[{\"name\":\"title\",\"type\":\"string\"},{\"name\":\"elevation\",\"type\":\"number\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unsupported_target" -> error', async () => {
+      if (typeof widgetGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenHandler.generate({ gen: "wg-3", target: "flutter", widgetAst: "{\"name\":\"Widget\"}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_ast_json" -> error', async () => {
+      if (typeof widgetGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenHandler.generate({ gen: "wg-4", target: "react", widgetAst: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetGen');
+    });
   });
 
   describe('invariant examples', () => {

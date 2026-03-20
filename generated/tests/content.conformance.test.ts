@@ -26,7 +26,7 @@ describe('Content functional handler', () => {
 
   describe('store', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' });
+      const program = contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Content functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' });
+      const program = contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' });
+      const program = contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' });
+      const program = contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Content functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' });
+      const program = contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Content functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHandler.store !== 'function') return;
       try {
-        const result = await interpret(contentHandler.store({ data: 'test', name: 'test-name', contentType: 'test-contentType' }), storage);
+        const result = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Content functional handler', () => {
       }
     });
 
+    it('fixture "store_text_file" -> ok', async () => {
+      if (typeof contentHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.store({ data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "store_empty_name" -> error', async () => {
+      if (typeof contentHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.store({ data: "content", name: "", contentType: "text/plain" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('pin', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentHandler.pin({ cid: 'test-cid' });
+      const program = contentHandler.pin({ cid: "abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Content functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentHandler.pin({ cid: 'test-cid' });
+      const program = contentHandler.pin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentHandler.pin({ cid: 'test-cid' });
+      const program = contentHandler.pin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentHandler.pin({ cid: 'test-cid' });
+      const program = contentHandler.pin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Content functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentHandler.pin({ cid: 'test-cid' });
+      const program = contentHandler.pin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Content functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHandler.pin !== 'function') return;
       try {
-        const result = await interpret(contentHandler.pin({ cid: 'test-cid' }), storage);
+        const result = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Content functional handler', () => {
       }
     });
 
+    it('fixture "pin_existing" -> ok', async () => {
+      if (typeof contentHandler.pin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.pin({ cid: "abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "pin_empty_cid" -> error', async () => {
+      if (typeof contentHandler.pin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.pin({ cid: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unpin', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentHandler.unpin({ cid: 'test-cid' });
+      const program = contentHandler.unpin({ cid: "abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Content functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentHandler.unpin({ cid: 'test-cid' });
+      const program = contentHandler.unpin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentHandler.unpin({ cid: 'test-cid' });
+      const program = contentHandler.unpin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentHandler.unpin({ cid: 'test-cid' });
+      const program = contentHandler.unpin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Content functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentHandler.unpin({ cid: 'test-cid' });
+      const program = contentHandler.unpin({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Content functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHandler.unpin !== 'function') return;
       try {
-        const result = await interpret(contentHandler.unpin({ cid: 'test-cid' }), storage);
+        const result = await interpret(contentHandler.unpin({ cid: "abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Content functional handler', () => {
       }
     });
 
+    it('fixture "unpin_existing" -> ok', async () => {
+      if (typeof contentHandler.unpin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.unpin({ cid: "abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unpin_empty_cid" -> error', async () => {
+      if (typeof contentHandler.unpin !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.unpin({ cid: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentHandler.resolve({ cid: 'test-cid' });
+      const program = contentHandler.resolve({ cid: "abc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Content functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentHandler.resolve({ cid: 'test-cid' });
+      const program = contentHandler.resolve({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentHandler.resolve({ cid: 'test-cid' });
+      const program = contentHandler.resolve({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentHandler.resolve({ cid: 'test-cid' });
+      const program = contentHandler.resolve({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Content functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentHandler.resolve({ cid: 'test-cid' });
+      const program = contentHandler.resolve({ cid: "abc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Content functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof contentHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(contentHandler.resolve({ cid: 'test-cid' }), storage);
+        const result = await interpret(contentHandler.resolve({ cid: "abc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Content functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof contentHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.resolve({ cid: "abc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof contentHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentHandler.resolve({ cid: "000000000000" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof contentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = contentHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Content');
+    });
   });
 
   describe('invariant examples', () => {
@@ -275,7 +349,7 @@ describe('Content functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('pin'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unpin'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -305,7 +379,7 @@ describe('Content functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('store'), input: fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('pin'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('unpin'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ cid: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -347,7 +421,7 @@ describe('Content functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ data: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ data: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), contentType: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = contentHandler.store(input as Record<string, unknown>);

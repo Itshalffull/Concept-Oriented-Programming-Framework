@@ -26,7 +26,7 @@ describe('FinalityGate functional handler', () => {
 
   describe('submit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' });
+      const program = finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' });
+      const program = finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' });
+      const program = finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' });
+      const program = finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' });
+      const program = finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FinalityGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof finalityGateHandler.submit !== 'function') return;
       try {
-        const result = await interpret(finalityGateHandler.submit({ operationRef: 'test-operationRef', provider: 'test-provider' }), storage);
+        const result = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('FinalityGate functional handler', () => {
       }
     });
 
+    it('fixture "submit_chain_finality" -> ok', async () => {
+      if (typeof finalityGateHandler.submit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-300", providerRef: "chain-finality-eth" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "submit_bft_finality" -> ok', async () => {
+      if (typeof finalityGateHandler.submit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(finalityGateHandler.submit({ operationRef: "gov-prop-301", providerRef: "bft-committee-alpha" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "submit_missing_ref" -> error', async () => {
+      if (typeof finalityGateHandler.submit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(finalityGateHandler.submit({ operationRef: "", providerRef: "chain-finality-eth" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('confirm', () => {
     it('builds a valid StorageProgram', () => {
-      const program = finalityGateHandler.confirm({ gate: 'test' });
+      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = finalityGateHandler.confirm({ gate: 'test' });
+      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = finalityGateHandler.confirm({ gate: 'test' });
+      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = finalityGateHandler.confirm({ gate: 'test' });
+      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('FinalityGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = finalityGateHandler.confirm({ gate: 'test' });
+      const program = finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('FinalityGate functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof finalityGateHandler.confirm !== 'function') return;
       try {
-        const result = await interpret(finalityGateHandler.confirm({ gate: 'test' }), storage);
+        const result = await interpret(finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('FinalityGate functional handler', () => {
       }
     });
 
+    it('fixture "confirm_finalized" -> ok', async () => {
+      if (typeof finalityGateHandler.confirm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(finalityGateHandler.confirm({ gate: "finality-001", proof: "block-hash-0xabc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "confirm_not_found" -> error', async () => {
+      if (typeof finalityGateHandler.confirm !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(finalityGateHandler.confirm({ gate: "finality-nonexistent", proof: "some-proof" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof finalityGateHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = finalityGateHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FinalityGate');
+    });
   });
 
   describe('invariant examples', () => {
@@ -158,8 +211,8 @@ describe('FinalityGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string() }) }),
+              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), providerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string(), proof: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -186,8 +239,8 @@ describe('FinalityGate functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string() }) }),
+              fc.record({ action: fc.constant('submit'), input: fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), providerRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('confirm'), input: fc.record({ gate: fc.string(), proof: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -226,7 +279,7 @@ describe('FinalityGate functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ operationRef: fc.string({ minLength: 1, maxLength: 50 }), providerRef: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = finalityGateHandler.submit(input as Record<string, unknown>);

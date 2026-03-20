@@ -26,7 +26,7 @@ describe('ZkSyncProvider functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' });
+      const program = zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' });
+      const program = zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' });
+      const program = zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' });
+      const program = zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' });
+      const program = zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ZkSyncProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof zkSyncProviderHandler.register !== 'function') return;
       try {
-        const result = await interpret(zkSyncProviderHandler.register({ rpc_url: 'test-rpc_url', diamond_proxy: 'test-diamond_proxy' }), storage);
+        const result = await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ZkSyncProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof zkSyncProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_rpc_url" -> unreachable', async () => {
+      if (typeof zkSyncProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.register({ rpc_url: "", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage);
+      expect(result.variant).toBe('unreachable');
+    });
+
   });
 
   describe('poll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = zkSyncProviderHandler.poll({ provider: 'test' });
+      const program = zkSyncProviderHandler.poll({ provider: "zksync-provider-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = zkSyncProviderHandler.poll({ provider: 'test' });
+      const program = zkSyncProviderHandler.poll({ provider: "zksync-provider-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = zkSyncProviderHandler.poll({ provider: 'test' });
+      const program = zkSyncProviderHandler.poll({ provider: "zksync-provider-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = zkSyncProviderHandler.poll({ provider: 'test' });
+      const program = zkSyncProviderHandler.poll({ provider: "zksync-provider-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = zkSyncProviderHandler.poll({ provider: 'test' });
+      const program = zkSyncProviderHandler.poll({ provider: "zksync-provider-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ZkSyncProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof zkSyncProviderHandler.poll !== 'function') return;
       try {
-        const result = await interpret(zkSyncProviderHandler.poll({ provider: 'test' }), storage);
+        const result = await interpret(zkSyncProviderHandler.poll({ provider: "zksync-provider-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ZkSyncProvider functional handler', () => {
       }
     });
 
+    it('fixture "poll_existing_provider" -> ok', async () => {
+      if (typeof zkSyncProviderHandler.poll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.poll({ provider: "zksync-provider-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "poll_missing_provider" -> error', async () => {
+      if (typeof zkSyncProviderHandler.poll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.poll({ provider: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkFinality', () => {
     it('builds a valid StorageProgram', () => {
-      const program = zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' });
+      const program = zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' });
+      const program = zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' });
+      const program = zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' });
+      const program = zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' });
+      const program = zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ZkSyncProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof zkSyncProviderHandler.checkFinality !== 'function') return;
       try {
-        const result = await interpret(zkSyncProviderHandler.checkFinality({ provider: 'test', tx_hash: 'test-tx_hash' }), storage);
+        const result = await interpret(zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ZkSyncProvider functional handler', () => {
       }
     });
 
+    it('fixture "check_finality_valid" -> ok', async () => {
+      if (typeof zkSyncProviderHandler.checkFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_finality_no_provider" -> notfound', async () => {
+      if (typeof zkSyncProviderHandler.checkFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.checkFinality({ provider: "", tx_hash: "0xabc123def456" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('getBatchProof', () => {
     it('builds a valid StorageProgram', () => {
-      const program = zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 });
+      const program = zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 });
+      const program = zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 });
+      const program = zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 });
+      const program = zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ZkSyncProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 });
+      const program = zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ZkSyncProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof zkSyncProviderHandler.getBatchProof !== 'function') return;
       try {
-        const result = await interpret(zkSyncProviderHandler.getBatchProof({ provider: 'test', batch_number: 1 }), storage);
+        const result = await interpret(zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('ZkSyncProvider functional handler', () => {
       }
     });
 
+    it('fixture "get_proof_valid" -> ok', async () => {
+      if (typeof zkSyncProviderHandler.getBatchProof !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_proof_no_provider" -> notfound', async () => {
+      if (typeof zkSyncProviderHandler.getBatchProof !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(zkSyncProviderHandler.getBatchProof({ provider: "", batch_number: "42" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof zkSyncProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = zkSyncProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ZkSyncProvider');
+    });
   });
 
   describe('invariant examples', () => {

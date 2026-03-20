@@ -26,7 +26,7 @@ describe('RenderTransform functional handler', () => {
 
   describe('registerKind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = renderTransformHandler.registerKind({ kind: 'test-kind' });
+      const program = renderTransformHandler.registerKind({ kind: "token-remap" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = renderTransformHandler.registerKind({ kind: 'test-kind' });
+      const program = renderTransformHandler.registerKind({ kind: "token-remap" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = renderTransformHandler.registerKind({ kind: 'test-kind' });
+      const program = renderTransformHandler.registerKind({ kind: "token-remap" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = renderTransformHandler.registerKind({ kind: 'test-kind' });
+      const program = renderTransformHandler.registerKind({ kind: "token-remap" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = renderTransformHandler.registerKind({ kind: 'test-kind' });
+      const program = renderTransformHandler.registerKind({ kind: "token-remap" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RenderTransform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderTransformHandler.registerKind !== 'function') return;
       try {
-        const result = await interpret(renderTransformHandler.registerKind({ kind: 'test-kind' }), storage);
+        const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('RenderTransform functional handler', () => {
       }
     });
 
+    it('fixture "token_remap_kind" -> ok', async () => {
+      if (typeof renderTransformHandler.registerKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_kind" -> error', async () => {
+      if (typeof renderTransformHandler.registerKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.registerKind({ kind: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('RenderTransform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderTransformHandler.register !== 'function') return;
       try {
-        const result = await interpret(renderTransformHandler.register({ name: 'test-name', kind: 'test-kind', spec: 'test-spec' }), storage);
+        const result = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('RenderTransform functional handler', () => {
       }
     });
 
+    it('fixture "dark_theme_transform" -> ok', async () => {
+      if (typeof renderTransformHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_spec" -> error', async () => {
+      if (typeof renderTransformHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.register({ name: "bad-transform", kind: "custom", spec: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('apply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' });
+      const program = renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('RenderTransform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderTransformHandler.apply !== 'function') return;
       try {
-        const result = await interpret(renderTransformHandler.apply({ program: 'test-program', kind: 'test-kind', spec: 'test-spec' }), storage);
+        const result = await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('RenderTransform functional handler', () => {
       }
     });
 
+    it('fixture "apply_token_remap" -> ok', async () => {
+      if (typeof renderTransformHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_program" -> error', async () => {
+      if (typeof renderTransformHandler.apply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.apply({ program: "not-json", kind: "token-remap", spec: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('compose', () => {
     it('builds a valid StorageProgram', () => {
-      const program = renderTransformHandler.compose({ transforms: 'test-transforms' });
+      const program = renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = renderTransformHandler.compose({ transforms: 'test-transforms' });
+      const program = renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = renderTransformHandler.compose({ transforms: 'test-transforms' });
+      const program = renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = renderTransformHandler.compose({ transforms: 'test-transforms' });
+      const program = renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = renderTransformHandler.compose({ transforms: 'test-transforms' });
+      const program = renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('RenderTransform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderTransformHandler.compose !== 'function') return;
       try {
-        const result = await interpret(renderTransformHandler.compose({ transforms: 'test-transforms' }), storage);
+        const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -252,6 +294,20 @@ describe('RenderTransform functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "compose_two" -> ok', async () => {
+      if (typeof renderTransformHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compose_empty" -> error', async () => {
+      if (typeof renderTransformHandler.compose !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.compose({ transforms: "[]" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -312,11 +368,18 @@ describe('RenderTransform functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof renderTransformHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.list({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = renderTransformHandler.get({ name: 'test-name' });
+      const program = renderTransformHandler.get({ name: "dark-theme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +387,21 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = renderTransformHandler.get({ name: 'test-name' });
+      const program = renderTransformHandler.get({ name: "dark-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = renderTransformHandler.get({ name: 'test-name' });
+      const program = renderTransformHandler.get({ name: "dark-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = renderTransformHandler.get({ name: 'test-name' });
+      const program = renderTransformHandler.get({ name: "dark-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +414,7 @@ describe('RenderTransform functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = renderTransformHandler.get({ name: 'test-name' });
+      const program = renderTransformHandler.get({ name: "dark-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +423,7 @@ describe('RenderTransform functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof renderTransformHandler.get !== 'function') return;
       try {
-        const result = await interpret(renderTransformHandler.get({ name: 'test-name' }), storage);
+        const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +433,38 @@ describe('RenderTransform functional handler', () => {
       }
     });
 
+    it('fixture "existing_transform" -> ok', async () => {
+      if (typeof renderTransformHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_transform" -> notfound', async () => {
+      if (typeof renderTransformHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(renderTransformHandler.get({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof renderTransformHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = renderTransformHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RenderTransform');
+    });
   });
 
   describe('invariant examples', () => {

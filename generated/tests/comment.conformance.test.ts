@@ -26,7 +26,7 @@ describe('Comment functional handler', () => {
 
   describe('addComment', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Comment functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       try {
-        const result = await interpret(commentHandler.addComment({ comment: 'test', entity: 'test-entity', content: 'test-content', author: 'test-author' }), storage);
+        const result = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Comment functional handler', () => {
       }
     });
 
+    it('fixture "valid_add" -> ok', async () => {
+      if (typeof commentHandler.addComment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_comment" -> error', async () => {
+      if (typeof commentHandler.addComment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.addComment({ comment: "", entity: "doc-42", content: "text", author: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('reply', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' });
+      const program = commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Comment functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       try {
-        const result = await interpret(commentHandler.reply({ comment: 'test', parent: 'test', content: 'test-content', author: 'test-author' }), storage);
+        const result = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Comment functional handler', () => {
       }
     });
 
+    it('fixture "valid_reply" -> ok', async () => {
+      if (typeof commentHandler.reply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_parent" -> error', async () => {
+      if (typeof commentHandler.reply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.reply({ comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('publish', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.publish({ comment: 'test' });
+      const program = commentHandler.publish({ comment: "c1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.publish({ comment: 'test' });
+      const program = commentHandler.publish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.publish({ comment: 'test' });
+      const program = commentHandler.publish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.publish({ comment: 'test' });
+      const program = commentHandler.publish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.publish({ comment: 'test' });
+      const program = commentHandler.publish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Comment functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof commentHandler.publish !== 'function') return;
       try {
-        const result = await interpret(commentHandler.publish({ comment: 'test' }), storage);
+        const result = await interpret(commentHandler.publish({ comment: "c1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Comment functional handler', () => {
       }
     });
 
+    it('fixture "valid_publish" -> ok', async () => {
+      if (typeof commentHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.publish({ comment: "c1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "publish_missing" -> notfound', async () => {
+      if (typeof commentHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.publish({ comment: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('unpublish', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.unpublish({ comment: 'test' });
+      const program = commentHandler.unpublish({ comment: "c1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.unpublish({ comment: 'test' });
+      const program = commentHandler.unpublish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.unpublish({ comment: 'test' });
+      const program = commentHandler.unpublish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.unpublish({ comment: 'test' });
+      const program = commentHandler.unpublish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.unpublish({ comment: 'test' });
+      const program = commentHandler.unpublish({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Comment functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof commentHandler.unpublish !== 'function') return;
       try {
-        const result = await interpret(commentHandler.unpublish({ comment: 'test' }), storage);
+        const result = await interpret(commentHandler.unpublish({ comment: "c1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Comment functional handler', () => {
       }
     });
 
+    it('fixture "valid_unpublish" -> ok', async () => {
+      if (typeof commentHandler.unpublish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.unpublish({ comment: "c1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unpublish_missing" -> notfound', async () => {
+      if (typeof commentHandler.unpublish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.unpublish({ comment: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.delete({ comment: 'test' });
+      const program = commentHandler.delete({ comment: "c1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.delete({ comment: 'test' });
+      const program = commentHandler.delete({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.delete({ comment: 'test' });
+      const program = commentHandler.delete({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.delete({ comment: 'test' });
+      const program = commentHandler.delete({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.delete({ comment: 'test' });
+      const program = commentHandler.delete({ comment: "c1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Comment functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof commentHandler.delete !== 'function') return;
       try {
-        const result = await interpret(commentHandler.delete({ comment: 'test' }), storage);
+        const result = await interpret(commentHandler.delete({ comment: "c1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Comment functional handler', () => {
       }
     });
 
+    it('fixture "valid_delete" -> ok', async () => {
+      if (typeof commentHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.delete({ comment: "c1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> notfound', async () => {
+      if (typeof commentHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.delete({ comment: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof commentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = commentHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Comment');
+    });
   });
 
   describe('invariant examples', () => {

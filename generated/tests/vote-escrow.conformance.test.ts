@@ -19,7 +19,7 @@ describe('VoteEscrow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voteEscrowHandler.configure !== 'function') return;
       try {
-        const result = await voteEscrowHandler.configure({ maxLockDurationDays: 1 }, storage);
+        const result = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('VoteEscrow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "configure_default" -> ok', async () => {
+      if (typeof voteEscrowHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_no_token" -> error', async () => {
+      if (typeof voteEscrowHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.configure({ token: "", maxLockYears: "4.0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('VoteEscrow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voteEscrowHandler.lock !== 'function') return;
       try {
-        const result = await voteEscrowHandler.lock({ participant: 'test-participant', amount: 1, lockDurationDays: 1 }, storage);
+        const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('VoteEscrow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "lock_full_term" -> ok', async () => {
+      if (typeof voteEscrowHandler.lock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lock_zero_amount" -> error', async () => {
+      if (typeof voteEscrowHandler.lock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "0.0", lockYears: "4.0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('VoteEscrow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voteEscrowHandler.extendLock !== 'function') return;
       try {
-        const result = await voteEscrowHandler.extendLock({ lock: 'test', additionalDays: 1 }, storage);
+        const result = await voteEscrowHandler.extendLock({ lock: "lock-001", additionalYears: "1.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('VoteEscrow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "extend_by_one" -> ok', async () => {
+      if (typeof voteEscrowHandler.extendLock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.extendLock({ lock: "lock-001", additionalYears: "1.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extend_missing_lock" -> error', async () => {
+      if (typeof voteEscrowHandler.extendLock !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.extendLock({ lock: "lock-missing", additionalYears: "1.0" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +109,7 @@ describe('VoteEscrow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voteEscrowHandler.getWeight !== 'function') return;
       try {
-        const result = await voteEscrowHandler.getWeight({ lock: 'test' }, storage);
+        const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "alice" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('VoteEscrow imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_weight_alice" -> ok', async () => {
+      if (typeof voteEscrowHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "alice" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_weight_unknown" -> error', async () => {
+      if (typeof voteEscrowHandler.getWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +139,7 @@ describe('VoteEscrow imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof voteEscrowHandler.withdraw !== 'function') return;
       try {
-        const result = await voteEscrowHandler.withdraw({ lock: 'test' }, storage);
+        const result = await voteEscrowHandler.withdraw({ lock: "lock-expired" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,32 +149,63 @@ describe('VoteEscrow imperative handler', () => {
       }
     });
 
+    it('fixture "withdraw_expired" -> ok', async () => {
+      if (typeof voteEscrowHandler.withdraw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.withdraw({ lock: "lock-expired" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "withdraw_still_locked" -> error', async () => {
+      if (typeof voteEscrowHandler.withdraw !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await voteEscrowHandler.withdraw({ lock: "lock-active" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof voteEscrowHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = voteEscrowHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VoteEscrow');
+    });
   });
 
   describe('invariant examples', () => {
     it("configure-then-getWeight", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await voteEscrowHandler.configure({ maxLockDurationDays: {"type":"literal","value":365} }, storage);
+      const configureResult0 = await voteEscrowHandler.configure({ token: {"type":"literal","value":"GOV"}, maxLockYears: {"type":"literal","value":4} }, storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
-      const thenResult0 = await voteEscrowHandler.lock({ participant: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockDurationDays: {"type":"literal","value":365} }, storage);
+      const thenResult0 = await voteEscrowHandler.lock({ config: {"type":"variable","name":"cfg"}, locker: {"type":"variable","name":"p"}, amount: {"type":"literal","value":100}, lockYears: {"type":"literal","value":4} }, storage);
       expect(thenResult0.variant).toBe("locked");
-      const thenResult1 = await voteEscrowHandler.getWeight({ lock: {"type":"variable","name":"ve"} }, storage);
+      const thenResult1 = await voteEscrowHandler.getWeight({ config: {"type":"variable","name":"cfg"}, participant: {"type":"variable","name":"p"} }, storage);
       expect(thenResult1.variant).toBe("weight");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-participant', async () => {
+    it('always: valid-locker', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ maxLockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalDays: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ lock: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }), maxLockYears: fc.string() }) }),
+              fc.record({ action: fc.constant('lock'), input: fc.record({ config: fc.string(), locker: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockYears: fc.string() }) }),
+              fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalYears: fc.string() }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('withdraw'), input: fc.record({ lock: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -145,10 +232,10 @@ describe('VoteEscrow imperative handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ maxLockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('lock'), input: fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockDurationDays: fc.string() }) }),
-              fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalDays: fc.string() }) }),
-              fc.record({ action: fc.constant('getWeight'), input: fc.record({ lock: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }), maxLockYears: fc.string() }) }),
+              fc.record({ action: fc.constant('lock'), input: fc.record({ config: fc.string(), locker: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string(), lockYears: fc.string() }) }),
+              fc.record({ action: fc.constant('extendLock'), input: fc.record({ lock: fc.string(), additionalYears: fc.string() }) }),
+              fc.record({ action: fc.constant('getWeight'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('withdraw'), input: fc.record({ lock: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -187,7 +274,7 @@ describe('VoteEscrow imperative handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ maxLockDurationDays: fc.string() }),
+          fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }), maxLockYears: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await voteEscrowHandler.configure(input as Record<string, unknown>, storage);

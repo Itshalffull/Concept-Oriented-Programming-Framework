@@ -19,7 +19,7 @@ describe('Canvas imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof canvasHandler.addNode !== 'function') return;
       try {
-        const result = await canvasHandler.addNode({ canvas: 'test', node: 'test-node', x: 1, y: 1 }, storage);
+        const result = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('Canvas imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_add" -> ok', async () => {
+      if (typeof canvasHandler.addNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_to_new_canvas" -> ok', async () => {
+      if (typeof canvasHandler.addNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.addNode({ canvas: "board-2", node: "card-b", x: "0", y: "0" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +49,7 @@ describe('Canvas imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof canvasHandler.moveNode !== 'function') return;
       try {
-        const result = await canvasHandler.moveNode({ canvas: 'test', node: 'test-node', x: 1, y: 1 }, storage);
+        const result = await canvasHandler.moveNode({ canvas: "board-1", node: "card-a", x: "300", y: "400" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('Canvas imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_move" -> ok', async () => {
+      if (typeof canvasHandler.moveNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.moveNode({ canvas: "board-1", node: "card-a", x: "300", y: "400" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "move_missing_canvas" -> notfound', async () => {
+      if (typeof canvasHandler.moveNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.moveNode({ canvas: "nonexistent", node: "card-a", x: "0", y: "0" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +79,7 @@ describe('Canvas imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof canvasHandler.groupNodes !== 'function') return;
       try {
-        const result = await canvasHandler.groupNodes({ canvas: 'test', nodes: 'test-nodes', group: 'test-group' }, storage);
+        const result = await canvasHandler.groupNodes({ canvas: "board-1", nodes: "[\"card-a\",\"card-b\"]", group: "section-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +87,20 @@ describe('Canvas imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_group" -> ok', async () => {
+      if (typeof canvasHandler.groupNodes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.groupNodes({ canvas: "board-1", nodes: "[\"card-a\",\"card-b\"]", group: "section-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "group_missing_canvas" -> notfound', async () => {
+      if (typeof canvasHandler.groupNodes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.groupNodes({ canvas: "nonexistent", nodes: "[\"card-a\"]", group: "g1" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -67,7 +109,7 @@ describe('Canvas imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof canvasHandler.removeItem !== 'function') return;
       try {
-        const result = await canvasHandler.removeItem({ canvas: 'test', node: 'test-node' }, storage);
+        const result = await canvasHandler.removeItem({ canvas: "board-1", node: "card-a" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('Canvas imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof canvasHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.removeItem({ canvas: "board-1", node: "card-a" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_missing" -> notfound', async () => {
+      if (typeof canvasHandler.removeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.removeItem({ canvas: "nonexistent", node: "card-a" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +139,7 @@ describe('Canvas imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof canvasHandler.resizeItem !== 'function') return;
       try {
-        const result = await canvasHandler.resizeItem({ canvas: 'test', node: 'test-node', width: 1, height: 1 }, storage);
+        const result = await canvasHandler.resizeItem({ canvas: "board-1", node: "card-a", width: "200", height: "150" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -93,6 +149,37 @@ describe('Canvas imperative handler', () => {
       }
     });
 
+    it('fixture "valid_resize" -> ok', async () => {
+      if (typeof canvasHandler.resizeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.resizeItem({ canvas: "board-1", node: "card-a", width: "200", height: "150" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resize_missing" -> notfound', async () => {
+      if (typeof canvasHandler.resizeItem !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await canvasHandler.resizeItem({ canvas: "nonexistent", node: "card-a", width: "100", height: "100" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof canvasHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = canvasHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Canvas');
+    });
   });
 
   describe('invariant examples', () => {

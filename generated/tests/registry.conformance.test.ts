@@ -26,7 +26,7 @@ describe('Registry functional handler', () => {
 
   describe('publish', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' });
+      const program = registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' });
+      const program = registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' });
+      const program = registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' });
+      const program = registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' });
+      const program = registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.publish !== 'function') return;
       try {
-        const result = await interpret(registryHandler.publish({ name: 'test-name', namespace: 'test-namespace', version: 'test-version', kind: 'test', artifact_hash: 'test-artifact_hash', dependencies: 'test', metadata: 'test' }), storage);
+        const result = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "publish_concept_module" -> ok', async () => {
+      if (typeof registryHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "publish_empty_name" -> error', async () => {
+      if (typeof registryHandler.publish !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.publish({ name: "", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc", dependencies: [], metadata: {"description":"Test","license":"MIT","repository":"","authors":[],"keywords":[]} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('yank', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.yank({ module: 'test' });
+      const program = registryHandler.yank({ module: "mod-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.yank({ module: 'test' });
+      const program = registryHandler.yank({ module: "mod-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.yank({ module: 'test' });
+      const program = registryHandler.yank({ module: "mod-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.yank({ module: 'test' });
+      const program = registryHandler.yank({ module: "mod-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.yank({ module: 'test' });
+      const program = registryHandler.yank({ module: "mod-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.yank !== 'function') return;
       try {
-        const result = await interpret(registryHandler.yank({ module: 'test' }), storage);
+        const result = await interpret(registryHandler.yank({ module: "mod-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "yank_existing_module" -> ok', async () => {
+      if (typeof registryHandler.yank !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.yank({ module: "mod-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "yank_nonexistent" -> error', async () => {
+      if (typeof registryHandler.yank !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.yank({ module: "mod-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('lookup', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' });
+      const program = registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' });
+      const program = registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' });
+      const program = registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' });
+      const program = registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' });
+      const program = registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.lookup !== 'function') return;
       try {
-        const result = await interpret(registryHandler.lookup({ name: 'test-name', namespace: 'test-namespace', version_range: 'test-version_range' }), storage);
+        const result = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "lookup_existing" -> ok', async () => {
+      if (typeof registryHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lookup_nonexistent" -> error', async () => {
+      if (typeof registryHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.lookup({ name: "nonexistent", namespace: "clef", version_range: "*" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('search', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' });
+      const program = registryHandler.search({ query: "authentication", kind: null, namespace: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' });
+      const program = registryHandler.search({ query: "authentication", kind: null, namespace: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' });
+      const program = registryHandler.search({ query: "authentication", kind: null, namespace: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' });
+      const program = registryHandler.search({ query: "authentication", kind: null, namespace: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' });
+      const program = registryHandler.search({ query: "authentication", kind: null, namespace: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.search !== 'function') return;
       try {
-        const result = await interpret(registryHandler.search({ query: 'test-query', kind: 'test', namespace: 'test' }), storage);
+        const result = await interpret(registryHandler.search({ query: "authentication", kind: null, namespace: null }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "search_by_keyword" -> ok', async () => {
+      if (typeof registryHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.search({ query: "authentication", kind: null, namespace: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "search_filtered" -> ok', async () => {
+      if (typeof registryHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.search({ query: "auth", kind: "concept", namespace: "clef" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listVersions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' });
+      const program = registryHandler.listVersions({ name: "auth", namespace: "clef" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' });
+      const program = registryHandler.listVersions({ name: "auth", namespace: "clef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' });
+      const program = registryHandler.listVersions({ name: "auth", namespace: "clef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' });
+      const program = registryHandler.listVersions({ name: "auth", namespace: "clef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' });
+      const program = registryHandler.listVersions({ name: "auth", namespace: "clef" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.listVersions !== 'function') return;
       try {
-        const result = await interpret(registryHandler.listVersions({ name: 'test-name', namespace: 'test-namespace' }), storage);
+        const result = await interpret(registryHandler.listVersions({ name: "auth", namespace: "clef" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "list_versions_existing" -> ok', async () => {
+      if (typeof registryHandler.listVersions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.listVersions({ name: "auth", namespace: "clef" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_versions_nonexistent" -> error', async () => {
+      if (typeof registryHandler.listVersions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.listVersions({ name: "nonexistent", namespace: "clef" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveCapability', () => {
     it('builds a valid StorageProgram', () => {
-      const program = registryHandler.resolveCapability({ capability: 'test-capability' });
+      const program = registryHandler.resolveCapability({ capability: "authentication" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Registry functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = registryHandler.resolveCapability({ capability: 'test-capability' });
+      const program = registryHandler.resolveCapability({ capability: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = registryHandler.resolveCapability({ capability: 'test-capability' });
+      const program = registryHandler.resolveCapability({ capability: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = registryHandler.resolveCapability({ capability: 'test-capability' });
+      const program = registryHandler.resolveCapability({ capability: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Registry functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = registryHandler.resolveCapability({ capability: 'test-capability' });
+      const program = registryHandler.resolveCapability({ capability: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Registry functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof registryHandler.resolveCapability !== 'function') return;
       try {
-        const result = await interpret(registryHandler.resolveCapability({ capability: 'test-capability' }), storage);
+        const result = await interpret(registryHandler.resolveCapability({ capability: "authentication" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('Registry functional handler', () => {
       }
     });
 
+    it('fixture "resolve_existing_capability" -> ok', async () => {
+      if (typeof registryHandler.resolveCapability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.resolveCapability({ capability: "authentication" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing_capability" -> error', async () => {
+      if (typeof registryHandler.resolveCapability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(registryHandler.resolveCapability({ capability: "nonexistent-capability" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof registryHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = registryHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Registry');
+    });
   });
 
   describe('invariant examples', () => {

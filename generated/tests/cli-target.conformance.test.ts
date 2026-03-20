@@ -26,7 +26,7 @@ describe('CliTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = cliTargetHandler.generate({ projection: "task-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = cliTargetHandler.generate({ projection: "task-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = cliTargetHandler.generate({ projection: "task-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = cliTargetHandler.generate({ projection: "task-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = cliTargetHandler.generate({ projection: "task-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('CliTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cliTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(cliTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('CliTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_default_config" -> ok', async () => {
+      if (typeof cliTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_custom_binary" -> ok', async () => {
+      if (typeof cliTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.generate({ projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_projection" -> error', async () => {
+      if (typeof cliTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "too_many_positional" -> ok', async () => {
+      if (typeof cliTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.generate({ projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cliTargetHandler.validate({ command: 'test' });
+      const program = cliTargetHandler.validate({ command: "cli-task-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cliTargetHandler.validate({ command: 'test' });
+      const program = cliTargetHandler.validate({ command: "cli-task-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cliTargetHandler.validate({ command: 'test' });
+      const program = cliTargetHandler.validate({ command: "cli-task-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cliTargetHandler.validate({ command: 'test' });
+      const program = cliTargetHandler.validate({ command: "cli-task-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cliTargetHandler.validate({ command: 'test' });
+      const program = cliTargetHandler.validate({ command: "cli-task-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('CliTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cliTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(cliTargetHandler.validate({ command: 'test' }), storage);
+        const result = await interpret(cliTargetHandler.validate({ command: "cli-task-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('CliTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_command" -> ok', async () => {
+      if (typeof cliTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.validate({ command: "cli-task-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_command" -> error', async () => {
+      if (typeof cliTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.validate({ command: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listCommands', () => {
     it('builds a valid StorageProgram', () => {
-      const program = cliTargetHandler.listCommands({ concept: 'test-concept' });
+      const program = cliTargetHandler.listCommands({ concept: "Task" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = cliTargetHandler.listCommands({ concept: 'test-concept' });
+      const program = cliTargetHandler.listCommands({ concept: "Task" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = cliTargetHandler.listCommands({ concept: 'test-concept' });
+      const program = cliTargetHandler.listCommands({ concept: "Task" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = cliTargetHandler.listCommands({ concept: 'test-concept' });
+      const program = cliTargetHandler.listCommands({ concept: "Task" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('CliTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = cliTargetHandler.listCommands({ concept: 'test-concept' });
+      const program = cliTargetHandler.listCommands({ concept: "Task" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('CliTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof cliTargetHandler.listCommands !== 'function') return;
       try {
-        const result = await interpret(cliTargetHandler.listCommands({ concept: 'test-concept' }), storage);
+        const result = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('CliTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_task_commands" -> ok', async () => {
+      if (typeof cliTargetHandler.listCommands !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_concept" -> error', async () => {
+      if (typeof cliTargetHandler.listCommands !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(cliTargetHandler.listCommands({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof cliTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = cliTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CliTarget');
+    });
   });
 
   describe('invariant examples', () => {

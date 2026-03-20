@@ -26,7 +26,7 @@ describe('SimpleAccumulator functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' });
+      const program = simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SimpleAccumulator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' });
+      const program = simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' });
+      const program = simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' });
+      const program = simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SimpleAccumulator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' });
+      const program = simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SimpleAccumulator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof simpleAccumulatorHandler.configure !== 'function') return;
       try {
-        const result = await interpret(simpleAccumulatorHandler.configure({ decayHalfLifeDays: 'test', initialScore: 1, minScore: 1, maxScore: 'test' }), storage);
+        const result = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SimpleAccumulator functional handler', () => {
       }
     });
 
+    it('fixture "configure_with_decay" -> ok', async () => {
+      if (typeof simpleAccumulatorHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_no_limits" -> ok', async () => {
+      if (typeof simpleAccumulatorHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.configure({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
-  describe('compute', () => {
+  describe('add', () => {
     it('builds a valid StorageProgram', () => {
-      const program = simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 });
+      const program = simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SimpleAccumulator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 });
+      const program = simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 });
+      const program = simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 });
+      const program = simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,16 +133,16 @@ describe('SimpleAccumulator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 });
+      const program = simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof simpleAccumulatorHandler.compute !== 'function') return;
+      if (typeof simpleAccumulatorHandler.add !== 'function') return;
       try {
-        const result = await interpret(simpleAccumulatorHandler.compute({ config: 'test', currentScore: 1, delta: 1, daysSinceLastUpdate: 1 }), storage);
+        const result = await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,28 +152,206 @@ describe('SimpleAccumulator functional handler', () => {
       }
     });
 
+    it('fixture "add_score" -> ok', async () => {
+      if (typeof simpleAccumulatorHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_negative" -> error', async () => {
+      if (typeof simpleAccumulatorHandler.add !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "-10.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('applyDecay', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('executes without crashing', async () => {
+      if (typeof simpleAccumulatorHandler.applyDecay !== 'function') return;
+      try {
+        const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" }), storage);
+        expect(result).toBeDefined();
+        expect(result.variant).toBeDefined();
+        expect(typeof result.variant).toBe('string');
+      } catch (e) {
+        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
+        expect(e).toBeDefined();
+      }
+    });
+
+    it('fixture "apply_decay_alice" -> ok', async () => {
+      if (typeof simpleAccumulatorHandler.applyDecay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_decay_no_config" -> error', async () => {
+      if (typeof simpleAccumulatorHandler.applyDecay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: "acc-nonexistent", participant: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('getScore', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('executes without crashing', async () => {
+      if (typeof simpleAccumulatorHandler.getScore !== 'function') return;
+      try {
+        const result = await interpret(simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" }), storage);
+        expect(result).toBeDefined();
+        expect(result.variant).toBeDefined();
+        expect(typeof result.variant).toBe('string');
+      } catch (e) {
+        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
+        expect(e).toBeDefined();
+      }
+    });
+
+    it('fixture "get_alice_score" -> ok', async () => {
+      if (typeof simpleAccumulatorHandler.getScore !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown_score" -> error', async () => {
+      if (typeof simpleAccumulatorHandler.getScore !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof simpleAccumulatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = simpleAccumulatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SimpleAccumulator');
+    });
   });
 
   describe('invariant examples', () => {
-    it("configure-then-compute", async () => {
+    it("configure-then-add", async () => {
       const storage = createInMemoryStorage();
-      const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayHalfLifeDays: {"type":"variable","name":"_"}, initialScore: {"type":"literal","value":0}, minScore: {"type":"literal","value":0}, maxScore: {"type":"variable","name":"_"} }), storage);
+      const configureResult0 = await interpret(simpleAccumulatorHandler.configure({ decayRate: {"type":"variable","name":"_"}, cap: {"type":"variable","name":"_"} }), storage);
       expect(configureResult0.variant).toBe("configured");
       const config = configureResult0.output["config"];
-      const thenResult0 = await interpret(simpleAccumulatorHandler.compute({ config: {"type":"variable","name":"sa"}, currentScore: {"type":"literal","value":50}, delta: {"type":"literal","value":10}, daysSinceLastUpdate: {"type":"literal","value":0} }), storage);
-      expect(thenResult0.variant).toBe("score");
+      const thenResult0 = await interpret(simpleAccumulatorHandler.add({ config: {"type":"variable","name":"sa"}, participant: {"type":"literal","value":"alice"}, amount: {"type":"literal","value":10} }), storage);
+      expect(thenResult0.variant).toBe("added");
     });
 
   });
 
   describe('state invariants (stateful PBT)', () => {
-    it('always: valid-decayHalfLifeDays', async () => {
+    it('always: valid-decayRate', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ decayHalfLifeDays: fc.string(), initialScore: fc.string(), minScore: fc.string(), maxScore: fc.string() }) }),
-              fc.record({ action: fc.constant('compute'), input: fc.record({ config: fc.string(), currentScore: fc.string(), delta: fc.string(), daysSinceLastUpdate: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ decayRate: fc.string(), cap: fc.string() }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('applyDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getScore'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -181,13 +373,15 @@ describe('SimpleAccumulator functional handler', () => {
       );
     });
 
-    it('never: orphaned-initialScore', async () => {
+    it('never: orphaned-cap', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('configure'), input: fc.record({ decayHalfLifeDays: fc.string(), initialScore: fc.string(), minScore: fc.string(), maxScore: fc.string() }) }),
-              fc.record({ action: fc.constant('compute'), input: fc.record({ config: fc.string(), currentScore: fc.string(), delta: fc.string(), daysSinceLastUpdate: fc.string() }) }),
+              fc.record({ action: fc.constant('configure'), input: fc.record({ decayRate: fc.string(), cap: fc.string() }) }),
+              fc.record({ action: fc.constant('add'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }), amount: fc.string() }) }),
+              fc.record({ action: fc.constant('applyDecay'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('getScore'), input: fc.record({ config: fc.string(), participant: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -200,7 +394,7 @@ describe('SimpleAccumulator functional handler', () => {
                   const program = actionFn.call(simpleAccumulatorHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
-                  // Never: orphaned-initialScore
+                  // Never: orphaned-cap
                 } catch { /* handler may throw on random inputs */ }
               }
             }
@@ -226,7 +420,7 @@ describe('SimpleAccumulator functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ decayHalfLifeDays: fc.string(), initialScore: fc.string(), minScore: fc.string(), maxScore: fc.string() }),
+          fc.record({ decayRate: fc.string(), cap: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = simpleAccumulatorHandler.configure(input as Record<string, unknown>);

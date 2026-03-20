@@ -26,7 +26,7 @@ describe('Delegation functional handler', () => {
 
   describe('delegate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true });
+      const program = delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Delegation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true });
+      const program = delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true });
+      const program = delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true });
+      const program = delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Delegation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true });
+      const program = delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Delegation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof delegationHandler.delegate !== 'function') return;
       try {
-        const result = await interpret(delegationHandler.delegate({ from: 'test-from', to: 'test-to', domain: 'test', transitive: true }), storage);
+        const result = await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Delegation functional handler', () => {
       }
     });
 
+    it('fixture "valid_delegate" -> ok', async () => {
+      if (typeof delegationHandler.delegate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.delegate({ from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delegate_no_expiry" -> ok', async () => {
+      if (typeof delegationHandler.delegate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.delegate({ from: "carol", to: "dave", scope: "hiring", expiresAt: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delegate_cycle" -> error', async () => {
+      if (typeof delegationHandler.delegate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.delegate({ from: "bob", to: "alice", scope: "budgets", expiresAt: null }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('undelegate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = delegationHandler.undelegate({ delegation: 'test' });
+      const program = delegationHandler.undelegate({ from: "alice", to: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Delegation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = delegationHandler.undelegate({ delegation: 'test' });
+      const program = delegationHandler.undelegate({ from: "alice", to: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = delegationHandler.undelegate({ delegation: 'test' });
+      const program = delegationHandler.undelegate({ from: "alice", to: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = delegationHandler.undelegate({ delegation: 'test' });
+      const program = delegationHandler.undelegate({ from: "alice", to: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Delegation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = delegationHandler.undelegate({ delegation: 'test' });
+      const program = delegationHandler.undelegate({ from: "alice", to: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Delegation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof delegationHandler.undelegate !== 'function') return;
       try {
-        const result = await interpret(delegationHandler.undelegate({ delegation: 'test' }), storage);
+        const result = await interpret(delegationHandler.undelegate({ from: "alice", to: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Delegation functional handler', () => {
       }
     });
 
+    it('fixture "valid_undelegate" -> ok', async () => {
+      if (typeof delegationHandler.undelegate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.undelegate({ from: "alice", to: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "undelegate_nonexistent" -> error', async () => {
+      if (typeof delegationHandler.undelegate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.undelegate({ from: "unknown", to: "nobody" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getEffectiveWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' });
+      const program = delegationHandler.getEffectiveWeight({ participant: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Delegation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' });
+      const program = delegationHandler.getEffectiveWeight({ participant: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' });
+      const program = delegationHandler.getEffectiveWeight({ participant: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' });
+      const program = delegationHandler.getEffectiveWeight({ participant: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Delegation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' });
+      const program = delegationHandler.getEffectiveWeight({ participant: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Delegation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof delegationHandler.getEffectiveWeight !== 'function') return;
       try {
-        const result = await interpret(delegationHandler.getEffectiveWeight({ participant: 'test-participant', domain: 'test' }), storage);
+        const result = await interpret(delegationHandler.getEffectiveWeight({ participant: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +231,38 @@ describe('Delegation functional handler', () => {
       }
     });
 
+    it('fixture "weight_lookup" -> ok', async () => {
+      if (typeof delegationHandler.getEffectiveWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.getEffectiveWeight({ participant: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "weight_scoped" -> ok', async () => {
+      if (typeof delegationHandler.getEffectiveWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(delegationHandler.getEffectiveWeight({ participant: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof delegationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = delegationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Delegation');
+    });
   });
 
   describe('invariant examples', () => {

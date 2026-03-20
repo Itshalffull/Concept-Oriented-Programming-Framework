@@ -26,7 +26,7 @@ describe('Validator functional handler', () => {
 
   describe('registerConstraint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' });
+      const program = validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Validator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' });
+      const program = validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' });
+      const program = validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' });
+      const program = validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Validator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' });
+      const program = validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Validator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof validatorHandler.registerConstraint !== 'function') return;
       try {
-        const result = await interpret(validatorHandler.registerConstraint({ validator: 'test', constraint: 'test-constraint' }), storage);
+        const result = await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Validator functional handler', () => {
       }
     });
 
+    it('fixture "register_required" -> ok', async () => {
+      if (typeof validatorHandler.registerConstraint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.registerConstraint({ validator: "user-form", constraint: "required" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_validator" -> error', async () => {
+      if (typeof validatorHandler.registerConstraint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.registerConstraint({ validator: "", constraint: "required" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addRule', () => {
     it('builds a valid StorageProgram', () => {
-      const program = validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' });
+      const program = validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Validator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' });
+      const program = validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' });
+      const program = validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' });
+      const program = validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Validator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' });
+      const program = validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Validator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof validatorHandler.addRule !== 'function') return;
       try {
-        const result = await interpret(validatorHandler.addRule({ validator: 'test', field: 'test-field', rule: 'test-rule' }), storage);
+        const result = await interpret(validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Validator functional handler', () => {
       }
     });
 
+    it('fixture "add_email_rule" -> ok', async () => {
+      if (typeof validatorHandler.addRule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.addRule({ validator: "user-form", field: "email", rule: "required|email" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_rule_missing_validator" -> error', async () => {
+      if (typeof validatorHandler.addRule !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.addRule({ validator: "", field: "email", rule: "required" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = validatorHandler.validate({ validator: 'test', data: 'test-data' });
+      const program = validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Validator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = validatorHandler.validate({ validator: 'test', data: 'test-data' });
+      const program = validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = validatorHandler.validate({ validator: 'test', data: 'test-data' });
+      const program = validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = validatorHandler.validate({ validator: 'test', data: 'test-data' });
+      const program = validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Validator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = validatorHandler.validate({ validator: 'test', data: 'test-data' });
+      const program = validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Validator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof validatorHandler.validate !== 'function') return;
       try {
-        const result = await interpret(validatorHandler.validate({ validator: 'test', data: 'test-data' }), storage);
+        const result = await interpret(validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Validator functional handler', () => {
       }
     });
 
+    it('fixture "validate_valid_data" -> ok', async () => {
+      if (typeof validatorHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"alice@example.com\",\"name\":\"Alice\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_invalid_email" -> error', async () => {
+      if (typeof validatorHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.validate({ validator: "user-form", data: "{\"email\":\"not-an-email\"}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validateField', () => {
     it('builds a valid StorageProgram', () => {
-      const program = validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' });
+      const program = validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Validator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' });
+      const program = validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' });
+      const program = validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' });
+      const program = validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Validator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' });
+      const program = validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Validator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof validatorHandler.validateField !== 'function') return;
       try {
-        const result = await interpret(validatorHandler.validateField({ validator: 'test', field: 'test-field', value: 'test-value' }), storage);
+        const result = await interpret(validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Validator functional handler', () => {
       }
     });
 
+    it('fixture "validate_email_field" -> ok', async () => {
+      if (typeof validatorHandler.validateField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.validateField({ validator: "user-form", field: "email", value: "alice@example.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_empty_field" -> error', async () => {
+      if (typeof validatorHandler.validateField !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.validateField({ validator: "user-form", field: "email", value: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addCustomValidator', () => {
     it('builds a valid StorageProgram', () => {
-      const program = validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' });
+      const program = validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Validator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' });
+      const program = validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' });
+      const program = validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' });
+      const program = validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Validator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' });
+      const program = validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Validator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof validatorHandler.addCustomValidator !== 'function') return;
       try {
-        const result = await interpret(validatorHandler.addCustomValidator({ validator: 'test', name: 'test-name', implementation: 'test-implementation' }), storage);
+        const result = await interpret(validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Validator functional handler', () => {
       }
     });
 
+    it('fixture "add_custom_phone" -> ok', async () => {
+      if (typeof validatorHandler.addCustomValidator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.addCustomValidator({ validator: "user-form", name: "phone", implementation: "return /^\\d{10}$/.test(value)" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_custom_empty_name" -> error', async () => {
+      if (typeof validatorHandler.addCustomValidator !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(validatorHandler.addCustomValidator({ validator: "user-form", name: "", implementation: "return true" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof validatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = validatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Validator');
+    });
   });
 
   describe('invariant examples', () => {

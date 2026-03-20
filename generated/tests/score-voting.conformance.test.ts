@@ -26,7 +26,7 @@ describe('ScoreVoting functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' });
+      const program = scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' });
+      const program = scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' });
+      const program = scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' });
+      const program = scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' });
+      const program = scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScoreVoting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreVotingHandler.configure !== 'function') return;
       try {
-        const result = await interpret(scoreVotingHandler.configure({ minScore: 1, maxScore: 1, aggregation: 'test-aggregation' }), storage);
+        const result = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('ScoreVoting functional handler', () => {
       }
     });
 
+    it('fixture "mean_zero_to_five" -> ok', async () => {
+      if (typeof scoreVotingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "5.0", aggregation: "Mean" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "median_scoring" -> ok', async () => {
+      if (typeof scoreVotingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreVotingHandler.configure({ minScore: "0.0", maxScore: "10.0", aggregation: "Median" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_range_config" -> error', async () => {
+      if (typeof scoreVotingHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreVotingHandler.configure({ minScore: "5.0", maxScore: "0.0", aggregation: "Mean" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('count', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' });
+      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' });
+      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' });
+      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' });
+      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('ScoreVoting functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' });
+      const program = scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('ScoreVoting functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreVotingHandler.count !== 'function') return;
       try {
-        const result = await interpret(scoreVotingHandler.count({ config: 'test', scoreBallots: 'test-scoreBallots', weights: 'test-weights' }), storage);
+        const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('ScoreVoting functional handler', () => {
       }
     });
 
+    it('fixture "score_two_candidates" -> ok', async () => {
+      if (typeof scoreVotingHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "score_empty_ballots" -> error', async () => {
+      if (typeof scoreVotingHandler.count !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreVotingHandler.count({ config: "score-001", scoreBallots: "[]", weights: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreVotingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreVotingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreVoting');
+    });
   });
 
   describe('invariant examples', () => {

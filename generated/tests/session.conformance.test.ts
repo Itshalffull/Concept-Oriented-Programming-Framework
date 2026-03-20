@@ -26,7 +26,7 @@ describe('Session functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' });
+      const program = sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' });
+      const program = sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' });
+      const program = sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' });
+      const program = sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' });
+      const program = sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.create !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.create({ session: 'test', userId: 'test-userId', device: 'test-device' }), storage);
+        const result = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "create_mobile" -> ok', async () => {
+      if (typeof sessionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_user" -> error', async () => {
+      if (typeof sessionHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.create({ session: "sess-002", userId: "", device: "desktop" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.validate({ session: 'test' });
+      const program = sessionHandler.validate({ session: "sess-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.validate({ session: 'test' });
+      const program = sessionHandler.validate({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.validate({ session: 'test' });
+      const program = sessionHandler.validate({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.validate({ session: 'test' });
+      const program = sessionHandler.validate({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.validate({ session: 'test' });
+      const program = sessionHandler.validate({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.validate !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.validate({ session: 'test' }), storage);
+        const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "validate_existing" -> ok', async () => {
+      if (typeof sessionHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "validate_nonexistent" -> error', async () => {
+      if (typeof sessionHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.validate({ session: "sess-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('refresh', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.refresh({ session: 'test' });
+      const program = sessionHandler.refresh({ session: "sess-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.refresh({ session: 'test' });
+      const program = sessionHandler.refresh({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.refresh({ session: 'test' });
+      const program = sessionHandler.refresh({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.refresh({ session: 'test' });
+      const program = sessionHandler.refresh({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.refresh({ session: 'test' });
+      const program = sessionHandler.refresh({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.refresh({ session: 'test' }), storage);
+        const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "refresh_valid" -> ok', async () => {
+      if (typeof sessionHandler.refresh !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "refresh_nonexistent" -> error', async () => {
+      if (typeof sessionHandler.refresh !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.refresh({ session: "sess-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.destroy({ session: 'test' });
+      const program = sessionHandler.destroy({ session: "sess-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.destroy({ session: 'test' });
+      const program = sessionHandler.destroy({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.destroy({ session: 'test' });
+      const program = sessionHandler.destroy({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.destroy({ session: 'test' });
+      const program = sessionHandler.destroy({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.destroy({ session: 'test' });
+      const program = sessionHandler.destroy({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.destroy({ session: 'test' }), storage);
+        const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "destroy_existing" -> ok', async () => {
+      if (typeof sessionHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_nonexistent" -> error', async () => {
+      if (typeof sessionHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.destroy({ session: "sess-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroyAll', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.destroyAll({ userId: 'test-userId' });
+      const program = sessionHandler.destroyAll({ userId: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.destroyAll({ userId: 'test-userId' });
+      const program = sessionHandler.destroyAll({ userId: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.destroyAll({ userId: 'test-userId' });
+      const program = sessionHandler.destroyAll({ userId: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.destroyAll({ userId: 'test-userId' });
+      const program = sessionHandler.destroyAll({ userId: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.destroyAll({ userId: 'test-userId' });
+      const program = sessionHandler.destroyAll({ userId: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.destroyAll({ userId: 'test-userId' }), storage);
+        const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "destroy_all_alice" -> ok', async () => {
+      if (typeof sessionHandler.destroyAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_all_empty" -> error', async () => {
+      if (typeof sessionHandler.destroyAll !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.destroyAll({ userId: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getContext', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sessionHandler.getContext({ session: 'test' });
+      const program = sessionHandler.getContext({ session: "sess-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Session functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sessionHandler.getContext({ session: 'test' });
+      const program = sessionHandler.getContext({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sessionHandler.getContext({ session: 'test' });
+      const program = sessionHandler.getContext({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sessionHandler.getContext({ session: 'test' });
+      const program = sessionHandler.getContext({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Session functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sessionHandler.getContext({ session: 'test' });
+      const program = sessionHandler.getContext({ session: "sess-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Session functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       try {
-        const result = await interpret(sessionHandler.getContext({ session: 'test' }), storage);
+        const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('Session functional handler', () => {
       }
     });
 
+    it('fixture "context_existing" -> ok', async () => {
+      if (typeof sessionHandler.getContext !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "context_nonexistent" -> error', async () => {
+      if (typeof sessionHandler.getContext !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sessionHandler.getContext({ session: "sess-missing" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof sessionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = sessionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Session');
+    });
   });
 
   describe('invariant examples', () => {

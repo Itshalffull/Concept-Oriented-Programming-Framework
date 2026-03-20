@@ -26,7 +26,7 @@ describe('RestTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = restTargetHandler.generate({ projection: "user-projection", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = restTargetHandler.generate({ projection: "user-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = restTargetHandler.generate({ projection: "user-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = restTargetHandler.generate({ projection: "user-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' });
+      const program = restTargetHandler.generate({ projection: "user-projection", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RestTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof restTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(restTargetHandler.generate({ projection: 'test-projection', config: 'test-config' }), storage);
+        const result = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('RestTarget functional handler', () => {
       }
     });
 
+    it('fixture "with_default_config" -> ok', async () => {
+      if (typeof restTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "with_custom_base_path" -> ok', async () => {
+      if (typeof restTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.generate({ projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_projection" -> error', async () => {
+      if (typeof restTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.generate({ projection: "", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "ambiguous_actions" -> ok', async () => {
+      if (typeof restTargetHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.generate({ projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = restTargetHandler.validate({ route: 'test' });
+      const program = restTargetHandler.validate({ route: "rest-user-12345" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = restTargetHandler.validate({ route: 'test' });
+      const program = restTargetHandler.validate({ route: "rest-user-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = restTargetHandler.validate({ route: 'test' });
+      const program = restTargetHandler.validate({ route: "rest-user-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = restTargetHandler.validate({ route: 'test' });
+      const program = restTargetHandler.validate({ route: "rest-user-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = restTargetHandler.validate({ route: 'test' });
+      const program = restTargetHandler.validate({ route: "rest-user-12345" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('RestTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof restTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(restTargetHandler.validate({ route: 'test' }), storage);
+        const result = await interpret(restTargetHandler.validate({ route: "rest-user-12345" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +166,25 @@ describe('RestTarget functional handler', () => {
       }
     });
 
+    it('fixture "valid_route" -> ok', async () => {
+      if (typeof restTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.validate({ route: "rest-user-12345" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_route" -> error', async () => {
+      if (typeof restTargetHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.validate({ route: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('listRoutes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = restTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = restTargetHandler.listRoutes({ concept: "User" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = restTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = restTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = restTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = restTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = restTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = restTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('RestTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = restTargetHandler.listRoutes({ concept: 'test-concept' });
+      const program = restTargetHandler.listRoutes({ concept: "User" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('RestTarget functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       try {
-        const result = await interpret(restTargetHandler.listRoutes({ concept: 'test-concept' }), storage);
+        const result = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('RestTarget functional handler', () => {
       }
     });
 
+    it('fixture "list_user_routes" -> ok', async () => {
+      if (typeof restTargetHandler.listRoutes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_concept" -> error', async () => {
+      if (typeof restTargetHandler.listRoutes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(restTargetHandler.listRoutes({ concept: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof restTargetHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = restTargetHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RestTarget');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('ProgramCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programCacheHandler.lookup !== 'function') return;
       try {
-        const result = await programCacheHandler.lookup({ programHash: 'test-programHash', stateHash: 'test-stateHash' }, storage);
+        const result = await programCacheHandler.lookup({ programHash: "sha256_abc123", stateHash: "sha256_def456" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,20 @@ describe('ProgramCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "lookup_existing" -> ok', async () => {
+      if (typeof programCacheHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.lookup({ programHash: "sha256_abc123", stateHash: "sha256_def456" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "lookup_empty_hash" -> error', async () => {
+      if (typeof programCacheHandler.lookup !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.lookup({ programHash: "", stateHash: "sha256_def456" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +49,7 @@ describe('ProgramCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programCacheHandler.store !== 'function') return;
       try {
-        const result = await programCacheHandler.store({ programHash: 'test-programHash', stateHash: 'test-stateHash', result: 'test-result' }, storage);
+        const result = await programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('ProgramCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "store_new_entry" -> ok', async () => {
+      if (typeof programCacheHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "store_empty_result" -> error', async () => {
+      if (typeof programCacheHandler.store !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +79,7 @@ describe('ProgramCache imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programCacheHandler.invalidateByState !== 'function') return;
       try {
-        const result = await programCacheHandler.invalidateByState({ stateHash: 'test-stateHash' }, storage);
+        const result = await programCacheHandler.invalidateByState({ stateHash: "sha256_def456" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,13 +89,27 @@ describe('ProgramCache imperative handler', () => {
       }
     });
 
+    it('fixture "invalidate_state" -> ok', async () => {
+      if (typeof programCacheHandler.invalidateByState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.invalidateByState({ stateHash: "sha256_def456" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_empty_state" -> error', async () => {
+      if (typeof programCacheHandler.invalidateByState !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.invalidateByState({ stateHash: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('invalidateByProgram', () => {
     it('executes without crashing', async () => {
       if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
       try {
-        const result = await programCacheHandler.invalidateByProgram({ programHash: 'test-programHash' }, storage);
+        const result = await programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +117,20 @@ describe('ProgramCache imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "invalidate_program" -> ok', async () => {
+      if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalidate_empty_program" -> error', async () => {
+      if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.invalidateByProgram({ programHash: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -93,6 +149,30 @@ describe('ProgramCache imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof programCacheHandler.stats !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programCacheHandler.stats({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof programCacheHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = programCacheHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProgramCache');
+    });
   });
 
   describe('invariant examples', () => {

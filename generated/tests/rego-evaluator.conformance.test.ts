@@ -26,7 +26,7 @@ describe('RegoEvaluator functional handler', () => {
 
   describe('loadBundle', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' });
+      const program = regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' });
+      const program = regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' });
+      const program = regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' });
+      const program = regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' });
+      const program = regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('RegoEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof regoEvaluatorHandler.loadBundle !== 'function') return;
       try {
-        const result = await interpret(regoEvaluatorHandler.loadBundle({ policySource: 'test-policySource', dataSource: 'test-dataSource', packageName: 'test-packageName' }), storage);
+        const result = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('RegoEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "load_allow_rule" -> ok', async () => {
+      if (typeof regoEvaluatorHandler.loadBundle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "[{\"name\":\"allow\",\"body\":[{\"op\":\"eq\",\"path\":\"role\",\"value\":\"admin\"}]}]", dataSource: "{\"roles\":[\"admin\",\"viewer\"]}", packageName: "authz" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "load_empty_source" -> compile_error', async () => {
+      if (typeof regoEvaluatorHandler.loadBundle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.loadBundle({ policySource: "", dataSource: "{}", packageName: "authz" }), storage);
+      expect(result.variant).toBe('compile_error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' });
+      const program = regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' });
+      const program = regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' });
+      const program = regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' });
+      const program = regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' });
+      const program = regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('RegoEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof regoEvaluatorHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(regoEvaluatorHandler.evaluate({ bundle: 'test', input: 'test-input' }), storage);
+        const result = await interpret(regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('RegoEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_admin_allowed" -> ok', async () => {
+      if (typeof regoEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.evaluate({ bundle: "rego-001", input: "{\"role\":\"admin\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_unknown_bundle" -> runtime_error', async () => {
+      if (typeof regoEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.evaluate({ bundle: "nonexistent", input: "{\"role\":\"admin\"}" }), storage);
+      expect(result.variant).toBe('runtime_error');
+    });
+
   });
 
   describe('updateData', () => {
     it('builds a valid StorageProgram', () => {
-      const program = regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' });
+      const program = regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' });
+      const program = regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' });
+      const program = regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' });
+      const program = regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('RegoEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' });
+      const program = regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('RegoEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof regoEvaluatorHandler.updateData !== 'function') return;
       try {
-        const result = await interpret(regoEvaluatorHandler.updateData({ bundle: 'test', newData: 'test-newData' }), storage);
+        const result = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('RegoEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "update_data_valid" -> ok', async () => {
+      if (typeof regoEvaluatorHandler.updateData !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.updateData({ bundle: "rego-001", newData: "{\"roles\":[\"admin\",\"editor\",\"viewer\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_data_unknown_bundle" -> error', async () => {
+      if (typeof regoEvaluatorHandler.updateData !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(regoEvaluatorHandler.updateData({ bundle: "nonexistent", newData: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof regoEvaluatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = regoEvaluatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('RegoEvaluator');
+    });
   });
 
   describe('invariant examples', () => {

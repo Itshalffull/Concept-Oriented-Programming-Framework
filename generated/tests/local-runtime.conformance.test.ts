@@ -26,7 +26,7 @@ describe('LocalRuntime functional handler', () => {
 
   describe('provision', () => {
     it('builds a valid StorageProgram', () => {
-      const program = localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 });
+      const program = localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 });
+      const program = localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 });
+      const program = localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 });
+      const program = localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 });
+      const program = localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('LocalRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof localRuntimeHandler.provision !== 'function') return;
       try {
-        const result = await interpret(localRuntimeHandler.provision({ concept: 'test-concept', command: 'test-command', port: 1 }), storage);
+        const result = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('LocalRuntime functional handler', () => {
       }
     });
 
+    it('fixture "provision_node" -> ok', async () => {
+      if (typeof localRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_python" -> ok', async () => {
+      if (typeof localRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "provision_empty_concept" -> error', async () => {
+      if (typeof localRuntimeHandler.provision !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.provision({ concept: "", command: "node index.js", port: "4000" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('deploy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = localRuntimeHandler.deploy({ process: 'test', command: 'test-command' });
+      const program = localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = localRuntimeHandler.deploy({ process: 'test', command: 'test-command' });
+      const program = localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = localRuntimeHandler.deploy({ process: 'test', command: 'test-command' });
+      const program = localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = localRuntimeHandler.deploy({ process: 'test', command: 'test-command' });
+      const program = localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = localRuntimeHandler.deploy({ process: 'test', command: 'test-command' });
+      const program = localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('LocalRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof localRuntimeHandler.deploy !== 'function') return;
       try {
-        const result = await interpret(localRuntimeHandler.deploy({ process: 'test', command: 'test-command' }), storage);
+        const result = await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('LocalRuntime functional handler', () => {
       }
     });
 
+    it('fixture "deploy_restart" -> ok', async () => {
+      if (typeof localRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deploy_missing_process" -> error', async () => {
+      if (typeof localRuntimeHandler.deploy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setTrafficWeight', () => {
     it('builds a valid StorageProgram', () => {
-      const program = localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 });
+      const program = localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 });
+      const program = localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 });
+      const program = localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 });
+      const program = localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 });
+      const program = localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('LocalRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       try {
-        const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: 'test', weight: 1 }), storage);
+        const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('LocalRuntime functional handler', () => {
       }
     });
 
+    it('fixture "traffic_local" -> ok', async () => {
+      if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traffic_no_process" -> error', async () => {
+      if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "", weight: "50" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('rollback', () => {
     it('builds a valid StorageProgram', () => {
-      const program = localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' });
+      const program = localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' });
+      const program = localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' });
+      const program = localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' });
+      const program = localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' });
+      const program = localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('LocalRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       try {
-        const result = await interpret(localRuntimeHandler.rollback({ process: 'test', previousCommand: 'test-previousCommand' }), storage);
+        const result = await interpret(localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('LocalRuntime functional handler', () => {
       }
     });
 
+    it('fixture "rollback_previous" -> ok', async () => {
+      if (typeof localRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing_process" -> error', async () => {
+      if (typeof localRuntimeHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.rollback({ process: "", previousCommand: "node old.js" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('destroy', () => {
     it('builds a valid StorageProgram', () => {
-      const program = localRuntimeHandler.destroy({ process: 'test' });
+      const program = localRuntimeHandler.destroy({ process: "proc-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = localRuntimeHandler.destroy({ process: 'test' });
+      const program = localRuntimeHandler.destroy({ process: "proc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = localRuntimeHandler.destroy({ process: 'test' });
+      const program = localRuntimeHandler.destroy({ process: "proc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = localRuntimeHandler.destroy({ process: 'test' });
+      const program = localRuntimeHandler.destroy({ process: "proc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('LocalRuntime functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = localRuntimeHandler.destroy({ process: 'test' });
+      const program = localRuntimeHandler.destroy({ process: "proc-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('LocalRuntime functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof localRuntimeHandler.destroy !== 'function') return;
       try {
-        const result = await interpret(localRuntimeHandler.destroy({ process: 'test' }), storage);
+        const result = await interpret(localRuntimeHandler.destroy({ process: "proc-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('LocalRuntime functional handler', () => {
       }
     });
 
+    it('fixture "destroy_valid" -> ok', async () => {
+      if (typeof localRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.destroy({ process: "proc-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "destroy_missing" -> error', async () => {
+      if (typeof localRuntimeHandler.destroy !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(localRuntimeHandler.destroy({ process: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof localRuntimeHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = localRuntimeHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('LocalRuntime');
+    });
   });
 
   describe('invariant examples', () => {

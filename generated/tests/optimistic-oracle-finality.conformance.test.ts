@@ -19,7 +19,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
       try {
-        const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: 'test-operationRef', asserter: 'test-asserter', bond: 1, challengeWindowHours: 1 }, storage);
+        const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('OptimisticOracleFinality imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "assert_standard" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-001", asserter: "validator-alice", bond: "100.0", challengeWindowHours: "48.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assert_short_window" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-002", asserter: "validator-bob", bond: "50.0", challengeWindowHours: "2.0" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assert_large_bond" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.assertFinality !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.assertFinality({ operationRef: "proposal-003", asserter: "validator-carol", bond: "10000.0", challengeWindowHours: "24.0" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -35,7 +56,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
       try {
-        const result = await optimisticOracleFinalityHandler.challenge({ assertion: 'test', challenger: 'test-challenger', bond: 1, evidence: 'test-evidence' }, storage);
+        const result = await optimisticOracleFinalityHandler.challenge({ assertion: "oo-001", challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('OptimisticOracleFinality imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "challenge_pending" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.challenge({ assertion: "oo-001", challenger: "watchdog-carol", bond: "200.0", evidence: "Invalid state transition detected" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "challenge_already_resolved" -> expired', async () => {
+      if (typeof optimisticOracleFinalityHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.challenge({ assertion: "oo-finalized", challenger: "watchdog-carol", bond: "200.0", evidence: "N/A" }, storage);
+      expect(result.variant).toBe('expired');
     });
 
   });
@@ -51,7 +86,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
       try {
-        const result = await optimisticOracleFinalityHandler.resolve({ assertion: 'test', validAssertion: true }, storage);
+        const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "true" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,27 @@ describe('OptimisticOracleFinality imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_valid" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "true" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_invalid" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-001", validAssertion: "false" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_rejected" -> rejected', async () => {
+      if (typeof optimisticOracleFinalityHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.resolve({ assertion: "oo-002", validAssertion: "false" }, storage);
+      expect(result.variant).toBe('rejected');
     });
 
   });
@@ -67,7 +123,7 @@ describe('OptimisticOracleFinality imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
       try {
-        const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: 'test' }, storage);
+        const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "oo-001" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +133,37 @@ describe('OptimisticOracleFinality imperative handler', () => {
       }
     });
 
+    it('fixture "check_expired" -> ok', async () => {
+      if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "oo-001" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_still_pending" -> still_pending', async () => {
+      if (typeof optimisticOracleFinalityHandler.checkExpiry !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await optimisticOracleFinalityHandler.checkExpiry({ assertion: "oo-recent" }, storage);
+      expect(result.variant).toBe('still_pending');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof optimisticOracleFinalityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = optimisticOracleFinalityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('OptimisticOracleFinality');
+    });
   });
 
   describe('invariant examples', () => {

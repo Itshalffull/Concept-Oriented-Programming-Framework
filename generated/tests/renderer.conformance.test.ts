@@ -26,7 +26,7 @@ describe('Renderer functional handler', () => {
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rendererHandler.render({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Renderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rendererHandler.render({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rendererHandler.render({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rendererHandler.render({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Renderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rendererHandler.render({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Renderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rendererHandler.render !== 'function') return;
       try {
-        const result = await interpret(rendererHandler.render({ renderer: 'test', tree: 'test-tree' }), storage);
+        const result = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Renderer functional handler', () => {
       }
     });
 
+    it('fixture "render_page" -> ok', async () => {
+      if (typeof rendererHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "<page><header/><body/></page>" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "render_empty_tree" -> error', async () => {
+      if (typeof rendererHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.render({ renderer: "main-renderer", tree: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('autoPlaceholder', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' });
+      const program = rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Renderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' });
+      const program = rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' });
+      const program = rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' });
+      const program = rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Renderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' });
+      const program = rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Renderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rendererHandler.autoPlaceholder !== 'function') return;
       try {
-        const result = await interpret(rendererHandler.autoPlaceholder({ renderer: 'test', name: 'test-name' }), storage);
+        const result = await interpret(rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Renderer functional handler', () => {
       }
     });
 
+    it('fixture "register_sidebar" -> ok', async () => {
+      if (typeof rendererHandler.autoPlaceholder !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "sidebar" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_placeholder_name" -> error', async () => {
+      if (typeof rendererHandler.autoPlaceholder !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.autoPlaceholder({ renderer: "main-renderer", name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('stream', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rendererHandler.stream({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Renderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rendererHandler.stream({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rendererHandler.stream({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rendererHandler.stream({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Renderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rendererHandler.stream({ renderer: 'test', tree: 'test-tree' });
+      const program = rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Renderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rendererHandler.stream !== 'function') return;
       try {
-        const result = await interpret(rendererHandler.stream({ renderer: 'test', tree: 'test-tree' }), storage);
+        const result = await interpret(rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Renderer functional handler', () => {
       }
     });
 
+    it('fixture "stream_page" -> ok', async () => {
+      if (typeof rendererHandler.stream !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.stream({ renderer: "main-renderer", tree: "<page><header/></page>" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stream_empty_tree" -> error', async () => {
+      if (typeof rendererHandler.stream !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.stream({ renderer: "main-renderer", tree: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('mergeCacheability', () => {
     it('builds a valid StorageProgram', () => {
-      const program = rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' });
+      const program = rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Renderer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' });
+      const program = rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' });
+      const program = rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' });
+      const program = rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Renderer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' });
+      const program = rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Renderer functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof rendererHandler.mergeCacheability !== 'function') return;
       try {
-        const result = await interpret(rendererHandler.mergeCacheability({ renderer: 'test', tags: 'test-tags' }), storage);
+        const result = await interpret(rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Renderer functional handler', () => {
       }
     });
 
+    it('fixture "merge_tags" -> ok', async () => {
+      if (typeof rendererHandler.mergeCacheability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "merge_empty_tags" -> error', async () => {
+      if (typeof rendererHandler.mergeCacheability !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(rendererHandler.mergeCacheability({ renderer: "main-renderer", tags: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof rendererHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = rendererHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Renderer');
+    });
   });
 
   describe('invariant examples', () => {

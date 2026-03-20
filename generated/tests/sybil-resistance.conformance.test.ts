@@ -26,7 +26,7 @@ describe('SybilResistance functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SybilResistance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sybilResistanceHandler.verify !== 'function') return;
       try {
-        const result = await interpret(sybilResistanceHandler.verify({ candidate: 'test-candidate', method: 'test-method', evidence: 'test-evidence' }), storage);
+        const result = await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SybilResistance functional handler', () => {
       }
     });
 
+    it('fixture "verify_alice" -> ok', async () => {
+      if (typeof sybilResistanceHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.verify({ candidate: "alice", method: "biometric", evidence: "fingerprint-hash-abc123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_empty_candidate" -> error', async () => {
+      if (typeof sybilResistanceHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.verify({ candidate: "", method: "biometric", evidence: "hash" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('challenge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' });
+      const program = sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SybilResistance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sybilResistanceHandler.challenge !== 'function') return;
       try {
-        const result = await interpret(sybilResistanceHandler.challenge({ targetId: 'test', challenger: 'test-challenger', evidence: 'test-evidence' }), storage);
+        const result = await interpret(sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SybilResistance functional handler', () => {
       }
     });
 
+    it('fixture "challenge_verified_user" -> ok', async () => {
+      if (typeof sybilResistanceHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.challenge({ targetId: "alice", challenger: "bob", evidence: "duplicate-account-evidence" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "challenge_invalid_target" -> error', async () => {
+      if (typeof sybilResistanceHandler.challenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.challenge({ targetId: "nonexistent", challenger: "bob", evidence: "some-evidence" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolveChallenge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SybilResistance functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' });
+      const program = sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SybilResistance functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
       try {
-        const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: 'test', outcome: 'test-outcome' }), storage);
+        const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('SybilResistance functional handler', () => {
       }
     });
 
+    it('fixture "resolve_upheld" -> ok', async () => {
+      if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-1001", outcome: "upheld" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof sybilResistanceHandler.resolveChallenge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(sybilResistanceHandler.resolveChallenge({ challengeId: "challenge-nonexistent", outcome: "upheld" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof sybilResistanceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = sybilResistanceHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SybilResistance');
+    });
   });
 
   describe('invariant examples', () => {

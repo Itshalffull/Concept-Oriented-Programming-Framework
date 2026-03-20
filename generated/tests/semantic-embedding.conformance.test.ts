@@ -26,7 +26,7 @@ describe('SemanticEmbedding functional handler', () => {
 
   describe('compute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' });
+      const program = semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' });
+      const program = semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' });
+      const program = semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' });
+      const program = semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' });
+      const program = semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SemanticEmbedding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof semanticEmbeddingHandler.compute !== 'function') return;
       try {
-        const result = await interpret(semanticEmbeddingHandler.compute({ unit: 'test-unit', model: 'test-model' }), storage);
+        const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('SemanticEmbedding functional handler', () => {
       }
     });
 
+    it('fixture "compute_codebert" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-123", model: "codeBERT" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compute_unixcoder" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-456", model: "unixcoder" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "compute_unknown_model" -> modelUnavailable', async () => {
+      if (typeof semanticEmbeddingHandler.compute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.compute({ unit: "def-789", model: "unknown-model" }), storage);
+      expect(result.variant).toBe('modelUnavailable');
+    });
+
   });
 
   describe('searchSimilar', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' });
+      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' });
+      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' });
+      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' });
+      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' });
+      const program = semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('SemanticEmbedding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof semanticEmbeddingHandler.searchSimilar !== 'function') return;
       try {
-        const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: 'test-queryVector', topK: 1, language: 'test-language', kind: 'test-kind' }), storage);
+        const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('SemanticEmbedding functional handler', () => {
       }
     });
 
+    it('fixture "search_similar_top5" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.searchSimilar !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.1, 0.2, 0.3]", topK: "5", language: "typescript", kind: "function" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "search_similar_all" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.searchSimilar !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.searchSimilar({ queryVector: "[0.5, -0.3, 0.8]", topK: "0", language: "", kind: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('searchNaturalLanguage', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 });
+      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 });
+      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 });
+      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 });
+      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 });
+      const program = semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('SemanticEmbedding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof semanticEmbeddingHandler.searchNaturalLanguage !== 'function') return;
       try {
-        const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: 'test-query', topK: 1 }), storage);
+        const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('SemanticEmbedding functional handler', () => {
       }
     });
 
+    it('fixture "nl_search_auth" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.searchNaturalLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: "authentication middleware", topK: "3" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "nl_search_broad" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.searchNaturalLanguage !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.searchNaturalLanguage({ query: "data validation", topK: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: 'test' });
+      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: 'test' });
+      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: 'test' });
+      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: 'test' });
+      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('SemanticEmbedding functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = semanticEmbeddingHandler.get({ embedding: 'test' });
+      const program = semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('SemanticEmbedding functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof semanticEmbeddingHandler.get !== 'function') return;
       try {
-        const result = await interpret(semanticEmbeddingHandler.get({ embedding: 'test' }), storage);
+        const result = await interpret(semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +303,38 @@ describe('SemanticEmbedding functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof semanticEmbeddingHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.get({ embedding: "semantic-embedding-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown" -> notfound', async () => {
+      if (typeof semanticEmbeddingHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(semanticEmbeddingHandler.get({ embedding: "semantic-embedding-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof semanticEmbeddingHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = semanticEmbeddingHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SemanticEmbedding');
+    });
   });
 
   describe('invariant examples', () => {

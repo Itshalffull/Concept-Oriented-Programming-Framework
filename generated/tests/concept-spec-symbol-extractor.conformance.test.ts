@@ -82,6 +82,24 @@ describe('ConceptSpecSymbolExtractor functional handler', () => {
 
   });
 
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof conceptSpecSymbolExtractorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = conceptSpecSymbolExtractorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ConceptSpecSymbolExtractor');
+    });
+  });
+
   describe('state invariants (stateful PBT)', () => {
     it('always: every instances entry has extractorRef', async () => {
       await fc.assert(

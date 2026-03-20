@@ -26,7 +26,7 @@ describe('Transport functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' });
+      const program = transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' });
+      const program = transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' });
+      const program = transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' });
+      const program = transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' });
+      const program = transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.configure !== 'function') return;
       try {
-        const result = await interpret(transportHandler.configure({ transport: 'test', kind: 'test-kind', baseUrl: 'test', auth: 'test', retryPolicy: 'test' }), storage);
+        const result = await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "configure_rest" -> ok', async () => {
+      if (typeof transportHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.configure({ transport: "P-1", kind: "rest", baseUrl: "https://api.example.com", auth: "Bearer tok_abc123", retryPolicy: "{ \"maxRetries\": 3, \"backoff\": \"exponential\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_graphql" -> ok', async () => {
+      if (typeof transportHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.configure({ transport: "P-2", kind: "graphql", baseUrl: "https://gql.example.com/query", auth: "", retryPolicy: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_invalid_kind" -> invalid', async () => {
+      if (typeof transportHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.configure({ transport: "P-3", kind: "ftp", baseUrl: "ftp://files.example.com", auth: "", retryPolicy: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('setAuth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.setAuth({ transport: 'test', auth: 'test-auth' });
+      const program = transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.setAuth({ transport: 'test', auth: 'test-auth' });
+      const program = transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.setAuth({ transport: 'test', auth: 'test-auth' });
+      const program = transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.setAuth({ transport: 'test', auth: 'test-auth' });
+      const program = transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.setAuth({ transport: 'test', auth: 'test-auth' });
+      const program = transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.setAuth !== 'function') return;
       try {
-        const result = await interpret(transportHandler.setAuth({ transport: 'test', auth: 'test-auth' }), storage);
+        const result = await interpret(transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "set_auth_bearer" -> ok', async () => {
+      if (typeof transportHandler.setAuth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.setAuth({ transport: "P-1", auth: "Bearer tok_xyz789" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_auth_new_transport" -> ok', async () => {
+      if (typeof transportHandler.setAuth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.setAuth({ transport: "P-new", auth: "Bearer tok_new" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('clearAuth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.clearAuth({ transport: 'test' });
+      const program = transportHandler.clearAuth({ transport: "P-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.clearAuth({ transport: 'test' });
+      const program = transportHandler.clearAuth({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.clearAuth({ transport: 'test' });
+      const program = transportHandler.clearAuth({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.clearAuth({ transport: 'test' });
+      const program = transportHandler.clearAuth({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.clearAuth({ transport: 'test' });
+      const program = transportHandler.clearAuth({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.clearAuth !== 'function') return;
       try {
-        const result = await interpret(transportHandler.clearAuth({ transport: 'test' }), storage);
+        const result = await interpret(transportHandler.clearAuth({ transport: "P-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "clear_auth_existing" -> ok', async () => {
+      if (typeof transportHandler.clearAuth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.clearAuth({ transport: "P-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clear_auth_missing" -> notfound', async () => {
+      if (typeof transportHandler.clearAuth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.clearAuth({ transport: "P-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('fetch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.fetch({ transport: 'test', query: 'test-query' });
+      const program = transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.fetch({ transport: 'test', query: 'test-query' });
+      const program = transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.fetch({ transport: 'test', query: 'test-query' });
+      const program = transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.fetch({ transport: 'test', query: 'test-query' });
+      const program = transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.fetch({ transport: 'test', query: 'test-query' });
+      const program = transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.fetch !== 'function') return;
       try {
-        const result = await interpret(transportHandler.fetch({ transport: 'test', query: 'test-query' }), storage);
+        const result = await interpret(transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "fetch_articles" -> ok', async () => {
+      if (typeof transportHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.fetch({ transport: "P-1", query: "{ \"path\": \"/articles\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "fetch_missing_transport" -> error', async () => {
+      if (typeof transportHandler.fetch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.fetch({ transport: "P-nonexistent", query: "{ \"path\": \"/data\" }" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('mutate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' });
+      const program = transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' });
+      const program = transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' });
+      const program = transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' });
+      const program = transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' });
+      const program = transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.mutate !== 'function') return;
       try {
-        const result = await interpret(transportHandler.mutate({ transport: 'test', action: 'test-action', input: 'test-input' }), storage);
+        const result = await interpret(transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "mutate_create" -> ok', async () => {
+      if (typeof transportHandler.mutate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.mutate({ transport: "P-1", action: "createArticle", input: "{ \"title\": \"Hello World\" }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mutate_missing_transport" -> error', async () => {
+      if (typeof transportHandler.mutate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.mutate({ transport: "P-nonexistent", action: "createArticle", input: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('flushQueue', () => {
     it('builds a valid StorageProgram', () => {
-      const program = transportHandler.flushQueue({ transport: 'test' });
+      const program = transportHandler.flushQueue({ transport: "P-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Transport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = transportHandler.flushQueue({ transport: 'test' });
+      const program = transportHandler.flushQueue({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = transportHandler.flushQueue({ transport: 'test' });
+      const program = transportHandler.flushQueue({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = transportHandler.flushQueue({ transport: 'test' });
+      const program = transportHandler.flushQueue({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Transport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = transportHandler.flushQueue({ transport: 'test' });
+      const program = transportHandler.flushQueue({ transport: "P-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Transport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof transportHandler.flushQueue !== 'function') return;
       try {
-        const result = await interpret(transportHandler.flushQueue({ transport: 'test' }), storage);
+        const result = await interpret(transportHandler.flushQueue({ transport: "P-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('Transport functional handler', () => {
       }
     });
 
+    it('fixture "flush_existing" -> ok', async () => {
+      if (typeof transportHandler.flushQueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.flushQueue({ transport: "P-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "flush_missing_transport" -> error', async () => {
+      if (typeof transportHandler.flushQueue !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(transportHandler.flushQueue({ transport: "P-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof transportHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = transportHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Transport');
+    });
   });
 
   describe('invariant examples', () => {

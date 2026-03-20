@@ -26,7 +26,7 @@ describe('Connector functional handler', () => {
 
   describe('configure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' });
+      const program = connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' });
+      const program = connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' });
+      const program = connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' });
+      const program = connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' });
+      const program = connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorHandler.configure !== 'function') return;
       try {
-        const result = await interpret(connectorHandler.configure({ sourceId: 'test-sourceId', protocolId: 'test-protocolId', config: 'test-config' }), storage);
+        const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Connector functional handler', () => {
       }
     });
 
+    it('fixture "configure_rest" -> ok', async () => {
+      if (typeof connectorHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_sql" -> ok', async () => {
+      if (typeof connectorHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "configure_bad_json" -> error', async () => {
+      if (typeof connectorHandler.configure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('read', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' });
+      const program = connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' });
+      const program = connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' });
+      const program = connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' });
+      const program = connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' });
+      const program = connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorHandler.read !== 'function') return;
       try {
-        const result = await interpret(connectorHandler.read({ connectorId: 'test-connectorId', query: 'test-query', options: 'test-options' }), storage);
+        const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Connector functional handler', () => {
       }
     });
 
+    it('fixture "read_posts" -> ok', async () => {
+      if (typeof connectorHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_missing_connector" -> notfound', async () => {
+      if (typeof connectorHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.read({ connectorId: "conn-missing", query: "{}", options: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' });
+      const program = connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' });
+      const program = connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' });
+      const program = connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' });
+      const program = connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' });
+      const program = connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorHandler.write !== 'function') return;
       try {
-        const result = await interpret(connectorHandler.write({ connectorId: 'test-connectorId', data: 'test-data', options: 'test-options' }), storage);
+        const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Connector functional handler', () => {
       }
     });
 
+    it('fixture "write_records" -> ok', async () => {
+      if (typeof connectorHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_missing_connector" -> notfound', async () => {
+      if (typeof connectorHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.write({ connectorId: "conn-missing", data: "[]", options: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('test', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorHandler.test({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.test({ connectorId: "conn-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorHandler.test({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.test({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorHandler.test({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.test({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorHandler.test({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.test({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorHandler.test({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.test({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorHandler.test !== 'function') return;
       try {
-        const result = await interpret(connectorHandler.test({ connectorId: 'test-connectorId' }), storage);
+        const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Connector functional handler', () => {
       }
     });
 
+    it('fixture "test_existing" -> ok', async () => {
+      if (typeof connectorHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "test_missing" -> notfound', async () => {
+      if (typeof connectorHandler.test !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.test({ connectorId: "conn-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = connectorHandler.discover({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.discover({ connectorId: "conn-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Connector functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = connectorHandler.discover({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.discover({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = connectorHandler.discover({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.discover({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = connectorHandler.discover({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.discover({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Connector functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = connectorHandler.discover({ connectorId: 'test-connectorId' });
+      const program = connectorHandler.discover({ connectorId: "conn-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Connector functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof connectorHandler.discover !== 'function') return;
       try {
-        const result = await interpret(connectorHandler.discover({ connectorId: 'test-connectorId' }), storage);
+        const result = await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Connector functional handler', () => {
       }
     });
 
+    it('fixture "discover_existing" -> ok', async () => {
+      if (typeof connectorHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_missing" -> notfound', async () => {
+      if (typeof connectorHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(connectorHandler.discover({ connectorId: "conn-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof connectorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = connectorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Connector');
+    });
   });
 
   describe('invariant examples', () => {

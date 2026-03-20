@@ -26,7 +26,7 @@ describe('Intent functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Intent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Intent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Intent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof intentHandler.define !== 'function') return;
       try {
-        const result = await interpret(intentHandler.define({ intent: 'test', target: 'test-target', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' }), storage);
+        const result = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Intent functional handler', () => {
       }
     });
 
+    it('fixture "define_auth" -> ok', async () => {
+      if (typeof intentHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_empty_intent" -> error', async () => {
+      if (typeof intentHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Intent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Intent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' });
+      const program = intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Intent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof intentHandler.update !== 'function') return;
       try {
-        const result = await interpret(intentHandler.update({ intent: 'test', purpose: 'test-purpose', operationalPrinciple: 'test-operationalPrinciple' }), storage);
+        const result = await interpret(intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Intent functional handler', () => {
       }
     });
 
+    it('fixture "update_purpose" -> ok', async () => {
+      if (typeof intentHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing" -> error', async () => {
+      if (typeof intentHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.update({ intent: "nonexistent", purpose: "Test", operationalPrinciple: "Test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = intentHandler.verify({ intent: 'test' });
+      const program = intentHandler.verify({ intent: "auth-intent" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Intent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = intentHandler.verify({ intent: 'test' });
+      const program = intentHandler.verify({ intent: "auth-intent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = intentHandler.verify({ intent: 'test' });
+      const program = intentHandler.verify({ intent: "auth-intent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = intentHandler.verify({ intent: 'test' });
+      const program = intentHandler.verify({ intent: "auth-intent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Intent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = intentHandler.verify({ intent: 'test' });
+      const program = intentHandler.verify({ intent: "auth-intent" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Intent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof intentHandler.verify !== 'function') return;
       try {
-        const result = await interpret(intentHandler.verify({ intent: 'test' }), storage);
+        const result = await interpret(intentHandler.verify({ intent: "auth-intent" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Intent functional handler', () => {
       }
     });
 
+    it('fixture "verify_existing" -> ok', async () => {
+      if (typeof intentHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.verify({ intent: "auth-intent" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "verify_missing" -> error', async () => {
+      if (typeof intentHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.verify({ intent: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = intentHandler.discover({ query: 'test-query' });
+      const program = intentHandler.discover({ query: "authentication" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Intent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = intentHandler.discover({ query: 'test-query' });
+      const program = intentHandler.discover({ query: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = intentHandler.discover({ query: 'test-query' });
+      const program = intentHandler.discover({ query: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = intentHandler.discover({ query: 'test-query' });
+      const program = intentHandler.discover({ query: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Intent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = intentHandler.discover({ query: 'test-query' });
+      const program = intentHandler.discover({ query: "authentication" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Intent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof intentHandler.discover !== 'function') return;
       try {
-        const result = await interpret(intentHandler.discover({ query: 'test-query' }), storage);
+        const result = await interpret(intentHandler.discover({ query: "authentication" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Intent functional handler', () => {
       }
     });
 
+    it('fixture "discover_auth" -> ok', async () => {
+      if (typeof intentHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.discover({ query: "authentication" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_empty" -> error', async () => {
+      if (typeof intentHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.discover({ query: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('suggestFromDescription', () => {
     it('builds a valid StorageProgram', () => {
-      const program = intentHandler.suggestFromDescription({ description: 'test-description' });
+      const program = intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Intent functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = intentHandler.suggestFromDescription({ description: 'test-description' });
+      const program = intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = intentHandler.suggestFromDescription({ description: 'test-description' });
+      const program = intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = intentHandler.suggestFromDescription({ description: 'test-description' });
+      const program = intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Intent functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = intentHandler.suggestFromDescription({ description: 'test-description' });
+      const program = intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Intent functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       try {
-        const result = await interpret(intentHandler.suggestFromDescription({ description: 'test-description' }), storage);
+        const result = await interpret(intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Intent functional handler', () => {
       }
     });
 
+    it('fixture "suggest_from_desc" -> ok', async () => {
+      if (typeof intentHandler.suggestFromDescription !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suggest_empty" -> error', async () => {
+      if (typeof intentHandler.suggestFromDescription !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(intentHandler.suggestFromDescription({ description: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof intentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = intentHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Intent');
+    });
   });
 
   describe('invariant examples', () => {

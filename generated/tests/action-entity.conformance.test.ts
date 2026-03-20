@@ -19,7 +19,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.register !== 'function') return;
       try {
-        const result = await actionEntityHandler.register({ concept: 'test-concept', name: 'test-name', params: 'test-params', variantRefs: 'test-variantRefs' }, storage);
+        const result = await actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_create" -> ok', async () => {
+      if (typeof actionEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_minimal" -> ok', async () => {
+      if (typeof actionEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_concept" -> error', async () => {
+      if (typeof actionEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.register({ concept: "", name: "create", params: "[]", variantRefs: "[]" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await actionEntityHandler.findByConcept({ concept: 'test-concept' }, storage);
+        const result = await actionEntityHandler.findByConcept({ concept: "Article" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_article" -> ok', async () => {
+      if (typeof actionEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.findByConcept({ concept: "Article" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof actionEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.findByConcept({ concept: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.triggeringSyncs !== 'function') return;
       try {
-        const result = await actionEntityHandler.triggeringSyncs({ action: 'test' }, storage);
+        const result = await actionEntityHandler.triggeringSyncs({ action: "action-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "triggering_valid" -> ok', async () => {
+      if (typeof actionEntityHandler.triggeringSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.triggeringSyncs({ action: "action-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "triggering_missing" -> error', async () => {
+      if (typeof actionEntityHandler.triggeringSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.triggeringSyncs({ action: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.invokingSyncs !== 'function') return;
       try {
-        const result = await actionEntityHandler.invokingSyncs({ action: 'test' }, storage);
+        const result = await actionEntityHandler.invokingSyncs({ action: "action-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "invoking_valid" -> ok', async () => {
+      if (typeof actionEntityHandler.invokingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.invokingSyncs({ action: "action-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invoking_missing" -> error', async () => {
+      if (typeof actionEntityHandler.invokingSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.invokingSyncs({ action: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -83,7 +146,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.implementations !== 'function') return;
       try {
-        const result = await actionEntityHandler.implementations({ action: 'test' }, storage);
+        const result = await actionEntityHandler.implementations({ action: "action-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +154,20 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "impl_valid" -> ok', async () => {
+      if (typeof actionEntityHandler.implementations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.implementations({ action: "action-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "impl_missing" -> error', async () => {
+      if (typeof actionEntityHandler.implementations !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.implementations({ action: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +176,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.interfaceExposures !== 'function') return;
       try {
-        const result = await actionEntityHandler.interfaceExposures({ action: 'test' }, storage);
+        const result = await actionEntityHandler.interfaceExposures({ action: "action-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -107,6 +184,20 @@ describe('ActionEntity imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "exposures_valid" -> ok', async () => {
+      if (typeof actionEntityHandler.interfaceExposures !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.interfaceExposures({ action: "action-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "exposures_missing" -> error', async () => {
+      if (typeof actionEntityHandler.interfaceExposures !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.interfaceExposures({ action: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -115,7 +206,7 @@ describe('ActionEntity imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof actionEntityHandler.get !== 'function') return;
       try {
-        const result = await actionEntityHandler.get({ action: 'test' }, storage);
+        const result = await actionEntityHandler.get({ action: "action-entity-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -125,6 +216,37 @@ describe('ActionEntity imperative handler', () => {
       }
     });
 
+    it('fixture "get_valid" -> ok', async () => {
+      if (typeof actionEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.get({ action: "action-entity-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof actionEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await actionEntityHandler.get({ action: "nonexistent-id" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof actionEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = actionEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ActionEntity');
+    });
   });
 
   describe('invariant examples', () => {

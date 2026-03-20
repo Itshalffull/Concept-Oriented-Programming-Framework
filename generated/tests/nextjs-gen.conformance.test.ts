@@ -26,7 +26,7 @@ describe('NextjsGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = nextjsGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('NextjsGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = nextjsGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = nextjsGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = nextjsGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('NextjsGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = nextjsGenHandler.generate({ spec: 'test', manifest: 'test' });
+      const program = nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('NextjsGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof nextjsGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(nextjsGenHandler.generate({ spec: 'test', manifest: 'test' }), storage);
+        const result = await interpret(nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,45 @@ describe('NextjsGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof nextjsGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsGenHandler.generate({ spec: "user-spec-001", manifest: {"name":"User","uri":"urn:clef/User","typeParams":[],"relations":[],"actions":[{"name":"create","params":[{"name":"email","type":{"kind":"primitive","primitive":"String"}}],"variants":[{"tag":"ok","fields":[{"name":"user","type":{"kind":"param"}}],"prose":"Created."}]}],"invariants":[],"graphqlSchema":"","jsonSchemas":{"invocations":{},"completions":{}},"capabilities":[],"purpose":"Manage users."} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof nextjsGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsGenHandler.generate({ spec: "bad-spec", manifest: {"name":""} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "null_manifest" -> error', async () => {
+      if (typeof nextjsGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(nextjsGenHandler.generate({ spec: "no-manifest", manifest: {} }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof nextjsGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = nextjsGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('NextjsGen');
+    });
   });
 
   describe('invariant examples', () => {

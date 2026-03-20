@@ -26,7 +26,7 @@ describe('AutomationRule functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' });
+      const program = automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' });
+      const program = automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' });
+      const program = automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' });
+      const program = automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' });
+      const program = automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AutomationRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof automationRuleHandler.define !== 'function') return;
       try {
-        const result = await interpret(automationRuleHandler.define({ rule: 'test', trigger: 'test-trigger', conditions: 'test-conditions', actions: 'test-actions' }), storage);
+        const result = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AutomationRule functional handler', () => {
       }
     });
 
+    it('fixture "define_save_rule" -> ok', async () => {
+      if (typeof automationRuleHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_empty_rule" -> error', async () => {
+      if (typeof automationRuleHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.define({ rule: "", trigger: "on_save", conditions: "always", actions: "log" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('enable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = automationRuleHandler.enable({ rule: 'test' });
+      const program = automationRuleHandler.enable({ rule: "auto-review" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = automationRuleHandler.enable({ rule: 'test' });
+      const program = automationRuleHandler.enable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = automationRuleHandler.enable({ rule: 'test' });
+      const program = automationRuleHandler.enable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = automationRuleHandler.enable({ rule: 'test' });
+      const program = automationRuleHandler.enable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = automationRuleHandler.enable({ rule: 'test' });
+      const program = automationRuleHandler.enable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AutomationRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof automationRuleHandler.enable !== 'function') return;
       try {
-        const result = await interpret(automationRuleHandler.enable({ rule: 'test' }), storage);
+        const result = await interpret(automationRuleHandler.enable({ rule: "auto-review" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AutomationRule functional handler', () => {
       }
     });
 
+    it('fixture "enable_existing_rule" -> ok', async () => {
+      if (typeof automationRuleHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.enable({ rule: "auto-review" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "enable_nonexistent_rule" -> notfound', async () => {
+      if (typeof automationRuleHandler.enable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.enable({ rule: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('disable', () => {
     it('builds a valid StorageProgram', () => {
-      const program = automationRuleHandler.disable({ rule: 'test' });
+      const program = automationRuleHandler.disable({ rule: "auto-review" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = automationRuleHandler.disable({ rule: 'test' });
+      const program = automationRuleHandler.disable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = automationRuleHandler.disable({ rule: 'test' });
+      const program = automationRuleHandler.disable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = automationRuleHandler.disable({ rule: 'test' });
+      const program = automationRuleHandler.disable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = automationRuleHandler.disable({ rule: 'test' });
+      const program = automationRuleHandler.disable({ rule: "auto-review" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AutomationRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof automationRuleHandler.disable !== 'function') return;
       try {
-        const result = await interpret(automationRuleHandler.disable({ rule: 'test' }), storage);
+        const result = await interpret(automationRuleHandler.disable({ rule: "auto-review" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('AutomationRule functional handler', () => {
       }
     });
 
+    it('fixture "disable_existing_rule" -> ok', async () => {
+      if (typeof automationRuleHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.disable({ rule: "auto-review" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "disable_nonexistent_rule" -> notfound', async () => {
+      if (typeof automationRuleHandler.disable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.disable({ rule: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = automationRuleHandler.execute({ rule: 'test', context: 'test-context' });
+      const program = automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = automationRuleHandler.execute({ rule: 'test', context: 'test-context' });
+      const program = automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = automationRuleHandler.execute({ rule: 'test', context: 'test-context' });
+      const program = automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = automationRuleHandler.execute({ rule: 'test', context: 'test-context' });
+      const program = automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('AutomationRule functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = automationRuleHandler.execute({ rule: 'test', context: 'test-context' });
+      const program = automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('AutomationRule functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof automationRuleHandler.execute !== 'function') return;
       try {
-        const result = await interpret(automationRuleHandler.execute({ rule: 'test', context: 'test-context' }), storage);
+        const result = await interpret(automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('AutomationRule functional handler', () => {
       }
     });
 
+    it('fixture "execute_rule" -> ok', async () => {
+      if (typeof automationRuleHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_nonexistent_rule" -> notfound', async () => {
+      if (typeof automationRuleHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(automationRuleHandler.execute({ rule: "nonexistent", context: "{}" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof automationRuleHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = automationRuleHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AutomationRule');
+    });
   });
 
   describe('invariant examples', () => {

@@ -19,7 +19,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.start !== 'function') return;
       try {
-        const result = await verificationRunHandler.start({ target_symbol: 'test-target_symbol', properties: 'test', solver: 'test-solver', timeout_ms: 1 }, storage);
+        const result = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('VerificationRun imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_start" -> ok', async () => {
+      if (typeof verificationRunHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: ["prop-1","prop-2"], solver: "z3", timeout_ms: "30000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "auto_solver" -> ok', async () => {
+      if (typeof verificationRunHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.start({ target_symbol: "clef/concept/Token", properties: ["invariant-1"], solver: "auto", timeout_ms: "60000" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_properties" -> invalid', async () => {
+      if (typeof verificationRunHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.start({ target_symbol: "clef/concept/Password", properties: [], solver: "z3", timeout_ms: "10000" }, storage);
+      expect(result.variant).toBe('invalid');
     });
 
   });
@@ -35,7 +56,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.complete !== 'function') return;
       try {
-        const result = await verificationRunHandler.complete({ run: 'test', results: 'test', resource_usage: 'test' }, storage);
+        const result = await verificationRunHandler.complete({ results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('VerificationRun imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_complete" -> ok', async () => {
+      if (typeof verificationRunHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.complete({ results: "{\"prop-1\":\"proved\",\"prop-2\":\"refuted\"}", resource_usage: "{\"total_time_ms\":1200}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_run" -> notfound', async () => {
+      if (typeof verificationRunHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.complete({ id: "vr-nonexistent", results: "{}", resource_usage: "{}" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -51,7 +86,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.timeout !== 'function') return;
       try {
-        const result = await verificationRunHandler.timeout({ run: 'test', partial_results: 'test' }, storage);
+        const result = await verificationRunHandler.timeout({ partial_results: "{\"prop-1\":\"proved\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('VerificationRun imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_timeout" -> ok', async () => {
+      if (typeof verificationRunHandler.timeout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.timeout({ partial_results: "{\"prop-1\":\"proved\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_partial" -> ok', async () => {
+      if (typeof verificationRunHandler.timeout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.timeout({ partial_results: "{}" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -67,7 +116,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.cancel !== 'function') return;
       try {
-        const result = await verificationRunHandler.cancel({ run: 'test' }, storage);
+        const result = await verificationRunHandler.cancel({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('VerificationRun imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_cancel" -> ok', async () => {
+      if (typeof verificationRunHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.cancel({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_cancel" -> notfound', async () => {
+      if (typeof verificationRunHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.cancel({ id: "vr-nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -83,7 +146,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.get_status !== 'function') return;
       try {
-        const result = await verificationRunHandler.get_status({ run: 'test' }, storage);
+        const result = await verificationRunHandler.get_status({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +154,20 @@ describe('VerificationRun imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_status" -> ok', async () => {
+      if (typeof verificationRunHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.get_status({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_status" -> notfound', async () => {
+      if (typeof verificationRunHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.get_status({ id: "vr-nonexistent" }, storage);
+      expect(result.variant).toBe('notfound');
     });
 
   });
@@ -99,7 +176,7 @@ describe('VerificationRun imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof verificationRunHandler.compare !== 'function') return;
       try {
-        const result = await verificationRunHandler.compare({ run1: 'test', run2: 'test' }, storage);
+        const result = await verificationRunHandler.compare({ run_id_a: "vr-aaa", run_id_b: "vr-bbb" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +186,37 @@ describe('VerificationRun imperative handler', () => {
       }
     });
 
+    it('fixture "valid_compare" -> ok', async () => {
+      if (typeof verificationRunHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.compare({ run_id_a: "vr-aaa", run_id_b: "vr-bbb" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_run_a" -> notfound', async () => {
+      if (typeof verificationRunHandler.compare !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await verificationRunHandler.compare({ run_id_a: "vr-nonexistent", run_id_b: "vr-bbb" }, storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof verificationRunHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = verificationRunHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VerificationRun');
+    });
   });
 
   describe('invariant examples', () => {

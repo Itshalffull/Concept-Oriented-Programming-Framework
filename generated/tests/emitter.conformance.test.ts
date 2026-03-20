@@ -26,7 +26,7 @@ describe('Emitter functional handler', () => {
 
   describe('write', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' });
+      const program = emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' });
+      const program = emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' });
+      const program = emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' });
+      const program = emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' });
+      const program = emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.write !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.write({ path: 'test-path', content: 'test-content', formatHint: 'test', sources: 'test' }), storage);
+        const result = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "write_new" -> ok', async () => {
+      if (typeof emitterHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.write({ path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_with_sources" -> ok', async () => {
+      if (typeof emitterHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.write({ path: "generated/ts/auth.ts", content: "export const auth = {};", sources: [{"sourcePath":"./specs/auth.concept","conceptName":"Auth"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_empty_path" -> error', async () => {
+      if (typeof emitterHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.write({ path: "", content: "export const x = 1;" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('writeBatch', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.writeBatch({ files: 'test' });
+      const program = emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.writeBatch({ files: 'test' });
+      const program = emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.writeBatch({ files: 'test' });
+      const program = emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.writeBatch({ files: 'test' });
+      const program = emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.writeBatch({ files: 'test' });
+      const program = emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.writeBatch !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.writeBatch({ files: 'test' }), storage);
+        const result = await interpret(emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "batch_two_files" -> ok', async () => {
+      if (typeof emitterHandler.writeBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.writeBatch({ files: [{"path":"generated/ts/a.ts","content":"export const a = 1;"},{"path":"generated/ts/b.ts","content":"export const b = 2;"}] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "batch_empty" -> ok', async () => {
+      if (typeof emitterHandler.writeBatch !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.writeBatch({ files: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('format', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.format({ path: 'test-path' });
+      const program = emitterHandler.format({ path: "generated/ts/password.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.format({ path: 'test-path' });
+      const program = emitterHandler.format({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.format({ path: 'test-path' });
+      const program = emitterHandler.format({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.format({ path: 'test-path' });
+      const program = emitterHandler.format({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.format({ path: 'test-path' });
+      const program = emitterHandler.format({ path: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.format !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.format({ path: 'test-path' }), storage);
+        const result = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "format_ts" -> ok', async () => {
+      if (typeof emitterHandler.format !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.format({ path: "generated/ts/password.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "format_missing" -> error', async () => {
+      if (typeof emitterHandler.format !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.format({ path: "generated/ts/nonexistent.ts" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('clean', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' });
+      const program = emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' });
+      const program = emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' });
+      const program = emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' });
+      const program = emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' });
+      const program = emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.clean !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.clean({ outputDir: 'test-outputDir', currentManifest: 'test' }), storage);
+        const result = await interpret(emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "clean_ts" -> ok', async () => {
+      if (typeof emitterHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.clean({ outputDir: "generated/ts", currentManifest: ["generated/ts/password.ts","generated/ts/auth.ts"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clean_empty_manifest" -> ok', async () => {
+      if (typeof emitterHandler.clean !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.clean({ outputDir: "generated/ts", currentManifest: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('manifest', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.manifest({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.manifest({ outputDir: "generated/ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.manifest({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.manifest({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.manifest({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.manifest({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.manifest({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.manifest({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.manifest({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.manifest({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.manifest !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.manifest({ outputDir: 'test-outputDir' }), storage);
+        const result = await interpret(emitterHandler.manifest({ outputDir: "generated/ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "manifest_ts" -> ok', async () => {
+      if (typeof emitterHandler.manifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.manifest({ outputDir: "generated/ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "manifest_all" -> ok', async () => {
+      if (typeof emitterHandler.manifest !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.manifest({ outputDir: "generated" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('trace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.trace({ outputPath: 'test-outputPath' });
+      const program = emitterHandler.trace({ outputPath: "generated/ts/password.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.trace({ outputPath: 'test-outputPath' });
+      const program = emitterHandler.trace({ outputPath: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.trace({ outputPath: 'test-outputPath' });
+      const program = emitterHandler.trace({ outputPath: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.trace({ outputPath: 'test-outputPath' });
+      const program = emitterHandler.trace({ outputPath: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.trace({ outputPath: 'test-outputPath' });
+      const program = emitterHandler.trace({ outputPath: "generated/ts/password.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.trace !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.trace({ outputPath: 'test-outputPath' }), storage);
+        const result = await interpret(emitterHandler.trace({ outputPath: "generated/ts/password.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +447,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "trace_existing" -> ok', async () => {
+      if (typeof emitterHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.trace({ outputPath: "generated/ts/password.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_missing" -> notFound', async () => {
+      if (typeof emitterHandler.trace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.trace({ outputPath: "generated/ts/nonexistent.ts" }), storage);
+      expect(result.variant).toBe('notFound');
+    });
+
   });
 
   describe('affected', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.affected({ sourcePath: 'test-sourcePath' });
+      const program = emitterHandler.affected({ sourcePath: "./specs/password.concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +473,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.affected({ sourcePath: 'test-sourcePath' });
+      const program = emitterHandler.affected({ sourcePath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.affected({ sourcePath: 'test-sourcePath' });
+      const program = emitterHandler.affected({ sourcePath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.affected({ sourcePath: 'test-sourcePath' });
+      const program = emitterHandler.affected({ sourcePath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +500,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.affected({ sourcePath: 'test-sourcePath' });
+      const program = emitterHandler.affected({ sourcePath: "./specs/password.concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +509,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.affected !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.affected({ sourcePath: 'test-sourcePath' }), storage);
+        const result = await interpret(emitterHandler.affected({ sourcePath: "./specs/password.concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +519,25 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "affected_concept" -> ok', async () => {
+      if (typeof emitterHandler.affected !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.affected({ sourcePath: "./specs/password.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "affected_unknown" -> ok', async () => {
+      if (typeof emitterHandler.affected !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.affected({ sourcePath: "./specs/nonexistent.concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('audit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = emitterHandler.audit({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.audit({ outputDir: "generated/ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +545,21 @@ describe('Emitter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = emitterHandler.audit({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.audit({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = emitterHandler.audit({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.audit({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = emitterHandler.audit({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.audit({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +572,7 @@ describe('Emitter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = emitterHandler.audit({ outputDir: 'test-outputDir' });
+      const program = emitterHandler.audit({ outputDir: "generated/ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +581,7 @@ describe('Emitter functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof emitterHandler.audit !== 'function') return;
       try {
-        const result = await interpret(emitterHandler.audit({ outputDir: 'test-outputDir' }), storage);
+        const result = await interpret(emitterHandler.audit({ outputDir: "generated/ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,6 +591,38 @@ describe('Emitter functional handler', () => {
       }
     });
 
+    it('fixture "audit_ts" -> ok', async () => {
+      if (typeof emitterHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.audit({ outputDir: "generated/ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "audit_all" -> ok', async () => {
+      if (typeof emitterHandler.audit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(emitterHandler.audit({ outputDir: "generated" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof emitterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = emitterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Emitter');
+    });
   });
 
   describe('invariant examples', () => {

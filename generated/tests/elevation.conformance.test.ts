@@ -26,7 +26,7 @@ describe('Elevation functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' });
+      const program = elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Elevation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' });
+      const program = elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' });
+      const program = elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' });
+      const program = elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Elevation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' });
+      const program = elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Elevation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof elevationHandler.define !== 'function') return;
       try {
-        const result = await interpret(elevationHandler.define({ elevation: 'test', level: 1, shadow: 'test-shadow' }), storage);
+        const result = await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,46 @@ describe('Elevation functional handler', () => {
       }
     });
 
+    it('fixture "define_raised" -> ok', async () => {
+      if (typeof elevationHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_overlay" -> ok', async () => {
+      if (typeof elevationHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.define({ elevation: "W-2", level: "3", shadow: "[{ \"y\": 6, \"blur\": 12, \"color\": \"rgba(0,0,0,0.15)\" }]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_flat" -> ok', async () => {
+      if (typeof elevationHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.define({ elevation: "W-3", level: "0", shadow: "none" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_level_too_high" -> invalid', async () => {
+      if (typeof elevationHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.define({ elevation: "W-4", level: "7", shadow: "[]" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "define_missing_shadow" -> invalid', async () => {
+      if (typeof elevationHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.define({ elevation: "W-5", level: "2", shadow: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = elevationHandler.get({ elevation: 'test' });
+      const program = elevationHandler.get({ elevation: "W-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +127,21 @@ describe('Elevation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = elevationHandler.get({ elevation: 'test' });
+      const program = elevationHandler.get({ elevation: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = elevationHandler.get({ elevation: 'test' });
+      const program = elevationHandler.get({ elevation: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = elevationHandler.get({ elevation: 'test' });
+      const program = elevationHandler.get({ elevation: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +154,7 @@ describe('Elevation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = elevationHandler.get({ elevation: 'test' });
+      const program = elevationHandler.get({ elevation: "W-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +163,7 @@ describe('Elevation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof elevationHandler.get !== 'function') return;
       try {
-        const result = await interpret(elevationHandler.get({ elevation: 'test' }), storage);
+        const result = await interpret(elevationHandler.get({ elevation: "W-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +173,25 @@ describe('Elevation functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof elevationHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.get({ elevation: "W-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_unknown" -> notfound', async () => {
+      if (typeof elevationHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.get({ elevation: "W-nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('generateScale', () => {
     it('builds a valid StorageProgram', () => {
-      const program = elevationHandler.generateScale({ baseColor: 'test-baseColor' });
+      const program = elevationHandler.generateScale({ baseColor: "0,0,0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +199,21 @@ describe('Elevation functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = elevationHandler.generateScale({ baseColor: 'test-baseColor' });
+      const program = elevationHandler.generateScale({ baseColor: "0,0,0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = elevationHandler.generateScale({ baseColor: 'test-baseColor' });
+      const program = elevationHandler.generateScale({ baseColor: "0,0,0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = elevationHandler.generateScale({ baseColor: 'test-baseColor' });
+      const program = elevationHandler.generateScale({ baseColor: "0,0,0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +226,7 @@ describe('Elevation functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = elevationHandler.generateScale({ baseColor: 'test-baseColor' });
+      const program = elevationHandler.generateScale({ baseColor: "0,0,0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +235,7 @@ describe('Elevation functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof elevationHandler.generateScale !== 'function') return;
       try {
-        const result = await interpret(elevationHandler.generateScale({ baseColor: 'test-baseColor' }), storage);
+        const result = await interpret(elevationHandler.generateScale({ baseColor: "0,0,0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +245,38 @@ describe('Elevation functional handler', () => {
       }
     });
 
+    it('fixture "scale_from_black" -> ok', async () => {
+      if (typeof elevationHandler.generateScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.generateScale({ baseColor: "0,0,0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "scale_empty_color" -> invalid', async () => {
+      if (typeof elevationHandler.generateScale !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(elevationHandler.generateScale({ baseColor: "" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof elevationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = elevationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Elevation');
+    });
   });
 
   describe('invariant examples', () => {

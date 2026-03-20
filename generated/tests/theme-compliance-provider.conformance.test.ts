@@ -26,7 +26,7 @@ describe('ThemeComplianceProvider functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' });
+      const program = themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ThemeComplianceProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' });
+      const program = themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' });
+      const program = themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' });
+      const program = themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ThemeComplianceProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' });
+      const program = themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ThemeComplianceProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeComplianceProviderHandler.verify !== 'function') return;
       try {
-        const result = await interpret(themeComplianceProviderHandler.verify({ check: 'test', program: 'test-program', tokens: 'test', manifest: 'test-manifest' }), storage);
+        const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('ThemeComplianceProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid_tokens" -> ok', async () => {
+      if (typeof themeComplianceProviderHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-1", program: "card-widget", tokens: ["color.primary","spacing.md"], manifest: "default-theme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "all_valid_json_manifest" -> ok', async () => {
+      if (typeof themeComplianceProviderHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-2", program: "button-widget", tokens: ["bg","fg"], manifest: "{\"bg\":\"#fff\",\"fg\":\"#000\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deprecated_token" -> ok', async () => {
+      if (typeof themeComplianceProviderHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-3", program: "legacy-widget", tokens: ["legacy.color.red"], manifest: "default-theme" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_token" -> ok', async () => {
+      if (typeof themeComplianceProviderHandler.verify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.verify({ check: "chk-4", program: "broken-widget", tokens: ["nonexistent.foo"], manifest: "{\"color.primary\":\"#000\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getResults', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeComplianceProviderHandler.getResults({ check: 'test' });
+      const program = themeComplianceProviderHandler.getResults({ check: "chk-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('ThemeComplianceProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeComplianceProviderHandler.getResults({ check: 'test' });
+      const program = themeComplianceProviderHandler.getResults({ check: "chk-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeComplianceProviderHandler.getResults({ check: 'test' });
+      const program = themeComplianceProviderHandler.getResults({ check: "chk-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeComplianceProviderHandler.getResults({ check: 'test' });
+      const program = themeComplianceProviderHandler.getResults({ check: "chk-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('ThemeComplianceProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeComplianceProviderHandler.getResults({ check: 'test' });
+      const program = themeComplianceProviderHandler.getResults({ check: "chk-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('ThemeComplianceProvider functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeComplianceProviderHandler.getResults !== 'function') return;
       try {
-        const result = await interpret(themeComplianceProviderHandler.getResults({ check: 'test' }), storage);
+        const result = await interpret(themeComplianceProviderHandler.getResults({ check: "chk-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,38 @@ describe('ThemeComplianceProvider functional handler', () => {
       }
     });
 
+    it('fixture "existing_check" -> ok', async () => {
+      if (typeof themeComplianceProviderHandler.getResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.getResults({ check: "chk-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unknown_check" -> notfound', async () => {
+      if (typeof themeComplianceProviderHandler.getResults !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeComplianceProviderHandler.getResults({ check: "nonexistent" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeComplianceProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeComplianceProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThemeComplianceProvider');
+    });
   });
 
   describe('invariant examples', () => {

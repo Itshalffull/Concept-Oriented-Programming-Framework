@@ -19,7 +19,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.register !== 'function') return;
       try {
-        const result = await symbolHandler.register({ symbolString: 'test-symbolString', kind: 'test-kind', displayName: 'test-displayName', definingFile: 'test-definingFile' }, storage);
+        const result = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('Symbol imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_register" -> ok', async () => {
+      if (typeof symbolHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_concept" -> ok', async () => {
+      if (typeof symbolHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> error', async () => {
+      if (typeof symbolHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.resolve !== 'function') return;
       try {
-        const result = await symbolHandler.resolve({ symbolString: 'test-symbolString' }, storage);
+        const result = await symbolHandler.resolve({ symbolString: "clef/concept/Order" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('Symbol imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_resolve" -> ok', async () => {
+      if (typeof symbolHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.resolve({ symbolString: "clef/concept/Order" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof symbolHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.resolve({ symbolString: "clef/concept/NonExistent" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.findByKind !== 'function') return;
       try {
-        const result = await symbolHandler.findByKind({ kind: 'test-kind', namespace: 'test-namespace' }, storage);
+        const result = await symbolHandler.findByKind({ kind: "function", namespace: "ts/function/src/handlers" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('Symbol imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_functions" -> ok', async () => {
+      if (typeof symbolHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.findByKind({ kind: "function", namespace: "ts/function/src/handlers" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_all_concepts" -> ok', async () => {
+      if (typeof symbolHandler.findByKind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.findByKind({ kind: "concept", namespace: "" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -67,7 +116,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       try {
-        const result = await symbolHandler.findByFile({ file: 'test-file' }, storage);
+        const result = await symbolHandler.findByFile({ file: "src/handlers/user.ts" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -75,6 +124,20 @@ describe('Symbol imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_in_file" -> ok', async () => {
+      if (typeof symbolHandler.findByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.findByFile({ file: "src/handlers/user.ts" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_in_empty_file" -> ok', async () => {
+      if (typeof symbolHandler.findByFile !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.findByFile({ file: "src/empty.ts" }, storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -83,7 +146,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.rename !== 'function') return;
       try {
-        const result = await symbolHandler.rename({ symbol: 'test', newName: 'test-newName' }, storage);
+        const result = await symbolHandler.rename({ symbol: "symbol-1", newName: "updateUser" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +154,20 @@ describe('Symbol imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_rename" -> ok', async () => {
+      if (typeof symbolHandler.rename !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.rename({ symbol: "symbol-1", newName: "updateUser" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rename_nonexistent" -> error', async () => {
+      if (typeof symbolHandler.rename !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.rename({ symbol: "symbol-999", newName: "foo" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -99,7 +176,7 @@ describe('Symbol imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof symbolHandler.get !== 'function') return;
       try {
-        const result = await symbolHandler.get({ symbol: 'test' }, storage);
+        const result = await symbolHandler.get({ symbol: "symbol-1" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -109,6 +186,37 @@ describe('Symbol imperative handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof symbolHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.get({ symbol: "symbol-1" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof symbolHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await symbolHandler.get({ symbol: "symbol-999" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof symbolHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = symbolHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Symbol');
+    });
   });
 
   describe('invariant examples', () => {

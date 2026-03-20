@@ -29,13 +29,20 @@ describe('WasmProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof wasmProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('load', () => {
     it('executes without crashing', async () => {
       if (typeof wasmProviderHandler.load !== 'function') return;
       try {
-        const result = await wasmProviderHandler.load({ name: 'test-name', wasmPath: 'test-wasmPath', memoryLimit: 1 }, storage);
+        const result = await wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -45,13 +52,27 @@ describe('WasmProvider imperative handler', () => {
       }
     });
 
+    it('fixture "load_tokenizer" -> ok', async () => {
+      if (typeof wasmProviderHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "load_large_module" -> ok', async () => {
+      if (typeof wasmProviderHandler.load !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.load({ name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: "131072" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('execute', () => {
     it('executes without crashing', async () => {
       if (typeof wasmProviderHandler.execute !== 'function') return;
       try {
-        const result = await wasmProviderHandler.execute({ module: 'test-module', function: 'test-function', args: 'test-args' }, storage);
+        const result = await wasmProviderHandler.execute({ module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,20 @@ describe('WasmProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "call_tokenize" -> ok', async () => {
+      if (typeof wasmProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.execute({ module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_unknown_module" -> notFound', async () => {
+      if (typeof wasmProviderHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.execute({ module: "nonexistent", function: "run", args: "[]" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -77,6 +112,30 @@ describe('WasmProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof wasmProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await wasmProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof wasmProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = wasmProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WasmProvider');
+    });
   });
 
   describe('invariant examples', () => {

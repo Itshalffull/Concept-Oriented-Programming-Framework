@@ -19,7 +19,7 @@ describe('AlloySolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof alloySolverEndpointHandler.register !== 'function') return;
       try {
-        const result = await alloySolverEndpointHandler.register({ name: 'test-name', jarPath: 'test-jarPath', scope: 1, timeout: 1, options: 'test-options' }, storage);
+        const result = await alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('AlloySolverEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "alloy_default" -> ok', async () => {
+      if (typeof alloySolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "alloy_custom" -> ok', async () => {
+      if (typeof alloySolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.register({ name: "alloy-ci", jarPath: "/usr/share/alloy/alloy6.jar", scope: "10", timeout: "120000", options: "-Xmx4g" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_name" -> error', async () => {
+      if (typeof alloySolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.register({ name: "", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('AlloySolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof alloySolverEndpointHandler.check !== 'function') return;
       try {
-        const result = await alloySolverEndpointHandler.check({ name: 'test-name', model: 'test-model', predicate: 'test-predicate' }, storage);
+        const result = await alloySolverEndpointHandler.check({ name: "alloy-local", model: "sig Node { edges: set Node }", predicate: "run { some Node } for 5" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('AlloySolverEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "check_simple_model" -> ok', async () => {
+      if (typeof alloySolverEndpointHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.check({ name: "alloy-local", model: "sig Node { edges: set Node }", predicate: "run { some Node } for 5" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_missing_endpoint" -> error', async () => {
+      if (typeof alloySolverEndpointHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.check({ name: "nonexistent", model: "sig A {}", predicate: "run {}" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('AlloySolverEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof alloySolverEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await alloySolverEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await alloySolverEndpointHandler.resolve({ name: "alloy-local" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -61,6 +96,37 @@ describe('AlloySolverEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof alloySolverEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.resolve({ name: "alloy-local" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> error', async () => {
+      if (typeof alloySolverEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await alloySolverEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof alloySolverEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = alloySolverEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AlloySolverEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

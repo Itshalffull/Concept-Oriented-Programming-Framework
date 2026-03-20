@@ -26,7 +26,7 @@ describe('GitOps functional handler', () => {
 
   describe('emit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' });
+      const program = gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GitOps functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' });
+      const program = gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' });
+      const program = gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' });
+      const program = gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('GitOps functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' });
+      const program = gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('GitOps functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gitOpsHandler.emit !== 'function') return;
       try {
-        const result = await interpret(gitOpsHandler.emit({ plan: 'test-plan', controller: 'test-controller', repo: 'test-repo', path: 'test-path' }), storage);
+        const result = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('GitOps functional handler', () => {
       }
     });
 
+    it('fixture "emit_argocd" -> ok', async () => {
+      if (typeof gitOpsHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "emit_flux" -> ok', async () => {
+      if (typeof gitOpsHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gitOpsHandler.emit({ plan: "dp-002", controller: "flux", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "emit_unsupported" -> controllerUnsupported', async () => {
+      if (typeof gitOpsHandler.emit !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gitOpsHandler.emit({ plan: "dp-003", controller: "spinnaker", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      expect(result.variant).toBe('controllerUnsupported');
+    });
+
   });
 
   describe('reconciliationStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: 'test' });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('GitOps functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: 'test' });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: 'test' });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: 'test' });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('GitOps functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gitOpsHandler.reconciliationStatus({ manifest: 'test' });
+      const program = gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('GitOps functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
       try {
-        const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: 'test' }), storage);
+        const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +159,38 @@ describe('GitOps functional handler', () => {
       }
     });
 
+    it('fixture "reconciliation_found" -> ok', async () => {
+      if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reconciliation_missing" -> failed', async () => {
+      if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "go-nonexistent" }), storage);
+      expect(result.variant).toBe('failed');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof gitOpsHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = gitOpsHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('GitOps');
+    });
   });
 
   describe('invariant examples', () => {

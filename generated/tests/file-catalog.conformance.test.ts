@@ -26,7 +26,7 @@ describe('FileCatalog functional handler', () => {
 
   describe('discover', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.discover({ base_paths: 'test-base_paths' });
+      const program = fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.discover({ base_paths: 'test-base_paths' });
+      const program = fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.discover({ base_paths: 'test-base_paths' });
+      const program = fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.discover({ base_paths: 'test-base_paths' });
+      const program = fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.discover({ base_paths: 'test-base_paths' });
+      const program = fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.discover !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.discover({ base_paths: 'test-base_paths' }), storage);
+        const result = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "valid_discover" -> ok', async () => {
+      if (typeof fileCatalogHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs,/project/syncs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "discover_single_path" -> ok', async () => {
+      if (typeof fileCatalogHandler.discover !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.discover({ base_paths: "/project/specs" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('registerProvider', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' });
+      const program = fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' });
+      const program = fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' });
+      const program = fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' });
+      const program = fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' });
+      const program = fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.registerProvider !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: 'test-provider_name', kind: 'test-kind', file_pattern: 'test-file_pattern' }), storage);
+        const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,32 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "valid_register_provider" -> ok', async () => {
+      if (typeof fileCatalogHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_widget_provider" -> ok', async () => {
+      if (typeof fileCatalogHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "widget", kind: "widget", file_pattern: ".widget" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate_provider" -> error', async () => {
+      if (typeof fileCatalogHandler.registerProvider !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.registerProvider({ provider_name: "concept", kind: "concept", file_pattern: ".concept" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = fileCatalogHandler.get({ name: "Article", kind: "concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = fileCatalogHandler.get({ name: "Article", kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = fileCatalogHandler.get({ name: "Article", kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = fileCatalogHandler.get({ name: "Article", kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = fileCatalogHandler.get({ name: "Article", kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.get !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.get({ name: 'test-name', kind: 'test-kind' }), storage);
+        const result = await interpret(fileCatalogHandler.get({ name: "Article", kind: "concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "valid_get" -> ok', async () => {
+      if (typeof fileCatalogHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.get({ name: "Article", kind: "concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof fileCatalogHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.get({ name: "NonExistent", kind: "concept" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.list({ kind: 'test-kind' });
+      const program = fileCatalogHandler.list({ kind: "concept" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.list({ kind: 'test-kind' });
+      const program = fileCatalogHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.list({ kind: 'test-kind' });
+      const program = fileCatalogHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.list({ kind: 'test-kind' });
+      const program = fileCatalogHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.list({ kind: 'test-kind' });
+      const program = fileCatalogHandler.list({ kind: "concept" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.list !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.list({ kind: 'test-kind' }), storage);
+        const result = await interpret(fileCatalogHandler.list({ kind: "concept" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_concepts" -> ok', async () => {
+      if (typeof fileCatalogHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.list({ kind: "concept" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof fileCatalogHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.list({ kind: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listForSuite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.listForSuite({ suite: 'test-suite' });
+      const program = fileCatalogHandler.listForSuite({ suite: "foundation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.listForSuite({ suite: 'test-suite' });
+      const program = fileCatalogHandler.listForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.listForSuite({ suite: 'test-suite' });
+      const program = fileCatalogHandler.listForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.listForSuite({ suite: 'test-suite' });
+      const program = fileCatalogHandler.listForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.listForSuite({ suite: 'test-suite' });
+      const program = fileCatalogHandler.listForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.listForSuite !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.listForSuite({ suite: 'test-suite' }), storage);
+        const result = await interpret(fileCatalogHandler.listForSuite({ suite: "foundation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "valid_list_suite" -> ok', async () => {
+      if (typeof fileCatalogHandler.listForSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.listForSuite({ suite: "foundation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_unknown_suite" -> ok', async () => {
+      if (typeof fileCatalogHandler.listForSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.listForSuite({ suite: "nonexistent-suite" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('syncFilePathsForSuite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' });
+      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' });
+      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' });
+      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' });
+      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('FileCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' });
+      const program = fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('FileCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
       try {
-        const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: 'test-suite', search_paths: 'test-search_paths' }), storage);
+        const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,38 @@ describe('FileCatalog functional handler', () => {
       }
     });
 
+    it('fixture "valid_sync_paths" -> ok', async () => {
+      if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "foundation" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "sync_paths_unknown" -> error', async () => {
+      if (typeof fileCatalogHandler.syncFilePathsForSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(fileCatalogHandler.syncFilePathsForSuite({ suite: "nonexistent-suite" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fileCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fileCatalogHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FileCatalog');
+    });
   });
 
   describe('invariant examples', () => {

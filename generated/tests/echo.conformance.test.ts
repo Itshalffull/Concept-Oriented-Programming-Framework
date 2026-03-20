@@ -26,7 +26,7 @@ describe('Echo functional handler', () => {
 
   describe('send', () => {
     it('builds a valid StorageProgram', () => {
-      const program = echoHandler.send({ id: 'test', text: 'test-text' });
+      const program = echoHandler.send({ id: "msg-001", text: "Hello, world!" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Echo functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = echoHandler.send({ id: 'test', text: 'test-text' });
+      const program = echoHandler.send({ id: "msg-001", text: "Hello, world!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = echoHandler.send({ id: 'test', text: 'test-text' });
+      const program = echoHandler.send({ id: "msg-001", text: "Hello, world!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = echoHandler.send({ id: 'test', text: 'test-text' });
+      const program = echoHandler.send({ id: "msg-001", text: "Hello, world!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Echo functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = echoHandler.send({ id: 'test', text: 'test-text' });
+      const program = echoHandler.send({ id: "msg-001", text: "Hello, world!" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Echo functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof echoHandler.send !== 'function') return;
       try {
-        const result = await interpret(echoHandler.send({ id: 'test', text: 'test-text' }), storage);
+        const result = await interpret(echoHandler.send({ id: "msg-001", text: "Hello, world!" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,6 +80,38 @@ describe('Echo functional handler', () => {
       }
     });
 
+    it('fixture "send_ok" -> ok', async () => {
+      if (typeof echoHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(echoHandler.send({ id: "msg-001", text: "Hello, world!" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "send_greeting" -> ok', async () => {
+      if (typeof echoHandler.send !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(echoHandler.send({ id: "msg-002", text: "Good morning, how are you?" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof echoHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = echoHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Echo');
+    });
   });
 
   describe('invariant examples', () => {

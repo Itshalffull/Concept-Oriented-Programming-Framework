@@ -26,7 +26,7 @@ describe('SchemaEvolution functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' });
+      const program = schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' });
+      const program = schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' });
+      const program = schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' });
+      const program = schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' });
+      const program = schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SchemaEvolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
       try {
-        const result = await interpret(schemaEvolutionHandler.register({ subject: 'test-subject', schema: 'test', compatibility: 'test-compatibility' }), storage);
+        const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SchemaEvolution functional handler', () => {
       }
     });
 
+    it('fixture "register_user_schema" -> ok', async () => {
+      if (typeof schemaEvolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_compat_mode" -> error', async () => {
+      if (typeof schemaEvolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[]", compatibility: "bogus" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' });
+      const program = schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' });
+      const program = schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' });
+      const program = schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' });
+      const program = schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' });
+      const program = schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SchemaEvolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
       try {
-        const result = await interpret(schemaEvolutionHandler.check({ oldSchema: 'test', newSchema: 'test', mode: 'test-mode' }), storage);
+        const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('SchemaEvolution functional handler', () => {
       }
     });
 
+    it('fixture "check_backward" -> ok', async () => {
+      if (typeof schemaEvolutionHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_mode" -> error', async () => {
+      if (typeof schemaEvolutionHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[]", newSchema: "[]", mode: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('upcast', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' });
+      const program = schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' });
+      const program = schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' });
+      const program = schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' });
+      const program = schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' });
+      const program = schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('SchemaEvolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       try {
-        const result = await interpret(schemaEvolutionHandler.upcast({ data: 'test', fromVersion: 1, toVersion: 1, subject: 'test-subject' }), storage);
+        const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('SchemaEvolution functional handler', () => {
       }
     });
 
+    it('fixture "upcast_v1_to_v2" -> ok', async () => {
+      if (typeof schemaEvolutionHandler.upcast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upcast_missing_subject" -> error', async () => {
+      if (typeof schemaEvolutionHandler.upcast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.upcast({ data: "{}", fromVersion: "1", toVersion: "2", subject: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' });
+      const program = schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' });
+      const program = schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' });
+      const program = schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' });
+      const program = schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' });
+      const program = schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('SchemaEvolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaEvolutionHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: 'test', writerSchema: 'test' }), storage);
+        const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('SchemaEvolution functional handler', () => {
       }
     });
 
+    it('fixture "resolve_schemas" -> ok', async () => {
+      if (typeof schemaEvolutionHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unparseable" -> error', async () => {
+      if (typeof schemaEvolutionHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "not-json", writerSchema: "not-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 });
+      const program = schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 });
+      const program = schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 });
+      const program = schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 });
+      const program = schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('SchemaEvolution functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 });
+      const program = schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('SchemaEvolution functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
       try {
-        const result = await interpret(schemaEvolutionHandler.getSchema({ subject: 'test-subject', version: 1 }), storage);
+        const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('SchemaEvolution functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "nonexistent-subject", version: "99" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof schemaEvolutionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = schemaEvolutionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SchemaEvolution');
+    });
   });
 
   describe('invariant examples', () => {

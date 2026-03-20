@@ -19,7 +19,7 @@ describe('ProgramInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programInterpreterHandler.register !== 'function') return;
       try {
-        const result = await programInterpreterHandler.register({ interpreter: 'test', backend: 'test-backend', mode: 'test-mode' }, storage);
+        const result = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -27,6 +27,27 @@ describe('ProgramInterpreter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_live" -> ok', async () => {
+      if (typeof programInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_dryrun" -> ok', async () => {
+      if (typeof programInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.register({ interpreter: "interp-2", backend: "memory", mode: "dry-run" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_invalid_mode" -> error', async () => {
+      if (typeof programInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.register({ interpreter: "interp-3", backend: "memory", mode: "invalid" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -35,7 +56,7 @@ describe('ProgramInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programInterpreterHandler.execute !== 'function') return;
       try {
-        const result = await programInterpreterHandler.execute({ interpreter: 'test', program: 'test-program', snapshot: 'test-snapshot' }, storage);
+        const result = await programInterpreterHandler.execute({ interpreter: "interp-1", program: "get(users, u1)", snapshot: "current" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +64,20 @@ describe('ProgramInterpreter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "execute_get_program" -> ok', async () => {
+      if (typeof programInterpreterHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.execute({ interpreter: "interp-1", program: "get(users, u1)", snapshot: "current" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "execute_missing_interpreter" -> error', async () => {
+      if (typeof programInterpreterHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.execute({ interpreter: "nonexistent", program: "get(users, u1)", snapshot: "current" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -51,7 +86,7 @@ describe('ProgramInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programInterpreterHandler.dryRun !== 'function') return;
       try {
-        const result = await programInterpreterHandler.dryRun({ interpreter: 'test', program: 'test-program', snapshot: 'test-snapshot' }, storage);
+        const result = await programInterpreterHandler.dryRun({ interpreter: "interp-1", program: "put(users, u1, data)", snapshot: "current" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +94,20 @@ describe('ProgramInterpreter imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "dryrun_put" -> ok', async () => {
+      if (typeof programInterpreterHandler.dryRun !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.dryRun({ interpreter: "interp-1", program: "put(users, u1, data)", snapshot: "current" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dryrun_missing_interpreter" -> error', async () => {
+      if (typeof programInterpreterHandler.dryRun !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.dryRun({ interpreter: "nonexistent", program: "put(users, u1, data)", snapshot: "current" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +116,7 @@ describe('ProgramInterpreter imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof programInterpreterHandler.rollback !== 'function') return;
       try {
-        const result = await programInterpreterHandler.rollback({ interpreter: 'test', executionId: 'test-executionId' }, storage);
+        const result = await programInterpreterHandler.rollback({ interpreter: "interp-1", executionId: "exec-abc123" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,6 +126,37 @@ describe('ProgramInterpreter imperative handler', () => {
       }
     });
 
+    it('fixture "rollback_execution" -> ok', async () => {
+      if (typeof programInterpreterHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.rollback({ interpreter: "interp-1", executionId: "exec-abc123" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rollback_missing" -> error', async () => {
+      if (typeof programInterpreterHandler.rollback !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await programInterpreterHandler.rollback({ interpreter: "nonexistent", executionId: "exec-abc123" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof programInterpreterHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = programInterpreterHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProgramInterpreter');
+    });
   });
 
   describe('invariant examples', () => {

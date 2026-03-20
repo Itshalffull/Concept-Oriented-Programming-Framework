@@ -26,7 +26,7 @@ describe('Graph functional handler', () => {
 
   describe('addNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.addNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.addNode({ graph: "social-network", node: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.addNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.addNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.addNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.addNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.addNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.addNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.addNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.addNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
       try {
-        const result = await interpret(graphHandler.addNode({ graph: 'test', node: 'test-node' }), storage);
+        const result = await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "add_node_a" -> ok', async () => {
+      if (typeof graphHandler.addNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_node_empty" -> error', async () => {
+      if (typeof graphHandler.addNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.addNode({ graph: "", node: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.removeNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.removeNode({ graph: "social-network", node: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.removeNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.removeNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.removeNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.removeNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.removeNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.removeNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.removeNode({ graph: 'test', node: 'test-node' });
+      const program = graphHandler.removeNode({ graph: "social-network", node: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.removeNode !== 'function') return;
       try {
-        const result = await interpret(graphHandler.removeNode({ graph: 'test', node: 'test-node' }), storage);
+        const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "remove_existing_node" -> ok', async () => {
+      if (typeof graphHandler.removeNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent_node" -> error', async () => {
+      if (typeof graphHandler.removeNode !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('addEdge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.addEdge !== 'function') return;
       try {
-        const result = await interpret(graphHandler.addEdge({ graph: 'test', source: 'test-source', target: 'test-target' }), storage);
+        const result = await interpret(graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "add_edge_ab" -> ok', async () => {
+      if (typeof graphHandler.addEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "add_edge_no_graph" -> error', async () => {
+      if (typeof graphHandler.addEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.addEdge({ graph: "nonexistent-graph", source: "a", target: "b" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('removeEdge', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' });
+      const program = graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.removeEdge !== 'function') return;
       try {
-        const result = await interpret(graphHandler.removeEdge({ graph: 'test', source: 'test-source', target: 'test-target' }), storage);
+        const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "remove_edge_ab" -> ok', async () => {
+      if (typeof graphHandler.removeEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent_edge" -> error', async () => {
+      if (typeof graphHandler.removeEdge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "x", target: "y" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getNeighbors', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 });
+      const program = graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 });
+      const program = graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 });
+      const program = graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 });
+      const program = graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 });
+      const program = graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.getNeighbors !== 'function') return;
       try {
-        const result = await interpret(graphHandler.getNeighbors({ graph: 'test', node: 'test-node', depth: 1 }), storage);
+        const result = await interpret(graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "neighbors_depth_1" -> ok', async () => {
+      if (typeof graphHandler.getNeighbors !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "neighbors_no_graph" -> error', async () => {
+      if (typeof graphHandler.getNeighbors !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.getNeighbors({ graph: "nonexistent", node: "alice", depth: "1" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('filterNodes', () => {
     it('builds a valid StorageProgram', () => {
-      const program = graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' });
+      const program = graphHandler.filterNodes({ graph: "social-network", filter: "type=person" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('Graph functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' });
+      const program = graphHandler.filterNodes({ graph: "social-network", filter: "type=person" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' });
+      const program = graphHandler.filterNodes({ graph: "social-network", filter: "type=person" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' });
+      const program = graphHandler.filterNodes({ graph: "social-network", filter: "type=person" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('Graph functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' });
+      const program = graphHandler.filterNodes({ graph: "social-network", filter: "type=person" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('Graph functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof graphHandler.filterNodes !== 'function') return;
       try {
-        const result = await interpret(graphHandler.filterNodes({ graph: 'test', filter: 'test-filter' }), storage);
+        const result = await interpret(graphHandler.filterNodes({ graph: "social-network", filter: "type=person" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('Graph functional handler', () => {
       }
     });
 
+    it('fixture "filter_by_type" -> ok', async () => {
+      if (typeof graphHandler.filterNodes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.filterNodes({ graph: "social-network", filter: "type=person" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "filter_no_graph" -> error', async () => {
+      if (typeof graphHandler.filterNodes !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphHandler.filterNodes({ graph: "nonexistent", filter: "type=any" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof graphHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = graphHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Graph');
+    });
   });
 
   describe('invariant examples', () => {

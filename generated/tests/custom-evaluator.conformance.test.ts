@@ -26,7 +26,7 @@ describe('CustomEvaluator functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true });
+      const program = customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true });
+      const program = customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true });
+      const program = customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true });
+      const program = customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true });
+      const program = customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('CustomEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof customEvaluatorHandler.register !== 'function') return;
       try {
-        const result = await interpret(customEvaluatorHandler.register({ name: 'test-name', source: 'test-source', language: 'test-language', sandbox: true }), storage);
+        const result = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('CustomEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "register_age_check" -> ok', async () => {
+      if (typeof customEvaluatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> syntax_error', async () => {
+      if (typeof customEvaluatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.register({ name: "", source: "{\"op\":\"eq\",\"field\":\"x\",\"value\":1}", language: "JavaScript", sandbox: "true" }), storage);
+      expect(result.variant).toBe('syntax_error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' });
+      const program = customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' });
+      const program = customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' });
+      const program = customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' });
+      const program = customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' });
+      const program = customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('CustomEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof customEvaluatorHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: 'test', context: 'test-context' }), storage);
+        const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('CustomEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_age_pass" -> ok', async () => {
+      if (typeof customEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_unknown_evaluator" -> runtime_error', async () => {
+      if (typeof customEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: "nonexistent", context: "{\"age\":21}" }), storage);
+      expect(result.variant).toBe('runtime_error');
+    });
+
   });
 
   describe('deregister', () => {
     it('builds a valid StorageProgram', () => {
-      const program = customEvaluatorHandler.deregister({ evaluator: 'test' });
+      const program = customEvaluatorHandler.deregister({ evaluator: "custom-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = customEvaluatorHandler.deregister({ evaluator: 'test' });
+      const program = customEvaluatorHandler.deregister({ evaluator: "custom-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = customEvaluatorHandler.deregister({ evaluator: 'test' });
+      const program = customEvaluatorHandler.deregister({ evaluator: "custom-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = customEvaluatorHandler.deregister({ evaluator: 'test' });
+      const program = customEvaluatorHandler.deregister({ evaluator: "custom-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('CustomEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = customEvaluatorHandler.deregister({ evaluator: 'test' });
+      const program = customEvaluatorHandler.deregister({ evaluator: "custom-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('CustomEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof customEvaluatorHandler.deregister !== 'function') return;
       try {
-        const result = await interpret(customEvaluatorHandler.deregister({ evaluator: 'test' }), storage);
+        const result = await interpret(customEvaluatorHandler.deregister({ evaluator: "custom-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('CustomEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "deregister_existing" -> ok', async () => {
+      if (typeof customEvaluatorHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.deregister({ evaluator: "custom-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deregister_nonexistent" -> error', async () => {
+      if (typeof customEvaluatorHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(customEvaluatorHandler.deregister({ evaluator: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof customEvaluatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = customEvaluatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('CustomEvaluator');
+    });
   });
 
   describe('invariant examples', () => {

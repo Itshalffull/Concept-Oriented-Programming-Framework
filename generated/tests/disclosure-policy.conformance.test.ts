@@ -26,7 +26,7 @@ describe('DisclosurePolicy functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' });
+      const program = disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' });
+      const program = disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' });
+      const program = disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' });
+      const program = disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' });
+      const program = disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DisclosurePolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disclosurePolicyHandler.define !== 'function') return;
       try {
-        const result = await interpret(disclosurePolicyHandler.define({ subject: 'test-subject', audience: 'test-audience', timing: 'test-timing', scope: 'test' }), storage);
+        const result = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('DisclosurePolicy functional handler', () => {
       }
     });
 
+    it('fixture "define_immediate_disclosure" -> ok', async () => {
+      if (typeof disclosurePolicyHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_missing_subject" -> error', async () => {
+      if (typeof disclosurePolicyHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.define({ subject: "", audience: "public", timing: "Immediate", scope: ["financial"] }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' });
+      const program = disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' });
+      const program = disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' });
+      const program = disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' });
+      const program = disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' });
+      const program = disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('DisclosurePolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disclosurePolicyHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(disclosurePolicyHandler.evaluate({ subject: 'test-subject', requester: 'test-requester' }), storage);
+        const result = await interpret(disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('DisclosurePolicy functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_active_policy" -> ok', async () => {
+      if (typeof disclosurePolicyHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_unknown_policy" -> restricted', async () => {
+      if (typeof disclosurePolicyHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.evaluate({ policy: "nonexistent", event: "budget_vote", requestor: "auditor@example.com" }), storage);
+      expect(result.variant).toBe('restricted');
+    });
+
   });
 
   describe('suspend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = disclosurePolicyHandler.suspend({ policy: 'test' });
+      const program = disclosurePolicyHandler.suspend({ policy: "disclosure-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = disclosurePolicyHandler.suspend({ policy: 'test' });
+      const program = disclosurePolicyHandler.suspend({ policy: "disclosure-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = disclosurePolicyHandler.suspend({ policy: 'test' });
+      const program = disclosurePolicyHandler.suspend({ policy: "disclosure-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = disclosurePolicyHandler.suspend({ policy: 'test' });
+      const program = disclosurePolicyHandler.suspend({ policy: "disclosure-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('DisclosurePolicy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = disclosurePolicyHandler.suspend({ policy: 'test' });
+      const program = disclosurePolicyHandler.suspend({ policy: "disclosure-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('DisclosurePolicy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof disclosurePolicyHandler.suspend !== 'function') return;
       try {
-        const result = await interpret(disclosurePolicyHandler.suspend({ policy: 'test' }), storage);
+        const result = await interpret(disclosurePolicyHandler.suspend({ policy: "disclosure-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('DisclosurePolicy functional handler', () => {
       }
     });
 
+    it('fixture "suspend_existing_policy" -> ok', async () => {
+      if (typeof disclosurePolicyHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.suspend({ policy: "disclosure-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suspend_unknown_policy" -> error', async () => {
+      if (typeof disclosurePolicyHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(disclosurePolicyHandler.suspend({ policy: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof disclosurePolicyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = disclosurePolicyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DisclosurePolicy');
+    });
   });
 
   describe('invariant examples', () => {
@@ -217,7 +277,7 @@ describe('DisclosurePolicy functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), audience: fc.string({ minLength: 1, maxLength: 50 }), timing: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), requester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), event: fc.string({ minLength: 1, maxLength: 50 }), requestor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -246,7 +306,7 @@ describe('DisclosurePolicy functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('define'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), audience: fc.string({ minLength: 1, maxLength: 50 }), timing: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
-              fc.record({ action: fc.constant('evaluate'), input: fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), requester: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('evaluate'), input: fc.record({ policy: fc.string(), event: fc.string({ minLength: 1, maxLength: 50 }), requestor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ policy: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },

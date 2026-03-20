@@ -26,7 +26,7 @@ describe('Authentication functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' });
+      const program = authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' });
+      const program = authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' });
+      const program = authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' });
+      const program = authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' });
+      const program = authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Authentication functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authenticationHandler.register !== 'function') return;
       try {
-        const result = await interpret(authenticationHandler.register({ user: 'test', provider: 'test-provider', credentials: 'test-credentials' }), storage);
+        const result = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Authentication functional handler', () => {
       }
     });
 
+    it('fixture "register_local" -> ok', async () => {
+      if (typeof authenticationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_user" -> error', async () => {
+      if (typeof authenticationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.register({ user: "", provider: "local", credentials: "pass" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('login', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.login({ user: 'test', credentials: 'test-credentials' });
+      const program = authenticationHandler.login({ user: "alice", credentials: "secret123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.login({ user: 'test', credentials: 'test-credentials' });
+      const program = authenticationHandler.login({ user: "alice", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.login({ user: 'test', credentials: 'test-credentials' });
+      const program = authenticationHandler.login({ user: "alice", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.login({ user: 'test', credentials: 'test-credentials' });
+      const program = authenticationHandler.login({ user: "alice", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.login({ user: 'test', credentials: 'test-credentials' });
+      const program = authenticationHandler.login({ user: "alice", credentials: "secret123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Authentication functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authenticationHandler.login !== 'function') return;
       try {
-        const result = await interpret(authenticationHandler.login({ user: 'test', credentials: 'test-credentials' }), storage);
+        const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Authentication functional handler', () => {
       }
     });
 
+    it('fixture "login_valid" -> ok', async () => {
+      if (typeof authenticationHandler.login !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "login_wrong_pass" -> error', async () => {
+      if (typeof authenticationHandler.login !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "wrong-password" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('logout', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.logout({ user: 'test' });
+      const program = authenticationHandler.logout({ user: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.logout({ user: 'test' });
+      const program = authenticationHandler.logout({ user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.logout({ user: 'test' });
+      const program = authenticationHandler.logout({ user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.logout({ user: 'test' });
+      const program = authenticationHandler.logout({ user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.logout({ user: 'test' });
+      const program = authenticationHandler.logout({ user: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Authentication functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authenticationHandler.logout !== 'function') return;
       try {
-        const result = await interpret(authenticationHandler.logout({ user: 'test' }), storage);
+        const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Authentication functional handler', () => {
       }
     });
 
+    it('fixture "logout_existing" -> ok', async () => {
+      if (typeof authenticationHandler.logout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "logout_unknown" -> error', async () => {
+      if (typeof authenticationHandler.logout !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.logout({ user: "nonexistent-user" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('authenticate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.authenticate({ token: 'test-token' });
+      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.authenticate({ token: 'test-token' });
+      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.authenticate({ token: 'test-token' });
+      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.authenticate({ token: 'test-token' });
+      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.authenticate({ token: 'test-token' });
+      const program = authenticationHandler.authenticate({ token: "tok-abc-123" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Authentication functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       try {
-        const result = await interpret(authenticationHandler.authenticate({ token: 'test-token' }), storage);
+        const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Authentication functional handler', () => {
       }
     });
 
+    it('fixture "auth_valid_token" -> ok', async () => {
+      if (typeof authenticationHandler.authenticate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "auth_invalid_token" -> error', async () => {
+      if (typeof authenticationHandler.authenticate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.authenticate({ token: "expired-or-revoked" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resetPassword', () => {
     it('builds a valid StorageProgram', () => {
-      const program = authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' });
+      const program = authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Authentication functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' });
+      const program = authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' });
+      const program = authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' });
+      const program = authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Authentication functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' });
+      const program = authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Authentication functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
       try {
-        const result = await interpret(authenticationHandler.resetPassword({ user: 'test', newCredentials: 'test-newCredentials' }), storage);
+        const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Authentication functional handler', () => {
       }
     });
 
+    it('fixture "reset_existing" -> ok', async () => {
+      if (typeof authenticationHandler.resetPassword !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reset_unknown" -> error', async () => {
+      if (typeof authenticationHandler.resetPassword !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(authenticationHandler.resetPassword({ user: "nonexistent-user", newCredentials: "pass" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof authenticationHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = authenticationHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Authentication');
+    });
   });
 
   describe('invariant examples', () => {

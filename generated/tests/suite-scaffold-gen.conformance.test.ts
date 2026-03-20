@@ -26,7 +26,7 @@ describe('SuiteScaffoldGen functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('SuiteScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteScaffoldGenHandler.generate !== 'function') return;
       try {
-        const result = await interpret(suiteScaffoldGenHandler.generate({ name: 'test-name', description: 'test-description', concepts: 'test' }), storage);
+        const result = await interpret(suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('SuiteScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid_generate" -> ok', async () => {
+      if (typeof suiteScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "minimal_generate" -> ok', async () => {
+      if (typeof suiteScaffoldGenHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteScaffoldGenHandler.generate({ name: "empty-suite", description: "A minimal suite", concepts: [] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('preview', () => {
     it('builds a valid StorageProgram', () => {
-      const program = suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('SuiteScaffoldGen functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' });
+      const program = suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('SuiteScaffoldGen functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof suiteScaffoldGenHandler.preview !== 'function') return;
       try {
-        const result = await interpret(suiteScaffoldGenHandler.preview({ name: 'test-name', description: 'test-description', concepts: 'test' }), storage);
+        const result = await interpret(suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -136,6 +150,13 @@ describe('SuiteScaffoldGen functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "valid_preview" -> ok', async () => {
+      if (typeof suiteScaffoldGenHandler.preview !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -196,6 +217,31 @@ describe('SuiteScaffoldGen functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof suiteScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(suiteScaffoldGenHandler.register({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof suiteScaffoldGenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = suiteScaffoldGenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('SuiteScaffoldGen');
+    });
   });
 
   describe('invariant examples', () => {

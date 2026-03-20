@@ -26,7 +26,7 @@ describe('WidgetGenFramework functional handler', () => {
 
   describe('initialize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetGenFrameworkHandler.initialize({ provider: 'test' });
+      const program = widgetGenFrameworkHandler.initialize({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('WidgetGenFramework functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetGenFrameworkHandler.initialize({ provider: 'test' });
+      const program = widgetGenFrameworkHandler.initialize({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetGenFrameworkHandler.initialize({ provider: 'test' });
+      const program = widgetGenFrameworkHandler.initialize({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetGenFrameworkHandler.initialize({ provider: 'test' });
+      const program = widgetGenFrameworkHandler.initialize({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('WidgetGenFramework functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetGenFrameworkHandler.initialize({ provider: 'test' });
+      const program = widgetGenFrameworkHandler.initialize({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('WidgetGenFramework functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetGenFrameworkHandler.initialize !== 'function') return;
       try {
-        const result = await interpret(widgetGenFrameworkHandler.initialize({ provider: 'test' }), storage);
+        const result = await interpret(widgetGenFrameworkHandler.initialize({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('WidgetGenFramework functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof widgetGenFrameworkHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenFrameworkHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reinitialize" -> ok', async () => {
+      if (typeof widgetGenFrameworkHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenFrameworkHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' });
+      const program = widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('WidgetGenFramework functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' });
+      const program = widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' });
+      const program = widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' });
+      const program = widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('WidgetGenFramework functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' });
+      const program = widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('WidgetGenFramework functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
       try {
-        const result = await interpret(widgetGenFrameworkHandler.generate({ gen: 'test', componentName: 'test-componentName', props: 'test-props', widgetAst: 'test-widgetAst' }), storage);
+        const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,45 @@ describe('WidgetGenFramework functional handler', () => {
       }
     });
 
+    it('fixture "button_component" -> ok', async () => {
+      if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_props_widget" -> ok', async () => {
+      if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "{\"name\":\"Divider\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_ast_json" -> error', async () => {
+      if (typeof widgetGenFrameworkHandler.generate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(widgetGenFrameworkHandler.generate({ widgetAst: "not-valid-json{{" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof widgetGenFrameworkHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = widgetGenFrameworkHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WidgetGenFramework');
+    });
   });
 
 });

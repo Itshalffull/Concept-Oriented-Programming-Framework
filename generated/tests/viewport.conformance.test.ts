@@ -26,7 +26,7 @@ describe('Viewport functional handler', () => {
 
   describe('observe', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportHandler.observe({ viewport: 'test', width: 1, height: 1 });
+      const program = viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Viewport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportHandler.observe({ viewport: 'test', width: 1, height: 1 });
+      const program = viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportHandler.observe({ viewport: 'test', width: 1, height: 1 });
+      const program = viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportHandler.observe({ viewport: 'test', width: 1, height: 1 });
+      const program = viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Viewport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportHandler.observe({ viewport: 'test', width: 1, height: 1 });
+      const program = viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Viewport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewportHandler.observe !== 'function') return;
       try {
-        const result = await interpret(viewportHandler.observe({ viewport: 'test', width: 1, height: 1 }), storage);
+        const result = await interpret(viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('Viewport functional handler', () => {
       }
     });
 
+    it('fixture "desktop_landscape" -> ok', async () => {
+      if (typeof viewportHandler.observe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.observe({ viewport: "v-1", width: "1280", height: "720" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "mobile_portrait" -> ok', async () => {
+      if (typeof viewportHandler.observe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.observe({ viewport: "v-2", width: "375", height: "812" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tablet_square" -> ok', async () => {
+      if (typeof viewportHandler.observe !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.observe({ viewport: "v-3", width: "768", height: "768" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('setBreakpoints', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' });
+      const program = viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('Viewport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' });
+      const program = viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' });
+      const program = viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' });
+      const program = viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('Viewport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' });
+      const program = viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('Viewport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewportHandler.setBreakpoints !== 'function') return;
       try {
-        const result = await interpret(viewportHandler.setBreakpoints({ viewport: 'test', breakpoints: 'test-breakpoints' }), storage);
+        const result = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,32 @@ describe('Viewport functional handler', () => {
       }
     });
 
+    it('fixture "custom_breakpoints" -> ok', async () => {
+      if (typeof viewportHandler.setBreakpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"mobile\":{\"min\":0,\"max\":599},\"tablet\":{\"min\":600,\"max\":1023},\"desktop\":{\"min\":1024,\"max\":9999}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_breakpoint_json" -> invalid', async () => {
+      if (typeof viewportHandler.setBreakpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "not-valid-json" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
+    it('fixture "negative_min" -> invalid', async () => {
+      if (typeof viewportHandler.setBreakpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.setBreakpoints({ viewport: "v-1", breakpoints: "{\"bad\":{\"min\":-1,\"max\":100}}" }), storage);
+      expect(result.variant).toBe('invalid');
+    });
+
   });
 
   describe('getBreakpoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = viewportHandler.getBreakpoint({ viewport: 'test' });
+      const program = viewportHandler.getBreakpoint({ viewport: "v-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +192,21 @@ describe('Viewport functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = viewportHandler.getBreakpoint({ viewport: 'test' });
+      const program = viewportHandler.getBreakpoint({ viewport: "v-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = viewportHandler.getBreakpoint({ viewport: 'test' });
+      const program = viewportHandler.getBreakpoint({ viewport: "v-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = viewportHandler.getBreakpoint({ viewport: 'test' });
+      const program = viewportHandler.getBreakpoint({ viewport: "v-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +219,7 @@ describe('Viewport functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = viewportHandler.getBreakpoint({ viewport: 'test' });
+      const program = viewportHandler.getBreakpoint({ viewport: "v-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +228,7 @@ describe('Viewport functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof viewportHandler.getBreakpoint !== 'function') return;
       try {
-        const result = await interpret(viewportHandler.getBreakpoint({ viewport: 'test' }), storage);
+        const result = await interpret(viewportHandler.getBreakpoint({ viewport: "v-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +238,38 @@ describe('Viewport functional handler', () => {
       }
     });
 
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof viewportHandler.getBreakpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.getBreakpoint({ viewport: "v-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> notfound', async () => {
+      if (typeof viewportHandler.getBreakpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewportHandler.getBreakpoint({ viewport: "v-unknown" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof viewportHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = viewportHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Viewport');
+    });
   });
 
   describe('invariant examples', () => {

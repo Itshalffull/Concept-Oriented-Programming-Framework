@@ -26,7 +26,7 @@ describe('ADICOEvaluator functional handler', () => {
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' });
+      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' });
+      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' });
+      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' });
+      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' });
+      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ADICOEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
       try {
-        const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: 'test-ruleText' }), storage);
+        const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ADICOEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "parse_valid_adico" -> ok', async () => {
+      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "parse_invalid_text" -> parse_error', async () => {
+      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "this is not valid ADICO" }), storage);
+      expect(result.variant).toBe('parse_error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' });
+      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' });
+      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' });
+      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' });
+      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' });
+      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ADICOEvaluator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: 'test', context: 'test-context' }), storage);
+        const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +152,38 @@ describe('ADICOEvaluator functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_admin_must_review" -> ok', async () => {
+      if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_mismatch_actor" -> not_applicable', async () => {
+      if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"guest\",\"role\":\"guest\",\"action\":\"delete\"}" }), storage);
+      expect(result.variant).toBe('not_applicable');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof aDICOEvaluatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = aDICOEvaluatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ADICOEvaluator');
+    });
   });
 
   describe('invariant examples', () => {

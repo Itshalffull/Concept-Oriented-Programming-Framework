@@ -26,7 +26,7 @@ describe('DesignToken functional handler', () => {
 
   describe('define', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' });
+      const program = designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' });
+      const program = designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' });
+      const program = designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' });
+      const program = designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' });
+      const program = designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.define({ token: 'test', name: 'test-name', value: 'test-value', type: 'test-type', tier: 'test-tier' }), storage);
+        const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,32 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "valid_define_color" -> ok', async () => {
+      if (typeof designTokenHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "valid_define_spacing" -> ok', async () => {
+      if (typeof designTokenHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_duplicate" -> error', async () => {
+      if (typeof designTokenHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('alias', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +113,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +140,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' });
+      const program = designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +149,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.alias({ token: 'test', name: 'test-name', reference: 'test', tier: 'test-tier' }), storage);
+        const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +159,25 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "valid_alias" -> ok', async () => {
+      if (typeof designTokenHandler.alias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "alias_nonexistent_ref" -> error', async () => {
+      if (typeof designTokenHandler.alias !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.alias({ token: "bad-alias", name: "bad-alias", reference: "nonexistent-token", tier: "semantic" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.resolve({ token: 'test' });
+      const program = designTokenHandler.resolve({ token: "blue-500" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +185,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.resolve({ token: 'test' });
+      const program = designTokenHandler.resolve({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.resolve({ token: 'test' });
+      const program = designTokenHandler.resolve({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.resolve({ token: 'test' });
+      const program = designTokenHandler.resolve({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +212,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.resolve({ token: 'test' });
+      const program = designTokenHandler.resolve({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +221,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.resolve({ token: 'test' }), storage);
+        const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +231,25 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "valid_resolve" -> ok', async () => {
+      if (typeof designTokenHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_nonexistent" -> error', async () => {
+      if (typeof designTokenHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.resolve({ token: "nonexistent-token" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('update', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.update({ token: 'test', value: 'test' });
+      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +257,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.update({ token: 'test', value: 'test' });
+      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.update({ token: 'test', value: 'test' });
+      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.update({ token: 'test', value: 'test' });
+      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +284,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.update({ token: 'test', value: 'test' });
+      const program = designTokenHandler.update({ token: "blue-500", value: "#2563eb" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +293,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.update !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.update({ token: 'test', value: 'test' }), storage);
+        const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +303,25 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "valid_update" -> ok', async () => {
+      if (typeof designTokenHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_nonexistent" -> error', async () => {
+      if (typeof designTokenHandler.update !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.update({ token: "nonexistent-token", value: "#000000" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('remove', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.remove({ token: 'test' });
+      const program = designTokenHandler.remove({ token: "blue-500" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.remove({ token: 'test' });
+      const program = designTokenHandler.remove({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.remove({ token: 'test' });
+      const program = designTokenHandler.remove({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.remove({ token: 'test' });
+      const program = designTokenHandler.remove({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.remove({ token: 'test' });
+      const program = designTokenHandler.remove({ token: "blue-500" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.remove !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.remove({ token: 'test' }), storage);
+        const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +375,25 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "valid_remove" -> ok', async () => {
+      if (typeof designTokenHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_nonexistent" -> error', async () => {
+      if (typeof designTokenHandler.remove !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.remove({ token: "nonexistent-token" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = designTokenHandler.export({ format: 'test-format' });
+      const program = designTokenHandler.export({ format: "css" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +401,21 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = designTokenHandler.export({ format: 'test-format' });
+      const program = designTokenHandler.export({ format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = designTokenHandler.export({ format: 'test-format' });
+      const program = designTokenHandler.export({ format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = designTokenHandler.export({ format: 'test-format' });
+      const program = designTokenHandler.export({ format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +428,7 @@ describe('DesignToken functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = designTokenHandler.export({ format: 'test-format' });
+      const program = designTokenHandler.export({ format: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +437,7 @@ describe('DesignToken functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
       try {
-        const result = await interpret(designTokenHandler.export({ format: 'test-format' }), storage);
+        const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +447,45 @@ describe('DesignToken functional handler', () => {
       }
     });
 
+    it('fixture "export_css" -> ok', async () => {
+      if (typeof designTokenHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_dtcg" -> ok', async () => {
+      if (typeof designTokenHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.export({ format: "dtcg" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "export_unsupported" -> error', async () => {
+      if (typeof designTokenHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(designTokenHandler.export({ format: "yaml" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof designTokenHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = designTokenHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DesignToken');
+    });
   });
 
   describe('invariant examples', () => {

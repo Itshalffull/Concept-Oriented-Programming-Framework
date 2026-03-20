@@ -19,7 +19,7 @@ describe('InvariantExtractionProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof invariantExtractionProviderHandler.extract !== 'function') return;
       try {
-        const result = await invariantExtractionProviderHandler.extract({ program: 'test-program', conceptSpec: 'test-conceptSpec' }, storage);
+        const result = await invariantExtractionProviderHandler.extract({ program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{\"name\":\"Alice\"}}]}", conceptSpec: "{\"state\":{\"users\":\"set U\"}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('InvariantExtractionProvider imperative handler', () => {
       }
     });
 
+    it('fixture "extract_with_put" -> ok', async () => {
+      if (typeof invariantExtractionProviderHandler.extract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await invariantExtractionProviderHandler.extract({ program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{\"name\":\"Alice\"}}]}", conceptSpec: "{\"state\":{\"users\":\"set U\"}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extract_with_get_only" -> ok', async () => {
+      if (typeof invariantExtractionProviderHandler.extract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await invariantExtractionProviderHandler.extract({ program: "get(users, u1); put(users, u1, data)", conceptSpec: "User { state { users: set U } }" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "extract_empty_program" -> error', async () => {
+      if (typeof invariantExtractionProviderHandler.extract !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await invariantExtractionProviderHandler.extract({ program: "", conceptSpec: "" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof invariantExtractionProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = invariantExtractionProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InvariantExtractionProvider');
+    });
   });
 
   describe('invariant examples', () => {

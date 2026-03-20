@@ -26,7 +26,7 @@ describe('ScoreApi functional handler', () => {
 
   describe('listFiles', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.listFiles({ pattern: 'test-pattern' });
+      const program = scoreApiHandler.listFiles({ pattern: "*" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.listFiles({ pattern: 'test-pattern' });
+      const program = scoreApiHandler.listFiles({ pattern: "*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.listFiles({ pattern: 'test-pattern' });
+      const program = scoreApiHandler.listFiles({ pattern: "*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.listFiles({ pattern: 'test-pattern' });
+      const program = scoreApiHandler.listFiles({ pattern: "*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.listFiles({ pattern: 'test-pattern' });
+      const program = scoreApiHandler.listFiles({ pattern: "*" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.listFiles !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.listFiles({ pattern: 'test-pattern' }), storage);
+        const result = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof scoreApiHandler.listFiles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> error', async () => {
+      if (typeof scoreApiHandler.listFiles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listFiles({ pattern: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getFileTree', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 });
+      const program = scoreApiHandler.getFileTree({ path: ".", depth: "2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 });
+      const program = scoreApiHandler.getFileTree({ path: ".", depth: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 });
+      const program = scoreApiHandler.getFileTree({ path: ".", depth: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 });
+      const program = scoreApiHandler.getFileTree({ path: ".", depth: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 });
+      const program = scoreApiHandler.getFileTree({ path: ".", depth: "2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getFileTree !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getFileTree({ path: 'test-path', depth: 1 }), storage);
+        const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "tree_root" -> ok', async () => {
+      if (typeof scoreApiHandler.getFileTree !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "tree_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getFileTree !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFileTree({ path: "/nonexistent", depth: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getFileContent', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getFileContent({ path: 'test-path' });
+      const program = scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getFileContent({ path: 'test-path' });
+      const program = scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getFileContent({ path: 'test-path' });
+      const program = scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getFileContent({ path: 'test-path' });
+      const program = scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getFileContent({ path: 'test-path' });
+      const program = scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getFileContent !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getFileContent({ path: 'test-path' }), storage);
+        const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_handler" -> ok', async () => {
+      if (typeof scoreApiHandler.getFileContent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getFileContent !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFileContent({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDefinitions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDefinitions({ path: 'test-path' });
+      const program = scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDefinitions({ path: 'test-path' });
+      const program = scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDefinitions({ path: 'test-path' });
+      const program = scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDefinitions({ path: 'test-path' });
+      const program = scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDefinitions({ path: 'test-path' });
+      const program = scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDefinitions !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDefinitions({ path: 'test-path' }), storage);
+        const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_defs" -> ok', async () => {
+      if (typeof scoreApiHandler.getDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_defs_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getDefinitions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDefinitions({ path: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('matchPattern', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' });
+      const program = scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' });
+      const program = scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' });
+      const program = scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' });
+      const program = scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' });
+      const program = scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.matchPattern !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.matchPattern({ pattern: 'test-pattern', language: 'test-language' }), storage);
+        const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "match_fns" -> ok', async () => {
+      if (typeof scoreApiHandler.matchPattern !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "match_empty" -> error', async () => {
+      if (typeof scoreApiHandler.matchPattern !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.matchPattern({ pattern: "", language: "typescript" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findSymbol', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.findSymbol({ name: 'test-name' });
+      const program = scoreApiHandler.findSymbol({ name: "flagHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.findSymbol({ name: 'test-name' });
+      const program = scoreApiHandler.findSymbol({ name: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.findSymbol({ name: 'test-name' });
+      const program = scoreApiHandler.findSymbol({ name: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.findSymbol({ name: 'test-name' });
+      const program = scoreApiHandler.findSymbol({ name: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.findSymbol({ name: 'test-name' });
+      const program = scoreApiHandler.findSymbol({ name: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.findSymbol !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.findSymbol({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,11 +440,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "find_flag" -> ok', async () => {
+      if (typeof scoreApiHandler.findSymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_empty" -> error', async () => {
+      if (typeof scoreApiHandler.findSymbol !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.findSymbol({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getReferences', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getReferences({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getReferences({ symbol: "flagHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -382,21 +466,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getReferences({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getReferences({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getReferences({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getReferences({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getReferences({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getReferences({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -409,7 +493,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getReferences({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getReferences({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -418,7 +502,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getReferences !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getReferences({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -428,11 +512,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "refs_flag" -> ok', async () => {
+      if (typeof scoreApiHandler.getReferences !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "refs_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getReferences !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getReferences({ symbol: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getScope', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getScope({ file: 'test-file', line: 1 });
+      const program = scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -440,21 +538,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getScope({ file: 'test-file', line: 1 });
+      const program = scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getScope({ file: 'test-file', line: 1 });
+      const program = scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getScope({ file: 'test-file', line: 1 });
+      const program = scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -467,7 +565,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getScope({ file: 'test-file', line: 1 });
+      const program = scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -476,7 +574,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getScope !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getScope({ file: 'test-file', line: 1 }), storage);
+        const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -486,11 +584,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "scope_handler" -> ok', async () => {
+      if (typeof scoreApiHandler.getScope !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "scope_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getScope !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getScope({ file: "", line: "0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getRelationships', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getRelationships({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getRelationships({ symbol: "flagHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -498,21 +610,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getRelationships({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getRelationships({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getRelationships({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getRelationships({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getRelationships({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getRelationships({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -525,7 +637,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getRelationships({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getRelationships({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -534,7 +646,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getRelationships !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getRelationships({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -542,6 +654,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "rels_flag" -> ok', async () => {
+      if (typeof scoreApiHandler.getRelationships !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "rels_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getRelationships !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getRelationships({ symbol: "" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -602,11 +728,18 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof scoreApiHandler.listConcepts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listConcepts({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getConcept({ name: 'test-name' });
+      const program = scoreApiHandler.getConcept({ name: "Flag" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -614,21 +747,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getConcept({ name: 'test-name' });
+      const program = scoreApiHandler.getConcept({ name: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getConcept({ name: 'test-name' });
+      const program = scoreApiHandler.getConcept({ name: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getConcept({ name: 'test-name' });
+      const program = scoreApiHandler.getConcept({ name: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -641,7 +774,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getConcept({ name: 'test-name' });
+      const program = scoreApiHandler.getConcept({ name: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -650,7 +783,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getConcept !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getConcept({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -660,11 +793,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_flag" -> ok', async () => {
+      if (typeof scoreApiHandler.getConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_2" -> error', async () => {
+      if (typeof scoreApiHandler.getConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getConcept({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getAction({ concept: "Flag", action: "flag" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -672,21 +819,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getAction({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getAction({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getAction({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -699,7 +846,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getAction({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -708,7 +855,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getAction !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getAction({ concept: 'test-concept', action: 'test-action' }), storage);
+        const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -716,6 +863,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_flag_action" -> ok', async () => {
+      if (typeof scoreApiHandler.getAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_action" -> error', async () => {
+      if (typeof scoreApiHandler.getAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getAction({ concept: "", action: "" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -776,11 +937,18 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_2" -> ok', async () => {
+      if (typeof scoreApiHandler.listSyncs !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listSyncs({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getSync', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getSync({ name: 'test-name' });
+      const program = scoreApiHandler.getSync({ name: "onUserCreate" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -788,21 +956,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getSync({ name: 'test-name' });
+      const program = scoreApiHandler.getSync({ name: "onUserCreate" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getSync({ name: 'test-name' });
+      const program = scoreApiHandler.getSync({ name: "onUserCreate" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getSync({ name: 'test-name' });
+      const program = scoreApiHandler.getSync({ name: "onUserCreate" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -815,7 +983,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getSync({ name: 'test-name' });
+      const program = scoreApiHandler.getSync({ name: "onUserCreate" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -824,7 +992,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getSync !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getSync({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -834,11 +1002,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_sync" -> ok', async () => {
+      if (typeof scoreApiHandler.getSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_sync" -> error', async () => {
+      if (typeof scoreApiHandler.getSync !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getSync({ name: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getFlow', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' });
+      const program = scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -846,21 +1028,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' });
+      const program = scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' });
+      const program = scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' });
+      const program = scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -873,7 +1055,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' });
+      const program = scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -882,7 +1064,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getFlow !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getFlow({ startConcept: 'test-startConcept', startAction: 'test-startAction' }), storage);
+        const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -892,11 +1074,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "flow_create" -> ok', async () => {
+      if (typeof scoreApiHandler.getFlow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "flow_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getFlow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getFlow({ startConcept: "", startAction: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getHandler', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' });
+      const program = scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -904,21 +1100,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' });
+      const program = scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' });
+      const program = scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' });
+      const program = scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -931,7 +1127,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' });
+      const program = scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -940,7 +1136,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getHandler !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getHandler({ concept: 'test-concept', language: 'test-language' }), storage);
+        const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -950,11 +1146,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_handler_ts" -> ok', async () => {
+      if (typeof scoreApiHandler.getHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_handler_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getHandler !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getHandler({ concept: "nonexistent", language: "typescript" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getActionSource', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -962,21 +1172,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -989,7 +1199,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' });
+      const program = scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -998,7 +1208,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getActionSource !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getActionSource({ concept: 'test-concept', action: 'test-action' }), storage);
+        const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1006,6 +1216,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_source" -> ok', async () => {
+      if (typeof scoreApiHandler.getActionSource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_source_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getActionSource !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getActionSource({ concept: "nonexistent", action: "x" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -1066,6 +1290,13 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_3" -> ok', async () => {
+      if (typeof scoreApiHandler.listHandlers !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listHandlers({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('implementationGaps', () => {
@@ -1124,11 +1355,18 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_4" -> ok', async () => {
+      if (typeof scoreApiHandler.implementationGaps !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.implementationGaps({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolveStackTrace', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1136,21 +1374,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1163,7 +1401,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' });
+      const program = scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1172,7 +1410,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: 'test-stackTrace' }), storage);
+        const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1182,11 +1420,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "resolve_trace" -> ok', async () => {
+      if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_empty" -> error', async () => {
+      if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getWidgetImpl', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' });
+      const program = scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1194,21 +1446,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' });
+      const program = scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' });
+      const program = scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' });
+      const program = scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1221,7 +1473,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' });
+      const program = scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1230,7 +1482,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: 'test-widget', framework: 'test-framework' }), storage);
+        const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1240,11 +1492,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_react_dialog" -> ok', async () => {
+      if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_impl" -> error', async () => {
+      if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "nonexistent", framework: "react" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getThemeImpl', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' });
+      const program = scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1252,21 +1518,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' });
+      const program = scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' });
+      const program = scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' });
+      const program = scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1279,7 +1545,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' });
+      const program = scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1288,7 +1554,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getThemeImpl({ theme: 'test-theme', platform: 'test-platform' }), storage);
+        const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1298,11 +1564,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_css_light" -> ok', async () => {
+      if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_theme" -> error', async () => {
+      if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "nonexistent", platform: "css" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDeployment', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDeployment({ name: 'test-name' });
+      const program = scoreApiHandler.getDeployment({ name: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1310,21 +1590,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDeployment({ name: 'test-name' });
+      const program = scoreApiHandler.getDeployment({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDeployment({ name: 'test-name' });
+      const program = scoreApiHandler.getDeployment({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDeployment({ name: 'test-name' });
+      const program = scoreApiHandler.getDeployment({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1337,7 +1617,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDeployment({ name: 'test-name' });
+      const program = scoreApiHandler.getDeployment({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1346,7 +1626,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDeployment !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDeployment({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1356,11 +1636,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_prod" -> ok', async () => {
+      if (typeof scoreApiHandler.getDeployment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_missing_deploy" -> error', async () => {
+      if (typeof scoreApiHandler.getDeployment !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeployment({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDeploymentTopology', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDeploymentTopology({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1368,21 +1662,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDeploymentTopology({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDeploymentTopology({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDeploymentTopology({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1395,7 +1689,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDeploymentTopology({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1404,7 +1698,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1414,11 +1708,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_topo" -> ok', async () => {
+      if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_topo_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDeploymentHealth', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDeploymentHealth({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1426,21 +1734,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDeploymentHealth({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDeploymentHealth({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDeploymentHealth({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1453,7 +1761,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDeploymentHealth({ name: 'test-name' });
+      const program = scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1462,7 +1770,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1470,6 +1778,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_health" -> ok', async () => {
+      if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_health_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -1530,11 +1852,18 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_5" -> ok', async () => {
+      if (typeof scoreApiHandler.listSuites !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listSuites({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getSuite', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getSuite({ name: 'test-name' });
+      const program = scoreApiHandler.getSuite({ name: "identity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1542,21 +1871,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getSuite({ name: 'test-name' });
+      const program = scoreApiHandler.getSuite({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getSuite({ name: 'test-name' });
+      const program = scoreApiHandler.getSuite({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getSuite({ name: 'test-name' });
+      const program = scoreApiHandler.getSuite({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1569,7 +1898,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getSuite({ name: 'test-name' });
+      const program = scoreApiHandler.getSuite({ name: "identity" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1578,7 +1907,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getSuite !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getSuite({ name: 'test-name' }), storage);
+        const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1586,6 +1915,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "get_suite" -> ok', async () => {
+      if (typeof scoreApiHandler.getSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_suite_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getSuite !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getSuite({ name: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -1646,11 +1989,18 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_6" -> ok', async () => {
+      if (typeof scoreApiHandler.listInterfaces !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.listInterfaces({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('getEndpoints', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' });
+      const program = scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1658,21 +2008,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' });
+      const program = scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' });
+      const program = scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' });
+      const program = scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1685,7 +2035,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' });
+      const program = scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1694,7 +2044,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getEndpoints !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getEndpoints({ interface: 'test-interface', target: 'test-target' }), storage);
+        const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1704,11 +2054,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "get_rest_endpoints" -> ok', async () => {
+      if (typeof scoreApiHandler.getEndpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_endpoints_missing" -> error', async () => {
+      if (typeof scoreApiHandler.getEndpoints !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getEndpoints({ interface: "nonexistent", target: "rest" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('traceEndpoint', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1716,21 +2080,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1743,7 +2107,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' });
+      const program = scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1752,7 +2116,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.traceEndpoint({ target: 'test-target', path: 'test-path', method: 'test-method' }), storage);
+        const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1762,11 +2126,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "trace_users" -> ok', async () => {
+      if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "trace_empty" -> error', async () => {
+      if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.traceEndpoint({ target: "", path: "", method: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDependencies', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDependencies({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependencies({ symbol: "flagHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1774,21 +2152,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDependencies({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependencies({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDependencies({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependencies({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDependencies({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependencies({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1801,7 +2179,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDependencies({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependencies({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1810,7 +2188,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDependencies !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDependencies({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1820,11 +2198,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "deps_symbol" -> ok', async () => {
+      if (typeof scoreApiHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deps_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getDependencies !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDependencies({ symbol: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDependents', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDependents({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependents({ symbol: "flagHandler" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1832,21 +2224,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDependents({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependents({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDependents({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependents({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDependents({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependents({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1859,7 +2251,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDependents({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.getDependents({ symbol: "flagHandler" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1868,7 +2260,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDependents !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDependents({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1878,11 +2270,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "dependents" -> ok', async () => {
+      if (typeof scoreApiHandler.getDependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dependents_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getDependents !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDependents({ symbol: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getImpact', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getImpact({ file: 'test-file' });
+      const program = scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1890,21 +2296,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getImpact({ file: 'test-file' });
+      const program = scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getImpact({ file: 'test-file' });
+      const program = scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getImpact({ file: 'test-file' });
+      const program = scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1917,7 +2323,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getImpact({ file: 'test-file' });
+      const program = scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1926,7 +2332,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getImpact !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getImpact({ file: 'test-file' }), storage);
+        const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1936,11 +2342,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "impact_handler" -> ok', async () => {
+      if (typeof scoreApiHandler.getImpact !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "impact_empty" -> error', async () => {
+      if (typeof scoreApiHandler.getImpact !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getImpact({ file: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getDataFlow', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' });
+      const program = scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -1948,21 +2368,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' });
+      const program = scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' });
+      const program = scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' });
+      const program = scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -1975,7 +2395,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' });
+      const program = scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -1984,7 +2404,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.getDataFlow !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.getDataFlow({ from: 'test-from', to: 'test-to' }), storage);
+        const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -1994,11 +2414,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "flow_path" -> ok', async () => {
+      if (typeof scoreApiHandler.getDataFlow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "flow_empty_2" -> error', async () => {
+      if (typeof scoreApiHandler.getDataFlow !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getDataFlow({ from: "", to: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('search', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.search({ query: 'test-query', limit: 1 });
+      const program = scoreApiHandler.search({ query: "user authentication", limit: "10" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -2006,21 +2440,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.search({ query: 'test-query', limit: 1 });
+      const program = scoreApiHandler.search({ query: "user authentication", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.search({ query: 'test-query', limit: 1 });
+      const program = scoreApiHandler.search({ query: "user authentication", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.search({ query: 'test-query', limit: 1 });
+      const program = scoreApiHandler.search({ query: "user authentication", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -2033,7 +2467,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.search({ query: 'test-query', limit: 1 });
+      const program = scoreApiHandler.search({ query: "user authentication", limit: "10" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -2042,7 +2476,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.search !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.search({ query: 'test-query', limit: 1 }), storage);
+        const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -2052,11 +2486,25 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "search_user" -> ok', async () => {
+      if (typeof scoreApiHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "search_empty" -> error', async () => {
+      if (typeof scoreApiHandler.search !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.search({ query: "", limit: "10" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('explain', () => {
     it('builds a valid StorageProgram', () => {
-      const program = scoreApiHandler.explain({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.explain({ symbol: "Flag" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -2064,21 +2512,21 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = scoreApiHandler.explain({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.explain({ symbol: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = scoreApiHandler.explain({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.explain({ symbol: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = scoreApiHandler.explain({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.explain({ symbol: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -2091,7 +2539,7 @@ describe('ScoreApi functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = scoreApiHandler.explain({ symbol: 'test-symbol' });
+      const program = scoreApiHandler.explain({ symbol: "Flag" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -2100,7 +2548,7 @@ describe('ScoreApi functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof scoreApiHandler.explain !== 'function') return;
       try {
-        const result = await interpret(scoreApiHandler.explain({ symbol: 'test-symbol' }), storage);
+        const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -2108,6 +2556,20 @@ describe('ScoreApi functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "explain_flag" -> ok', async () => {
+      if (typeof scoreApiHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "explain_empty" -> error', async () => {
+      if (typeof scoreApiHandler.explain !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.explain({ symbol: "" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -2168,6 +2630,13 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_7" -> ok', async () => {
+      if (typeof scoreApiHandler.status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.status({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('reindex', () => {
@@ -2226,6 +2695,31 @@ describe('ScoreApi functional handler', () => {
       }
     });
 
+    it('fixture "valid_8" -> ok', async () => {
+      if (typeof scoreApiHandler.reindex !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.reindex({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof scoreApiHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = scoreApiHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ScoreApi');
+    });
   });
 
   describe('invariant examples', () => {

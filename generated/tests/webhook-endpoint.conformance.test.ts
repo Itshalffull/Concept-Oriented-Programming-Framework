@@ -19,7 +19,7 @@ describe('WebhookEndpoint imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof webhookEndpointHandler.register !== 'function') return;
       try {
-        const result = await webhookEndpointHandler.register({ name: 'test-name', url: 'test-url', headers: 'test-headers' }, storage);
+        const result = await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,13 +29,27 @@ describe('WebhookEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "register_deploy_hook" -> ok', async () => {
+      if (typeof webhookEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webhookEndpointHandler.register({ name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_slack_hook" -> ok', async () => {
+      if (typeof webhookEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webhookEndpointHandler.register({ name: "slack-notify", url: "https://hooks.slack.com/services/T00/B00/xxx", headers: "{}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
       if (typeof webhookEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await webhookEndpointHandler.resolve({ name: 'test-name' }, storage);
+        const result = await webhookEndpointHandler.resolve({ name: "deploy-webhook" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +57,20 @@ describe('WebhookEndpoint imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "resolve_deploy" -> ok', async () => {
+      if (typeof webhookEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webhookEndpointHandler.resolve({ name: "deploy-webhook" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_unknown" -> notFound', async () => {
+      if (typeof webhookEndpointHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webhookEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -61,6 +89,30 @@ describe('WebhookEndpoint imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof webhookEndpointHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await webhookEndpointHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof webhookEndpointHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = webhookEndpointHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('WebhookEndpoint');
+    });
   });
 
   describe('invariant examples', () => {

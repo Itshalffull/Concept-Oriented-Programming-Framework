@@ -26,7 +26,7 @@ describe('AccessControl functional handler', () => {
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' });
+      const program = accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' });
+      const program = accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' });
+      const program = accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' });
+      const program = accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' });
+      const program = accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AccessControl functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessControlHandler.check !== 'function') return;
       try {
-        const result = await interpret(accessControlHandler.check({ resource: 'test-resource', action: 'test-action', context: 'test-context' }), storage);
+        const result = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AccessControl functional handler', () => {
       }
     });
 
+    it('fixture "check_read" -> ok', async () => {
+      if (typeof accessControlHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.check({ resource: "document:123", action: "read", context: "user:alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_empty_resource" -> error', async () => {
+      if (typeof accessControlHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.check({ resource: "", action: "read", context: "user:alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('orIf', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessControlHandler.orIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.orIf({ left: "neutral", right: "allowed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessControlHandler.orIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.orIf({ left: "neutral", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessControlHandler.orIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.orIf({ left: "neutral", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessControlHandler.orIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.orIf({ left: "neutral", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessControlHandler.orIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.orIf({ left: "neutral", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AccessControl functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessControlHandler.orIf !== 'function') return;
       try {
-        const result = await interpret(accessControlHandler.orIf({ left: 'test-left', right: 'test-right' }), storage);
+        const result = await interpret(accessControlHandler.orIf({ left: "neutral", right: "allowed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AccessControl functional handler', () => {
       }
     });
 
+    it('fixture "orIf_allowed" -> ok', async () => {
+      if (typeof accessControlHandler.orIf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.orIf({ left: "neutral", right: "allowed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "orIf_forbidden" -> error', async () => {
+      if (typeof accessControlHandler.orIf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.orIf({ left: "forbidden", right: "allowed" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('andIf', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessControlHandler.andIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.andIf({ left: "allowed", right: "allowed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessControlHandler.andIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.andIf({ left: "allowed", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessControlHandler.andIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.andIf({ left: "allowed", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessControlHandler.andIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.andIf({ left: "allowed", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AccessControl functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessControlHandler.andIf({ left: 'test-left', right: 'test-right' });
+      const program = accessControlHandler.andIf({ left: "allowed", right: "allowed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AccessControl functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessControlHandler.andIf !== 'function') return;
       try {
-        const result = await interpret(accessControlHandler.andIf({ left: 'test-left', right: 'test-right' }), storage);
+        const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "allowed" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,6 +224,38 @@ describe('AccessControl functional handler', () => {
       }
     });
 
+    it('fixture "andIf_both_allowed" -> ok', async () => {
+      if (typeof accessControlHandler.andIf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "allowed" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "andIf_one_forbidden" -> error', async () => {
+      if (typeof accessControlHandler.andIf !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessControlHandler.andIf({ left: "allowed", right: "forbidden" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof accessControlHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = accessControlHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AccessControl');
+    });
   });
 
   describe('invariant examples', () => {

@@ -26,7 +26,7 @@ describe('PageAsRecord functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.create !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.create({ page: 'test', schema: 'test-schema' }), storage);
+        const result = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "create_page" -> ok', async () => {
+      if (typeof pageAsRecordHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_page" -> error', async () => {
+      if (typeof pageAsRecordHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.create({ page: "", schema: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('setProperty', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' });
+      const program = pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' });
+      const program = pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' });
+      const program = pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' });
+      const program = pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' });
+      const program = pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.setProperty !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.setProperty({ page: 'test', key: 'test-key', value: 'test-value' }), storage);
+        const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "set_title" -> ok', async () => {
+      if (typeof pageAsRecordHandler.setProperty !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_on_missing" -> error', async () => {
+      if (typeof pageAsRecordHandler.setProperty !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.setProperty({ page: "nonexistent", key: "title", value: "Test" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('getProperty', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' });
+      const program = pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' });
+      const program = pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' });
+      const program = pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' });
+      const program = pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' });
+      const program = pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.getProperty !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.getProperty({ page: 'test', key: 'test-key' }), storage);
+        const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "get_title" -> ok', async () => {
+      if (typeof pageAsRecordHandler.getProperty !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_from_missing" -> error', async () => {
+      if (typeof pageAsRecordHandler.getProperty !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.getProperty({ page: "nonexistent", key: "title" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('appendToBody', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' });
+      const program = pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' });
+      const program = pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' });
+      const program = pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' });
+      const program = pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' });
+      const program = pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.appendToBody({ page: 'test', content: 'test-content' }), storage);
+        const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "append_text" -> ok', async () => {
+      if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "append_to_missing" -> error', async () => {
+      if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.appendToBody({ page: "nonexistent", content: "Some text" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('attachToSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.attachToSchema({ page: 'test', schema: 'test-schema' }), storage);
+        const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "attach_schema" -> ok', async () => {
+      if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "attach_to_missing" -> error', async () => {
+      if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "nonexistent", schema: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('convertFromFreeform', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('PageAsRecord functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' });
+      const program = pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('PageAsRecord functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
       try {
-        const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: 'test', schema: 'test-schema' }), storage);
+        const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('PageAsRecord functional handler', () => {
       }
     });
 
+    it('fixture "convert_page" -> ok', async () => {
+      if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "convert_missing" -> error', async () => {
+      if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "nonexistent", schema: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof pageAsRecordHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = pageAsRecordHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('PageAsRecord');
+    });
   });
 
   describe('invariant examples', () => {

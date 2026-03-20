@@ -26,7 +26,7 @@ describe('Policy functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' });
+      const program = policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Policy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' });
+      const program = policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' });
+      const program = policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' });
+      const program = policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Policy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' });
+      const program = policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Policy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof policyHandler.create !== 'function') return;
       try {
-        const result = await interpret(policyHandler.create({ attributes: 'test-attributes', deontic: 'test-deontic', aim: 'test-aim', conditions: 'test-conditions', orElse: 'test', domain: 'test' }), storage);
+        const result = await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Policy functional handler', () => {
       }
     });
 
+    it('fixture "create_must_policy" -> ok', async () => {
+      if (typeof policyHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_missing_attributes" -> error', async () => {
+      if (typeof policyHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.create({ attributes: "", deontic: "Must", aim: "review", conditions: "always" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = policyHandler.evaluate({ policy: 'test', context: 'test-context' });
+      const program = policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Policy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = policyHandler.evaluate({ policy: 'test', context: 'test-context' });
+      const program = policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = policyHandler.evaluate({ policy: 'test', context: 'test-context' });
+      const program = policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = policyHandler.evaluate({ policy: 'test', context: 'test-context' });
+      const program = policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Policy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = policyHandler.evaluate({ policy: 'test', context: 'test-context' });
+      const program = policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Policy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof policyHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(policyHandler.evaluate({ policy: 'test', context: 'test-context' }), storage);
+        const result = await interpret(policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Policy functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_active_policy" -> ok', async () => {
+      if (typeof policyHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_unknown_policy" -> not_applicable', async () => {
+      if (typeof policyHandler.evaluate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.evaluate({ policy: "nonexistent", context: "{}" }), storage);
+      expect(result.variant).toBe('not_applicable');
+    });
+
   });
 
   describe('suspend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = policyHandler.suspend({ policy: 'test' });
+      const program = policyHandler.suspend({ policy: "policy-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Policy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = policyHandler.suspend({ policy: 'test' });
+      const program = policyHandler.suspend({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = policyHandler.suspend({ policy: 'test' });
+      const program = policyHandler.suspend({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = policyHandler.suspend({ policy: 'test' });
+      const program = policyHandler.suspend({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Policy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = policyHandler.suspend({ policy: 'test' });
+      const program = policyHandler.suspend({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Policy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof policyHandler.suspend !== 'function') return;
       try {
-        const result = await interpret(policyHandler.suspend({ policy: 'test' }), storage);
+        const result = await interpret(policyHandler.suspend({ policy: "policy-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Policy functional handler', () => {
       }
     });
 
+    it('fixture "suspend_active_policy" -> ok', async () => {
+      if (typeof policyHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.suspend({ policy: "policy-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "suspend_unknown_policy" -> error', async () => {
+      if (typeof policyHandler.suspend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.suspend({ policy: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('repeal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = policyHandler.repeal({ policy: 'test' });
+      const program = policyHandler.repeal({ policy: "policy-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Policy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = policyHandler.repeal({ policy: 'test' });
+      const program = policyHandler.repeal({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = policyHandler.repeal({ policy: 'test' });
+      const program = policyHandler.repeal({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = policyHandler.repeal({ policy: 'test' });
+      const program = policyHandler.repeal({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Policy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = policyHandler.repeal({ policy: 'test' });
+      const program = policyHandler.repeal({ policy: "policy-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Policy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof policyHandler.repeal !== 'function') return;
       try {
-        const result = await interpret(policyHandler.repeal({ policy: 'test' }), storage);
+        const result = await interpret(policyHandler.repeal({ policy: "policy-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Policy functional handler', () => {
       }
     });
 
+    it('fixture "repeal_active_policy" -> ok', async () => {
+      if (typeof policyHandler.repeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.repeal({ policy: "policy-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "repeal_unknown_policy" -> error', async () => {
+      if (typeof policyHandler.repeal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.repeal({ policy: "nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('modify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' });
+      const program = policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Policy functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' });
+      const program = policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' });
+      const program = policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' });
+      const program = policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Policy functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' });
+      const program = policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Policy functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof policyHandler.modify !== 'function') return;
       try {
-        const result = await interpret(policyHandler.modify({ policy: 'test', field: 'test-field', newValue: 'test-newValue' }), storage);
+        const result = await interpret(policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Policy functional handler', () => {
       }
     });
 
+    it('fixture "modify_aim" -> ok', async () => {
+      if (typeof policyHandler.modify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "modify_unknown_policy" -> not_found', async () => {
+      if (typeof policyHandler.modify !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(policyHandler.modify({ policy: "nonexistent", field: "aim", newValue: "anything" }), storage);
+      expect(result.variant).toBe('not_found');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof policyHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = policyHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Policy');
+    });
   });
 
   describe('invariant examples', () => {

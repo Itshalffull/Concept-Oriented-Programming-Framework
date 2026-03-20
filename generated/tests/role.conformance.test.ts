@@ -26,7 +26,7 @@ describe('Role functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' });
+      const program = roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' });
+      const program = roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' });
+      const program = roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' });
+      const program = roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' });
+      const program = roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Role functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof roleHandler.create !== 'function') return;
       try {
-        const result = await interpret(roleHandler.create({ role: 'test', name: 'test-name', purpose: 'test-purpose', permissions: 'test' }), storage);
+        const result = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Role functional handler', () => {
       }
     });
 
+    it('fixture "create_admin" -> ok', async () => {
+      if (typeof roleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_empty_name" -> error', async () => {
+      if (typeof roleHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.create({ name: "", permissions: "read", polity: "dao-governance" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('assign', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.assign({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.assign({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.assign({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.assign({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.assign({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Role functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof roleHandler.assign !== 'function') return;
       try {
-        const result = await interpret(roleHandler.assign({ role: 'test', holder: 'test-holder' }), storage);
+        const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Role functional handler', () => {
       }
     });
 
+    it('fixture "assign_alice_admin" -> ok', async () => {
+      if (typeof roleHandler.assign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "assign_empty_member" -> error', async () => {
+      if (typeof roleHandler.assign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.assign({ role: "role-1", member: "", assignedBy: "system" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('revoke', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.revoke({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.revoke({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.revoke({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.revoke({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.revoke({ role: 'test', holder: 'test-holder' });
+      const program = roleHandler.revoke({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Role functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
       try {
-        const result = await interpret(roleHandler.revoke({ role: 'test', holder: 'test-holder' }), storage);
+        const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Role functional handler', () => {
       }
     });
 
+    it('fixture "revoke_alice" -> ok', async () => {
+      if (typeof roleHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "revoke_unassigned" -> error', async () => {
+      if (typeof roleHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.revoke({ role: "role-1", member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('check', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.check({ holder: 'test-holder', permission: 'test-permission' });
+      const program = roleHandler.check({ role: "role-1", member: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.check({ holder: 'test-holder', permission: 'test-permission' });
+      const program = roleHandler.check({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.check({ holder: 'test-holder', permission: 'test-permission' });
+      const program = roleHandler.check({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.check({ holder: 'test-holder', permission: 'test-permission' });
+      const program = roleHandler.check({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.check({ holder: 'test-holder', permission: 'test-permission' });
+      const program = roleHandler.check({ role: "role-1", member: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Role functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof roleHandler.check !== 'function') return;
       try {
-        const result = await interpret(roleHandler.check({ holder: 'test-holder', permission: 'test-permission' }), storage);
+        const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('Role functional handler', () => {
       }
     });
 
+    it('fixture "check_alice_admin" -> ok', async () => {
+      if (typeof roleHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_nonmember" -> error', async () => {
+      if (typeof roleHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.check({ role: "role-1", member: "unknown-member" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('dissolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = roleHandler.dissolve({ role: 'test' });
+      const program = roleHandler.dissolve({ role: "role-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('Role functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = roleHandler.dissolve({ role: 'test' });
+      const program = roleHandler.dissolve({ role: "role-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = roleHandler.dissolve({ role: 'test' });
+      const program = roleHandler.dissolve({ role: "role-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = roleHandler.dissolve({ role: 'test' });
+      const program = roleHandler.dissolve({ role: "role-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('Role functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = roleHandler.dissolve({ role: 'test' });
+      const program = roleHandler.dissolve({ role: "role-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('Role functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       try {
-        const result = await interpret(roleHandler.dissolve({ role: 'test' }), storage);
+        const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +368,38 @@ describe('Role functional handler', () => {
       }
     });
 
+    it('fixture "dissolve_admin" -> ok', async () => {
+      if (typeof roleHandler.dissolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "dissolve_nonexistent" -> error', async () => {
+      if (typeof roleHandler.dissolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(roleHandler.dissolve({ role: "nonexistent-role" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof roleHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = roleHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Role');
+    });
   });
 
   describe('invariant examples', () => {
@@ -334,10 +422,10 @@ describe('Role functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }), assignedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ role: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -365,10 +453,10 @@ describe('Role functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }) }),
-              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), holder: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('check'), input: fc.record({ holder: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assign'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }), assignedBy: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revoke'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('check'), input: fc.record({ role: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('dissolve'), input: fc.record({ role: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -408,7 +496,7 @@ describe('Role functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ role: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string() }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = roleHandler.create(input as Record<string, unknown>);

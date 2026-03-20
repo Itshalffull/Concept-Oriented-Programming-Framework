@@ -26,7 +26,7 @@ describe('ProgressiveSchema functional handler', () => {
 
   describe('captureFreeform', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.captureFreeform({ content: 'test-content' });
+      const program = progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.captureFreeform({ content: 'test-content' });
+      const program = progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.captureFreeform({ content: 'test-content' });
+      const program = progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.captureFreeform({ content: 'test-content' });
+      const program = progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.captureFreeform({ content: 'test-content' });
+      const program = progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.captureFreeform !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: 'test-content' }), storage);
+        const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "capture_meeting" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.captureFreeform !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Meeting with John on 2026-03-01 about #project-x" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "capture_note" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.captureFreeform !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.captureFreeform({ content: "Quick thought: refactor the sync engine to support batching" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('detectStructure', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' });
+      const program = progressiveSchemaHandler.detectStructure({ itemId: "ps-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: 'test-itemId' }), storage);
+        const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "detect_existing" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_missing" -> notfound', async () => {
+      if (typeof progressiveSchemaHandler.detectStructure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.detectStructure({ itemId: "ps-missing" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('acceptSuggestion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' }), storage);
+        const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "accept_date" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-1", suggestionId: "sug-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "accept_missing" -> notfound', async () => {
+      if (typeof progressiveSchemaHandler.acceptSuggestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.acceptSuggestion({ itemId: "ps-missing", suggestionId: "sug-1" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('rejectSuggestion', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' });
+      const program = progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: 'test-itemId', suggestionId: 'test-suggestionId' }), storage);
+        const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "reject_tag" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-1", suggestionId: "sug-2" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "reject_missing" -> notfound', async () => {
+      if (typeof progressiveSchemaHandler.rejectSuggestion !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.rejectSuggestion({ itemId: "ps-missing", suggestionId: "sug-2" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('promote', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' });
+      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' });
+      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' });
+      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' });
+      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' });
+      const program = progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.promote !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.promote({ itemId: 'test-itemId', targetSchema: 'test-targetSchema' }), storage);
+        const result = await interpret(progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,11 +368,25 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "promote_to_article" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.promote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.promote({ itemId: "ps-1", targetSchema: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "promote_missing" -> notfound', async () => {
+      if (typeof progressiveSchemaHandler.promote !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.promote({ itemId: "ps-missing", targetSchema: "Article" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('inferSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = progressiveSchemaHandler.inferSchema({ items: 'test-items' });
+      const program = progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +394,21 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = progressiveSchemaHandler.inferSchema({ items: 'test-items' });
+      const program = progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = progressiveSchemaHandler.inferSchema({ items: 'test-items' });
+      const program = progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = progressiveSchemaHandler.inferSchema({ items: 'test-items' });
+      const program = progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +421,7 @@ describe('ProgressiveSchema functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = progressiveSchemaHandler.inferSchema({ items: 'test-items' });
+      const program = progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +430,7 @@ describe('ProgressiveSchema functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof progressiveSchemaHandler.inferSchema !== 'function') return;
       try {
-        const result = await interpret(progressiveSchemaHandler.inferSchema({ items: 'test-items' }), storage);
+        const result = await interpret(progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +440,38 @@ describe('ProgressiveSchema functional handler', () => {
       }
     });
 
+    it('fixture "infer_from_items" -> ok', async () => {
+      if (typeof progressiveSchemaHandler.inferSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.inferSchema({ items: "[\"ps-1\",\"ps-2\",\"ps-3\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "infer_empty" -> error', async () => {
+      if (typeof progressiveSchemaHandler.inferSchema !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(progressiveSchemaHandler.inferSchema({ items: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof progressiveSchemaHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = progressiveSchemaHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ProgressiveSchema');
+    });
   });
 
   describe('invariant examples', () => {

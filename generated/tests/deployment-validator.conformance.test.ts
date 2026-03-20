@@ -26,7 +26,7 @@ describe('DeploymentValidator functional handler', () => {
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentValidatorHandler.parse({ raw: 'test-raw' });
+      const program = deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DeploymentValidator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentValidatorHandler.parse({ raw: 'test-raw' });
+      const program = deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentValidatorHandler.parse({ raw: 'test-raw' });
+      const program = deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentValidatorHandler.parse({ raw: 'test-raw' });
+      const program = deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('DeploymentValidator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentValidatorHandler.parse({ raw: 'test-raw' });
+      const program = deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('DeploymentValidator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentValidatorHandler.parse !== 'function') return;
       try {
-        const result = await interpret(deploymentValidatorHandler.parse({ raw: 'test-raw' }), storage);
+        const result = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('DeploymentValidator functional handler', () => {
       }
     });
 
+    it('fixture "valid_manifest" -> ok', async () => {
+      if (typeof deploymentValidatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{\"name\":\"myapp\",\"version\":\"1.0\",\"uri\":\"urn:app/myapp\"},\"runtimes\":{\"api\":{\"type\":\"node\",\"engine\":true,\"transport\":\"http\"}},\"concepts\":{\"User\":{\"spec\":\"./user.concept\",\"implementations\":[{\"language\":\"typescript\",\"path\":\"./handlers/user.handler.ts\",\"runtime\":\"api\",\"storage\":\"memory\",\"queryMode\":\"lite\"}]}},\"syncs\":[]}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "empty_raw" -> error', async () => {
+      if (typeof deploymentValidatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.parse({ raw: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof deploymentValidatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.parse({ raw: "not valid json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "missing_app_fields" -> error', async () => {
+      if (typeof deploymentValidatorHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.parse({ raw: "{\"app\":{},\"runtimes\":{},\"concepts\":{},\"syncs\":[]}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' });
+      const program = deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('DeploymentValidator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' });
+      const program = deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' });
+      const program = deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' });
+      const program = deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('DeploymentValidator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' });
+      const program = deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('DeploymentValidator functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof deploymentValidatorHandler.validate !== 'function') return;
       try {
-        const result = await interpret(deploymentValidatorHandler.validate({ manifest: 'test', concepts: 'test', syncs: 'test' }), storage);
+        const result = await interpret(deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,38 @@ describe('DeploymentValidator functional handler', () => {
       }
     });
 
+    it('fixture "valid_validate" -> ok', async () => {
+      if (typeof deploymentValidatorHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.validate({ manifest: "manifest-ref-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "missing_manifest_ref" -> error', async () => {
+      if (typeof deploymentValidatorHandler.validate !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(deploymentValidatorHandler.validate({ manifest: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof deploymentValidatorHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = deploymentValidatorHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('DeploymentValidator');
+    });
   });
 
   describe('invariant examples', () => {
@@ -168,7 +228,7 @@ describe('DeploymentValidator functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('parse'), input: fc.record({ raw: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('validate'), input: fc.record({ manifest: fc.string(), concepts: fc.string(), syncs: fc.string() }) }),
+              fc.record({ action: fc.constant('validate'), input: fc.record({ manifest: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -234,7 +294,7 @@ describe('DeploymentValidator functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ manifest: fc.string(), concepts: fc.string(), syncs: fc.string() }),
+          fc.record({ manifest: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const program = deploymentValidatorHandler.validate(input as Record<string, unknown>);

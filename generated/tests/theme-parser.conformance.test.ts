@@ -26,7 +26,7 @@ describe('ThemeParser functional handler', () => {
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeParserHandler.parse({ theme: 'test', source: 'test-source' });
+      const program = themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ThemeParser functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeParserHandler.parse({ theme: 'test', source: 'test-source' });
+      const program = themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeParserHandler.parse({ theme: 'test', source: 'test-source' });
+      const program = themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeParserHandler.parse({ theme: 'test', source: 'test-source' });
+      const program = themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('ThemeParser functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeParserHandler.parse({ theme: 'test', source: 'test-source' });
+      const program = themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('ThemeParser functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeParserHandler.parse !== 'function') return;
       try {
-        const result = await interpret(themeParserHandler.parse({ theme: 'test', source: 'test-source' }), storage);
+        const result = await interpret(themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,39 @@ describe('ThemeParser functional handler', () => {
       }
     });
 
+    it('fixture "expressive_theme" -> ok', async () => {
+      if (typeof themeParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.parse({ theme: "h-1", source: "{\"name\":\"brand-light\",\"colorScheme\":{\"modes\":{\"light\":{\"foreground\":\"#1a1a1a\",\"background\":\"#ffffff\",\"primary\":\"#3b82f6\"},\"dark\":{\"foreground\":\"#f5f5f5\",\"background\":\"#1a1a1a\",\"primary\":\"#60a5fa\"}},\"activeMode\":\"light\"},\"density\":{\"mode\":\"comfortable\",\"multiplier\":1},\"tokens\":{\"color\":{\"primary\":\"#3b82f6\"}}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "legacy_tokens_only" -> ok', async () => {
+      if (typeof themeParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.parse({ theme: "h-2", source: "{\"tokens\":{\"color.primary\":\"#10b981\",\"spacing.sm\":\"4px\"}}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json_source" -> error', async () => {
+      if (typeof themeParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.parse({ theme: "h-3", source: "not-valid-json" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+    it('fixture "null_block_value" -> error', async () => {
+      if (typeof themeParserHandler.parse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.parse({ theme: "h-4", source: "{\"colorScheme\":null}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('checkContrast', () => {
     it('builds a valid StorageProgram', () => {
-      const program = themeParserHandler.checkContrast({ theme: 'test' });
+      const program = themeParserHandler.checkContrast({ theme: "h-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +120,21 @@ describe('ThemeParser functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = themeParserHandler.checkContrast({ theme: 'test' });
+      const program = themeParserHandler.checkContrast({ theme: "h-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = themeParserHandler.checkContrast({ theme: 'test' });
+      const program = themeParserHandler.checkContrast({ theme: "h-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = themeParserHandler.checkContrast({ theme: 'test' });
+      const program = themeParserHandler.checkContrast({ theme: "h-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +147,7 @@ describe('ThemeParser functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = themeParserHandler.checkContrast({ theme: 'test' });
+      const program = themeParserHandler.checkContrast({ theme: "h-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +156,7 @@ describe('ThemeParser functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof themeParserHandler.checkContrast !== 'function') return;
       try {
-        const result = await interpret(themeParserHandler.checkContrast({ theme: 'test' }), storage);
+        const result = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,6 +166,38 @@ describe('ThemeParser functional handler', () => {
       }
     });
 
+    it('fixture "passing_contrast" -> ok', async () => {
+      if (typeof themeParserHandler.checkContrast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.checkContrast({ theme: "h-1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unparsed_theme" -> violations', async () => {
+      if (typeof themeParserHandler.checkContrast !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeParserHandler.checkContrast({ theme: "h-nonexistent" }), storage);
+      expect(result.variant).toBe('violations');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeParserHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeParserHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThemeParser');
+    });
   });
 
   describe('invariant examples', () => {

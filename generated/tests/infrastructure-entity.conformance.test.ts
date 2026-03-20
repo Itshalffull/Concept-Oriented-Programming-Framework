@@ -26,7 +26,7 @@ describe('InfrastructureEntity functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' });
+      const program = infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' });
+      const program = infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' });
+      const program = infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' });
+      const program = infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' });
+      const program = infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('InfrastructureEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof infrastructureEntityHandler.register !== 'function') return;
       try {
-        const result = await interpret(infrastructureEntityHandler.register({ name: 'test-name', kind: 'test-kind', sourceFile: 'test-sourceFile', backend: 'test-backend', config: 'test-config' }), storage);
+        const result = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "register_app_storage" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_name" -> error', async () => {
+      if (typeof infrastructureEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.register({ name: "", kind: "storage", sourceFile: "adapters/empty.ts", backend: "postgresql", config: "{}" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' });
+      const program = infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('InfrastructureEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof infrastructureEntityHandler.get !== 'function') return;
       try {
-        const result = await interpret(infrastructureEntityHandler.get({ name: 'test-name', kind: 'test-kind' }), storage);
+        const result = await interpret(infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "get_app_storage" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_nonexistent" -> error', async () => {
+      if (typeof infrastructureEntityHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.get({ name: "Nonexistent", kind: "storage" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByBackend', () => {
     it('builds a valid StorageProgram', () => {
-      const program = infrastructureEntityHandler.findByBackend({ backend: 'test-backend' });
+      const program = infrastructureEntityHandler.findByBackend({ backend: "postgresql" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = infrastructureEntityHandler.findByBackend({ backend: 'test-backend' });
+      const program = infrastructureEntityHandler.findByBackend({ backend: "postgresql" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = infrastructureEntityHandler.findByBackend({ backend: 'test-backend' });
+      const program = infrastructureEntityHandler.findByBackend({ backend: "postgresql" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = infrastructureEntityHandler.findByBackend({ backend: 'test-backend' });
+      const program = infrastructureEntityHandler.findByBackend({ backend: "postgresql" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = infrastructureEntityHandler.findByBackend({ backend: 'test-backend' });
+      const program = infrastructureEntityHandler.findByBackend({ backend: "postgresql" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('InfrastructureEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
       try {
-        const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: 'test-backend' }), storage);
+        const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "postgresql" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_postgresql_adapters" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "postgresql" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_backend" -> error', async () => {
+      if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "unknown-db" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByConcept', () => {
     it('builds a valid StorageProgram', () => {
-      const program = infrastructureEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = infrastructureEntityHandler.findByConcept({ concept: "Article" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = infrastructureEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = infrastructureEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = infrastructureEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = infrastructureEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = infrastructureEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = infrastructureEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = infrastructureEntityHandler.findByConcept({ concept: 'test-concept' });
+      const program = infrastructureEntityHandler.findByConcept({ concept: "Article" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('InfrastructureEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
       try {
-        const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: 'test-concept' }), storage);
+        const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Article" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,25 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "find_article_adapters" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Article" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unbound_concept" -> error', async () => {
+      if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('findByRuntime', () => {
     it('builds a valid StorageProgram', () => {
-      const program = infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = infrastructureEntityHandler.findByRuntime({ runtime: "api-server" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +322,21 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = infrastructureEntityHandler.findByRuntime({ runtime: "api-server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = infrastructureEntityHandler.findByRuntime({ runtime: "api-server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = infrastructureEntityHandler.findByRuntime({ runtime: "api-server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +349,7 @@ describe('InfrastructureEntity functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' });
+      const program = infrastructureEntityHandler.findByRuntime({ runtime: "api-server" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +358,7 @@ describe('InfrastructureEntity functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
       try {
-        const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: 'test-runtime' }), storage);
+        const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "api-server" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -310,6 +366,20 @@ describe('InfrastructureEntity functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "find_api_runtime" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "api-server" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_unknown_runtime" -> error', async () => {
+      if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "nonexistent-runtime" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -370,6 +440,20 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "shared_backend_failure" -> error', async () => {
+      if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('networkTopology', () => {
@@ -428,6 +512,38 @@ describe('InfrastructureEntity functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "topology_failure" -> error', async () => {
+      if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof infrastructureEntityHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = infrastructureEntityHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('InfrastructureEntity');
+    });
   });
 
   describe('invariant examples', () => {

@@ -29,13 +29,20 @@ describe('FsProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof fsProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.register({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('read', () => {
     it('executes without crashing', async () => {
       if (typeof fsProviderHandler.read !== 'function') return;
       try {
-        const result = await fsProviderHandler.read({ path: 'test-path' }, storage);
+        const result = await fsProviderHandler.read({ path: "/tmp/test.txt" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -43,6 +50,20 @@ describe('FsProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "read_existing_file" -> ok', async () => {
+      if (typeof fsProviderHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.read({ path: "/tmp/test.txt" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "read_missing_file" -> notFound', async () => {
+      if (typeof fsProviderHandler.read !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.read({ path: "/tmp/nonexistent-file" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -51,7 +72,7 @@ describe('FsProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof fsProviderHandler.write !== 'function') return;
       try {
-        const result = await fsProviderHandler.write({ path: 'test-path', content: 'test-content' }, storage);
+        const result = await fsProviderHandler.write({ path: "/tmp/output.txt", content: "hello world" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -59,6 +80,20 @@ describe('FsProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "write_file" -> ok', async () => {
+      if (typeof fsProviderHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.write({ path: "/tmp/output.txt", content: "hello world" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "write_readonly_path" -> error', async () => {
+      if (typeof fsProviderHandler.write !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.write({ path: "/readonly/forbidden.txt", content: "data" }, storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -67,7 +102,7 @@ describe('FsProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof fsProviderHandler.exists !== 'function') return;
       try {
-        const result = await fsProviderHandler.exists({ path: 'test-path' }, storage);
+        const result = await fsProviderHandler.exists({ path: "/tmp/test.txt" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -77,13 +112,27 @@ describe('FsProvider imperative handler', () => {
       }
     });
 
+    it('fixture "check_existing" -> ok', async () => {
+      if (typeof fsProviderHandler.exists !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.exists({ path: "/tmp/test.txt" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "check_missing" -> ok', async () => {
+      if (typeof fsProviderHandler.exists !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.exists({ path: "/tmp/nonexistent" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('delete', () => {
     it('executes without crashing', async () => {
       if (typeof fsProviderHandler.delete !== 'function') return;
       try {
-        const result = await fsProviderHandler.delete({ path: 'test-path' }, storage);
+        const result = await fsProviderHandler.delete({ path: "/tmp/test.txt" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -91,6 +140,20 @@ describe('FsProvider imperative handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "delete_existing" -> ok', async () => {
+      if (typeof fsProviderHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.delete({ path: "/tmp/test.txt" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "delete_missing" -> notFound', async () => {
+      if (typeof fsProviderHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.delete({ path: "/tmp/nonexistent" }, storage);
+      expect(result.variant).toBe('notFound');
     });
 
   });
@@ -109,6 +172,30 @@ describe('FsProvider imperative handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof fsProviderHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await fsProviderHandler.list({  }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof fsProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = fsProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('FsProvider');
+    });
   });
 
   describe('invariant examples', () => {

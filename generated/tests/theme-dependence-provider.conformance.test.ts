@@ -80,6 +80,38 @@ describe('ThemeDependenceProvider functional handler', () => {
       }
     });
 
+    it('fixture "valid" -> ok', async () => {
+      if (typeof themeDependenceProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeDependenceProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "duplicate_init" -> loadError', async () => {
+      if (typeof themeDependenceProviderHandler.initialize !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(themeDependenceProviderHandler.initialize({  }), storage);
+      expect(result.variant).toBe('loadError');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof themeDependenceProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = themeDependenceProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('ThemeDependenceProvider');
+    });
   });
 
   describe('state invariants (stateful PBT)', () => {

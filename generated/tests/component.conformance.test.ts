@@ -26,7 +26,7 @@ describe('Component functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = componentHandler.register({ component: 'test', config: 'test-config' });
+      const program = componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Component functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = componentHandler.register({ component: 'test', config: 'test-config' });
+      const program = componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = componentHandler.register({ component: 'test', config: 'test-config' });
+      const program = componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = componentHandler.register({ component: 'test', config: 'test-config' });
+      const program = componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Component functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = componentHandler.register({ component: 'test', config: 'test-config' });
+      const program = componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Component functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof componentHandler.register !== 'function') return;
       try {
-        const result = await interpret(componentHandler.register({ component: 'test', config: 'test-config' }), storage);
+        const result = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Component functional handler', () => {
       }
     });
 
+    it('fixture "register_hero" -> ok', async () => {
+      if (typeof componentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_sidebar_nav" -> ok', async () => {
+      if (typeof componentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('render', () => {
     it('builds a valid StorageProgram', () => {
-      const program = componentHandler.render({ component: 'test', context: 'test-context' });
+      const program = componentHandler.render({ component: "hero-banner", context: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Component functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = componentHandler.render({ component: 'test', context: 'test-context' });
+      const program = componentHandler.render({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = componentHandler.render({ component: 'test', context: 'test-context' });
+      const program = componentHandler.render({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = componentHandler.render({ component: 'test', context: 'test-context' });
+      const program = componentHandler.render({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Component functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = componentHandler.render({ component: 'test', context: 'test-context' });
+      const program = componentHandler.render({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Component functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof componentHandler.render !== 'function') return;
       try {
-        const result = await interpret(componentHandler.render({ component: 'test', context: 'test-context' }), storage);
+        const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Component functional handler', () => {
       }
     });
 
+    it('fixture "render_homepage" -> ok', async () => {
+      if (typeof componentHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "render_unknown" -> notfound', async () => {
+      if (typeof componentHandler.render !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.render({ component: "nonexistent-widget", context: "homepage" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('place', () => {
     it('builds a valid StorageProgram', () => {
-      const program = componentHandler.place({ component: 'test', region: 'test-region' });
+      const program = componentHandler.place({ component: "hero-banner", region: "header" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Component functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = componentHandler.place({ component: 'test', region: 'test-region' });
+      const program = componentHandler.place({ component: "hero-banner", region: "header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = componentHandler.place({ component: 'test', region: 'test-region' });
+      const program = componentHandler.place({ component: "hero-banner", region: "header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = componentHandler.place({ component: 'test', region: 'test-region' });
+      const program = componentHandler.place({ component: "hero-banner", region: "header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Component functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = componentHandler.place({ component: 'test', region: 'test-region' });
+      const program = componentHandler.place({ component: "hero-banner", region: "header" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Component functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof componentHandler.place !== 'function') return;
       try {
-        const result = await interpret(componentHandler.place({ component: 'test', region: 'test-region' }), storage);
+        const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Component functional handler', () => {
       }
     });
 
+    it('fixture "place_in_header" -> ok', async () => {
+      if (typeof componentHandler.place !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "place_unknown" -> notfound', async () => {
+      if (typeof componentHandler.place !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.place({ component: "nonexistent-widget", region: "sidebar" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('setVisibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = componentHandler.setVisibility({ component: 'test', visible: true });
+      const program = componentHandler.setVisibility({ component: "hero-banner", visible: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Component functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = componentHandler.setVisibility({ component: 'test', visible: true });
+      const program = componentHandler.setVisibility({ component: "hero-banner", visible: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = componentHandler.setVisibility({ component: 'test', visible: true });
+      const program = componentHandler.setVisibility({ component: "hero-banner", visible: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = componentHandler.setVisibility({ component: 'test', visible: true });
+      const program = componentHandler.setVisibility({ component: "hero-banner", visible: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Component functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = componentHandler.setVisibility({ component: 'test', visible: true });
+      const program = componentHandler.setVisibility({ component: "hero-banner", visible: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Component functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       try {
-        const result = await interpret(componentHandler.setVisibility({ component: 'test', visible: true }), storage);
+        const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,11 +296,32 @@ describe('Component functional handler', () => {
       }
     });
 
+    it('fixture "set_visible_true" -> ok', async () => {
+      if (typeof componentHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_visible_false" -> ok', async () => {
+      if (typeof componentHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_visible_unknown" -> notfound', async () => {
+      if (typeof componentHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.setVisibility({ component: "nonexistent-widget", visible: "true" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
   });
 
   describe('evaluateVisibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' });
+      const program = componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -266,21 +329,21 @@ describe('Component functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' });
+      const program = componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' });
+      const program = componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' });
+      const program = componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -293,7 +356,7 @@ describe('Component functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' });
+      const program = componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -302,7 +365,7 @@ describe('Component functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
       try {
-        const result = await interpret(componentHandler.evaluateVisibility({ component: 'test', context: 'test-context' }), storage);
+        const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -312,6 +375,38 @@ describe('Component functional handler', () => {
       }
     });
 
+    it('fixture "evaluate_homepage" -> ok', async () => {
+      if (typeof componentHandler.evaluateVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "evaluate_unknown" -> notfound', async () => {
+      if (typeof componentHandler.evaluateVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(componentHandler.evaluateVisibility({ component: "nonexistent-widget", context: "homepage" }), storage);
+      expect(result.variant).toBe('notfound');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof componentHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = componentHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Component');
+    });
   });
 
   describe('invariant examples', () => {

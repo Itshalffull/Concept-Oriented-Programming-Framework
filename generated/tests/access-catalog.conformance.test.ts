@@ -26,7 +26,7 @@ describe('AccessCatalog functional handler', () => {
 
   describe('registerPermission', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' });
+      const program = accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' });
+      const program = accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' });
+      const program = accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' });
+      const program = accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' });
+      const program = accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('AccessCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessCatalogHandler.registerPermission !== 'function') return;
       try {
-        const result = await interpret(accessCatalogHandler.registerPermission({ entry: 'test', key: 'test-key', label: 'test-label', group: 'test-group', description: 'test-description' }), storage);
+        const result = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('AccessCatalog functional handler', () => {
       }
     });
 
+    it('fixture "register_admin_perm" -> ok', async () => {
+      if (typeof accessCatalogHandler.registerPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerPermission({ entry: "perm-001", key: "admin.access", label: "Access administration", group: "Administration", description: "Open the admin shell" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_entry" -> error', async () => {
+      if (typeof accessCatalogHandler.registerPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerPermission({ entry: "", key: "admin.access", label: "Admin", group: "Admin", description: "desc" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerRole', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' });
+      const program = accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' });
+      const program = accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' });
+      const program = accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' });
+      const program = accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' });
+      const program = accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('AccessCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessCatalogHandler.registerRole !== 'function') return;
       try {
-        const result = await interpret(accessCatalogHandler.registerRole({ entry: 'test', key: 'test-key', label: 'test-label', description: 'test-description', permissions: 'test' }), storage);
+        const result = await interpret(accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('AccessCatalog functional handler', () => {
       }
     });
 
+    it('fixture "register_editor_role" -> ok', async () => {
+      if (typeof accessCatalogHandler.registerRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerRole({ entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_role" -> error', async () => {
+      if (typeof accessCatalogHandler.registerRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerRole({ entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('registerResourceAction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' });
+      const program = accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' });
+      const program = accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' });
+      const program = accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' });
+      const program = accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' });
+      const program = accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('AccessCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
       try {
-        const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: 'test', catalog: 'test-catalog', key: 'test-key', label: 'test-label' }), storage);
+        const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -194,6 +222,20 @@ describe('AccessCatalog functional handler', () => {
         // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
         expect(e).toBeDefined();
       }
+    });
+
+    it('fixture "register_view_action" -> ok', async () => {
+      if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "action-001", catalog: "schema", key: "view", label: "View content" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_action" -> error', async () => {
+      if (typeof accessCatalogHandler.registerResourceAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.registerResourceAction({ entry: "", catalog: "schema", key: "view", label: "View" }), storage);
+      expect(result.variant).toBe('error');
     });
 
   });
@@ -254,6 +296,13 @@ describe('AccessCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_all_perms" -> ok', async () => {
+      if (typeof accessCatalogHandler.listPermissions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.listPermissions({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listRoles', () => {
@@ -312,11 +361,18 @@ describe('AccessCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_all_roles" -> ok', async () => {
+      if (typeof accessCatalogHandler.listRoles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.listRoles({  }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
 
   describe('listResourceActions', () => {
     it('builds a valid StorageProgram', () => {
-      const program = accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' });
+      const program = accessCatalogHandler.listResourceActions({ catalog: "schema" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -324,21 +380,21 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' });
+      const program = accessCatalogHandler.listResourceActions({ catalog: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' });
+      const program = accessCatalogHandler.listResourceActions({ catalog: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' });
+      const program = accessCatalogHandler.listResourceActions({ catalog: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -351,7 +407,7 @@ describe('AccessCatalog functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' });
+      const program = accessCatalogHandler.listResourceActions({ catalog: "schema" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -360,7 +416,7 @@ describe('AccessCatalog functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
       try {
-        const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: 'test-catalog' }), storage);
+        const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "schema" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -370,6 +426,38 @@ describe('AccessCatalog functional handler', () => {
       }
     });
 
+    it('fixture "list_schema_actions" -> ok', async () => {
+      if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "schema" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty_catalog" -> error', async () => {
+      if (typeof accessCatalogHandler.listResourceActions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(accessCatalogHandler.listResourceActions({ catalog: "" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof accessCatalogHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = accessCatalogHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('AccessCatalog');
+    });
   });
 
   describe('invariant examples', () => {

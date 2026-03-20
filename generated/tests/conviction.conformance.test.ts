@@ -26,7 +26,7 @@ describe('Conviction functional handler', () => {
 
   describe('registerProposal', () => {
     it('builds a valid StorageProgram', () => {
-      const program = convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 });
+      const program = convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('Conviction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 });
+      const program = convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 });
+      const program = convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 });
+      const program = convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,7 +61,7 @@ describe('Conviction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 });
+      const program = convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -70,7 +70,7 @@ describe('Conviction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof convictionHandler.registerProposal !== 'function') return;
       try {
-        const result = await interpret(convictionHandler.registerProposal({ proposalRef: 'test-proposalRef', requestedFunds: 1, totalFunds: 1 }), storage);
+        const result = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -80,11 +80,25 @@ describe('Conviction functional handler', () => {
       }
     });
 
+    it('fixture "register_infra_proposal" -> ok', async () => {
+      if (typeof convictionHandler.registerProposal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.registerProposal({ proposalRef: "proposal-infra-2026", requestedFunds: "5000.0", totalFunds: "100000.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_empty_ref" -> error', async () => {
+      if (typeof convictionHandler.registerProposal !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.registerProposal({ proposalRef: "", requestedFunds: "1000.0", totalFunds: "50000.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('stake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 });
+      const program = convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -92,21 +106,21 @@ describe('Conviction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 });
+      const program = convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 });
+      const program = convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 });
+      const program = convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -119,7 +133,7 @@ describe('Conviction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 });
+      const program = convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -128,7 +142,7 @@ describe('Conviction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof convictionHandler.stake !== 'function') return;
       try {
-        const result = await interpret(convictionHandler.stake({ proposal: 'test', staker: 'test-staker', amount: 1 }), storage);
+        const result = await interpret(convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -138,11 +152,25 @@ describe('Conviction functional handler', () => {
       }
     });
 
+    it('fixture "stake_tokens" -> ok', async () => {
+      if (typeof convictionHandler.stake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.stake({ proposal: "conviction-001", staker: "alice", amount: "500.0" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "stake_missing_proposal" -> error', async () => {
+      if (typeof convictionHandler.stake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.stake({ proposal: "conviction-nonexistent", staker: "alice", amount: "100.0" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('unstake', () => {
     it('builds a valid StorageProgram', () => {
-      const program = convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' });
+      const program = convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +178,21 @@ describe('Conviction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' });
+      const program = convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' });
+      const program = convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' });
+      const program = convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +205,7 @@ describe('Conviction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' });
+      const program = convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -186,7 +214,7 @@ describe('Conviction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof convictionHandler.unstake !== 'function') return;
       try {
-        const result = await interpret(convictionHandler.unstake({ proposal: 'test', staker: 'test-staker' }), storage);
+        const result = await interpret(convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -196,11 +224,25 @@ describe('Conviction functional handler', () => {
       }
     });
 
+    it('fixture "unstake_tokens" -> ok', async () => {
+      if (typeof convictionHandler.unstake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.unstake({ proposal: "conviction-001", staker: "alice" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unstake_missing" -> error', async () => {
+      if (typeof convictionHandler.unstake !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.unstake({ proposal: "conviction-nonexistent", staker: "alice" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
   });
 
   describe('updateConviction', () => {
     it('builds a valid StorageProgram', () => {
-      const program = convictionHandler.updateConviction({ proposal: 'test' });
+      const program = convictionHandler.updateConviction({ proposal: "conviction-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,21 +250,21 @@ describe('Conviction functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = convictionHandler.updateConviction({ proposal: 'test' });
+      const program = convictionHandler.updateConviction({ proposal: "conviction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = convictionHandler.updateConviction({ proposal: 'test' });
+      const program = convictionHandler.updateConviction({ proposal: "conviction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = convictionHandler.updateConviction({ proposal: 'test' });
+      const program = convictionHandler.updateConviction({ proposal: "conviction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -235,7 +277,7 @@ describe('Conviction functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = convictionHandler.updateConviction({ proposal: 'test' });
+      const program = convictionHandler.updateConviction({ proposal: "conviction-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -244,7 +286,7 @@ describe('Conviction functional handler', () => {
     it('executes without crashing', async () => {
       if (typeof convictionHandler.updateConviction !== 'function') return;
       try {
-        const result = await interpret(convictionHandler.updateConviction({ proposal: 'test' }), storage);
+        const result = await interpret(convictionHandler.updateConviction({ proposal: "conviction-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -254,6 +296,38 @@ describe('Conviction functional handler', () => {
       }
     });
 
+    it('fixture "update_active" -> ok', async () => {
+      if (typeof convictionHandler.updateConviction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.updateConviction({ proposal: "conviction-001" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "update_missing" -> error', async () => {
+      if (typeof convictionHandler.updateConviction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(convictionHandler.updateConviction({ proposal: "conviction-nonexistent" }), storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof convictionHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = convictionHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+          result = await interpret(result, storage);
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('Conviction');
+    });
   });
 
   describe('invariant examples', () => {

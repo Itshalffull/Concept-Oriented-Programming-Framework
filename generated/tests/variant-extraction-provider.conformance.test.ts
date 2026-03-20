@@ -19,7 +19,7 @@ describe('VariantExtractionProvider imperative handler', () => {
     it('executes without crashing', async () => {
       if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
       try {
-        const result = await variantExtractionProviderHandler.analyze({ program: 'test-program' }, storage);
+        const result = await variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -29,6 +29,44 @@ describe('VariantExtractionProvider imperative handler', () => {
       }
     });
 
+    it('fixture "single_pure_terminal" -> ok', async () => {
+      if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "branched_variants" -> ok', async () => {
+      if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantExtractionProviderHandler.analyze({ program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":true,\"thenBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]},\"elseBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"error\"}}]}}],\"terminated\":false,\"effects\":{\"completionVariants\":[\"ok\",\"error\"]}}" }, storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invalid_json" -> error', async () => {
+      if (typeof variantExtractionProviderHandler.analyze !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await variantExtractionProviderHandler.analyze({ program: "not valid json{{{" }, storage);
+      expect(result.variant).toBe('error');
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof variantExtractionProviderHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      let result: any;
+      try {
+        const r = variantExtractionProviderHandler.register({}, storage);
+        result = r instanceof Promise ? await r : r;
+        // If StorageProgram, interpret it
+        if (result?.instructions && !result.variant) {
+        }
+      } catch { return; }
+      expect(result.variant).toBe('ok');
+      expect(result.name).toBe('VariantExtractionProvider');
+    });
   });
 
   describe('invariant examples', () => {
