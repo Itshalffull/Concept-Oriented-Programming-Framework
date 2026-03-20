@@ -37,6 +37,10 @@ concept LambdaRuntime [F] {
       -> iamError(policy: String, reason: String) {
         IAM role creation or policy attachment failed.
       }
+
+      fixture provision_standard { concept: "UserAuth", memory: 256, timeout: 30, region: "us-east-1" }
+      fixture provision_high_memory { concept: "ImageProcessor", memory: 1024, timeout: 60, region: "eu-west-1" }
+      fixture provision_empty_concept { concept: "", memory: 128, timeout: 10, region: "us-east-1" } -> error
     }
 
     action deploy(function: F, artifactLocation: String) {
@@ -49,18 +53,27 @@ concept LambdaRuntime [F] {
       -> runtimeUnsupported(function: F, runtime: String) {
         Requested runtime version not available.
       }
+
+      fixture deploy_s3 { function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }
+      fixture deploy_missing_function { function: "", artifactLocation: "s3://bucket/code.zip" } -> error
     }
 
     action setTrafficWeight(function: F, aliasWeight: Int) {
       -> ok(function: F) {
         Lambda alias weighted routing updated for canary.
       }
+
+      fixture traffic_canary { function: "fn-abc123", aliasWeight: 10 }
+      fixture traffic_invalid_weight { function: "", aliasWeight: -5 } -> error
     }
 
     action rollback(function: F, targetVersion: String) {
       -> ok(function: F, restoredVersion: String) {
         Alias pointed to previous function version.
       }
+
+      fixture rollback_to_v2 { function: "fn-abc123", targetVersion: "2" }
+      fixture rollback_empty_version { function: "fn-abc123", targetVersion: "" } -> error
     }
 
     action destroy(function: F) {
@@ -70,6 +83,9 @@ concept LambdaRuntime [F] {
       -> resourceInUse(function: F, dependents: list String) {
         Other resources reference this function.
       }
+
+      fixture destroy_valid { function: "fn-abc123" }
+      fixture destroy_missing { function: "" } -> error
     }
   }
 

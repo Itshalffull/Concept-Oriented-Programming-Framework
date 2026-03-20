@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept AttestationSybil [AS] {
 
   purpose {
@@ -22,27 +23,48 @@ concept AttestationSybil [AS] {
   }
 
   actions {
-    action configure(requiredSchemas: set String, trustedAttesters: set String) {
+    action configure(requiredSchema: String, requiredAttester: String) {
       -> configured(config: AS) {
         Defines which attestation schemas and issuers are accepted
         for sybil verification.
       }
+
+      fixture configure_kyc { requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }
+      fixture configure_empty_schema { requiredSchema: "", requiredAttester: "civic-authority" } -> error
     }
 
-    action checkParticipant(config: AS, participant: String, attestationRef: String) {
-      -> verified(participant: String) {
-        The participant holds a valid attestation from a trusted attester
+    action submitAttestation(config: AS, candidate: String, attestationRef: String, schema: String, attester: String, expiresAt: option String) {
+      -> submitted(candidate: String, attestationRef: String) {
+        The candidate submits an attestation credential for verification.
+      }
+
+      fixture submit_valid_attestation { config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }
+      fixture submit_missing_candidate { config: "att-sybil-1", candidate: "", attestationRef: "att-ref-002", schema: "kyc-basic", attester: "civic-authority" } -> error
+    }
+
+    action verify(config: AS, candidate: String) {
+      -> verified(candidate: String, attestationRef: String) {
+        The candidate holds a valid attestation from a trusted attester
         matching a required schema.
       }
-      -> untrusted_attester(attester: String) {
+      -> schema_mismatch(candidate: String, expected: String, actual: String) {
+        The attestation does not match the required schema.
+      }
+      -> attester_mismatch(candidate: String, expected: String, actual: String) {
         The attestation's issuer is not in the trusted set.
       }
-      -> wrong_schema(schema: String) {
-        The attestation does not match any required schema.
+      -> expired(candidate: String, expiresAt: String) {
+        The attestation has expired.
       }
-      -> invalid_attestation(reason: String) {
-        The attestation is expired, revoked, or malformed.
+      -> no_attestation(candidate: String) {
+        No attestation submitted for this candidate.
       }
+      -> not_found(config: AS) {
+        The configuration does not exist.
+      }
+
+      fixture verify_alice { config: "att-sybil-1", candidate: "alice" }
+      fixture verify_missing_config { config: "nonexistent", candidate: "alice" } -> error
     }
   }
 

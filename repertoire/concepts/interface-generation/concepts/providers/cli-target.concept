@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept CliTarget [C] {
 
@@ -59,6 +60,11 @@ concept CliTarget [C] {
         conventions allow. Excess arguments should be
         converted to flags via annotation.
       }
+
+      fixture with_default_config { projection: "task-projection", config: "{}" }
+      fixture with_custom_binary { projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture too_many_positional { projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }
     }
 
     action validate(command: C) {

@@ -75,6 +75,9 @@ concept Branch [B] {
       -> notFound(message: String) {
         Branch not found.
       }
+
+      fixture protect_main { branch: "branch-1" }
+      fixture protect_missing { branch: "branch-nonexistent" } -> error
     }
 
     action setUpstream(branch: B, upstream: B) {
@@ -84,6 +87,9 @@ concept Branch [B] {
       -> notFound(message: String) {
         Branch or upstream not found.
       }
+
+      fixture set_upstream_main { branch: "branch-2", upstream: "branch-1" }
+      fixture upstream_missing { branch: "branch-2", upstream: "branch-nonexistent" } -> error
     }
 
     action divergencePoint(b1: B, b2: B) {

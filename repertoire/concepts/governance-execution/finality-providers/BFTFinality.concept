@@ -48,6 +48,9 @@ concept BFTFinality [BF] {
       -> proposed(committee: BF, roundNumber: Int) {
         A finality round is initiated by the proposer.
       }
+
+      fixture propose_round { committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }
+      fixture propose_unknown_committee { committee: "bft-nonexistent", operationRef: "gov-prop-55", proposer: "val-1" } -> error
     }
 
     action vote(committee: BF, roundNumber: Int, validator: String, approve: Bool) {
@@ -57,6 +60,10 @@ concept BFTFinality [BF] {
       -> not_validator(validator: String) {
         The voter is not a committee member.
       }
+
+      fixture vote_approve { committee: "bft-001", roundNumber: 1, validator: "val-1", approve: true }
+      fixture vote_reject { committee: "bft-001", roundNumber: 1, validator: "val-2", approve: false }
+      fixture vote_not_member { committee: "bft-001", roundNumber: 1, validator: "unknown-val", approve: true } -> error
     }
 
     action checkConsensus(committee: BF, roundNumber: Int) {

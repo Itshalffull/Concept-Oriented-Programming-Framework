@@ -30,6 +30,10 @@ concept GitOps [G] {
       -> controllerUnsupported(controller: String) {
         Unknown GitOps controller type.
       }
+
+      fixture emit_argocd { plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }
+      fixture emit_flux { plan: "dp-002", controller: "flux", repo: "git@github.com:org/deploy.git", path: "envs/staging" }
+      fixture emit_unsupported { plan: "dp-003", controller: "spinnaker", repo: "git@github.com:org/deploy.git", path: "envs/prod" } -> controllerUnsupported
     }
 
     action reconciliationStatus(manifest: G) {
