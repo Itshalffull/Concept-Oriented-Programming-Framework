@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=SolidityBuilder
 // @migrated dsl-constructs 2026-03-18
 // SolidityBuilder Concept Implementation
 // Solidity provider for the Builder coordination concept. Manages

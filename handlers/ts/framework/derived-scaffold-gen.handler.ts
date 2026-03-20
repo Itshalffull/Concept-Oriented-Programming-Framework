@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=DerivedScaffoldGen
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // DerivedScaffoldGen — Derived concept (.derived) scaffold generator

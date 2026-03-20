@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=SolidityToolchain
 // @migrated dsl-constructs 2026-03-18
 // SolidityToolchain Concept Implementation
 // Solidity provider for the Toolchain coordination concept. Manages

@@ -1,4 +1,4 @@
-// @clef-handler style=imperative
+// @clef-handler style=imperative concept=graphql-provider
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, get, put, find, pure, perform,

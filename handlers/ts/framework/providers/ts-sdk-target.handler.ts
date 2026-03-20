@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=TsSdkTarget
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScript SDK Target Provider — Clef Bind

@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=ProjectInstructionsTarget
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // Project Instructions Target Provider Handler

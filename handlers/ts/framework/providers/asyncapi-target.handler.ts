@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=AsyncapiTarget
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // AsyncAPI Target Provider — Clef Bind

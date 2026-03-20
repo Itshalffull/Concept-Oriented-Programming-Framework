@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=CliTarget
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // CLI Target Provider Handler

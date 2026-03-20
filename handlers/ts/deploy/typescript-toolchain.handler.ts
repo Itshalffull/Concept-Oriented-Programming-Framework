@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=TypeScriptToolchain
 // @migrated dsl-constructs 2026-03-18
 // TypeScriptToolchain Concept Implementation
 // TypeScript provider for the Toolchain coordination concept. Manages

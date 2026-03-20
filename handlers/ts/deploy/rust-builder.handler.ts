@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=RustBuilder
 // @migrated dsl-constructs 2026-03-18
 // RustBuilder Concept Implementation
 // Rust provider for the Builder coordination concept. Manages

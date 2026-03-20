@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=SwiftGen
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // SwiftGen Concept Implementation

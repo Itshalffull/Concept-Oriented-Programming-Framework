@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=PulumiProvider
 // @migrated dsl-constructs 2026-03-18
 // PulumiProvider Concept Implementation
 // Generate and apply Pulumi TypeScript programs from Clef deploy plans.

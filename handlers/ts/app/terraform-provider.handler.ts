@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=TerraformProvider
 // @migrated dsl-constructs 2026-03-18
 // TerraformProvider Concept Implementation
 // Generate and apply Terraform HCL modules from Clef deploy plans.

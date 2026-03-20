@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=RustToolchain
 // @migrated dsl-constructs 2026-03-18
 // RustToolchain Concept Implementation
 // Rust provider for the Toolchain coordination concept. Manages

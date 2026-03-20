@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=SwiftToolchain
 // @migrated dsl-constructs 2026-03-18
 // SwiftToolchain Concept Implementation
 // Swift provider for the Toolchain coordination concept. Manages

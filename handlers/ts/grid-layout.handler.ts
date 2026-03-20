@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=grid
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // GridLayout Handler

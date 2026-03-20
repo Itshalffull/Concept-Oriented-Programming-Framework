@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=RestTarget
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // REST Target Provider — Clef Bind

@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=CloudFormationProvider
 // @migrated dsl-constructs 2026-03-18
 // CloudFormationProvider Concept Implementation
 // Generate and apply AWS CloudFormation templates from Clef deploy plans.

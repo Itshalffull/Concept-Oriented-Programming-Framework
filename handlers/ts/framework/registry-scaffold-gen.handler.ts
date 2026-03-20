@@ -1,4 +1,4 @@
-// @clef-handler style=functional
+// @clef-handler style=functional concept=RegistryScaffoldGen
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // RegistryScaffoldGen — Kernel registry boot code generator
