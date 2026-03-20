@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept Dispute [DS] {
@@ -32,24 +33,62 @@ concept Dispute [DS] {
       -> opened(dispute: DS) {
         A new dispute is created in Open status.
       }
+
+      fixture open_dispute_with_bond {
+        challenger: "alice"
+        respondent: "bob"
+        subject: "Unauthorized budget allocation"
+        evidence: "Transaction log entry 2026-01-15"
+        bond: 100.0
+      }
+      fixture open_dispute_missing_challenger {
+        challenger: ""
+        respondent: "bob"
+        subject: "Budget issue"
+        evidence: "None"
+      } -> error
     }
 
-    action submitEvidence(dispute: DS, submitter: String, content: String) {
+    action submitEvidence(dispute: DS, party: String, evidence: String) {
       -> submitted(dispute: DS) {
         Evidence is added to the dispute record.
       }
       -> not_open(dispute: DS) {
         The dispute is not in a phase that accepts evidence.
       }
-    }
 
-    action arbitrate(dispute: DS, arbiter: String, resolution: String) {
-      -> resolved(dispute: DS, resolution: String) {
-        The dispute is resolved with the given resolution.
+      fixture submit_evidence_valid {
+        dispute: "dispute-001"
+        party: "alice"
+        evidence: "Email thread showing policy violation on 2026-01-15"
       }
+      fixture submit_evidence_unknown_dispute {
+        dispute: "nonexistent"
+        party: "alice"
+        evidence: "Some evidence"
+      } -> not_open
     }
 
-    action appeal(dispute: DS, appellant: String, reason: String) {
+    action arbitrate(dispute: DS, arbitrator: String, decision: String, reasoning: String) {
+      -> resolved(dispute: DS, decision: String) {
+        The dispute is resolved with the given decision.
+      }
+
+      fixture arbitrate_valid {
+        dispute: "dispute-001"
+        arbitrator: "judge_carol"
+        decision: "upheld"
+        reasoning: "Evidence clearly demonstrates policy violation"
+      }
+      fixture arbitrate_unknown_dispute {
+        dispute: "nonexistent"
+        arbitrator: "judge_carol"
+        decision: "upheld"
+        reasoning: "N/A"
+      } -> error
+    }
+
+    action appeal(dispute: DS, appellant: String, grounds: String) {
       -> appealed(dispute: DS) {
         The dispute is escalated. A new round of review begins.
       }
@@ -59,6 +98,17 @@ concept Dispute [DS] {
       -> appeal_limit_reached(dispute: DS) {
         Maximum number of appeals has been reached.
       }
+
+      fixture appeal_resolved_dispute {
+        dispute: "dispute-001"
+        appellant: "bob"
+        grounds: "New evidence not considered in original decision"
+      }
+      fixture appeal_unresolved_dispute {
+        dispute: "dispute-open"
+        appellant: "bob"
+        grounds: "Premature ruling"
+      } -> not_resolved
     }
   }
 
@@ -66,9 +116,9 @@ concept Dispute [DS] {
 
     after open(challenger: _, respondent: _, subject: _, evidence: _, bond: _) -> opened(dispute: ds)
 
-        then submitEvidence(dispute: ds, submitter: _, content: _) -> submitted(dispute: ds)
+        then submitEvidence(dispute: ds, party: _, evidence: _) -> submitted(dispute: ds)
 
-        and  arbitrate(dispute: ds, arbiter: _, resolution: _) -> resolved(dispute: ds, resolution: _)
+        and  arbitrate(dispute: ds, arbitrator: _, decision: _, reasoning: _) -> resolved(dispute: ds, decision: _)
 
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 @gate
 concept ChainMonitor [B] {
@@ -38,6 +39,15 @@ concept ChainMonitor [B] {
         still be valid but has not reached the requested finality level
         within the configured timeout window.
       }
+
+      fixture await_finality_valid {
+        txHash: "0xabc123"
+        level: "confirmations"
+      }
+      fixture await_finality_empty_hash {
+        txHash: ""
+        level: "confirmations"
+      } -> timeout
     }
 
     action subscribe(chainId: Int, rpcUrl: String) {
@@ -48,6 +58,15 @@ concept ChainMonitor [B] {
       -> error(message: String) {
         Failed to connect to the chain RPC endpoint.
       }
+
+      fixture subscribe_valid {
+        chainId: 1
+        rpcUrl: "https://mainnet.infura.io/v3/abc123"
+      }
+      fixture subscribe_missing_rpc {
+        chainId: 1
+        rpcUrl: ""
+      } -> error
     }
 
     action onBlock(chainId: Int, blockNumber: Int, blockHash: String) {
@@ -60,6 +79,17 @@ concept ChainMonitor [B] {
         canonical. All pending finality requests for affected transactions
         receive reorged completions.
       }
+
+      fixture on_block_valid {
+        chainId: 1
+        blockNumber: 19500001
+        blockHash: "0xdeadbeefcafe"
+      }
+      fixture on_block_empty_hash {
+        chainId: 1
+        blockNumber: 19500001
+        blockHash: ""
+      } -> reorg
     }
   }
 

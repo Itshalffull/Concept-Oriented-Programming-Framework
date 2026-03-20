@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept TargetProfile [P] {
 
@@ -26,6 +27,9 @@ concept TargetProfile [P] {
       -> ok(profile: P) {
         Create a new empty target profile with the given name.
       }
+
+      fixture valid_create { name: "fullstack-ts" }
+      fixture create_duplicate { name: "fullstack-ts" } -> error
     }
 
     action setBackendLanguages(profile: P, languages: list String) {
@@ -35,6 +39,9 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more languages are not recognized.
       }
+
+      fixture valid_set_backend { profileId: "profile-1", values: "[\"typescript\",\"rust\"]" }
+      fixture invalid_backend_lang { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
     action setFrontendFrameworks(profile: P, frameworks: list String) {
@@ -44,6 +51,9 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more frameworks are not recognized.
       }
+
+      fixture valid_set_frontend { profileId: "profile-1", values: "[\"react\",\"svelte\"]" }
+      fixture invalid_frontend { profileId: "profile-1", values: "[\"angular\"]" } -> error
     }
 
     action setApiInterfaces(profile: P, interfaces: list String) {
@@ -53,12 +63,18 @@ concept TargetProfile [P] {
       -> invalid(message: String) {
         One or more interfaces are not recognized.
       }
+
+      fixture valid_set_api { profileId: "profile-1", values: "[\"rest\",\"graphql\"]" }
+      fixture invalid_api { profileId: "profile-1", values: "[\"soap\"]" } -> error
     }
 
     action setSdkLanguages(profile: P, languages: list String) {
       -> ok {
         Set the SDK language selections for the profile.
       }
+
+      fixture valid_set_sdk { profileId: "profile-1", values: "[\"typescript\",\"python\"]" }
+      fixture invalid_sdk { profileId: "profile-1", values: "[\"cobol\"]" } -> error
     }
 
     action setDeployTargets(profile: P, targets: list String) {
@@ -68,18 +84,27 @@ concept TargetProfile [P] {
       -> incompatible(message: String) {
         The selected deploy targets conflict with other profile settings.
       }
+
+      fixture valid_set_deploy { profileId: "profile-1", values: "[\"vercel\",\"lambda\"]" }
+      fixture invalid_deploy { profileId: "profile-1", values: "[\"azure-functions\"]" } -> error
     }
 
     action setStorageAdapters(profile: P, adapters: list String) {
       -> ok {
         Set the storage adapter selections for the profile.
       }
+
+      fixture valid_set_storage { profileId: "profile-1", values: "[\"postgres\",\"memory\"]" }
+      fixture invalid_storage { profileId: "profile-1", values: "[\"oracle\"]" } -> error
     }
 
     action setTransportAdapters(profile: P, adapters: list String) {
       -> ok {
         Set the transport adapter selections for the profile.
       }
+
+      fixture valid_set_transport { profileId: "profile-1", values: "[\"http\",\"ws\"]" }
+      fixture invalid_transport { profileId: "profile-1", values: "[\"mqtt\"]" } -> error
     }
 
     action validate(profile: P) {
@@ -92,6 +117,9 @@ concept TargetProfile [P] {
       -> incompatible(conflicts: list String) {
         Selected options across dimensions are not compatible.
       }
+
+      fixture valid_validate { profileId: "profile-1" }
+      fixture validate_nonexistent { profileId: "profile-999" } -> error
     }
 
     action deriveModules(profile: P) {
@@ -99,6 +127,9 @@ concept TargetProfile [P] {
         Compute the list of modules required to satisfy all
         dimensions of this target profile.
       }
+
+      fixture valid_derive { profileId: "profile-1" }
+      fixture derive_nonexistent { profileId: "profile-999" } -> error
     }
 
     action listOptions() {
@@ -113,6 +144,8 @@ concept TargetProfile [P] {
       }) {
         Return all available options for each dimension.
       }
+
+      fixture list_all_options { }
     }
   }
 

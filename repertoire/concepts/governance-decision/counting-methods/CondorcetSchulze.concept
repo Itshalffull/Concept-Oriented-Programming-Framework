@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CondorcetSchulze [CS] {
 
@@ -22,6 +23,8 @@ concept CondorcetSchulze [CS] {
       -> configured(config: CS) {
         A Condorcet-Schulze configuration is created.
       }
+
+      fixture default_config { }
     }
 
     action count(config: CS, rankedBallots: String, weights: String) {
@@ -36,12 +39,18 @@ concept CondorcetSchulze [CS] {
         The Smith set contains candidates that Schulze cannot further
         distinguish. Rare with real ballots.
       }
+
+      fixture condorcet_clear_winner { config: "condorcet-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }
+      fixture condorcet_empty_ballots { config: "condorcet-001", rankedBallots: "[]", weights: "{}" } -> error
     }
 
     action getPairwiseMatrix(config: CS) {
       -> matrix(data: String) {
         Returns the full pairwise comparison matrix from the last count.
       }
+
+      fixture get_matrix { config: "condorcet-001" }
+      fixture get_matrix_missing { config: "condorcet-nonexistent" } -> error
     }
   }
 

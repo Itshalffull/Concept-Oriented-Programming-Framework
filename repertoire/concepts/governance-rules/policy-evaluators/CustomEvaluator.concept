@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CustomEvaluator [CU] {
 
@@ -29,6 +30,19 @@ concept CustomEvaluator [CU] {
       -> syntax_error(name: String, error: String) {
         The source code has syntax errors.
       }
+
+      fixture register_age_check {
+        name: "age_check"
+        source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}"
+        language: "JavaScript"
+        sandbox: true
+      }
+      fixture register_empty_name {
+        name: ""
+        source: "{\"op\":\"eq\",\"field\":\"x\",\"value\":1}"
+        language: "JavaScript"
+        sandbox: true
+      } -> syntax_error
     }
 
     action evaluate(evaluator: CU, context: String) {
@@ -41,12 +55,28 @@ concept CustomEvaluator [CU] {
       -> timeout(evaluator: CU) {
         Execution exceeded the time limit.
       }
+
+      fixture evaluate_age_pass {
+        evaluator: "custom-001"
+        context: "{\"age\":21}"
+      }
+      fixture evaluate_unknown_evaluator {
+        evaluator: "nonexistent"
+        context: "{\"age\":21}"
+      } -> runtime_error
     }
 
     action deregister(evaluator: CU) {
       -> deregistered(evaluator: CU) {
         The custom evaluator is removed.
       }
+
+      fixture deregister_existing {
+        evaluator: "custom-001"
+      }
+      fixture deregister_nonexistent {
+        evaluator: "nonexistent"
+      } -> error
     }
   }
 

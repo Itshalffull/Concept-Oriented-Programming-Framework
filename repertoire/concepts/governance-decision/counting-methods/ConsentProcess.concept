@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ConsentProcess [CP] {
 
@@ -29,6 +30,9 @@ concept ConsentProcess [CP] {
       -> initiated(process: CP) {
         A consent process begins in Presenting phase.
       }
+
+      fixture initiate_budget_proposal { proposalRef: "proposal-budget-2026" }
+      fixture initiate_empty_ref { proposalRef: "" } -> error
     }
 
     action advancePhase(process: CP) {
@@ -36,6 +40,9 @@ concept ConsentProcess [CP] {
         The process moves to the next phase in sequence:
         Presenting → Clarifying → Reacting → ObjectionRound.
       }
+
+      fixture advance_to_clarifying { process: "consent-001" }
+      fixture advance_missing_process { process: "consent-nonexistent" } -> error
     }
 
     action raiseObjection(process: CP, objector: String, reason: String, isParamount: Bool) {
@@ -46,6 +53,9 @@ concept ConsentProcess [CP] {
       -> wrong_phase(process: CP) {
         Objections can only be raised during ObjectionRound.
       }
+
+      fixture raise_paramount { process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: true }
+      fixture raise_during_wrong_phase { process: "consent-001", objector: "bob", reason: "Unclear scope", isParamount: false } -> error
     }
 
     action integrateObjection(process: CP, objectionIndex: Int, amendment: String) {
@@ -54,6 +64,9 @@ concept ConsentProcess [CP] {
         is marked as integrated. If all objections are integrated,
         a new objection round begins on the amended proposal.
       }
+
+      fixture integrate_first_objection { process: "consent-001", objectionIndex: 0, amendment: "Cap budget at 80% of original request" }
+      fixture integrate_missing_objection { process: "consent-001", objectionIndex: 99, amendment: "N/A" } -> error
     }
 
     action resolve(process: CP) {
@@ -63,6 +76,9 @@ concept ConsentProcess [CP] {
       -> blocked(process: CP, outstandingObjections: Int) {
         Paramount objections remain that could not be integrated.
       }
+
+      fixture resolve_clean { process: "consent-001" }
+      fixture resolve_missing_process { process: "consent-nonexistent" } -> error
     }
   }
 

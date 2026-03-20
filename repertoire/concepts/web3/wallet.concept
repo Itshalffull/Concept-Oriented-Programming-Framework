@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Wallet [W] {
 
@@ -29,6 +30,17 @@ concept Wallet [W] {
         Verification could not be performed (malformed signature,
         unsupported signature type, etc.).
       }
+
+      fixture verify_valid_signature {
+        address: "0x0000000000000000000000000000000000000000"
+        message: "Sign this message"
+        signature: "0xdeadbeef"
+      }
+      fixture verify_mismatched_address {
+        address: "0x1234567890abcdef1234567890abcdef12345678"
+        message: "Sign this message"
+        signature: "0xdeadbeef"
+      } -> invalid
     }
 
     action verifyTypedData(
@@ -47,6 +59,21 @@ concept Wallet [W] {
       -> error(message: String) {
         Verification could not be performed.
       }
+
+      fixture verify_typed_data_valid {
+        address: "0x0000000000000000000000000000000000000000"
+        domain: "{\"name\":\"MyApp\"}"
+        types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}"
+        value: "{\"content\":\"hello\"}"
+        signature: "0xabcdef"
+      }
+      fixture verify_typed_data_mismatch {
+        address: "0x9999999999999999999999999999999999999999"
+        domain: "{\"name\":\"MyApp\"}"
+        types: "{\"Message\":[{\"name\":\"content\",\"type\":\"string\"}]}"
+        value: "{\"content\":\"hello\"}"
+        signature: "0xabcdef"
+      } -> invalid
     }
 
     action getNonce(address: String) {
@@ -56,11 +83,22 @@ concept Wallet [W] {
       -> notFound(address: String) {
         No nonce record for this address. First interaction.
       }
+
+      fixture get_nonce_existing {
+        address: "0x0000000000000000000000000000000000000000"
+      }
+      fixture get_nonce_unknown {
+        address: "0xdeaddeaddeaddeaddeaddeaddeaddeaddeaddead"
+      } -> notFound
     }
 
     action incrementNonce(address: String) {
       -> ok(address: String, nonce: Int) {
         Nonce incremented. Returns the new nonce value.
+      }
+
+      fixture increment_nonce_valid {
+        address: "0x0000000000000000000000000000000000000000"
       }
     }
   }

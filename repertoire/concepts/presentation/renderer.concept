@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Renderer [R] {
 
@@ -21,12 +22,18 @@ concept Renderer [R] {
       -> error(message: String) {
         The render tree could not be processed.
       }
+
+      fixture render_page { renderer: "main-renderer", tree: "<page><header/><body/></page>" }
+      fixture render_empty_tree { renderer: "main-renderer", tree: "" } -> error
     }
 
     action autoPlaceholder(renderer: R, name: String) {
       -> ok(placeholder: String) {
         A named placeholder is registered for lazy resolution during rendering.
       }
+
+      fixture register_sidebar { renderer: "main-renderer", name: "sidebar" }
+      fixture empty_placeholder_name { renderer: "main-renderer", name: "" } -> error
     }
 
     action stream(renderer: R, tree: String) {
@@ -36,12 +43,18 @@ concept Renderer [R] {
       -> error(message: String) {
         The streaming render could not be started.
       }
+
+      fixture stream_page { renderer: "main-renderer", tree: "<page><header/></page>" }
+      fixture stream_empty_tree { renderer: "main-renderer", tree: "" } -> error
     }
 
     action mergeCacheability(renderer: R, tags: String) {
       -> ok(merged: String) {
         Cache tags are merged to compute the effective cacheability of the output.
       }
+
+      fixture merge_tags { renderer: "main-renderer", tags: "{\"page\":300,\"user\":60}" }
+      fixture merge_empty_tags { renderer: "main-renderer", tags: "" } -> error
     }
   }
 

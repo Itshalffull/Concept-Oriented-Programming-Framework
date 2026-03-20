@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept BordaCount [BD] {
 
@@ -23,6 +24,10 @@ concept BordaCount [BD] {
         Modified: first gets N, last gets 1 (no zero).
         Dowdall: first gets 1, second gets 1/2, third 1/3, etc.
       }
+
+      fixture standard_scheme { pointScheme: "Standard" }
+      fixture dowdall_scheme { pointScheme: "Dowdall" }
+      fixture empty_scheme { pointScheme: "" } -> error
     }
 
     action count(config: BD, rankedBallots: String, weights: String) {
@@ -32,6 +37,9 @@ concept BordaCount [BD] {
       -> tie(choices: String, totalPoints: Float) {
         Multiple candidates have identical Borda scores.
       }
+
+      fixture borda_three_voters { config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }
+      fixture borda_no_ballots { config: "borda-001", rankedBallots: "[]", weights: "{}" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ApprovalCounting [AC] {
 
@@ -23,6 +24,10 @@ concept ApprovalCounting [AC] {
         how many candidates each voter can approve (none = unlimited).
         WinnerCount allows multi-winner elections.
       }
+
+      fixture single_winner_unlimited { maxApprovals: null, winnerCount: 1 }
+      fixture multi_winner_capped { maxApprovals: 3, winnerCount: 2 }
+      fixture zero_winners { maxApprovals: null, winnerCount: 0 } -> error
     }
 
     action count(config: AC, approvalSets: String, weights: String) {
@@ -32,6 +37,9 @@ concept ApprovalCounting [AC] {
       -> tie(tiedCandidates: String, approvalCount: Float) {
         Multiple candidates have identical approval counts at the winner boundary.
       }
+
+      fixture count_approvals { config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }
+      fixture count_no_ballots { config: "approval-001", approvalSets: "[]", weights: "{}" } -> error
     }
   }
 

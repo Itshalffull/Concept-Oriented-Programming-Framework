@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Element [E] {
 
@@ -38,6 +39,10 @@ concept Element [E] {
         group, container, rich-text, file-upload, media-display.
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture valid_create_field { element: "E-1", kind: "field", label: "Title", dataType: "String" }
+      fixture valid_create_group { element: "E-2", kind: "group", label: "Details", dataType: "" }
+      fixture invalid_kind { element: "E-3", kind: "unknown-kind", label: "Bad", dataType: "String" } -> error
     }
 
     action nest(parent: E, child: E) {

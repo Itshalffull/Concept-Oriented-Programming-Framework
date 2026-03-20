@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept View [V] {
 
@@ -48,6 +49,9 @@ concept View [V] {
         The view could not be created due to an invalid data source
         or unsupported layout type.
       }
+
+      fixture create_task_table { view: "tasks-table", dataSource: "tasks", layout: "table" }
+      fixture create_empty_source { view: "bad-view", dataSource: "", layout: "table" } -> error
     }
 
     action get(view: V) {
@@ -61,6 +65,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture get_existing_view { view: "tasks-table" }
+      fixture get_nonexistent { view: "no-such-view" } -> error
     }
 
     action resolve(view: V) {
@@ -75,6 +82,9 @@ concept View [V] {
       -> error(message: String) {
         The dataSource query failed.
       }
+
+      fixture resolve_existing { view: "tasks-table" }
+      fixture resolve_nonexistent { view: "no-such-view" } -> error
     }
 
     action setControls(view: V, controls: String) {
@@ -85,6 +95,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture set_controls { view: "tasks-table", controls: "{\"create\": true}" }
+      fixture set_controls_missing_view { view: "no-such-view", controls: "{}" } -> error
     }
 
     action setFilter(view: V, filter: String) {
@@ -94,6 +107,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture set_filter_active { view: "tasks-table", filter: "status=active" }
+      fixture set_filter_missing_view { view: "no-such-view", filter: "status=active" } -> error
     }
 
     action setSort(view: V, sort: String) {
@@ -103,6 +119,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture sort_by_date { view: "tasks-table", sort: "created_at:desc" }
+      fixture sort_missing_view { view: "no-such-view", sort: "name:asc" } -> error
     }
 
     action setGroup(view: V, group: String) {
@@ -112,6 +131,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture group_by_status { view: "tasks-table", group: "status" }
+      fixture group_missing_view { view: "no-such-view", group: "priority" } -> error
     }
 
     action setVisibleFields(view: V, fields: String) {
@@ -121,6 +143,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture set_fields { view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" }
+      fixture set_fields_missing_view { view: "no-such-view", fields: "[\"title\"]" } -> error
     }
 
     action changeLayout(view: V, layout: String) {
@@ -130,6 +155,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture switch_to_board { view: "tasks-table", layout: "board" }
+      fixture change_layout_missing { view: "no-such-view", layout: "calendar" } -> error
     }
 
     action duplicate(view: V) {
@@ -139,6 +167,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture duplicate_existing { view: "tasks-table" }
+      fixture duplicate_missing { view: "no-such-view" } -> error
     }
 
     action embed(view: V) {
@@ -148,6 +179,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture embed_existing { view: "tasks-table" }
+      fixture embed_missing { view: "no-such-view" } -> error
     }
   }
 
@@ -165,6 +199,9 @@ concept View [V] {
       -> notfound(message: String) {
         The view does not exist.
       }
+
+      fixture add_ctx_filter { view: "tasks-table", field: "author", operator: "equals", context_binding: "context.currentUser", fallback_behavior: "hide" }
+      fixture bad_binding { view: "tasks-table", field: "author", operator: "equals", context_binding: "invalid.path", fallback_behavior: "hide" } -> error
     }
   }
 

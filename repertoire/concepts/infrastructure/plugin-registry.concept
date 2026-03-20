@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PluginRegistry [P] {
 
@@ -24,12 +25,18 @@ concept PluginRegistry [P] {
         Plugin with this name and type already registered. Returns existing ref.
         Idempotent — not an error.
       }
+
+      fixture register_formatter { type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }
+      fixture missing_type { type: "", name: "orphan", metadata: "{}" } -> error
     }
 
     action discover(type: String) {
       -> ok(plugins: String) {
         Discover all available plugins of the specified type via attribute-based scanning.
       }
+
+      fixture discover_formatters { type: "formatter" }
+      fixture discover_empty_type { type: "" } -> error
     }
 
     action createInstance(plugin: P, config: String) {
@@ -39,18 +46,27 @@ concept PluginRegistry [P] {
       -> notfound() {
         The specified plugin definition does not exist.
       }
+
+      fixture create_with_config { plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }
+      fixture invalid_config { plugin: "formatter:markdown-fmt", config: "bad-json" } -> error
     }
 
     action getDefinitions(type: String) {
       -> ok(definitions: String) {
         Return all registered plugin definitions for the specified type.
       }
+
+      fixture get_formatter_defs { type: "formatter" }
+      fixture get_unknown_defs { type: "" } -> error
     }
 
     action alterDefinitions(type: String, alterations: String) {
       -> ok() {
         Apply alterations to the plugin definitions of the specified type.
       }
+
+      fixture alter_formatters { type: "formatter", alterations: "{\"deprecated\":true}" }
+      fixture alter_missing_type { type: "", alterations: "{}" } -> error
     }
 
     action derivePlugins(plugin: P, config: String) {
@@ -60,6 +76,9 @@ concept PluginRegistry [P] {
       -> notfound() {
         The base plugin definition does not exist.
       }
+
+      fixture derive_variant { plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }
+      fixture derive_nonexistent { plugin: "nonexistent:plugin", config: "{}" } -> error
     }
   }
 

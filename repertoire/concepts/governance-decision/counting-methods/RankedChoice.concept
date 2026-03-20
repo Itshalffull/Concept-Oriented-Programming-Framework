@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RankedChoice [RC] {
 
@@ -30,6 +31,10 @@ concept RankedChoice [RC] {
         A ranked choice configuration is created. InstantRunoff for
         single-winner, SingleTransferable for multi-winner.
       }
+
+      fixture irv_single_seat { eliminationMethod: "InstantRunoff", seats: 1 }
+      fixture stv_multi_seat { eliminationMethod: "SingleTransferable", seats: 3 }
+      fixture empty_method { eliminationMethod: "", seats: 1 } -> error
     }
 
     action count(config: RC, rankedBallots: String, weights: String) {
@@ -40,6 +45,9 @@ concept RankedChoice [RC] {
       -> exhausted(remainingCandidates: String, finalRound: Int) {
         All ballots are exhausted before a winner emerges.
       }
+
+      fixture count_three_candidates { config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }
+      fixture count_empty_ballots { config: "rcv-001", rankedBallots: "[]", weights: "{}" } -> error
     }
 
     action getRoundDetail(config: RC, roundNumber: Int) {
@@ -49,6 +57,9 @@ concept RankedChoice [RC] {
       -> not_found(roundNumber: Int) {
         No such round exists.
       }
+
+      fixture get_round_one { config: "rcv-001", roundNumber: 1 }
+      fixture get_invalid_round { config: "rcv-001", roundNumber: 999 } -> error
     }
   }
 

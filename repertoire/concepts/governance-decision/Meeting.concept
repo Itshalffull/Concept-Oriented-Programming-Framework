@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Meeting [MT] {
 
@@ -38,12 +39,18 @@ concept Meeting [MT] {
       -> scheduled(meeting: MT) {
         A meeting is created in Scheduled phase with the given agenda.
       }
+
+      fixture schedule_board_meeting { title: "Q2 Board Meeting", agenda: ["Budget review", "Hiring plan", "Product roadmap"] }
+      fixture schedule_empty_title { title: "", agenda: ["Item 1"] } -> error
     }
 
     action callToOrder(meeting: MT, chair: String) {
       -> called(meeting: MT) {
         The meeting moves to Called phase. The chair is recorded.
       }
+
+      fixture call_existing_meeting { meeting: "meeting-001", chair: "alice" }
+      fixture call_missing_meeting { meeting: "meeting-nonexistent", chair: "alice" } -> error
     }
 
     action makeMotion(meeting: MT, mover: String, motionType: String, text: String) {
@@ -53,6 +60,9 @@ concept Meeting [MT] {
       -> out_of_order(meeting: MT, reason: String) {
         The motion is out of order given the current meeting state.
       }
+
+      fixture make_main_motion { meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }
+      fixture make_motion_missing_meeting { meeting: "meeting-nonexistent", mover: "bob", motionType: "main", text: "Test" } -> error
     }
 
     action secondMotion(meeting: MT, seconder: String, motionIndex: Int) {
@@ -60,24 +70,36 @@ concept Meeting [MT] {
         The motion has been seconded and is now debatable (if the motion
         type allows debate).
       }
+
+      fixture second_existing_motion { meeting: "meeting-001", seconder: "carol", motionIndex: 0 }
+      fixture second_missing_motion { meeting: "meeting-001", seconder: "carol", motionIndex: 99 } -> error
     }
 
     action callQuestion(meeting: MT) {
       -> question_called(meeting: MT) {
         Debate on the current motion is closed. The motion proceeds to vote.
       }
+
+      fixture call_question_valid { meeting: "meeting-001" }
+      fixture call_question_missing { meeting: "meeting-nonexistent" } -> error
     }
 
     action recordMinute(meeting: MT, record: String) {
       -> recorded(meeting: MT) {
         A minute entry is added to the meeting record.
       }
+
+      fixture record_minute_entry { meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }
+      fixture record_missing_meeting { meeting: "meeting-nonexistent", record: "Test" } -> error
     }
 
     action adjourn(meeting: MT) {
       -> adjourned(meeting: MT) {
         The meeting is adjourned. Minutes are finalized.
       }
+
+      fixture adjourn_valid { meeting: "meeting-001" }
+      fixture adjourn_missing { meeting: "meeting-nonexistent" } -> error
     }
   }
 

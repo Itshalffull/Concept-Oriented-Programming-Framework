@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Cache [C] {
 
@@ -19,6 +20,9 @@ concept Cache [C] {
       -> ok() {
         Store data in the cache bin under the given key with associated tags and max-age.
       }
+
+      fixture set_page_cache { bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: 600 }
+      fixture set_missing_bin { bin: "", key: "orphan", data: "test", tags: "", maxAge: 0 } -> error
     }
 
     action get(bin: C, key: String) {
@@ -28,6 +32,9 @@ concept Cache [C] {
       -> miss() {
         No valid cache entry exists for the given key.
       }
+
+      fixture get_existing { bin: "render", key: "home-page" }
+      fixture get_nonexistent { bin: "render", key: "does-not-exist" } -> error
     }
 
     action invalidate(bin: C, key: String) {
@@ -37,12 +44,18 @@ concept Cache [C] {
       -> notfound() {
         No cache entry exists for the given key.
       }
+
+      fixture invalidate_existing { bin: "render", key: "home-page" }
+      fixture invalidate_missing { bin: "render", key: "nonexistent" } -> error
     }
 
     action invalidateByTags(tags: String) {
       -> ok(count: Int) {
         Invalidate all cache entries matching the specified tags and return the count removed.
       }
+
+      fixture invalidate_page_tags { tags: "page,frontpage" }
+      fixture invalidate_empty_tags { tags: "" } -> error
     }
   }
 

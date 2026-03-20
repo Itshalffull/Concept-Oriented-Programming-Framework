@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Circle [C] {
 
@@ -28,6 +29,10 @@ concept Circle [C] {
         A new circle is created. If parent is specified, this circle
         is added to the parent's children set.
       }
+
+      fixture valid_create { name: "Engineering", domain: "software-development", purpose: "Build and ship software" }
+      fixture create_with_parent { name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }
+      fixture missing_name { name: "", domain: "unknown", purpose: "" } -> error
     }
 
     action assignMember(circle: C, member: String) {
@@ -37,12 +42,18 @@ concept Circle [C] {
       -> not_found(circle: C) {
         The circle does not exist.
       }
+
+      fixture valid_assign { circle: "circle-1", member: "alice", role: "developer" }
+      fixture assign_nonexistent { circle: "circle-999", member: "bob", role: "lead" } -> error
     }
 
     action removeMember(circle: C, member: String) {
       -> removed(circle: C, member: String) {
         The member is removed from the circle's member set.
       }
+
+      fixture valid_remove { circle: "circle-1", member: "alice" }
+      fixture remove_nonexistent_circle { circle: "circle-999", member: "alice" } -> error
     }
 
     action setLinks(circle: C, repLink: option String, leadLink: option String) {
@@ -50,6 +61,9 @@ concept Circle [C] {
         The representative and lead links are set. RepLink represents
         the circle in its parent; leadLink represents the parent in this circle.
       }
+
+      fixture valid_set_links { circle: "circle-1", leadLink: "alice", repLink: "bob" }
+      fixture set_links_nonexistent { circle: "circle-999", leadLink: "alice", repLink: "bob" } -> error
     }
 
     action dissolve(circle: C) {
@@ -60,6 +74,9 @@ concept Circle [C] {
       -> not_found(circle: C) {
         The circle does not exist.
       }
+
+      fixture valid_dissolve { circle: "circle-1" }
+      fixture dissolve_nonexistent { circle: "circle-999" } -> error
     }
 
     action checkJurisdiction(circle: C, action: String) {
@@ -70,6 +87,9 @@ concept Circle [C] {
         The action is outside this circle's domain. If a parent exists,
         escalateTo points to it.
       }
+
+      fixture valid_jurisdiction { circle: "circle-1", action: "approve-budget" }
+      fixture jurisdiction_nonexistent { circle: "circle-999", action: "approve-budget" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ProjectInit [J] {
 
@@ -49,6 +50,11 @@ concept ProjectInit [J] {
       -> invalid_path(message: String) {
         The project path is not valid or not writable.
       }
+
+      fixture valid_create { project_name: "my-app", project_path: "/tmp/my-app", module_list: "[\"User\",\"Article\"]", profile: "{\"backend_languages\":[\"typescript\"],\"api_interfaces\":[\"rest\"]}", derived_concepts: "[]" }
+      fixture with_derived { project_name: "blog-app", project_path: "/tmp/blog", module_list: "[\"User\",\"Post\"]", profile: "{\"backend_languages\":[\"typescript\"]}", derived_concepts: "[{\"name\":\"BlogPost\",\"composes\":[\"User\",\"Post\"]}]" }
+      fixture empty_name { project_name: "", project_path: "/tmp/empty", module_list: "[\"User\"]", profile: "{}", derived_concepts: "[]" } -> error
+      fixture empty_modules { project_name: "no-mods", project_path: "/tmp/no-mods", module_list: "[]", profile: "{}", derived_concepts: "[]" } -> error
     }
 
     action writeManifest(init: J) {
@@ -60,6 +66,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Failed to write the manifest file.
       }
+
+      fixture valid_write_manifest { init: "init-1" }
+      fixture write_manifest_nonexistent { init: "init-999" } -> error
     }
 
     action writeInterfaceManifests(init: J) {
@@ -67,12 +76,18 @@ concept ProjectInit [J] {
         Write bind/interface manifest files for each selected
         API interface and frontend framework.
       }
+
+      fixture valid_write_interfaces { init: "init-1" }
+      fixture write_interfaces_nonexistent { init: "init-999" } -> error
     }
 
     action writeDeployManifests(init: J) {
       -> ok {
         Write deploy manifest files for each selected deploy target.
       }
+
+      fixture valid_write_deploy { init: "init-1" }
+      fixture write_deploy_nonexistent { init: "init-999" } -> error
     }
 
     action writeDerivedConcepts(init: J) {
@@ -80,6 +95,9 @@ concept ProjectInit [J] {
         Scaffold concept spec files for each derived concept,
         pre-filling the composes references.
       }
+
+      fixture valid_write_derived { init: "init-1" }
+      fixture write_derived_nonexistent { init: "init-999" } -> error
     }
 
     action triggerInstall(init: J) {
@@ -90,6 +108,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Dependency installation failed.
       }
+
+      fixture valid_trigger_install { init: "init-1" }
+      fixture trigger_install_nonexistent { init: "init-999" } -> error
     }
 
     action triggerGenerate(init: J) {
@@ -100,6 +121,9 @@ concept ProjectInit [J] {
       -> error(message: String) {
         Code generation failed.
       }
+
+      fixture valid_trigger_generate { init: "init-1" }
+      fixture trigger_generate_nonexistent { init: "init-999" } -> error
     }
 
     action complete(init: J) {
@@ -114,6 +138,9 @@ concept ProjectInit [J] {
         Finalize the initialization, set status to complete,
         and return a summary of everything that was created.
       }
+
+      fixture valid_complete { init: "init-1" }
+      fixture complete_nonexistent { init: "init-999" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Polity [G] {
 
@@ -30,6 +31,10 @@ concept Polity [G] {
         A new governance domain is created with the given charter attributes.
         All three governance layers are initialized.
       }
+
+      fixture valid_establish { name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency", "equity"], scope: ["budgets", "hiring"] }
+      fixture minimal_establish { name: "Small Circle", purpose: "Team coordination", values: [], scope: ["sprint-planning"] }
+      fixture missing_name { name: "", purpose: "No name provided", values: [], scope: [] } -> error
     }
 
     action amend(polity: G, field: String, newValue: String) {
@@ -44,6 +49,9 @@ concept Polity [G] {
         The field is protected by constitutional rules and cannot be amended
         through this action.
       }
+
+      fixture valid_amend { polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }
+      fixture amend_nonexistent { polity: "polity-999", field: "purpose", newValue: "No such polity" } -> error
     }
 
     action dissolve(polity: G) {
@@ -54,6 +62,9 @@ concept Polity [G] {
       -> not_found(polity: G) {
         The polity does not exist.
       }
+
+      fixture valid_dissolve { polity: "polity-1", reason: "Merger with partner org" }
+      fixture dissolve_nonexistent { polity: "polity-999", reason: "Does not exist" } -> error
     }
   }
 

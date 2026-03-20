@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GlickoRating [GL] {
 
@@ -32,6 +33,9 @@ concept GlickoRating [GL] {
         Glicko-2 parameters. Deviation grows with inactivity per
         inactivityGrowthRate, representing increasing uncertainty.
       }
+
+      fixture configure_standard { initialRating: 1500.0, initialDeviation: 350.0, initialVolatility: 0.06, inactivityGrowthRate: 30.0 }
+      fixture configure_zero_deviation { initialRating: 1500.0, initialDeviation: 0.0, initialVolatility: 0.06, inactivityGrowthRate: 30.0 } -> error
     }
 
     action recordOutcome(config: GL, participant: String, opponent: String, outcome: Float) {
@@ -39,6 +43,9 @@ concept GlickoRating [GL] {
         Rating and deviation updated per Glicko-2 algorithm.
         Deviation decreases (more certain) after activity.
       }
+
+      fixture outcome_win { config: "glicko-001", participant: "alice", opponent: "bob", outcome: 1.0 }
+      fixture outcome_invalid { config: "glicko-001", participant: "", opponent: "", outcome: -1.0 } -> error
     }
 
     action applyInactivityDecay(config: GL, participant: String, daysSinceActive: Float) {
@@ -46,6 +53,9 @@ concept GlickoRating [GL] {
         Deviation increases based on days inactive, reflecting
         growing uncertainty about the participant's current ability.
       }
+
+      fixture decay_30_days { config: "glicko-001", participant: "alice", daysSinceActive: 30.0 }
+      fixture decay_nonexistent { config: "glicko-001", participant: "unknown-player", daysSinceActive: 90.0 } -> error
     }
 
     action getReliableWeight(config: GL, participant: String) {
@@ -53,6 +63,9 @@ concept GlickoRating [GL] {
         Reliability = 1 - (deviation / maxDeviation). Can be used
         to discount governance weight for uncertain participants.
       }
+
+      fixture weight_alice { config: "glicko-001", participant: "alice" }
+      fixture weight_unknown { config: "glicko-001", participant: "" } -> error
     }
   }
 

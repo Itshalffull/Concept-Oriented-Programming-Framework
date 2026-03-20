@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ModuleSelection [S] {
 
@@ -60,6 +61,10 @@ concept ModuleSelection [S] {
       -> profile_notfound(message: String) {
         The specified profile name does not exist.
       }
+
+      fixture begin_with_template { template_name: "social", profile_name: null }
+      fixture begin_with_profile { template_name: null, profile_name: "fullstack" }
+      fixture begin_empty { template_name: null, profile_name: null }
     }
 
     action addConcept(selection: S, module_id: String,
@@ -70,6 +75,9 @@ concept ModuleSelection [S] {
       -> already_selected(message: String) {
         This concept module is already in the selection.
       }
+
+      fixture valid_add_concept { selection: "sel-1", module_id: "Article", features: "[]" }
+      fixture add_concept_nonexistent_selection { selection: "sel-999", module_id: "Article", features: "[]" } -> error
     }
 
     action removeConcept(selection: S, module_id: String) {
@@ -82,6 +90,9 @@ concept ModuleSelection [S] {
       -> has_dependents(dependents: list String) {
         Other selected modules depend on this concept.
       }
+
+      fixture valid_remove_concept { selection: "sel-1", module_id: "Article" }
+      fixture remove_concept_nonexistent { selection: "sel-999", module_id: "Article" } -> error
     }
 
     action chooseHandler(selection: S, concept_module: String,
@@ -95,18 +106,27 @@ concept ModuleSelection [S] {
       -> language_mismatch(message: String) {
         The handler language does not match the target profile.
       }
+
+      fixture valid_choose_handler { selection: "sel-1", concept_module: "User", handler_module: "UserTsHandler" }
+      fixture choose_handler_nonexistent { selection: "sel-999", concept_module: "User", handler_module: "UserTsHandler" } -> error
     }
 
     action addWidget(selection: S, module_id: String) {
       -> ok {
         Add a widget module to the selection.
       }
+
+      fixture valid_add_widget { selection: "sel-1", module_id: "DataTableWidget" }
+      fixture add_widget_nonexistent { selection: "sel-999", module_id: "DataTableWidget" } -> error
     }
 
     action selectTheme(selection: S, theme_module: String) {
       -> ok {
         Set the theme module for the selection.
       }
+
+      fixture valid_select_theme { selection: "sel-1", theme_module: "MaterialTheme" }
+      fixture select_theme_nonexistent { selection: "sel-999", theme_module: "MaterialTheme" } -> error
     }
 
     action addDerived(selection: S, name: String, composes: list String) {
@@ -116,6 +136,9 @@ concept ModuleSelection [S] {
       -> missing_concepts(missing: list String) {
         One or more composed concepts are not in the selection.
       }
+
+      fixture valid_add_derived { selection: "sel-1", name: "BlogPost", composes: "[\"User\",\"Article\"]" }
+      fixture add_derived_missing { selection: "sel-1", name: "BadDerived", composes: "[\"NonExistent\"]" } -> error
     }
 
     action finalize(selection: S) {
@@ -131,6 +154,9 @@ concept ModuleSelection [S] {
       -> incomplete(issues: list String) {
         The selection cannot be finalized due to unresolved issues.
       }
+
+      fixture valid_finalize { selection: "sel-1" }
+      fixture finalize_nonexistent { selection: "sel-999" } -> error
     }
 
     action preview(selection: S) {
@@ -144,6 +170,9 @@ concept ModuleSelection [S] {
       }) {
         Return a summary of the current selection without finalizing.
       }
+
+      fixture valid_preview { selection: "sel-1" }
+      fixture preview_nonexistent { selection: "sel-999" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Treasury [TR] {
 
@@ -26,43 +27,54 @@ concept Treasury [TR] {
   }
 
   actions {
-    action deposit(vault: TR, token: String, amount: Float, depositor: String) {
+    action deposit(vault: TR, token: String, amount: Float) {
       -> deposited(vault: TR, newBalance: Float) {
         The amount is added to the vault's balance for the given token.
       }
+
+      fixture deposit_eth { vault: "dao-treasury", token: "ETH", amount: 100.0 }
+      fixture deposit_zero { vault: "dao-treasury", token: "ETH", amount: 0.0 } -> error
     }
 
-    action withdraw(vault: TR, token: String, amount: Float, recipient: String, sourceRef: String) {
+    action withdraw(vault: TR, token: String, amount: Float) {
       -> withdrawn(vault: TR, newBalance: Float) {
-        The amount is deducted and sent to the recipient.
-        SourceRef tracks which governance action authorized this.
+        The amount is deducted from the vault's balance for the given token.
       }
-      -> insufficient_funds(vault: TR, available: Float, requested: Float) {
+      -> insufficient(vault: TR, available: Float, requested: Float) {
         The vault does not hold enough of the token.
       }
+
+      fixture withdraw_eth { vault: "dao-treasury", token: "ETH", amount: 50.0 }
+      fixture withdraw_too_much { vault: "dao-treasury", token: "ETH", amount: 999999.0 } -> error
     }
 
-    action allocate(vault: TR, proposalRef: String, token: String, amount: Float) {
-      -> allocated(vault: TR) {
-        The amount is earmarked for a proposal but not yet withdrawn.
+    action allocate(vault: TR, token: String, amount: Float, purpose: String) {
+      -> allocated(allocation: String) {
+        The amount is earmarked for a purpose but not yet withdrawn.
       }
-      -> insufficient_funds(vault: TR, available: Float, requested: Float) {
-        Not enough unallocated funds.
-      }
+
+      fixture allocate_grant { vault: "dao-treasury", token: "ETH", amount: 25.0, purpose: "developer-grant-q1" }
+      fixture allocate_empty_purpose { vault: "dao-treasury", token: "ETH", amount: 10.0, purpose: "" } -> error
     }
 
-    action releaseAllocation(vault: TR, proposalRef: String) {
-      -> released(vault: TR) {
+    action releaseAllocation(allocation: String) {
+      -> released(allocation: String) {
         The earmarked allocation is released back to available balance.
       }
+      -> not_found(allocation: String) {
+        No allocation found with this identifier.
+      }
+
+      fixture release_existing { allocation: "alloc-001" }
+      fixture release_nonexistent { allocation: "alloc-nonexistent" } -> error
     }
   }
 
   example "deposit-then-withdraw": {
 
-    after deposit(vault: v, token: t, amount: 100.0, depositor: _) -> deposited(vault: v, newBalance: _)
+    after deposit(vault: v, token: t, amount: 100.0) -> deposited(vault: v, newBalance: _)
 
-        then withdraw(vault: v, token: t, amount: 50.0, recipient: _, sourceRef: _) -> withdrawn(vault: v, newBalance: _)
+        then withdraw(vault: v, token: t, amount: 50.0) -> withdrawn(vault: v, newBalance: _)
 
   }
 

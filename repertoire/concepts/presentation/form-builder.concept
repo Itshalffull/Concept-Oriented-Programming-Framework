@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept FormBuilder [F] {
 
@@ -21,6 +22,9 @@ concept FormBuilder [F] {
       -> error(message: String) {
         The form could not be built from the given schema.
       }
+
+      fixture build_user_profile { form: "user-form", schema: "user-profile" }
+      fixture build_no_schema { form: "empty-form", schema: "" } -> error
     }
   }
 

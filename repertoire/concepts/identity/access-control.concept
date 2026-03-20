@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AccessControl [A] {
 
@@ -24,6 +25,9 @@ concept AccessControl [A] {
         which policies contributed. maxAge indicates how long the
         result may be cached in seconds.
       }
+
+      fixture check_read { resource: "document:123", action: "read", context: "user:alice" }
+      fixture check_empty_resource { resource: "", action: "read", context: "user:alice" } -> error
     }
 
     action orIf(left: String, right: String) {
@@ -33,6 +37,9 @@ concept AccessControl [A] {
         "forbidden" (forbidden takes precedence), and "neutral"
         only if both are "neutral".
       }
+
+      fixture orIf_allowed { left: "neutral", right: "allowed" }
+      fixture orIf_forbidden { left: "forbidden", right: "allowed" } -> error
     }
 
     action andIf(left: String, right: String) {
@@ -43,6 +50,9 @@ concept AccessControl [A] {
         Returns "neutral" if neither is "forbidden" and at
         least one is "neutral".
       }
+
+      fixture andIf_both_allowed { left: "allowed", right: "allowed" }
+      fixture andIf_one_forbidden { left: "allowed", right: "forbidden" } -> error
     }
   }
 

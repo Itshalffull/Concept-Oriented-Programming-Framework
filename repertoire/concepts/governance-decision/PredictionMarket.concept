@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept PredictionMarket [PM] {
@@ -40,6 +41,10 @@ concept PredictionMarket [PM] {
         A new prediction market is created in Open status.
         Initial prices are set uniformly across outcomes.
       }
+
+      fixture valid_market { question: "Will GDP grow by 3%?", outcomes: ["Yes", "No"], deadline: "2026-12-31T23:59:59Z" }
+      fixture multi_outcome { question: "Which party wins?", outcomes: ["Alpha", "Beta", "Gamma"], deadline: "2026-06-01T00:00:00Z" }
+      fixture empty_question { question: "", outcomes: ["Yes", "No"], deadline: "2026-12-31T23:59:59Z" } -> error
     }
 
     action trade(market: PM, trader: String, outcome: String, amount: Float) {
@@ -53,6 +58,9 @@ concept PredictionMarket [PM] {
       -> invalid_outcome(market: PM, outcome: String) {
         The outcome is not a valid option for this market.
       }
+
+      fixture buy_shares { market: "market-001", trader: "alice", outcome: "Yes", amount: 50.0 }
+      fixture missing_market { market: "market-nonexistent", trader: "bob", outcome: "No", amount: 10.0 } -> error
     }
 
     action resolve(market: PM, outcome: String) {
@@ -63,6 +71,9 @@ concept PredictionMarket [PM] {
       -> already_resolved(market: PM) {
         The market has already been resolved.
       }
+
+      fixture resolve_market { market: "market-001", outcome: "Yes" }
+      fixture resolve_missing { market: "market-nonexistent", outcome: "No" } -> error
     }
 
     action claimPayout(market: PM, trader: String) {
@@ -75,6 +86,9 @@ concept PredictionMarket [PM] {
       -> not_resolved(market: PM) {
         The market has not been resolved yet.
       }
+
+      fixture claim_valid { market: "market-001", trader: "alice" }
+      fixture claim_no_winnings { market: "market-001", trader: "bob" } -> error
     }
   }
 

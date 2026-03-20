@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Majority [MJ] {
 
@@ -23,6 +24,10 @@ concept Majority [MJ] {
         A majority counting configuration is created. Default threshold
         is 0.5 (strict majority). BinaryOnly enforces exactly two choices.
       }
+
+      fixture standard_majority { threshold: 0.5, binaryOnly: true, tieBreaker: null }
+      fixture with_tiebreaker { threshold: 0.5, binaryOnly: false, tieBreaker: "chair-decides" }
+      fixture invalid_threshold { threshold: -0.1, binaryOnly: true, tieBreaker: null } -> error
     }
 
     action count(config: MJ, ballots: String, weights: String) {
@@ -36,6 +41,9 @@ concept Majority [MJ] {
       -> no_majority(leadingChoice: String, voteShare: Float, threshold: Float) {
         No choice meets the threshold.
       }
+
+      fixture clear_winner { config: "maj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }
+      fixture no_ballots { config: "maj-001", ballots: "[]", weights: "{}" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Supermajority [SM] {
 
@@ -28,6 +29,10 @@ concept Supermajority [SM] {
       -> invalid_threshold(threshold: Float) {
         Threshold must be between 0.5 (exclusive) and 1.0 (inclusive).
       }
+
+      fixture two_thirds { threshold: 0.6667, roundingMode: "floor", abstentionsCount: false }
+      fixture three_quarters_with_abstentions { threshold: 0.75, roundingMode: "ceil", abstentionsCount: true }
+      fixture invalid_low_threshold { threshold: 0.3, roundingMode: "floor", abstentionsCount: false } -> error
     }
 
     action count(config: SM, ballots: String, weights: String) {
@@ -37,6 +42,9 @@ concept Supermajority [SM] {
       -> insufficient(leadingChoice: String, voteShare: Float, requiredShare: Float, shortfall: Float) {
         The leading choice falls short of the threshold.
       }
+
+      fixture supermajority_reached { config: "supermaj-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"yes\"},{\"voter\":\"carol\",\"choice\":\"no\"}]", weights: "{}" }
+      fixture no_ballots { config: "supermaj-001", ballots: "[]", weights: "{}" } -> error
     }
   }
 

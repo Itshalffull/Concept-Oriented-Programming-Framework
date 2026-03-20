@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EloRating [EL] {
 
@@ -29,6 +30,9 @@ concept EloRating [EL] {
         K-factor controls update magnitude. InitialRating for new
         participants. KFactorDecay optionally reduces K as games increase.
       }
+
+      fixture configure_standard { kFactor: 32.0, initialRating: 1500.0 }
+      fixture configure_zero_k { kFactor: 0.0, initialRating: 1500.0 } -> error
     }
 
     action recordOutcome(config: EL, winner: String, loser: String) {
@@ -37,12 +41,18 @@ concept EloRating [EL] {
         (1 for winner, 0 for loser) drives update:
         newRating = oldRating + K × (actual - expected).
       }
+
+      fixture outcome_alice_wins { config: "elo-001", winner: "alice", loser: "bob" }
+      fixture outcome_same_player { config: "elo-001", winner: "alice", loser: "alice" } -> error
     }
 
     action recordDraw(config: EL, participantA: String, participantB: String) {
       -> updated(aNewRating: Float, bNewRating: Float) {
         Both participants scored 0.5. Updates apply symmetrically.
       }
+
+      fixture draw_match { config: "elo-001", participantA: "alice", participantB: "bob" }
+      fixture draw_same_player { config: "elo-001", participantA: "alice", participantB: "alice" } -> error
     }
 
     action getRating(config: EL, participant: String) {
@@ -52,6 +62,9 @@ concept EloRating [EL] {
       -> unrated(participant: String) {
         No rating exists. Would receive initialRating.
       }
+
+      fixture get_alice_rating { config: "elo-001", participant: "alice" }
+      fixture get_unknown_rating { config: "elo-001", participant: "" } -> error
     }
   }
 

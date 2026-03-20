@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Objective [OB] {
 
@@ -26,19 +27,25 @@ concept Objective [OB] {
   }
 
   actions {
-    action create(title: String, description: String, owner: String, targets: list String) {
+    action create(title: String, description: String, owner: String, metricRefs: list String, targetDate: String) {
       -> created(objective: OB) {
         A new objective is created in Active status with 0% progress.
       }
+
+      fixture create_revenue_goal { title: "Increase Revenue", description: "Grow quarterly revenue by 20%", owner: "cfo@acme.com", metricRefs: ["metric-revenue"], targetDate: "2026-12-31" }
+      fixture create_empty_title { title: "", description: "", owner: "", metricRefs: [], targetDate: "" } -> error
     }
 
-    action updateProgress(objective: OB, metricRef: String, currentValue: Float) {
+    action updateProgress(objective: OB, currentValue: Float) {
       -> progressed(objective: OB, newProgress: Float) {
         Progress is recalculated based on current metric values vs targets.
       }
       -> achieved(objective: OB) {
         All target values have been met. Status moves to Achieved.
       }
+
+      fixture update_halfway { objective: "objective-001", currentValue: 50.0 }
+      fixture update_nonexistent { objective: "objective-nonexistent", currentValue: 10.0 } -> error
     }
 
     action evaluate(objective: OB) {
@@ -51,20 +58,26 @@ concept Objective [OB] {
       -> missed(objective: OB) {
         The deadline has passed without achieving targets.
       }
+
+      fixture evaluate_existing { objective: "objective-001" }
+      fixture evaluate_nonexistent { objective: "objective-nonexistent" } -> error
     }
 
-    action cancel(objective: OB) {
+    action cancel(objective: OB, reason: String) {
       -> cancelled(objective: OB) {
         The objective is cancelled.
       }
+
+      fixture cancel_with_reason { objective: "objective-001", reason: "Budget constraints" }
+      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } -> error
     }
   }
 
   example "create-then-updateProgress": {
 
-    after create(title: _, description: _, owner: _, targets: _) -> created(objective: ob)
+    after create(title: _, description: _, owner: _, metricRefs: _, targetDate: _) -> created(objective: ob)
 
-        then updateProgress(objective: ob, metricRef: _, currentValue: _) -> progressed(objective: ob, newProgress: _)
+        then updateProgress(objective: ob, currentValue: _) -> progressed(objective: ob, newProgress: _)
 
   }
 

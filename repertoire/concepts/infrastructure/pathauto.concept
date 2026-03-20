@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Pathauto [P] {
 
@@ -21,6 +22,10 @@ concept Pathauto [P] {
       -> notfound() {
         The specified pattern does not exist.
       }
+
+      fixture valid_page { pattern: "blog", entity: "My Example Page" }
+      fixture special_chars { pattern: "products", entity: "Héllo & Wörld!" }
+      fixture empty_entity { entity: "" } -> error
     }
 
     action bulkGenerate(pattern: P, entities: String) {
@@ -30,12 +35,18 @@ concept Pathauto [P] {
       -> notfound() {
         The specified pattern does not exist.
       }
+
+      fixture bulk_two { pattern: "docs", entities: "[\"Getting Started\",\"API Reference\"]" }
+      fixture invalid_json { pattern: "docs", entities: "not-json" } -> error
     }
 
     action cleanString(input: String) {
       -> ok(cleaned: String) {
         Sanitize the input string into a URL-safe slug by applying clean rules.
       }
+
+      fixture clean_spaces { input: "Hello World Test" }
+      fixture clean_empty { input: "" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Monitor [MN] {
 
@@ -9,7 +10,7 @@ concept Monitor [MN] {
   state {
     observers: set MN
     subject: MN -> String
-    ruleRef: MN -> String
+    policyRef: MN -> String
     status: MN -> {Watching | Triggered | Resolved}
     observations: MN -> list {
       behavior: String,
@@ -23,11 +24,20 @@ concept Monitor [MN] {
   }
 
   actions {
-    action watch(subject: String, ruleRef: String) {
+    action watch(subject: String, policyRef: String) {
       -> watching(observer: MN) {
         A new monitoring session begins for the subject against the
         referenced rule.
       }
+
+      fixture watch_user_compliance {
+        subject: "user-42"
+        policyRef: "policy-001"
+      }
+      fixture watch_missing_subject {
+        subject: ""
+        policyRef: "policy-001"
+      } -> error
     }
 
     action observe(observer: MN, behavior: String) {
@@ -37,18 +47,34 @@ concept Monitor [MN] {
       -> violation(observer: MN, severity: String) {
         The behavior violates the rule. Severity is assessed.
       }
+
+      fixture observe_compliant_behavior {
+        observer: "monitor-001"
+        behavior: "submitted_report_on_time"
+      }
+      fixture observe_unknown_observer {
+        observer: "nonexistent"
+        behavior: "some_action"
+      } -> violation
     }
 
     action resolve(observer: MN) {
       -> resolved(observer: MN) {
         The monitoring session is concluded.
       }
+
+      fixture resolve_session {
+        observer: "monitor-001"
+      }
+      fixture resolve_unknown_observer {
+        observer: "nonexistent"
+      } -> error
     }
   }
 
   example "watch-then-observe": {
 
-    after watch(subject: _, ruleRef: _) -> watching(observer: mn)
+    after watch(subject: _, policyRef: _) -> watching(observer: mn)
 
         then observe(observer: mn, behavior: _) -> compliant(observer: mn)
 
@@ -63,11 +89,11 @@ concept Monitor [MN] {
 
   }
 
-  never "orphaned-ruleRef" {
+  never "orphaned-policyRef" {
 
     exists mn in observers:
 
-      mn.ruleRef = none
+      mn.policyRef = none
 
   }
 

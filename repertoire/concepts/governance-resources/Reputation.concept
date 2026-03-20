@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Reputation [RP] {
 
@@ -31,24 +32,30 @@ concept Reputation [RP] {
         The participant's score increases by the given amount.
         A history entry is recorded.
       }
+
+      fixture earn_contribution { participant: "alice", amount: 10.0, reason: "code-review" }
+      fixture earn_zero { participant: "alice", amount: 0.0, reason: "" } -> error
     }
 
-    action burn(participant: String, amount: Float, reason: String) {
+    action burn(participant: String, amount: Float) {
       -> burned(entry: RP) {
         The participant's score decreases by the given amount.
       }
       -> insufficient(participant: String, currentScore: Float) {
         The participant does not have enough reputation to burn.
       }
+
+      fixture burn_penalty { participant: "alice", amount: 5.0 }
+      fixture burn_excessive { participant: "alice", amount: 999999.0 } -> error
     }
 
-    action decay() {
-      -> decayed(affectedCount: Int) {
-        All scores are reduced per the configured decay rate.
+    action decay(participant: String, decayFactor: Float) {
+      -> decayed(entry: RP, newScore: Float) {
+        The participant's score is reduced by the decay factor.
       }
-      -> no_decay_configured() {
-        No decay rate is set.
-      }
+
+      fixture decay_alice { participant: "alice", decayFactor: 0.1 }
+      fixture decay_invalid_factor { participant: "alice", decayFactor: -1.0 } -> error
     }
 
     action getScore(participant: String) {
@@ -58,12 +65,18 @@ concept Reputation [RP] {
       -> not_found(participant: String) {
         No reputation record exists for this participant.
       }
+
+      fixture get_alice_score { participant: "alice" }
+      fixture get_unknown_score { participant: "" } -> error
     }
 
     action recalculate(participant: String) {
       -> recalculated(participant: String, newScore: Float) {
         The score is recomputed from history using the configured algorithm.
       }
+
+      fixture recalculate_alice { participant: "alice" }
+      fixture recalculate_unknown { participant: "" } -> error
     }
   }
 

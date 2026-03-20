@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Delegation [E] {
 
@@ -34,6 +35,10 @@ concept Delegation [E] {
       -> cycle_detected(from: String, to: String) {
         Delegation would create a cycle in the delegation graph.
       }
+
+      fixture valid_delegate { from: "alice", to: "bob", scope: "budgets", expiresAt: "2026-12-31T23:59:59Z" }
+      fixture delegate_no_expiry { from: "carol", to: "dave", scope: "hiring", expiresAt: null }
+      fixture delegate_cycle { from: "bob", to: "alice", scope: "budgets", expiresAt: null } -> error
     }
 
     action undelegate(delegation: E) {
@@ -43,6 +48,9 @@ concept Delegation [E] {
       -> not_found(delegation: E) {
         The delegation does not exist.
       }
+
+      fixture valid_undelegate { from: "alice", to: "bob" }
+      fixture undelegate_nonexistent { from: "unknown", to: "nobody" } -> error
     }
 
     action getEffectiveWeight(participant: String, domain: option String) {
@@ -50,6 +58,9 @@ concept Delegation [E] {
         Returns 1.0 + sum of weights of all delegators (recursively
         if transitive), filtered by domain if specified.
       }
+
+      fixture weight_lookup { participant: "bob" }
+      fixture weight_with_domain { participant: "alice" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Metric [ME] {
 
@@ -29,25 +30,34 @@ concept Metric [ME] {
   }
 
   actions {
-    action define(name: String, unit: option String, source: String) {
+    action define(name: String, unit: option String, aggregation: String) {
       -> defined(metric: ME) {
         A new metric is created with initial value 0.
       }
+
+      fixture define_revenue { name: "quarterly-revenue", unit: "USD", aggregation: "sum" }
+      fixture define_empty_name { name: "", unit: "", aggregation: "sum" } -> error
     }
 
-    action update(metric: ME, value: Float) {
+    action update(metric: ME, value: Float, source: String) {
       -> updated(metric: ME, previousValue: Float) {
         The metric value is updated and history is appended.
       }
       -> threshold_crossed(metric: ME, threshold: String, direction: String) {
         The update caused a threshold to be crossed.
       }
+
+      fixture update_revenue { metric: "metric-001", value: 150000.0, source: "finance-api" }
+      fixture update_nonexistent { metric: "metric-nonexistent", value: 0.0, source: "manual" } -> error
     }
 
-    action setThreshold(metric: ME, level: String, operator: String, value: Float) {
+    action setThreshold(metric: ME, threshold: Float, alertOnBreach: Bool) {
       -> threshold_set(metric: ME) {
         A threshold is added or updated.
       }
+
+      fixture set_revenue_threshold { metric: "metric-001", threshold: 100000.0, alertOnBreach: true }
+      fixture set_threshold_nonexistent { metric: "metric-nonexistent", threshold: 0.0, alertOnBreach: false } -> error
     }
 
     action evaluate(metric: ME) {
@@ -57,14 +67,17 @@ concept Metric [ME] {
       -> threshold_breached(metric: ME, breachedThresholds: String) {
         One or more thresholds are breached.
       }
+
+      fixture evaluate_existing { metric: "metric-001" }
+      fixture evaluate_nonexistent { metric: "metric-nonexistent" } -> error
     }
   }
 
   example "define-then-update": {
 
-    after define(name: _, unit: _, source: _) -> defined(metric: me)
+    after define(name: _, unit: _, aggregation: _) -> defined(metric: me)
 
-        then update(metric: me, value: 50.0) -> updated(metric: me, previousValue: _)
+        then update(metric: me, value: 50.0, source: _) -> updated(metric: me, previousValue: _)
 
   }
 

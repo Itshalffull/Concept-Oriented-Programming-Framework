@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Quorum [Q] {
 
@@ -22,6 +23,10 @@ concept Quorum [Q] {
         A quorum rule is created with the given threshold type and value.
         Absolute means at least N votes. Fractional means at least N% of eligible.
       }
+
+      fixture absolute_ten { thresholdType: "Absolute", value: 10.0 }
+      fixture fractional_half { thresholdType: "Fractional", value: 0.5 }
+      fixture empty_type { thresholdType: "", value: 10.0 } -> error
     }
 
     action check(totalVotes: Int, totalEligible: Int) {

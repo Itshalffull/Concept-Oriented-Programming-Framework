@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreVoting [SV] {
 
@@ -27,6 +28,10 @@ concept ScoreVoting [SV] {
       -> invalid_range(minScore: Float, maxScore: Float) {
         MinScore must be less than maxScore.
       }
+
+      fixture mean_zero_to_five { minScore: 0.0, maxScore: 5.0, aggregation: "Mean" }
+      fixture median_scoring { minScore: 0.0, maxScore: 10.0, aggregation: "Median" }
+      fixture invalid_range_config { minScore: 5.0, maxScore: 0.0, aggregation: "Mean" } -> error
     }
 
     action count(config: SV, scoreBallots: String, weights: String) {
@@ -36,6 +41,9 @@ concept ScoreVoting [SV] {
       -> tie(choices: String, aggregateScore: Float) {
         Multiple candidates have identical aggregate scores.
       }
+
+      fixture score_two_candidates { config: "score-001", scoreBallots: "[{\"voter\":\"alice\",\"scores\":{\"A\":4,\"B\":2}},{\"voter\":\"bob\",\"scores\":{\"A\":3,\"B\":5}}]", weights: "{}" }
+      fixture score_empty_ballots { config: "score-001", scoreBallots: "[]", weights: "{}" } -> error
     }
   }
 

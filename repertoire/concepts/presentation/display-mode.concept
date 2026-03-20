@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept DisplayMode [D] {
 
@@ -41,6 +42,9 @@ concept DisplayMode [D] {
       -> already_exists(schema: String, mode_id: String) {
         A mode with this (schema, mode_id) pair already exists.
       }
+
+      fixture create_article_full { schema: "Article", mode_id: "full", name: "Full Page" }
+      fixture create_empty_schema { schema: "", mode_id: "full", name: "Full Page" } -> error
     }
 
     action resolve(schema: String, mode_id: String) {
@@ -53,6 +57,9 @@ concept DisplayMode [D] {
         No mode configured. Caller should fall back to WidgetResolver
         automatic rendering with no display customization.
       }
+
+      fixture resolve_article { schema: "Article", mode_id: "full" }
+      fixture resolve_nonexistent { schema: "Article", mode_id: "nonexistent" } -> error
     }
 
     action set_layout(mode: D, layout: String) {
@@ -63,6 +70,9 @@ concept DisplayMode [D] {
       -> not_found(mode: D) {
         The mode does not exist.
       }
+
+      fixture set_layout_triple { mode: "Article:full", layout: "triple-zone-default" }
+      fixture set_layout_missing_mode { mode: "Missing:mode", layout: "two-column" } -> error
     }
 
     action clear_layout(mode: D) {
@@ -70,6 +80,9 @@ concept DisplayMode [D] {
         Removes the Layout assignment. Rendering falls back to the
         flat_fields list or WidgetResolver defaults.
       }
+
+      fixture clear_existing_layout { mode: "Article:full" }
+      fixture clear_layout_missing { mode: "Missing:mode" } -> error
     }
 
     action set_component_mapping(mode: D, mapping: String) {
@@ -77,12 +90,18 @@ concept DisplayMode [D] {
         Assigns a ComponentMapping for full widget takeover. Rendering
         delegates entirely to this mapping. Clears layout if set.
       }
+
+      fixture set_mapping_hero { mode: "Article:full", mapping: "article-hero-card" }
+      fixture set_mapping_missing { mode: "Missing:mode", mapping: "widget" } -> error
     }
 
     action clear_component_mapping(mode: D) {
       -> ok(mode: D) {
         Removes the ComponentMapping assignment.
       }
+
+      fixture clear_comp_mapping { mode: "Article:full" }
+      fixture clear_comp_missing { mode: "Missing:mode" } -> error
     }
 
     action set_flat_fields(mode: D, placements: list String) {
@@ -91,6 +110,9 @@ concept DisplayMode [D] {
         Used when no layout is assigned, or as the default field config
         that Layout areas can inherit from.
       }
+
+      fixture set_placements { mode: "Article:full", placements: "[\"fp-title\",\"fp-body\"]" }
+      fixture set_placements_missing { mode: "Missing:mode", placements: "[]" } -> error
     }
 
     action get(mode: D) {
@@ -103,6 +125,9 @@ concept DisplayMode [D] {
       -> not_found(mode: D) {
         The mode does not exist.
       }
+
+      fixture get_existing_mode { mode: "Article:full" }
+      fixture get_missing_mode { mode: "Missing:mode" } -> error
     }
 
     action delete(mode: D) {
@@ -113,6 +138,9 @@ concept DisplayMode [D] {
       -> not_found(mode: D) {
         The mode does not exist.
       }
+
+      fixture delete_existing { mode: "Article:full" }
+      fixture delete_missing { mode: "Missing:mode" } -> error
     }
 
     action list_for_schema(schema: String) {
@@ -121,12 +149,17 @@ concept DisplayMode [D] {
         what powers the display-as picker — the picker shows the
         available mode_ids for each of the entity's applied Schemas.
       }
+
+      fixture list_article_modes { schema: "Article" }
+      fixture list_empty_schema { schema: "" } -> error
     }
 
     action list() {
       -> ok(items: String) {
         Returns all display modes in the system.
       }
+
+      fixture list_all { }
     }
   }
 

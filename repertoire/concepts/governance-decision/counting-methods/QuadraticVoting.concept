@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept QuadraticVoting [QV] {
 
@@ -32,6 +33,9 @@ concept QuadraticVoting [QV] {
         A quadratic voting configuration with the given per-voter
         credit budget. Cost = votes².
       }
+
+      fixture standard_budget { creditBudget: 100.0 }
+      fixture zero_budget { creditBudget: 0.0 } -> error
     }
 
     action allocateCredits(config: QV, voter: String) {
@@ -41,6 +45,9 @@ concept QuadraticVoting [QV] {
       -> already_allocated(voter: String) {
         Credits have already been allocated to this voter.
       }
+
+      fixture allocate_alice { config: "qv-001", voter: "alice" }
+      fixture allocate_duplicate { config: "qv-001", voter: "alice" } -> error
     }
 
     action castVotes(config: QV, voter: String, issue: String, numberOfVotes: Int) {
@@ -53,6 +60,9 @@ concept QuadraticVoting [QV] {
       -> no_allocation(voter: String) {
         The voter has not been allocated credits.
       }
+
+      fixture cast_five_votes { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: 5 }
+      fixture exceed_budget { config: "qv-001", voter: "alice", issue: "budget-increase", numberOfVotes: 20 } -> error
     }
 
     action count(config: QV, issue: String) {
@@ -62,6 +72,9 @@ concept QuadraticVoting [QV] {
       -> tie(choices: String, totalVotes: Float) {
         Multiple choices have equal vote totals.
       }
+
+      fixture tally_issue { config: "qv-001", issue: "budget-increase" }
+      fixture tally_missing_session { config: "qv-nonexistent", issue: "budget-increase" } -> error
     }
   }
 

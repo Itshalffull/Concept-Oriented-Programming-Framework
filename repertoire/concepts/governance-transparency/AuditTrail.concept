@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AuditTrail [AT] {
 
@@ -27,6 +28,20 @@ concept AuditTrail [AT] {
         A new audit entry is appended. Entries are immutable once recorded.
         An optional content hash ensures integrity.
       }
+
+      fixture record_governance_action {
+        eventType: "policy_change"
+        actor: "admin@example.com"
+        action: "update_rule"
+        details: "Changed voting threshold from 50% to 66%"
+        sourceRef: "policy-42"
+      }
+      fixture record_missing_event_type {
+        eventType: ""
+        actor: "admin@example.com"
+        action: "update_rule"
+        details: "Changed threshold"
+      } -> error
     }
 
     action query(eventType: option String, actor: option String, fromTime: option DateTime, toTime: option DateTime) {
@@ -36,6 +51,15 @@ concept AuditTrail [AT] {
       -> no_results() {
         No entries match the filter.
       }
+
+      fixture query_by_actor {
+        eventType: "policy_change"
+        actor: "admin@example.com"
+      }
+      fixture query_no_matches {
+        eventType: "nonexistent_type"
+        actor: "nobody@example.com"
+      } -> no_results
     }
 
     action verifyIntegrity(entry: AT) {
@@ -45,6 +69,13 @@ concept AuditTrail [AT] {
       -> tampered(entry: AT) {
         The entry's content does not match its hash.
       }
+
+      fixture verify_valid_entry {
+        entry: "audit-001"
+      }
+      fixture verify_tampered_entry {
+        entry: "audit-tampered"
+      } -> tampered
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CedarEvaluator [CE] {
 
@@ -33,6 +34,14 @@ concept CedarEvaluator [CE] {
       -> validation_error(errors: String) {
         Policies fail schema validation.
       }
+
+      fixture load_permit_policies {
+        policies: "[{\"effect\":\"permit\",\"principal\":\"admin\",\"action\":\"read\",\"resource\":\"docs\"}]"
+        schema: "{}"
+      }
+      fixture load_empty_policies {
+        policies: ""
+      } -> validation_error
     }
 
     action authorize(store: CE, principal: String, action: String, resource: String, context: String) {
@@ -42,6 +51,21 @@ concept CedarEvaluator [CE] {
       -> deny(store: CE, reasons: String) {
         A forbid policy matches, or no permit policy matches.
       }
+
+      fixture authorize_permitted_action {
+        store: "cedar-001"
+        principal: "admin"
+        action: "read"
+        resource: "docs"
+        context: "{}"
+      }
+      fixture authorize_denied_action {
+        store: "cedar-001"
+        principal: "guest"
+        action: "delete"
+        resource: "secrets"
+        context: "{}"
+      } -> deny
     }
 
     action verify(store: CE, property: String) {
@@ -51,6 +75,15 @@ concept CedarEvaluator [CE] {
       -> counterexample(store: CE, property: String, example: String) {
         A counterexample was found violating the property.
       }
+
+      fixture verify_no_conflicts {
+        store: "cedar-001"
+        property: "no_conflicts"
+      }
+      fixture verify_nonexistent_store {
+        store: "nonexistent"
+        property: "no_conflicts"
+      } -> counterexample
     }
   }
 

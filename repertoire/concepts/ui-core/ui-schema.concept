@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept UISchema [S, C] {
 
@@ -41,6 +42,10 @@ concept UISchema [S, C] {
         and field summary for entity-level classification.
       }
       -> parseError(message: String) { Spec could not be parsed. }
+
+      fixture valid_inspect { schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }
+      fixture inspect_with_annotations { schema: "S-2", conceptSpec: "{\"name\":\"Task\",\"suite\":\"project-mgmt\",\"annotations\":{\"surface\":{\"tags\":[\"kanban\"]}},\"fields\":[\"status\"],\"actions\":[\"update\"]}" }
+      fixture inspect_bad_json { schema: "S-3", conceptSpec: "not-valid-json" } -> error
     }
 
     action override(schema: S, overrides: String) {
@@ -50,11 +55,17 @@ concept UISchema [S, C] {
       }
       -> notfound(message: String) { No schema for this concept. }
       -> invalid(message: String) { Override malformed. }
+
+      fixture valid_override { schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }
+      fixture override_bad_json { schema: "S-1", overrides: "not-json" } -> error
     }
 
     action getSchema(schema: S) {
       -> ok(schema: S, uiSchema: String) { Return current schema. }
       -> notfound(message: String) { No schema exists. }
+
+      fixture valid_get_schema { schema: "S-1" }
+      fixture get_schema_nonexistent { schema: "S-999" } -> error
     }
 
     action getElements(schema: S) {
@@ -69,6 +80,9 @@ concept UISchema [S, C] {
         Schema was resolved at entity level. Field-level
         element extraction is skipped.
       }
+
+      fixture valid_get_elements { schema: "S-1" }
+      fixture get_elements_nonexistent { schema: "S-999" } -> error
     }
 
     action getEntityElement(schema: S) {
@@ -78,6 +92,9 @@ concept UISchema [S, C] {
         summary of fields and actions for contract matching.
       }
       -> notfound(message: String) { No schema exists. }
+
+      fixture valid_get_entity { schema: "S-1" }
+      fixture get_entity_nonexistent { schema: "S-999" } -> error
     }
 
     action markResolved(schema: S) {
@@ -88,6 +105,9 @@ concept UISchema [S, C] {
         running for this concept instance.
       }
       -> notfound(message: String) { No schema exists. }
+
+      fixture valid_mark_resolved { schema: "S-1" }
+      fixture mark_resolved_nonexistent { schema: "S-999" } -> error
     }
   }
 

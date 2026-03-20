@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CountingMethod [C] {
 
@@ -26,6 +27,9 @@ concept CountingMethod [C] {
       -> already_registered(name: String) {
         A method with this name already exists.
       }
+
+      fixture register_majority { name: "simple-majority", provider: "Majority", parameters: "{\"threshold\":0.5}" }
+      fixture register_empty_name { name: "", provider: "Majority", parameters: "{}" } -> error
     }
 
     action aggregate(method: C, ballots: String, weights: String) {
@@ -42,12 +46,18 @@ concept CountingMethod [C] {
       -> provider_error(method: C, error: String) {
         The provider implementation returned an error.
       }
+
+      fixture aggregate_valid { method: "counting-001", ballots: "[{\"voter\":\"alice\",\"choice\":\"yes\"},{\"voter\":\"bob\",\"choice\":\"no\"}]", weights: "{}" }
+      fixture aggregate_missing_method { method: "counting-nonexistent", ballots: "[]", weights: "{}" } -> error
     }
 
     action deregister(method: C) {
       -> deregistered(method: C) {
         The method is removed from available methods.
       }
+
+      fixture deregister_existing { method: "counting-001" }
+      fixture deregister_missing { method: "counting-nonexistent" } -> error
     }
   }
 
