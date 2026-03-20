@@ -27,6 +27,10 @@ concept A11yAuditProvider [A] {
         The program data is malformed or missing required fields
         for accessibility analysis.
       }
+
+      fixture accessible_dialog { audit: "aud-1", program: "dialog-widget", instructions: "[{\"tag\":\"element\",\"part\":\"root\",\"role\":\"container\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"role\",\"value\":\"dialog\"},{\"tag\":\"aria\",\"part\":\"root\",\"attr\":\"label\",\"value\":\"Confirm\"},{\"tag\":\"focus\",\"strategy\":\"trap\"}]", parts: ["root"] }
+      fixture missing_aria { audit: "aud-2", program: "button-widget", instructions: "[{\"tag\":\"element\",\"part\":\"btn\",\"role\":\"interactive\"}]", parts: ["btn"] }
+      fixture malformed_instructions { audit: "aud-3", program: "bad-widget", instructions: "not-valid-json", parts: ["root"] } -> error
     }
 
     action getFindings(audit: A) {
@@ -37,6 +41,9 @@ concept A11yAuditProvider [A] {
       -> notfound() {
         No audit result exists with this identifier.
       }
+
+      fixture existing_audit { audit: "aud-1" }
+      fixture unknown_audit { audit: "nonexistent" } -> notfound
     }
   }
 

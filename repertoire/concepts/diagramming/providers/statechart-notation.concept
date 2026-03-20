@@ -17,6 +17,8 @@ concept StatechartNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "statechart", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -32,6 +34,8 @@ concept StatechartNotationProvider [C] {
       }) {
         Returns statechart notation definition.
       }
+
+      fixture valid {}
     }
   }
 

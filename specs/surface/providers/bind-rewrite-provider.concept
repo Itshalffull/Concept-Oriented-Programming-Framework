@@ -24,6 +24,8 @@ concept BindRewriteProvider [V] {
         kind: "bind-rewrite"
         capabilities: ["expression-rewrite", "data-source-swap"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -37,6 +39,10 @@ concept BindRewriteProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture rewrite_bind_expr { program: "{\"instructions\":[{\"tag\":\"bind\",\"expr\":\"?variant\"}]}", spec: "{\"rewrites\":{\"?variant\":\"?custom\"}}" }
+      fixture empty_rewrites { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"rewrites\":{}}" }
+      fixture invalid_program_json { program: "not-json", spec: "{}" } -> error
     }
   }
 

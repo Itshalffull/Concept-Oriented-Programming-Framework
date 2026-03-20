@@ -16,6 +16,8 @@ concept BpmnXmlExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "bpmn-xml", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +28,10 @@ concept BpmnXmlExportProvider [C] {
         interchange (BPMNDI) for layout. mime_type: "application/xml".
       }
       -> error(message: String) { Export failed. }
+
+      fixture basic_export { canvas_id: "canvas-1", options: none }
+      fixture with_process_id { canvas_id: "canvas-1", options: { process_id: "proc-main" } }
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
     action importData(data: String, target_canvas: option String) {

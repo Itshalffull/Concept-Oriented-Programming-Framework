@@ -22,6 +22,15 @@ concept ProgramAnalysis [A] {
     action registerProvider(name: String, kind: String) {
       -> ok() { Analysis provider registered under the given name and kind classification. }
       -> exists() { A provider with this name is already registered. }
+
+      fixture register_structural {
+        name: "read-write-sets",
+        kind: "structural"
+      }
+      fixture register_empty_name {
+        name: "",
+        kind: "structural"
+      } -> error
     }
 
     action run(program: String, provider: String) {
@@ -31,6 +40,15 @@ concept ProgramAnalysis [A] {
       }
       -> providerNotFound() { No provider is registered under the given name. }
       -> error(message: String) { The analysis provider returned an error. }
+
+      fixture run_analysis {
+        program: "get(users, u1)",
+        provider: "read-write-sets"
+      }
+      fixture run_missing_provider {
+        program: "get(users, u1)",
+        provider: ""
+      } -> error
     }
 
     action runAll(program: String) {
@@ -39,10 +57,19 @@ concept ProgramAnalysis [A] {
         all results keyed by provider name.
       }
       -> error(message: String) { One or more providers failed during analysis. }
+
+      fixture run_all {
+        program: "get(users, u1)"
+      }
+      fixture run_all_empty {
+        program: ""
+      } -> error
     }
 
     action listProviders() {
       -> ok(providers: String) { Return all registered provider names and their kind classifications. }
+
+      fixture valid {}
     }
   }
 

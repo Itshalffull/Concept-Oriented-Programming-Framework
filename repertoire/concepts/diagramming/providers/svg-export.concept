@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SvgExportProvider [C] {
 
@@ -15,6 +16,8 @@ concept SvgExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "svg", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {

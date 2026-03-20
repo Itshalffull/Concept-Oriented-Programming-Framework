@@ -36,6 +36,36 @@ concept LocalModelInstance [I] {
       -> exists(name: String) {
         An instance with this name is already registered.
       }
+
+      fixture codebert_onnx {
+        name: "codebert-base"
+        runtime: "onnx"
+        modelPath: "/models/codebert.onnx"
+        tokenizerPath: "/models/codebert-tokenizer.json"
+        device: "cpu"
+        maxSequenceLength: 512
+        dimensions: 768
+      }
+
+      fixture unixcoder_wasm {
+        name: "unixcoder"
+        runtime: "wasm"
+        modelPath: "/models/unixcoder.wasm"
+        tokenizerPath: ""
+        device: "cpu"
+        maxSequenceLength: 256
+        dimensions: 768
+      }
+
+      fixture missing_name {
+        name: ""
+        runtime: "onnx"
+        modelPath: "/models/test.onnx"
+        tokenizerPath: ""
+        device: "cpu"
+        maxSequenceLength: 512
+        dimensions: 768
+      } -> error
     }
 
     action resolve(name: String) {
@@ -47,6 +77,14 @@ concept LocalModelInstance [I] {
       -> notFound(name: String) {
         No instance is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "codebert-base"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -54,6 +92,8 @@ concept LocalModelInstance [I] {
         Return all registered instances as a serialized JSON array
         with name, runtime, device, and dimensions.
       }
+
+      fixture valid {}
     }
   }
 

@@ -42,6 +42,9 @@ concept ThemeComplianceProvider [T] {
       -> notfound() {
         No compliance check exists with this identifier.
       }
+
+      fixture existing_check { check: "chk-1" }
+      fixture unknown_check { check: "nonexistent" } -> notfound
     }
   }
 

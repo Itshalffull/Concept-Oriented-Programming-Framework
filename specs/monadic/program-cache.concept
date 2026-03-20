@@ -38,6 +38,17 @@ concept ProgramCache [C] {
     action store(programHash: String, stateHash: String, result: String) {
       -> ok(entry: C) { Result cached under the given program and state hashes. }
       -> exists() { An entry with these hashes already exists; no duplicate stored. }
+
+      fixture store_new_entry {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456",
+        result: "{\"variant\":\"ok\"}"
+      }
+      fixture store_empty_result {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456",
+        result: ""
+      } -> error
     }
 
     action invalidateByState(stateHash: String) {
@@ -45,6 +56,13 @@ concept ProgramCache [C] {
         Remove all entries whose stateHash matches, returning the count
         of evicted entries. Called when storage state changes.
       }
+
+      fixture invalidate_state {
+        stateHash: "sha256_def456"
+      }
+      fixture invalidate_empty_state {
+        stateHash: ""
+      } -> error
     }
 
     action invalidateByProgram(programHash: String) {
@@ -52,6 +70,13 @@ concept ProgramCache [C] {
         Remove all entries for the given program hash, returning the
         count of evicted entries. Called when handler code is redeployed.
       }
+
+      fixture invalidate_program {
+        programHash: "sha256_abc123"
+      }
+      fixture invalidate_empty_program {
+        programHash: ""
+      } -> error
     }
 
     action stats() {
@@ -59,6 +84,8 @@ concept ProgramCache [C] {
         Return aggregate cache statistics: total entries, hit rate
         as a percentage string, and approximate memory usage.
       }
+
+      fixture valid {}
     }
   }
 
