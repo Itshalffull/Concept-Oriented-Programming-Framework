@@ -26,6 +26,8 @@ concept WasmProvider [M] {
         Return provider metadata for PluginRegistry registration.
         Name is "wasm-provider", kind is "runtime".
       }
+
+      fixture valid {}
     }
 
     action load(name: String, wasmPath: String, memoryLimit: Int) {
@@ -40,6 +42,9 @@ concept WasmProvider [M] {
       -> exists(name: String) {
         A module with this name is already loaded.
       }
+
+      fixture load_tokenizer { name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: 65536 }
+      fixture load_large_module { name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: 131072 }
     }
 
     action execute(module: String, function: String, args: String) {

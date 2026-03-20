@@ -43,6 +43,12 @@ concept AnalysisOverlay [O] {
       -> invalid_result(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
+
+      fixture node_color_overlay { canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: none }
+      fixture node_size_overlay { canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }
+      fixture heat_map_overlay { canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: none }
+      fixture unsupported { canvas: "canvas-1", result: "{\"nodes\":[]}", kind: "sparkline", config: none } -> unsupported_kind
+      fixture bad_result { canvas: "canvas-1", result: "not json", kind: "node-color", config: none } -> invalid_result
     }
 
     action remove(overlay: O) {
@@ -53,6 +59,9 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture remove_existing { overlay: "overlay-001" }
+      fixture remove_missing { overlay: "overlay-nonexistent" } -> notfound
     }
 
     action toggle(overlay: O) {
@@ -63,6 +72,9 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture toggle_existing { overlay: "overlay-001" }
+      fixture toggle_missing { overlay: "overlay-nonexistent" } -> notfound
     }
 
     action listOverlays(canvas: String) {
@@ -70,6 +82,9 @@ concept AnalysisOverlay [O] {
         Returns all overlays applied to the given canvas as a
         JSON array of overlay summaries with visibility state.
       }
+
+      fixture list_canvas { canvas: "canvas-1" }
+      fixture list_empty { canvas: "canvas-empty" }
     }
 
     action updateConfig(overlay: O, config: String) {
@@ -80,6 +95,10 @@ concept AnalysisOverlay [O] {
       -> notfound() {
         No overlay exists with the given identifier.
       }
+
+      fixture update_scale { overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }
+      fixture update_missing { overlay: "overlay-nonexistent", config: "{}" } -> notfound
+      fixture invalid_config { overlay: "overlay-001", config: "not json" } -> notfound
     }
   }
 

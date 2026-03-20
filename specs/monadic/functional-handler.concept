@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FunctionalHandler [H] {
 
@@ -25,6 +26,28 @@ concept FunctionalHandler [H] {
         the handler may produce.
       }
       -> exists() { A handler for this concept/action pair is already registered. }
+
+      fixture register_readwrite {
+        handler: "handler-user-create",
+        concept: "User",
+        action: "create",
+        purity: "read-write",
+        variants: "[\"ok\",\"error\"]"
+      }
+      fixture register_pure {
+        handler: "handler-ping",
+        concept: "Ping",
+        action: "ping",
+        purity: "pure",
+        variants: "[\"ok\"]"
+      }
+      fixture register_empty_concept {
+        handler: "handler-bad",
+        concept: "",
+        action: "create",
+        purity: "read-write",
+        variants: "[]"
+      } -> error
     }
 
     action build(handler: H, input: String) {
@@ -35,6 +58,15 @@ concept FunctionalHandler [H] {
       }
       -> notfound() { No handler is registered with this identifier. }
       -> error(message: String) { The factory function threw an exception during program construction. }
+
+      fixture build_program {
+        handler: "handler-user-create",
+        input: "{\"name\":\"Alice\"}"
+      }
+      fixture build_missing_handler {
+        handler: "nonexistent",
+        input: "{\"name\":\"Alice\"}"
+      } -> error
     }
 
     action list(concept: String) {

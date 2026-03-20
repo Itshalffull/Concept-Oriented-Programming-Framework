@@ -80,12 +80,17 @@ concept FsProvider [F] {
       -> notFound(path: String) {
         No file exists at the given path.
       }
+
+      fixture delete_existing { path: "/tmp/test.txt" }
+      fixture delete_missing { path: "/tmp/nonexistent" } -> notFound
     }
 
     action list() {
       -> ok(operations: String) {
         Return recent operations as a serialized JSON array.
       }
+
+      fixture valid {}
     }
   }
 

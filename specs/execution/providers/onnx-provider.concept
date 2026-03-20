@@ -29,6 +29,8 @@ concept OnnxProvider [N] {
         Name is "onnx-provider", kind is "runtime", capabilities
         lists supported devices (cpu, cuda, tensorrt).
       }
+
+      fixture valid {}
     }
 
     action load(name: String, modelPath: String, device: String, options: String) {
@@ -44,6 +46,9 @@ concept OnnxProvider [N] {
       -> exists(name: String) {
         A session with this name is already loaded.
       }
+
+      fixture load_codebert { name: "codebert", modelPath: "/models/codebert.onnx", device: "cpu", options: "{}" }
+      fixture load_gpu_model { name: "resnet", modelPath: "/models/resnet50.onnx", device: "cuda", options: "{\"optimization_level\":99}" }
     }
 
     action infer(session: String, inputs: String, options: String) {
@@ -63,6 +68,9 @@ concept OnnxProvider [N] {
         The input tensor shapes do not match the model's expected
         input schema.
       }
+
+      fixture infer_codebert { session: "codebert", inputs: "[[1,2,3]]", options: "{}" }
+      fixture infer_unknown_session { session: "nonexistent", inputs: "[]", options: "{}" } -> notFound
     }
 
     action list() {
@@ -70,6 +78,8 @@ concept OnnxProvider [N] {
         Return all loaded sessions as a serialized JSON array
         with name, modelPath, device, and status.
       }
+
+      fixture valid {}
     }
   }
 

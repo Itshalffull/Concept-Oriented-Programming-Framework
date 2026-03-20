@@ -67,6 +67,18 @@ concept FrameworkAdapter [R] {
     action mount(renderer: R, machine: String, target: String) {
       -> ok(renderer: R) { Create and mount a single machine's component. }
       -> error(message: String) { Mount failed. }
+
+      fixture mount_to_root {
+        renderer: "react-19"
+        machine: "counter-machine"
+        target: "#app-root"
+      }
+
+      fixture mount_empty_machine {
+        renderer: "react-19"
+        machine: ""
+        target: "#app-root"
+      } -> error
     }
 
     action render(adapter: R, props: String) {
@@ -75,11 +87,31 @@ concept FrameworkAdapter [R] {
         framework's rendering pipeline.
       }
       -> error(message: String) { Render failed. }
+
+      fixture render_valid {
+        adapter: "react-19"
+        props: "{ \"className\": \"card\", \"onClick\": \"handleClick\" }"
+      }
+
+      fixture render_empty_props {
+        adapter: "react-19"
+        props: ""
+      } -> error
     }
 
     action unmount(renderer: R, target: String) {
       -> ok(renderer: R) { Unmount and clean up. }
       -> notfound(message: String) { Nothing mounted at target. }
+
+      fixture unmount_existing {
+        renderer: "react-19"
+        target: "#app-root"
+      }
+
+      fixture unmount_missing {
+        renderer: "react-19"
+        target: "#nonexistent"
+      } -> error
     }
   }
 

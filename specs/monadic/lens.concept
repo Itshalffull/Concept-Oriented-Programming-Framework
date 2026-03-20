@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Lens [L] {
 
@@ -25,6 +26,25 @@ concept Lens [L] {
         which segments are provided: relation-only, record, or field.
       }
       -> exists() { A lens with this identifier has already been created. }
+
+      fixture create_field_lens {
+        lens: "lens-user-email",
+        relation: "users",
+        key: "u1",
+        field: "email"
+      }
+      fixture create_relation_lens {
+        lens: "lens-users",
+        relation: "users",
+        key: "",
+        field: ""
+      }
+      fixture create_empty_relation {
+        lens: "lens-bad",
+        relation: "",
+        key: "",
+        field: ""
+      } -> error
     }
 
     action fromRelation(lens: L, relation: String) {
@@ -34,6 +54,15 @@ concept Lens [L] {
         broadest focus — composing with at() or field() narrows it.
       }
       -> exists() { A lens with this identifier has already been created. }
+
+      fixture from_users_relation {
+        lens: "lens-users-rel",
+        relation: "users"
+      }
+      fixture from_empty_relation {
+        lens: "lens-bad",
+        relation: ""
+      } -> error
     }
 
     action compose(outer: L, inner: L) {
@@ -49,6 +78,15 @@ concept Lens [L] {
         The outer lens's focus type does not match the inner lens's
         source type, so composition would produce an invalid path.
       }
+
+      fixture compose_valid {
+        outer: "lens-users-rel",
+        inner: "lens-user-email"
+      }
+      fixture compose_missing {
+        outer: "nonexistent",
+        inner: "lens-user-email"
+      } -> error
     }
 
     action get(lens: L) {
@@ -57,6 +95,13 @@ concept Lens [L] {
         source and focus types, and kind classification.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture get_existing {
+        lens: "lens-user-email"
+      }
+      fixture get_missing {
+        lens: "nonexistent"
+      } -> error
     }
 
     action decompose(lens: L) {
@@ -66,6 +111,13 @@ concept Lens [L] {
         of: relation, key, or field.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture decompose_existing {
+        lens: "lens-user-email"
+      }
+      fixture decompose_missing {
+        lens: "nonexistent"
+      } -> error
     }
 
     action validate(lens: L, conceptSpec: String) {
@@ -80,6 +132,15 @@ concept Lens [L] {
         declared state schema.
       }
       -> notfound() { No lens exists with this identifier. }
+
+      fixture validate_valid {
+        lens: "lens-user-email",
+        conceptSpec: "{\"state\":{\"users\":\"set U\",\"email\":\"U -> String\"}}"
+      }
+      fixture validate_missing_lens {
+        lens: "nonexistent",
+        conceptSpec: "{\"state\":{\"users\":\"set U\"}}"
+      } -> error
     }
 
     action list() {
@@ -87,6 +148,8 @@ concept Lens [L] {
         Return all registered lenses with their metadata as
         a serialized JSON array.
       }
+
+      fixture valid {}
     }
   }
 

@@ -69,6 +69,9 @@ concept DiagramNotation [N] {
                              min_incoming: option Int, max_incoming: option Int) {
       -> ok(notation: N) { Adds connection rule. }
       -> invalid(message: String) { Referenced type_keys don't exist. }
+
+      fixture task_to_decision { notation: "notation-1", source_type: "task", target_type: "decision", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none }
+      fixture invalid_source { notation: "notation-1", source_type: "nonexistent", target_type: "task", allowed_edge_types: ["flow"], min_outgoing: none, max_outgoing: none, min_incoming: none, max_incoming: none } -> invalid
     }
 
     action validateDiagram(canvas_id: ID, notation: N) {
@@ -76,6 +79,9 @@ concept DiagramNotation [N] {
       -> violations(canvas_id: ID, errors: list {
         element_id: ID, rule: String, message: String, severity: String
       }) { Violations found. }
+
+      fixture valid_diagram { canvas_id: "canvas-1", notation: "notation-1" }
+      fixture missing_notation { canvas_id: "canvas-1", notation: "notation-nonexistent" } -> violations
     }
 
     action getNodePalette(notation: N) {
@@ -83,6 +89,8 @@ concept DiagramNotation [N] {
         type_key: String, label: String, shape: String,
         default_fill: option String, icon: option String
       }) { Node types for palette. }
+
+      fixture existing_notation { notation: "notation-1" }
     }
 
     action getEdgePalette(notation: N) {
@@ -90,11 +98,16 @@ concept DiagramNotation [N] {
         type_key: String, label: String, line_style: String,
         arrow_type: String, default_color: option String
       }) { Edge types for palette. }
+
+      fixture existing_notation { notation: "notation-1" }
     }
 
     action applyToCanvas(canvas_id: ID, notation: N) {
       -> ok(canvas_id: ID, notation: N) { Associates notation with canvas. }
       -> notfound(message: String) { Canvas or notation not found. }
+
+      fixture apply_notation { canvas_id: "canvas-1", notation: "notation-1" }
+      fixture missing_notation { canvas_id: "canvas-1", notation: "notation-nonexistent" } -> notfound
     }
   }
 
