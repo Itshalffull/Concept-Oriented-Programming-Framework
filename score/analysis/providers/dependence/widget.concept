@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetDependenceProvider [I] {
 
@@ -26,6 +27,9 @@ concept WidgetDependenceProvider [I] {
       -> loadError(message: String) {
         Failed to initialize the widget dependence provider.
       }
+
+      fixture valid {}
+      fixture duplicate_init {} -> loadError
     }
   }
 

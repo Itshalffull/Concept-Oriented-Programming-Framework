@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TypeScriptBuilder [N] {
 
@@ -45,6 +46,10 @@ concept TypeScriptBuilder [N] {
       -> bundleError(reason: String) {
         Bundler (esbuild/webpack) failed.
       }
+
+      fixture build_node_release { source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" } }
+      fixture build_browser_debug { source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: { mode: "debug", features: ["tree-shaking"] } }
+      fixture build_missing_source { source: "", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: { mode: "release" } } -> error
     }
 
     action test(build: N, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
@@ -59,6 +64,10 @@ concept TypeScriptBuilder [N] {
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
+
+      fixture test_unit { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }
+      fixture test_with_invocation { build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: { command: "npx vitest run", args: ["--reporter=json"], outputFormat: "vitest-json" }, testType: "unit" }
+      fixture test_missing_build { build: "", toolchainPath: "/usr/local/bin/tsc", testType: "unit" } -> error
     }
 
     action package(build: N, format: String) {
@@ -71,6 +80,10 @@ concept TypeScriptBuilder [N] {
       -> formatUnsupported(format: String) {
         Requested format not available.
       }
+
+      fixture package_npm { build: "tsb-001", format: "npm" }
+      fixture package_bundle { build: "tsb-001", format: "bundle" }
+      fixture package_invalid_format { build: "tsb-001", format: "zip" } -> error
     }
 
     action register() {

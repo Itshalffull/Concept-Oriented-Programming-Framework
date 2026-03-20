@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GenerationPlan [R] {
 
@@ -28,6 +29,8 @@ concept GenerationPlan [R] {
         Mark a new generation run as started. Sets activeRun.
         Subsequent recordStep calls associate with this run.
       }
+
+      fixture valid {}
     }
 
     action recordStep(stepKey: String, status: String, filesProduced: option Int, duration: option Int, cached: Bool) {
@@ -41,6 +44,10 @@ concept GenerationPlan [R] {
         in the execution path. If GenerationPlan is unavailable,
         generation proceeds normally; only status tracking is lost.
       }
+
+      fixture record_done { stepKey: "framework:TypeScriptGen:password", status: "done", filesProduced: 3, duration: 150, cached: false }
+      fixture record_cached { stepKey: "framework:TypeScriptGen:auth", status: "cached", cached: true }
+      fixture record_failed { stepKey: "framework:RustGen:password", status: "failed", duration: 5000, cached: false }
     }
 
     action complete() {
@@ -48,6 +55,8 @@ concept GenerationPlan [R] {
         Mark the active run as complete. Called when all pipeline
         syncs have quiesced. Clears activeRun.
       }
+
+      fixture valid {}
     }
 
     action status(run: R) {

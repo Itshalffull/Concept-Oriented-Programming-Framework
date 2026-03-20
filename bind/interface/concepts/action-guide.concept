@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept ActionGuide [W] {
 
@@ -47,6 +48,22 @@ concept ActionGuide [W] {
       -> emptySteps() {
         No steps were provided.
       }
+
+      fixture with_content {
+        concept: "SpecParser"
+        steps: ["parse", "validate", "emit"]
+        content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}"
+      }
+      fixture minimal {
+        concept: "Widget"
+        steps: ["create"]
+        content: "{}"
+      }
+      fixture empty_steps {
+        concept: "SpecParser"
+        steps: []
+        content: "{}"
+      } -> emptySteps
     }
 
     action render(workflow: W, format: String) {
@@ -63,6 +80,19 @@ concept ActionGuide [W] {
       -> unknownFormat(format: String) {
         The requested format is not recognized.
       }
+
+      fixture skill_md_format {
+        workflow: "action-guide-1"
+        format: "skill-md"
+      }
+      fixture cli_help_format {
+        workflow: "action-guide-1"
+        format: "cli-help"
+      }
+      fixture unsupported_format {
+        workflow: "action-guide-1"
+        format: "yaml-doc"
+      } -> unknownFormat
     }
   }
 
