@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Taxonomy [V] {
   purpose { Organize classification terms into hierarchical vocabularies with parent-child relationships. }
@@ -11,22 +12,38 @@ concept Taxonomy [V] {
     action createVocabulary(vocab: V, name: String) {
       -> ok() { Create a new named vocabulary. }
       -> exists(message: String) { Vocabulary already exists. }
+
+      fixture create_topics_vocab { vocab: "vocab-topics-1", name: "topics" }
+      fixture create_empty_vocab { vocab: "", name: "unnamed" } -> error
     }
     action addTerm(vocab: V, term: String, parent: option String) {
       -> ok() { Add a term to the vocabulary, optionally under a parent term. }
       -> notfound(message: String) { Vocabulary or parent term not found. }
+
+      fixture add_root_term { vocab: "vocab-topics-1", term: "science", parent: "" }
+      fixture add_child_term { vocab: "vocab-topics-1", term: "physics", parent: "science" }
+      fixture add_term_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "" } -> error
     }
     action setParent(vocab: V, term: String, parent: String) {
       -> ok() { Reassign the parent of an existing term. }
       -> notfound(message: String) { Vocabulary or term not found. }
+
+      fixture reassign_parent { vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }
+      fixture set_parent_missing_vocab { vocab: "nonexistent", term: "orphan", parent: "root" } -> error
     }
     action tagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Associate an entity with a term in the vocabulary. }
       -> notfound(message: String) { Vocabulary or term not found. }
+
+      fixture tag_page_with_term { entity: "page-1", vocab: "vocab-topics-1", term: "science" }
+      fixture tag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
     action untagEntity(entity: String, vocab: V, term: String) {
       -> ok() { Remove the association between an entity and a term. }
       -> notfound(message: String) { Vocabulary, term, or association not found. }
+
+      fixture untag_page { entity: "page-1", vocab: "vocab-topics-1", term: "science" }
+      fixture untag_missing_vocab { entity: "page-1", vocab: "nonexistent", term: "science" } -> error
     }
   }
   example "createVocabulary-then-untagEntity": {

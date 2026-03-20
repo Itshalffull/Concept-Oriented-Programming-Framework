@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GoSdkTarget [S] {
 
@@ -22,6 +23,10 @@ concept GoSdkTarget [S] {
         returning (T, error). Map return variants to typed error
         values. Generate client, models, go.mod, and go.sum.
       }
+
+      fixture generate_default { projection: "score-projection", config: "{}" }
+      fixture generate_custom_module { projection: "agent-projection", config: "{\"modulePath\":\"github.com/myorg/agent-sdk\",\"goVersion\":\"1.22\"}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
   }
 

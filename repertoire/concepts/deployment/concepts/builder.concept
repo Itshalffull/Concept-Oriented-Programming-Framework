@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Builder [B] {
 
@@ -66,6 +67,10 @@ concept Builder [B] {
         Toolchain resolution failed before compilation started.
         Propagated from Toolchain concept.
       }
+
+      fixture build_swift_release { concept: "password", source: "./generated/swift/password", language: "swift", platform: "linux-arm64", config: { mode: "release" } }
+      fixture build_ts_debug { concept: "session", source: "./generated/ts/session", language: "typescript", platform: "linux-x86_64", config: { mode: "debug", features: ["logging"] } }
+      fixture build_missing_concept { concept: "", source: "./src", language: "swift", platform: "linux-arm64", config: { mode: "release" } } -> error
     }
 
     action buildAll(concepts: list String, source: String, targets: list { language: String, platform: String }, config: { mode: String, features: option list String }) {
@@ -77,6 +82,9 @@ concept Builder [B] {
       -> partial(completed: list { concept: String, language: String, artifactHash: String }, failed: list { concept: String, language: String, error: String }) {
         Some builds succeeded, some failed.
       }
+
+      fixture buildall_multi { concepts: ["password", "session"], source: "./generated", targets: [{ language: "swift", platform: "linux-arm64" }], config: { mode: "release" } }
+      fixture buildall_empty_concepts { concepts: [], source: "./src", targets: [{ language: "typescript", platform: "linux-x86_64" }], config: { mode: "debug" } } -> error
     }
 
     action test(concept: String, language: String, platform: String, testFilter: option list String, testType: option String, toolName: option String) {
@@ -122,6 +130,10 @@ concept Builder [B] {
         Propagated from Toolchain when no matching category tool
         is available.
       }
+
+      fixture test_unit { concept: "password", language: "swift", platform: "linux-arm64", testType: "unit" }
+      fixture test_e2e_with_tool { concept: "session", language: "typescript", platform: "linux-x86_64", testType: "e2e", toolName: "playwright" }
+      fixture test_not_built { concept: "nonexistent", language: "swift", platform: "linux-arm64" } -> error
     }
 
     action status(build: B) {
@@ -129,6 +141,9 @@ concept Builder [B] {
         Current build status. Statuses: "pending", "compiling",
         "testing", "packaging", "done", "failed".
       }
+
+      fixture status_existing { build: "bld-abc123" }
+      fixture status_missing { build: "" } -> error
     }
 
     action history(concept: String, language: option String) {
@@ -136,6 +151,10 @@ concept Builder [B] {
         Build history for a concept, optionally filtered by
         language. Used by `clef build history`.
       }
+
+      fixture history_all { concept: "password" }
+      fixture history_by_lang { concept: "password", language: "swift" }
+      fixture history_empty_concept { concept: "" } -> error
     }
   }
 

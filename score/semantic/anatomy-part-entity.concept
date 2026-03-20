@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept AnatomyPartEntity [A] {
 
   purpose {
@@ -32,6 +33,9 @@ concept AnatomyPartEntity [A] {
         Register an anatomy part extracted from a widget spec.
         Role is one of: container, action, text, overlay, widget.
       }
+
+      fixture register_dialog_root { widget: "dialog", name: "root", role: "container", required: "true" }
+      fixture register_empty_widget { widget: "", name: "root", role: "container", required: "true" } -> error
     }
 
     action findByRole(role: String) {
@@ -39,6 +43,9 @@ concept AnatomyPartEntity [A] {
         Return all anatomy parts with the given semantic role
         across all widgets. Results as serialized JSON array.
       }
+
+      fixture find_containers { role: "container" }
+      fixture find_unknown_role { role: "nonexistent-role" } -> error
     }
 
     action findBoundToField(field: String) {
@@ -46,6 +53,9 @@ concept AnatomyPartEntity [A] {
         Return all anatomy parts that present the given concept
         state field. Results as serialized JSON array.
       }
+
+      fixture find_title_bindings { field: "title" }
+      fixture find_unbound_field { field: "nonexistent-field" } -> error
     }
 
     action findBoundToAction(action: String) {
@@ -53,6 +63,9 @@ concept AnatomyPartEntity [A] {
         Return all anatomy parts that trigger the given concept
         action. Results as serialized JSON array.
       }
+
+      fixture find_submit_bindings { action: "submit" }
+      fixture find_unbound_action { action: "nonexistent-action" } -> error
     }
 
     action get(part: A) {
@@ -62,6 +75,9 @@ concept AnatomyPartEntity [A] {
       -> notfound() {
         Part does not exist.
       }
+
+      fixture get_existing_part { part: "anatomy-part-entity-1" }
+      fixture get_nonexistent_part { part: "nonexistent-part" } -> error
     }
   }
 

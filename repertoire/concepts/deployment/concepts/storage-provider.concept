@@ -1,3 +1,4 @@
+# @fixtures-added
 concept StorageProvider [S] {
 
   purpose {
@@ -18,8 +19,8 @@ concept StorageProvider [S] {
   }
 
   actions {
-    action provision(store: S, storeName: String, storageType: String, conceptName: String, config: String) {
-      -> ok(store: S, credentials: String) {
+    action provision(storeName: String, storageType: String, conceptName: String, config: String) {
+      -> ok(store: S, storageType: String, credentials: String) {
         Create a new storage backend of the given type, returning
         connection credentials the concept needs to connect.
       }
@@ -30,6 +31,10 @@ concept StorageProvider [S] {
         The storage backend could not be created, e.g. quota exceeded,
         invalid configuration, or provider API error.
       }
+
+      fixture provision_kv { storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }
+      fixture provision_dynamo { storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }
+      fixture provision_missing_name { storeName: "", storageType: "vercel-kv", conceptName: "Session", config: "{}" } -> error
     }
 
     action configure(store: S, settings: String) {
@@ -40,6 +45,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture configure_ttl { store: "session-kv", settings: "{\"ttl\": 3600}" }
+      fixture configure_missing { store: "", settings: "{}" } -> error
     }
 
     action getCredentials(store: S) {
@@ -49,6 +57,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture get_creds { store: "session-kv" }
+      fixture get_creds_missing { store: "" } -> error
     }
 
     action destroy(store: S) {
@@ -58,12 +69,15 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture destroy_valid { store: "session-kv" }
+      fixture destroy_missing { store: "" } -> error
     }
   }
 
   example "provision-then-getCredentials-2": {
 
-    after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
+    after provision(storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, storageType: "vercel-kv", credentials: creds)
 
         then getCredentials(store: s1) -> ok(store: s1, credentials: creds)
 
@@ -71,7 +85,7 @@ concept StorageProvider [S] {
 
   example "provision-then-getCredentials": {
 
-    after provision(store: s1, storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, credentials: creds)
+    after provision(storeName: "test-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}") -> ok(store: s1, storageType: "vercel-kv", credentials: creds)
 
         then destroy(store: s1) -> ok(store: s1)
 
@@ -98,9 +112,9 @@ concept StorageProvider [S] {
 
   action provision {
 
-    requires: store != ""
+    requires: storeName != ""
 
-    ensures ok: store != none
+    ensures ok: storeName != none
 
   }
 }

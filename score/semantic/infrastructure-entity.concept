@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept InfrastructureEntity [I] {
 
   purpose {
@@ -38,6 +39,9 @@ concept InfrastructureEntity [I] {
       -> alreadyRegistered(existing: I) {
         An adapter with this name and kind already exists.
       }
+
+      fixture register_app_storage { name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }
+      fixture register_empty_name { name: "", kind: "storage", sourceFile: "adapters/empty.ts", backend: "postgresql", config: "{}" } -> error
     }
 
     action get(name: String, kind: String) {
@@ -47,6 +51,9 @@ concept InfrastructureEntity [I] {
       -> notfound() {
         No adapter with this name and kind exists.
       }
+
+      fixture get_app_storage { name: "AppStorage", kind: "storage" }
+      fixture get_nonexistent { name: "Nonexistent", kind: "storage" } -> error
     }
 
     action findByBackend(backend: String) {
@@ -54,6 +61,9 @@ concept InfrastructureEntity [I] {
         Return all adapters using a given backend. Result as
         serialized JSON array.
       }
+
+      fixture find_postgresql_adapters { backend: "postgresql" }
+      fixture find_unknown_backend { backend: "unknown-db" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -61,6 +71,9 @@ concept InfrastructureEntity [I] {
         Return all adapters bound to a concept. Result as
         serialized JSON array of { name, kind, backend }.
       }
+
+      fixture find_article_adapters { concept: "Article" }
+      fixture find_unbound_concept { concept: "Nonexistent" } -> error
     }
 
     action findByRuntime(runtime: String) {
@@ -68,6 +81,9 @@ concept InfrastructureEntity [I] {
         Return all adapters bound to a runtime. Result as
         serialized JSON array.
       }
+
+      fixture find_api_runtime { runtime: "api-server" }
+      fixture find_unknown_runtime { runtime: "nonexistent-runtime" } -> error
     }
 
     action sharedBackends() {
@@ -76,6 +92,9 @@ concept InfrastructureEntity [I] {
         Result as serialized JSON array of { backend, kind,
         adapter, concepts: [] }.
       }
+
+      fixture valid {}
+      fixture shared_backend_failure {} -> error
     }
 
     action networkTopology() {
@@ -84,6 +103,9 @@ concept InfrastructureEntity [I] {
         connect to which via which protocols. Result as serialized
         JSON { nodes: [], edges: [{ from, to, protocol, adapter }] }.
       }
+
+      fixture valid {}
+      fixture topology_failure {} -> error
     }
   }
 

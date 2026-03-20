@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept TestSelection [M] {
 
@@ -48,6 +49,10 @@ concept TestSelection [M] {
         No coverage mappings available — first run or
         mappings expired. All tests should run.
       }
+
+      fixture analyze_concept_change { changedSources: ["./specs/password.concept"] }
+      fixture analyze_with_type { changedSources: ["./specs/auth.concept"], testType: "unit" }
+      fixture analyze_empty { changedSources: [] } -> noMappings
     }
 
     action select(affectedTests: list { testId: String, language: String, testType: String, relevance: Float }, budget: option { maxDuration: Int, maxTests: Int }) {
@@ -65,6 +70,10 @@ concept TestSelection [M] {
         Returns what fits, plus how many were dropped
         and the reduced confidence.
       }
+
+      fixture select_no_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }] }
+      fixture select_with_budget { affectedTests: [{ testId: "test_hash", language: "typescript", testType: "unit", relevance: 1.0 }], budget: { maxDuration: 5000, maxTests: 10 } }
+      fixture select_empty { affectedTests: [] }
     }
 
     action record(testId: String, language: String, testType: String, coveredSources: list String, duration: Int, passed: Bool) {
@@ -76,6 +85,9 @@ concept TestSelection [M] {
         to collect file-level coverage, then storing the
         test-to-source mapping.
       }
+
+      fixture record_unit { testId: "test_password_hash", language: "typescript", testType: "unit", coveredSources: ["./specs/password.concept", "generated/ts/password.ts"], duration: 45, passed: true }
+      fixture record_failing { testId: "test_auth_flow", language: "rust", testType: "integration", coveredSources: ["./specs/auth.concept"], duration: 1200, passed: false }
     }
 
     action statistics() {
@@ -89,6 +101,8 @@ concept TestSelection [M] {
         Selection ratio: what fraction of tests are typically
         selected (lower = more efficient).
       }
+
+      fixture valid {}
     }
   }
 

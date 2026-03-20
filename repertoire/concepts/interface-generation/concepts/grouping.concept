@@ -52,6 +52,10 @@ concept Grouping [G] {
         eventProducing: true if side-effecting.
         mcpType: tool | resource | resource-template.
       }
+
+      fixture classify_create { actionName: "createOrder" }
+      fixture classify_read { actionName: "getUser" }
+      fixture empty_action { actionName: "" } -> error
     }
   }
 

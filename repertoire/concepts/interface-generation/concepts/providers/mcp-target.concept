@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept McpTarget [M] {
 
@@ -52,6 +53,10 @@ concept McpTarget [M] {
         Consider grouping related actions or using resource
         types to reduce tool count.
       }
+
+      fixture generate_agent { projection: "agent-projection", config: "{\"serverName\":\"agent-mcp\",\"transport\":\"stdio\"}" }
+      fixture generate_default_config { projection: "score-projection", config: "{}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(tool: M) {
@@ -65,6 +70,9 @@ concept McpTarget [M] {
         Tool lacks a description. MCP tools require
         descriptions for LLM discoverability.
       }
+
+      fixture validate_existing { tool: "mcp-agent-001" }
+      fixture validate_unknown { tool: "mcp-nonexistent" } -> error
     }
 
     action listTools(concept: String) {
@@ -72,6 +80,10 @@ concept McpTarget [M] {
         Return all generated MCP primitives for a concept
         grouped by MCP type, including hierarchy tools.
       }
+
+      fixture list_tools_agent { concept: "Agent" }
+      fixture list_tools_score { concept: "ScoreApi" }
+      fixture list_tools_empty { concept: "" } -> error
     }
   }
 

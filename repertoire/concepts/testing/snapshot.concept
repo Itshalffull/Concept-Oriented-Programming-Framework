@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Snapshot [S] {
 
@@ -40,6 +41,9 @@ concept Snapshot [S] {
         No baseline exists for this output path.
         First generation — requires initial approval.
       }
+
+      fixture compare_existing { outputPath: "generated/ts/password.ts", currentContent: "export const hash = (pw: string) => pw;" }
+      fixture compare_new_file { outputPath: "generated/ts/brand-new.ts", currentContent: "export const x = 1;" }
     }
 
     action approve(path: String, approver: option String) {
@@ -52,6 +56,9 @@ concept Snapshot [S] {
         Nothing to approve — current output already
         matches baseline.
       }
+
+      fixture approve_changed { path: "generated/ts/password.ts", approver: "alice" }
+      fixture approve_unchanged { path: "generated/ts/stable.ts" } -> noChange
     }
 
     action approveAll(paths: option list String) {
@@ -60,6 +67,9 @@ concept Snapshot [S] {
         by path prefix. Used for bulk approval after
         intentional generator changes.
       }
+
+      fixture approve_all {}
+      fixture approve_all_filtered { paths: ["generated/ts/"] }
     }
 
     action reject(path: String) {
@@ -71,6 +81,9 @@ concept Snapshot [S] {
       -> noChange(snapshot: S) {
         Nothing to reject.
       }
+
+      fixture reject_changed { path: "generated/ts/password.ts" }
+      fixture reject_unchanged { path: "generated/ts/stable.ts" } -> noChange
     }
 
     action status(paths: option list String) {
@@ -83,6 +96,9 @@ concept Snapshot [S] {
         Return snapshot status for all tracked paths.
         Statuses: "current", "changed", "new", "rejected".
       }
+
+      fixture status_all {}
+      fixture status_filtered { paths: ["generated/ts/"] }
     }
 
     action diff(path: String) {
@@ -96,6 +112,9 @@ concept Snapshot [S] {
       -> unchanged(path: String) {
         No difference — output matches baseline.
       }
+
+      fixture diff_changed { path: "generated/ts/password.ts" }
+      fixture diff_no_baseline { path: "generated/ts/nonexistent.ts" } -> noBaseline
     }
 
     action clean(outputDir: String) {
@@ -103,6 +122,9 @@ concept Snapshot [S] {
         Remove baselines for output files that no longer
         exist (orphaned snapshots from deleted concepts).
       }
+
+      fixture clean_generated { outputDir: "generated/ts" }
+      fixture clean_all { outputDir: "generated" }
     }
   }
 

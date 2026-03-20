@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept AsyncApiTarget [A] {
 
@@ -33,6 +34,10 @@ concept AsyncApiTarget [A] {
         @hierarchical trait is detected, channel name segments
         mirror tree path and messages include parentPath header.
       }
+
+      fixture generate_websocket { projections: ["score-events", "agent-events"], syncSpecs: ["score-sync"], config: "{\"transport\":\"websocket\"}" }
+      fixture generate_kafka { projections: ["order-events"], syncSpecs: ["order-sync", "inventory-sync"], config: "{\"transport\":\"kafka\"}" }
+      fixture generate_empty_projections { projections: [], syncSpecs: [], config: "{}" } -> error
     }
   }
 

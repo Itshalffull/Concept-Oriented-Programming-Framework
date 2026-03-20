@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept UILibraryTarget [D] {
 
@@ -47,6 +48,10 @@ concept UILibraryTarget [D] {
       -> noWidgets(reason: String) {
         No widget or theme files found in the repertoire directory.
       }
+
+      fixture generate_default { config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }
+      fixture generate_with_options { config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }
+      fixture generate_empty_config { config: "" } -> error
     }
 
     action validate(document: D) {
@@ -56,6 +61,9 @@ concept UILibraryTarget [D] {
       -> missingSection(document: D, section: String) {
         A required section is missing from the document.
       }
+
+      fixture validate_valid { document: "ui-library-001" }
+      fixture validate_not_found { document: "ui-library-nonexistent" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Resource [R] {
 
@@ -34,6 +35,10 @@ concept Resource [R] {
         Known resource, digest identical to stored value.
         No action needed downstream.
       }
+
+      fixture upsert_new { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123", size: 1024 }
+      fixture upsert_changed { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-def456" }
+      fixture upsert_unchanged { locator: "./specs/password.concept", kind: "concept-spec", digest: "sha256-abc123" }
     }
 
     action get(locator: String) {
@@ -43,6 +48,9 @@ concept Resource [R] {
       -> notFound(locator: String) {
         No resource registered at this locator.
       }
+
+      fixture get_existing { locator: "./specs/password.concept" }
+      fixture get_missing { locator: "./specs/nonexistent.concept" } -> notFound
     }
 
     action list(kind: option String) {

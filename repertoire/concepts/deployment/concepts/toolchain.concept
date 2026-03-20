@@ -136,6 +136,9 @@ concept Toolchain [T] {
         Return detailed capabilities for a resolved tool.
         Used by Builder to determine available build modes.
       }
+
+      fixture capabilities_existing { tool: "tc-abc123" }
+      fixture capabilities_missing { tool: "" } -> error
     }
   }
 

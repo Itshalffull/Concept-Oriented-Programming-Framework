@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Tag [T] {
   purpose { Apply lightweight, flat or optionally hierarchical labels to content for cross-cutting classification. }
@@ -11,21 +12,36 @@ concept Tag [T] {
     action addTag(entity: String, tag: T) {
       -> ok() { Associate the tag with the entity. }
       -> notfound(message: String) { Tag does not exist. }
+
+      fixture add_tag_to_page { entity: "page-42", tag: "important" }
+      fixture add_tag_empty_entity { entity: "", tag: "label" } -> error
     }
     action removeTag(entity: String, tag: T) {
       -> ok() { Dissociate the tag from the entity. }
       -> notfound(message: String) { Tag or entity not found. }
+
+      fixture remove_existing_tag { entity: "page-42", tag: "important" }
+      fixture remove_nonexistent_tag { entity: "page-99", tag: "missing-tag" } -> error
     }
     action getByTag(tag: T) {
       -> ok(entities: String) { Return all entities associated with the tag. }
+
+      fixture get_by_existing_tag { tag: "important" }
+      fixture get_by_empty_tag { tag: "" } -> error
     }
     action getChildren(tag: T) {
       -> ok(children: String) { Return child tags in the hierarchy. }
       -> notfound(message: String) { Tag does not exist. }
+
+      fixture get_children_of_tag { tag: "engineering" }
+      fixture get_children_missing_tag { tag: "nonexistent" } -> error
     }
     action rename(tag: T, name: String) {
       -> ok() { Rename the tag. }
       -> notfound(message: String) { Tag does not exist. }
+
+      fixture rename_existing_tag { tag: "important", name: "critical" }
+      fixture rename_missing_tag { tag: "nonexistent", name: "new-name" } -> error
     }
   }
   example "addTag-then-getByTag": {

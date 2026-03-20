@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Telemetry [T] {
 
@@ -27,6 +28,10 @@ concept Telemetry [T] {
         the Runtime concept injects OTEL instrumentation with
         these settings.
       }
+
+      fixture configure_otel { concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: 0.5 }
+      fixture configure_full_sampling { concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: 1.0 }
+      fixture configure_empty_concept { concept: "", endpoint: "http://otel:4317", samplingRate: 0.1 } -> error
     }
 
     action deployMarker(suite: String, version: String, environment: String, status: String) {
@@ -39,6 +44,10 @@ concept Telemetry [T] {
         Observability backend unreachable. Non-fatal so
         deployment continues and marker is queued for retry.
       }
+
+      fixture marker_staging { suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }
+      fixture marker_production { suite: "payments", version: "1.0.0", environment: "production", status: "completed" }
+      fixture marker_empty_suite { suite: "", version: "1.0.0", environment: "staging", status: "started" } -> error
     }
 
     action analyze(concept: String, window: Int, criteria: String) {
@@ -54,6 +63,10 @@ concept Telemetry [T] {
       -> backendUnavailable(endpoint: String) {
         Cannot query metrics. Conservative action is pause rollout.
       }
+
+      fixture analyze_5min { concept: "UserService", window: 300, criteria: "error_rate < 0.05" }
+      fixture analyze_1hr { concept: "PaymentService", window: 3600, criteria: "latency_p99 < 500" }
+      fixture analyze_empty_concept { concept: "", window: 60, criteria: "error_rate < 0.1" } -> error
     }
   }
 

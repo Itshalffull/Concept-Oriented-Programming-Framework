@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RustSdkTarget [S] {
 
@@ -23,6 +24,10 @@ concept RustSdkTarget [S] {
         return variants to enum variants. Generate lib.rs,
         client module, types module, and Cargo.toml.
       }
+
+      fixture generate_default { projection: "score-projection", config: "{}" }
+      fixture generate_custom_crate { projection: "agent-projection", config: "{\"crateName\":\"agent-sdk\",\"edition\":\"2024\"}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
   }
 

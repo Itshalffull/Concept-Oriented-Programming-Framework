@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ClaudeMdTarget [D] {
 
@@ -46,6 +47,10 @@ concept ClaudeMdTarget [D] {
       -> noProjections(reason: String) {
         No valid concept projections found to aggregate.
       }
+
+      fixture generate_project { projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }
+      fixture generate_with_conventions { projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }
+      fixture generate_empty_projection { projection: "", config: "{}" } -> error
     }
 
     action validate(document: D) {
@@ -55,12 +60,18 @@ concept ClaudeMdTarget [D] {
       -> missingSection(document: D, section: String) {
         A configured section is missing from the document.
       }
+
+      fixture validate_valid { document: "claude-md-001" }
+      fixture validate_not_found { document: "claude-md-nonexistent" } -> error
     }
 
     action preview(config: String) {
       -> ok(sections: list String, estimatedLines: Int) {
         Dry-run listing of sections that would be generated.
       }
+
+      fixture preview_full { config: "{\"projectName\":\"TestProject\"}" }
+      fixture preview_empty { config: "" } -> error
     }
   }
 

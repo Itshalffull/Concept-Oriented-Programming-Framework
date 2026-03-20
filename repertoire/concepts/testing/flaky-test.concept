@@ -51,6 +51,9 @@ concept FlakyTest [F] {
         the configured window. This test is flaky.
         If autoQuarantine is enabled, automatically quarantines.
       }
+
+      fixture record_pass { testId: "test_password_hash", language: "typescript", builder: "TypeScriptBuilder", testType: "unit", passed: true, duration: 45 }
+      fixture record_fail { testId: "test_timing", language: "typescript", builder: "TypeScriptBuilder", testType: "e2e", passed: false, duration: 5001 }
     }
 
     action quarantine(testId: String, reason: String, owner: option String) {
@@ -65,6 +68,9 @@ concept FlakyTest [F] {
       -> notFound(testId: String) {
         No history for this test ID.
       }
+
+      fixture quarantine_flaky { testId: "test_timing", reason: "Timing-dependent, fails on slow CI", owner: "alice" }
+      fixture quarantine_unknown { testId: "test_nonexistent", reason: "Unknown test", owner: "bob" } -> notFound
     }
 
     action release(testId: String) {
@@ -75,6 +81,9 @@ concept FlakyTest [F] {
       -> notQuarantined(test: F) {
         Test wasn't quarantined.
       }
+
+      fixture release_quarantined { testId: "test_timing" }
+      fixture release_not_quarantined { testId: "test_stable" } -> notQuarantined
     }
 
     action isQuarantined(testId: String) {
@@ -88,6 +97,9 @@ concept FlakyTest [F] {
       -> unknown(testId: String) {
         No history for this test.
       }
+
+      fixture is_quarantined_check { testId: "test_timing" }
+      fixture is_quarantined_unknown { testId: "test_never_seen" } -> unknown
     }
 
     action report(testType: option String) {
@@ -103,6 +115,9 @@ concept FlakyTest [F] {
         stabilized: tests that were quarantined but have
         been passing consistently (candidates for release).
       }
+
+      fixture report_all {}
+      fixture report_unit_only { testType: "unit" }
     }
 
     action setPolicy(flipThreshold: option Int, flipWindow: option String, autoQuarantine: option Bool, retryCount: option Int) {
@@ -113,6 +128,9 @@ concept FlakyTest [F] {
         autoQuarantine: automatically quarantine detected flaky tests (default: false)
         retryCount: number of retries before declaring failure (default: 1)
       }
+
+      fixture set_strict_policy { flipThreshold: 2, flipWindow: "3d", autoQuarantine: true, retryCount: 2 }
+      fixture set_lenient_policy { flipThreshold: 10, flipWindow: "30d", autoQuarantine: false }
     }
   }
 

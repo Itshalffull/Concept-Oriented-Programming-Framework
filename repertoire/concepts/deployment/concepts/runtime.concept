@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Runtime [I] {
 
@@ -41,6 +42,10 @@ concept Runtime [I] {
       -> provisionFailed(concept: String, runtimeType: String, reason: String) {
         Provider reported failure propagated via sync.
       }
+
+      fixture provision_ecs { concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }
+      fixture provision_vercel { concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }
+      fixture provision_empty_concept { concept: "", runtimeType: "ecs-fargate", config: "{}" } -> error
     }
 
     action deploy(instance: I, artifact: String, version: String) {
@@ -51,6 +56,9 @@ concept Runtime [I] {
       -> deployFailed(instance: I, reason: String) {
         Provider reported deployment failure.
       }
+
+      fixture deploy_v1 { instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }
+      fixture deploy_missing_instance { instance: "", artifact: "s3://bucket/app.zip", version: "1.0.0" } -> error
     }
 
     action setTrafficWeight(instance: I, weight: Int) {
@@ -58,6 +66,9 @@ concept Runtime [I] {
         Traffic weight updated. For canary splits between
         current and canary endpoint.
       }
+
+      fixture traffic_canary { instance: "rt-abc123", weight: 25 }
+      fixture traffic_no_instance { instance: "", weight: 50 } -> error
     }
 
     action rollback(instance: I) {
@@ -71,6 +82,9 @@ concept Runtime [I] {
       -> rollbackFailed(instance: I, reason: String) {
         Provider could not roll back.
       }
+
+      fixture rollback_instance { instance: "rt-abc123" }
+      fixture rollback_missing { instance: "" } -> error
     }
 
     action destroy(instance: I) {
@@ -82,6 +96,9 @@ concept Runtime [I] {
         Provider could not destroy. Instance marked for
         manual cleanup.
       }
+
+      fixture destroy_valid { instance: "rt-abc123" }
+      fixture destroy_missing { instance: "" } -> error
     }
 
     action updateEndpoint(instance: I, endpoint: String) {

@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept PerformanceProfile [P] {
 
   purpose {
@@ -37,6 +38,9 @@ concept PerformanceProfile [P] {
         Not enough data points in the window for meaningful
         statistics.
       }
+
+      fixture aggregate_article_create { symbol: "clef/action/Article/create", window: "{}" }
+      fixture aggregate_empty_symbol { symbol: "", window: "{}" } -> error
     }
 
     action hotspots(kind: String, metric: String, topN: Int) {
@@ -45,6 +49,9 @@ concept PerformanceProfile [P] {
         p99, errorRate, unnecessaryRenderPct). Results as
         serialized JSON array of { symbol, value }.
       }
+
+      fixture hotspots_actions_p90 { kind: "action", metric: "p90", topN: 10 }
+      fixture hotspots_invalid_metric { kind: "action", metric: "", topN: 0 } -> error
     }
 
     action slowChains(thresholdMs: Int) {
@@ -54,6 +61,9 @@ concept PerformanceProfile [P] {
         as serialized JSON array of { flowGraphPath, p90TotalMs,
         bottleneck }.
       }
+
+      fixture slow_chains_500ms { thresholdMs: 500 }
+      fixture slow_chains_zero { thresholdMs: 0 } -> error
     }
 
     action compareWindows(symbol: String, windowA: String, windowB: String) {
@@ -65,6 +75,9 @@ concept PerformanceProfile [P] {
       -> insufficientData(window: String, count: Int) {
         Not enough data in one of the windows.
       }
+
+      fixture compare_weekly { symbol: "clef/action/Article/create", windowA: "{\"start\":\"2026-03-01\",\"end\":\"2026-03-07\"}", windowB: "{\"start\":\"2026-03-08\",\"end\":\"2026-03-14\"}" }
+      fixture compare_empty_symbol { symbol: "", windowA: "{}", windowB: "{}" } -> error
     }
 
     action get(profile: P) {
@@ -74,6 +87,9 @@ concept PerformanceProfile [P] {
       -> notfound() {
         Profile does not exist.
       }
+
+      fixture get_existing_profile { profile: "performance-profile-1" }
+      fixture get_nonexistent { profile: "nonexistent-profile" } -> error
     }
   }
 
