@@ -138,6 +138,14 @@ function renderSolidityTests(plan: TestPlan): string {
     lines.push('');
   }
 
+  // Register conformance test
+  lines.push(`    function test_register_declares_concept_name() public {`);
+  lines.push(`        (string memory variant, string memory name) = target.register();`);
+  lines.push(`        assertEq(variant, "ok");`);
+  lines.push(`        assertEq(name, "${plan.conceptName}");`);
+  lines.push('    }');
+  lines.push('');
+
   // Always invariants (Echidna-style)
   for (const inv of plan.stateInvariants) {
     if (inv.kind === 'always') {

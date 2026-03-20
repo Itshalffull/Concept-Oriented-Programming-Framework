@@ -176,6 +176,15 @@ function renderRustTests(plan: TestPlan): string {
     lines.push('');
   }
 
+  // Register conformance test
+  lines.push('#[test]');
+  lines.push(`fn test_register_declares_concept_name() {`);
+  lines.push(`    let result = register();`);
+  lines.push(`    assert_eq!(result.variant, "ok");`);
+  lines.push(`    assert_eq!(result.name, "${plan.conceptName}");`);
+  lines.push('}');
+  lines.push('');
+
   // State invariant tests
   for (const inv of plan.stateInvariants) {
     const fnName = toSnake(inv.name).replace(/[^a-z0-9_]/g, '_');

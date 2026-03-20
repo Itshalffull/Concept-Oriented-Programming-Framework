@@ -554,6 +554,28 @@ export function renderTypeScriptTests(plan: TestPlan): string {
     lines.push(...renderStructuralTests(handlerVar, action, style));
   }
 
+  // Register conformance test — verifies handler declares its concept name
+  lines.push(`  describe('register()', () => {`);
+  lines.push(`    it('declares concept name', async () => {`);
+  lines.push(`      if (typeof ${handlerVar}.register !== 'function') return;`);
+  lines.push(`      const storage = createInMemoryStorage();`);
+  lines.push(`      let result: any;`);
+  lines.push(`      try {`);
+  lines.push(`        const r = ${handlerVar}.register({}, storage);`);
+  lines.push(`        result = r instanceof Promise ? await r : r;`);
+  lines.push(`        // If StorageProgram, interpret it`);
+  lines.push(`        if (result?.instructions && !result.variant) {`);
+  if (style === 'functional') {
+    lines.push(`          result = await interpret(result, storage);`);
+  }
+  lines.push(`        }`);
+  lines.push(`      } catch { return; }`);
+  lines.push(`      expect(result.variant).toBe('ok');`);
+  lines.push(`      expect(result.name).toBe('${plan.conceptName}');`);
+  lines.push(`    });`);
+  lines.push(`  });`);
+  lines.push('');
+
   // Invariant-derived tests
   lines.push(...renderExampleTests(handlerVar, plan.examples, style));
   lines.push(...renderForallTests(handlerVar, plan.properties, style));

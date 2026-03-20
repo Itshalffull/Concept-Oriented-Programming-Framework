@@ -138,6 +138,14 @@ function renderSwiftTests(plan: TestPlan): string {
     lines.push('');
   }
 
+  // Register conformance test
+  lines.push(`    func testRegisterDeclaresConceptName() throws {`);
+  lines.push(`        let result = try handler.register()`);
+  lines.push(`        XCTAssertEqual(result.variant, "ok")`);
+  lines.push(`        XCTAssertEqual(result.name, "${plan.conceptName}")`);
+  lines.push('    }');
+  lines.push('');
+
   // State invariant tests
   for (const inv of plan.stateInvariants) {
     const fnName = toCamel(inv.name.replace(/[^a-zA-Z0-9]/g, '_'));
