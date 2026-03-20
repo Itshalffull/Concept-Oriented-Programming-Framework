@@ -46,6 +46,9 @@ concept RetentionPolicy [R] {
       -> ok(holdId: H) {
         Legal hold applied. All records matching scope pattern are held.
       }
+
+      fixture apply_litigation_hold { name: "litigation-2024", scope: "matter:123/*", reason: "pending lawsuit", issuer: "legal-dept" }
+      fixture empty_hold_name { name: "", scope: "matter:*", reason: "test", issuer: "admin" } -> error
     }
 
     action releaseHold(holdId: H, releasedBy: String, reason: String) {
@@ -58,6 +61,9 @@ concept RetentionPolicy [R] {
       -> alreadyReleased(message: String) {
         Hold was already released.
       }
+
+      fixture release_existing { holdId: "hold-1", releasedBy: "legal-dept", reason: "case settled" }
+      fixture release_empty_by { holdId: "hold-1", releasedBy: "", reason: "test" } -> error
     }
 
     action checkDisposition(record: String) {
