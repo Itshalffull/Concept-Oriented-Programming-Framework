@@ -31,6 +31,9 @@ concept Registry [C] {
       -> ok() {
         Remove the concept registration for the given URI.
       }
+
+      fixture valid_deregister { uri: "urn:clef/User" }
+      fixture nonexistent_deregister { uri: "urn:clef/NonExistent" }
     }
 
     action heartbeat(uri: String) {
@@ -38,6 +41,9 @@ concept Registry [C] {
         Check whether the concept at the given URI is reachable
         and return its availability status.
       }
+
+      fixture registered_heartbeat { uri: "urn:clef/User" }
+      fixture unregistered_heartbeat { uri: "urn:clef/NonExistent" }
     }
   }
 

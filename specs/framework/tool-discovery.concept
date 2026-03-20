@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ToolDiscovery [T] {
 
@@ -34,6 +35,9 @@ concept ToolDiscovery [T] {
       -> duplicate(name: String) {
         A tool with this name already exists in the catalog.
       }
+
+      fixture valid_register { name: "score_query", briefDescription: "Run GraphQL queries against Score index", fullDescription: "Execute a GraphQL query against the materialized Score index and return structured results", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{\"type\": \"object\", \"properties\": {\"graphql\": {\"type\": \"string\"}}}", alwaysLoaded: true }
+      fixture duplicate_register { name: "score_query", briefDescription: "Duplicate tool", fullDescription: "This is a duplicate", category: "score", concept: "ScoreQuery", action: "query", inputSchema: "{}", alwaysLoaded: false } -> duplicate
     }
 
     action searchTools(query: String, limit: Int) {
@@ -46,6 +50,10 @@ concept ToolDiscovery [T] {
       -> empty(query: String) {
         No tools matched the search query.
       }
+
+      fixture valid_search { query: "graphql query", limit: 5 }
+      fixture no_match { query: "zzzznonexistentzzz", limit: 10 } -> empty
+      fixture empty_query { query: "", limit: 10 } -> empty
     }
 
     action describeTools(tools: list String) {
@@ -55,6 +63,9 @@ concept ToolDiscovery [T] {
         the LLM calls this only when it needs a specific tool's
         full schema to make a call.
       }
+
+      fixture valid_describe { tools: ["score_query", "score_navigate"] }
+      fixture empty_tools { tools: [] }
     }
 
     action listCategories() {
@@ -63,6 +74,8 @@ concept ToolDiscovery [T] {
         Categories are derived from concept groupings — each concept
         becomes a category.
       }
+
+      fixture valid_list_categories {}
     }
 
     action getCategory(category: String) {
@@ -73,6 +86,10 @@ concept ToolDiscovery [T] {
       -> notfound(category: String) {
         No category exists with this name.
       }
+
+      fixture valid_category { category: "score" }
+      fixture missing_category { category: "nonexistent_category" } -> notfound
+      fixture empty_category { category: "" } -> notfound
     }
 
     action getAlwaysLoaded() {

@@ -33,6 +33,10 @@ concept RuntimeDiscovery [D] {
       -> io_error(directory: String, message: String) {
         The directory does not exist or is not readable.
       }
+
+      fixture valid_scan { directory: "/app/clef-base" }
+      fixture empty_directory { directory: "/tmp/empty-project" } -> empty
+      fixture nonexistent_scan { directory: "/nonexistent/path" } -> io_error
     }
 
     action listProjects() {

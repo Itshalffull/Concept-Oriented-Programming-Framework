@@ -29,6 +29,9 @@ concept SyncScaffoldGen [S] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_sync { name: "OnUserCreate", trigger: { concept: "User", action: "create" }, conditions: [], effects: [{ concept: "Notification", action: "send", params: [{ field: "userId", value: "?userId" }] }], thenBlocks: [] }
+      fixture minimal_sync { name: "SimpleSync", trigger: { concept: "Order", action: "place" }, conditions: [], effects: [], thenBlocks: [] }
     }
 
     action preview(name: String, trigger: Trigger, conditions: list Condition, effects: list Effect, thenBlocks: list list Effect) {
@@ -44,6 +47,8 @@ concept SyncScaffoldGen [S] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "OnUserCreate", trigger: { concept: "User", action: "create" }, conditions: [], effects: [{ concept: "Notification", action: "send", params: [] }], thenBlocks: [] }
     }
 
     action register() {
@@ -54,6 +59,8 @@ concept SyncScaffoldGen [S] {
         outputKind: "SyncSpec"
         capabilities: ["sync-spec", "when-clause", "where-clause", "then-clause", "filter-condition", "guard-condition", "multi-then"]
       }
+
+      fixture valid {}
     }
   }
 
