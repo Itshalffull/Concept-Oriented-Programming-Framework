@@ -60,6 +60,8 @@ concept EnvironmentEntity [E] {
         serialized JSON array of { name, kind, value, source,
         boundRuntime, sensitive }.
       }
+      fixture find_production { environment: "production" }
+      fixture find_empty_env { environment: "" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -67,6 +69,8 @@ concept EnvironmentEntity [E] {
         Return all config entries bound to a concept. Result
         as serialized JSON array.
       }
+      fixture find_user_concept { concept: "User" }
+      fixture find_empty_concept { concept: "" } -> error
     }
 
     action findByRuntime(runtime: String) {
@@ -74,6 +78,8 @@ concept EnvironmentEntity [E] {
         Return all config entries bound to a runtime. Result
         as serialized JSON array.
       }
+      fixture find_api_runtime { runtime: "api" }
+      fixture find_empty_runtime { runtime: "" } -> error
     }
 
     action diffEnvironments(envA: String, envB: String) {
@@ -85,6 +91,8 @@ concept EnvironmentEntity [E] {
       -> same() {
         Environments have identical config.
       }
+      fixture diff_staging_prod { envA: "staging", envB: "production" }
+      fixture diff_empty_env { envA: "", envB: "production" } -> error
     }
 
     action secretsAudit(environment: String) {
@@ -93,6 +101,8 @@ concept EnvironmentEntity [E] {
         and rotation status. Result as serialized JSON array of
         { name, source, boundRuntime, lastRotated }.
       }
+      fixture audit_production { environment: "production" }
+      fixture audit_empty { environment: "" } -> error
     }
 
     action featureFlags(environment: String) {
@@ -100,6 +110,8 @@ concept EnvironmentEntity [E] {
         Return all feature flags for an environment. Result as
         serialized JSON array of { name, value, boundConcept }.
       }
+      fixture flags_staging { environment: "staging" }
+      fixture flags_empty { environment: "" } -> error
     }
   }
 

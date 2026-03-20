@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TestGenSolidity [R] {
 
@@ -29,6 +30,8 @@ concept TestGenSolidity [R] {
       -> invalid(message: String) {
         The test_plan JSON is malformed or missing required fields.
       }
+      fixture render_valid { test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.solidity" }
+      fixture render_invalid_json { test_plan: "not json", output_path: "test.ts" } -> error
     }
 
     action renderBatch(test_plans: String) {
@@ -38,12 +41,16 @@ concept TestGenSolidity [R] {
       -> error(message: String) {
         One or more test plans failed to render.
       }
+      fixture batch_valid { test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }
+      fixture batch_empty { test_plans: "" } -> error
     }
 
     action listRendered(concept_ref: String) {
       -> ok(results: String) {
         List all rendered Solidity test files for a given concept.
       }
+      fixture list_valid { concept_ref: "clef/concept/Counter" }
+      fixture list_empty { concept_ref: "" } -> error
     }
   }
 

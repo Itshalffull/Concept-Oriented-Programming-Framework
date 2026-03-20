@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StructuralPattern [P] {
 
@@ -29,6 +30,8 @@ concept StructuralPattern [P] {
       -> invalidSyntax(message: String, position: Int) {
         The pattern source has a syntax error.
       }
+      fixture create_ts_query { syntax: "tree-sitter-query", source: "(function_declaration) @fn", language: "typescript" }
+      fixture create_empty_syntax { syntax: "", source: "(id) @x", language: "typescript" } -> error
     }
 
     action match(pattern: P, tree: String) {
@@ -42,6 +45,8 @@ concept StructuralPattern [P] {
       -> incompatibleLanguage(patternLang: String, treeLang: String) {
         The pattern's language constraint doesn't match the tree's language.
       }
+      fixture match_pattern { pattern: "pat-1", tree: "tree-1" }
+      fixture match_missing_pattern { pattern: "nonexistent", tree: "tree-1" } -> error
     }
 
     action matchProject(pattern: P) {
@@ -52,6 +57,8 @@ concept StructuralPattern [P] {
       -> noMatches() {
         No matches found across the project.
       }
+      fixture match_project { pattern: "pat-1" }
+      fixture match_project_missing { pattern: "nonexistent" } -> error
     }
   }
 

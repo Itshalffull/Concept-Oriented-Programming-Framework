@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CausalClock [T] {
 
@@ -21,6 +22,8 @@ concept CausalClock [T] {
         Increments this replica's position in the vector clock.
         Returns the new timestamp event and clock snapshot.
       }
+      fixture tick_replica_a { replicaId: "replica-a" }
+      fixture tick_empty_replica { replicaId: "" } -> error
     }
 
     action merge(localClock: list Int, remoteClock: list Int) {
@@ -30,6 +33,8 @@ concept CausalClock [T] {
       -> incompatible(message: String) {
         Clocks have different dimensions.
       }
+      fixture merge_same_length { localClock: "[1,2,3]", remoteClock: "[2,1,4]" }
+      fixture merge_different_length { localClock: "[1,2]", remoteClock: "[1,2,3]" } -> error
     }
 
     action compare(a: T, b: T) {
@@ -42,6 +47,8 @@ concept CausalClock [T] {
       -> concurrent() {
         Neither happened before the other. Events are concurrent.
       }
+      fixture compare_events { a: "event-1", b: "event-2" }
+      fixture compare_missing { a: "nonexistent", b: "event-2" } -> error
     }
 
     action dominates(a: T, b: T) {
@@ -49,6 +56,8 @@ concept CausalClock [T] {
         Returns whether a strictly dominates b —
         a >= b component-wise and a != b.
       }
+      fixture dominates_check { a: "event-1", b: "event-2" }
+      fixture dominates_missing { a: "nonexistent", b: "event-2" } -> error
     }
   }
 

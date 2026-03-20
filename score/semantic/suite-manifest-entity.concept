@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SuiteManifestEntity [S] {
 
@@ -40,6 +41,9 @@ concept SuiteManifestEntity [S] {
       -> alreadyRegistered(existing: S) {
         A suite with this name is already registered.
       }
+      fixture register_identity { name: "identity", source: "repertoire/concepts/identity/suite.yaml", manifest: "{\"version\":\"1.0.0\",\"concepts\":[\"User\",\"Session\"],\"syncs\":[\"auth-on-login\"]}" }
+      fixture register_empty { name: "content", source: "repertoire/concepts/content/suite.yaml", manifest: "{}" }
+      fixture register_empty_name { name: "", source: "suite.yaml", manifest: "{}" } -> error
     }
 
     action get(name: String) {
@@ -49,6 +53,8 @@ concept SuiteManifestEntity [S] {
       -> notfound() {
         No suite with this name exists.
       }
+      fixture get_identity { name: "identity" }
+      fixture get_missing { name: "nonexistent-suite" } -> error
     }
 
     action listAll() {
@@ -56,6 +62,8 @@ concept SuiteManifestEntity [S] {
         Return all registered suites with name, version, concept
         count, and sync count. Result as serialized JSON array.
       }
+      fixture list_all_valid {}
+      fixture valid {}
     }
 
     action findByConcept(concept: String) {
@@ -63,6 +71,9 @@ concept SuiteManifestEntity [S] {
         Return all suites that contain the given concept.
         Result as serialized JSON array.
       }
+      fixture find_user { concept: "User" }
+      fixture find_empty_concept { concept: "" } -> error
+      fixture find_empty { concept: "" } -> error
     }
 
     action findBySync(sync: String) {
@@ -70,6 +81,9 @@ concept SuiteManifestEntity [S] {
         Return all suites that declare the given sync.
         Result as serialized JSON array.
       }
+      fixture find_auth_sync { sync: "auth-on-login" }
+      fixture find_empty_sync { sync: "" } -> error
+      fixture find_sync { sync: "onUserCreate" }
     }
 
     action concepts(suite: S) {
@@ -78,6 +92,8 @@ concept SuiteManifestEntity [S] {
         and type parameter bindings. Result as serialized JSON
         array of { name, spec, params }.
       }
+      fixture concepts_valid { suite: "suite-uuid-1" }
+      fixture concepts_missing { suite: "nonexistent-id" } -> error
     }
 
     action syncs(suite: S) {
@@ -85,6 +101,8 @@ concept SuiteManifestEntity [S] {
         Return all syncs in this suite with their tiers.
         Result as serialized JSON array of { name, tier, spec }.
       }
+      fixture syncs_valid { suite: "suite-uuid-1" }
+      fixture syncs_missing { suite: "nonexistent-id" } -> error
     }
 
     action dependencyGraph() {
@@ -93,6 +111,7 @@ concept SuiteManifestEntity [S] {
         registered suites. Result as serialized JSON { nodes:
         [{ name, version }], edges: [{ from, to, constraint }] }.
       }
+      fixture dep_graph_valid {}
     }
 
     action transitiveDependencies(suite: S) {
@@ -101,6 +120,8 @@ concept SuiteManifestEntity [S] {
         Result as serialized JSON array of { name, version,
         depth, via }.
       }
+      fixture transitive_valid { suite: "suite-uuid-1" }
+      fixture transitive_missing { suite: "nonexistent-id" } -> error
     }
 
     action validateDependencies(suite: S) {
@@ -112,6 +133,8 @@ concept SuiteManifestEntity [S] {
         Missing or incompatible dependencies. Result as serialized
         JSON array of { dependency, constraint, actual, message }.
       }
+      fixture validate_valid { suite: "suite-uuid-1" }
+      fixture validate_missing { suite: "nonexistent-id" } -> error
     }
 
     action crossSuiteConflicts() {
@@ -123,6 +146,7 @@ concept SuiteManifestEntity [S] {
         Conflicts found. Result as serialized JSON array of
         { kind, suiteA, suiteB, entity, message }.
       }
+      fixture cross_suite_valid {}
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SlotProvider [P] {
 
@@ -31,6 +32,8 @@ concept SlotProvider [P] {
       -> configError(message: String) {
         Configuration invalid.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action define(provider: P, name: String, host: String,
@@ -43,6 +46,8 @@ concept SlotProvider [P] {
       -> duplicate(message: String) {
         Slot name already defined on this host.
       }
+      fixture define_header { provider: "sp-1", name: "header", host: "dialog", position: "before-title" }
+      fixture define_empty_name { provider: "sp-1", name: "", host: "dialog", position: "top" } -> error
     }
 
     action fill(provider: P, slot: String, content: String) {
@@ -51,6 +56,8 @@ concept SlotProvider [P] {
         fill or the default fallback.
       }
       -> notfound(message: String) { Slot not defined. }
+      fixture fill_slot { provider: "sp-1", slot: "slot-1", content: "<h1>Title</h1>" }
+      fixture fill_missing_slot { provider: "sp-1", slot: "nonexistent", content: "x" } -> error
     }
 
     action clear(provider: P, slot: String) {
@@ -58,6 +65,8 @@ concept SlotProvider [P] {
         Remove injected content, revert slot to its fallback.
       }
       -> notfound(message: String) { Slot not defined. }
+      fixture clear_slot { provider: "sp-1", slot: "slot-1" }
+      fixture clear_missing_slot { provider: "sp-1", slot: "nonexistent" } -> error
     }
 
     action getSlots(provider: P, host: String) {
@@ -65,6 +74,8 @@ concept SlotProvider [P] {
         Return all slots defined on a host widget, including
         current fill state and fallback content.
       }
+      fixture get_slots_dialog { host: "dialog" }
+      fixture get_slots_empty { host: "" } -> error
     }
   }
 

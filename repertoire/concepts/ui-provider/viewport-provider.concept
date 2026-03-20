@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ViewportProvider [P] {
 
@@ -35,6 +36,8 @@ concept ViewportProvider [P] {
       -> configError(message: String) {
         Configuration invalid or breakpoints not ascending.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action observe(provider: P, width: Int, height: Int) {
@@ -42,6 +45,8 @@ concept ViewportProvider [P] {
         Report current dimensions. Computes active breakpoint and
         orientation from the configured breakpoint thresholds.
       }
+      fixture observe_desktop { provider: "vp-1", width: 1920, height: 1080 }
+      fixture observe_mobile { provider: "vp-1", width: 375, height: 812 }
     }
 
     action getBreakpoint(provider: P) {
@@ -51,6 +56,8 @@ concept ViewportProvider [P] {
       -> notInitialized(message: String) {
         Provider not yet initialized or no observation recorded.
       }
+      fixture get_breakpoint_valid { provider: "vp-1" }
+      fixture get_breakpoint_missing { provider: "nonexistent" } -> error
     }
 
     action setBreakpoints(provider: P, breakpoints: String) {
@@ -61,6 +68,8 @@ concept ViewportProvider [P] {
       -> invalid(message: String) {
         Breakpoint values must be ascending positive integers.
       }
+      fixture set_breakpoints_custom { provider: "vp-1", breakpoints: "{"sm":480,"md":768,"lg":1024}" }
+      fixture set_breakpoints_invalid { provider: "vp-1", breakpoints: "not json" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RuntimeFlow [F] {
 
@@ -39,6 +40,8 @@ concept RuntimeFlow [F] {
       -> notfound() {
         No ActionLog entries exist for this flow ID.
       }
+      fixture correlate_flow { flowId: "f-123" }
+      fixture correlate_empty { flowId: "" } -> error
     }
 
     action findByAction(action: String, since: String) {
@@ -46,6 +49,8 @@ concept RuntimeFlow [F] {
         Return all flows that include the given action.
         Results as serialized JSON array.
       }
+      fixture find_create { action: "User/create", since: "2026-01-01T00:00:00Z" }
+      fixture find_empty { action: "", since: "" } -> error
     }
 
     action findBySync(sync: String, since: String) {
@@ -53,6 +58,8 @@ concept RuntimeFlow [F] {
         Return all flows that triggered the given sync.
         Results as serialized JSON array.
       }
+      fixture find_sync { sync: "onUserCreate", since: "2026-01-01T00:00:00Z" }
+      fixture find_empty_sync { sync: "", since: "" } -> error
     }
 
     action findByVariant(variant: String, since: String) {
@@ -60,6 +67,8 @@ concept RuntimeFlow [F] {
         Return all flows that produced the given variant.
         Results as serialized JSON array.
       }
+      fixture find_ok { variant: "ok", since: "2026-01-01T00:00:00Z" }
+      fixture find_empty_variant { variant: "", since: "" } -> error
     }
 
     action findFailures(since: String) {
@@ -67,6 +76,8 @@ concept RuntimeFlow [F] {
         Return all flows with status "failed" or "timeout".
         Results as serialized JSON array.
       }
+      fixture find_recent { since: "2026-01-01T00:00:00Z" }
+      fixture find_all { since: "" }
     }
 
     action compareToStatic(flow: F) {
@@ -82,6 +93,8 @@ concept RuntimeFlow [F] {
       -> noStaticPath() {
         No FlowGraph path exists for this flow's trigger action.
       }
+      fixture compare_flow { flow: "runtime-flow-1" }
+      fixture compare_missing { flow: "nonexistent" } -> error
     }
 
     action sourceLocations(flow: F) {
@@ -90,6 +103,8 @@ concept RuntimeFlow [F] {
         Results as serialized JSON array of
         { step, file, line, col, symbol }.
       }
+      fixture locations_flow { flow: "runtime-flow-1" }
+      fixture locations_missing { flow: "nonexistent" } -> error
     }
 
     action get(flow: F) {
@@ -99,6 +114,8 @@ concept RuntimeFlow [F] {
       -> notfound() {
         Flow does not exist.
       }
+      fixture get_flow { flow: "runtime-flow-1" }
+      fixture get_missing { flow: "nonexistent" } -> error
     }
   }
 

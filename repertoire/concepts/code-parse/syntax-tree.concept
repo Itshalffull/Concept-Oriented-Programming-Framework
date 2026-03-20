@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SyntaxTree [T] {
 
@@ -34,6 +35,8 @@ concept SyntaxTree [T] {
       -> noGrammar(message: String) {
         No grammar could be loaded for this file type.
       }
+      fixture parse_ts_file { file: "src/app.ts", grammar: "typescript" }
+      fixture parse_empty_file { file: "", grammar: "typescript" } -> error
     }
 
     action reparse(tree: T, startByte: Int, oldEndByte: Int, newEndByte: Int, newText: String) {
@@ -44,6 +47,8 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist in the cache.
       }
+      fixture reparse_edit { tree: "tree-1", startByte: 10, oldEndByte: 20, newEndByte: 25, newText: "const x = 1;" }
+      fixture reparse_missing { tree: "nonexistent", startByte: 0, oldEndByte: 0, newEndByte: 0, newText: "" } -> error
     }
 
     action query(tree: T, pattern: String) {
@@ -57,6 +62,8 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
+      fixture query_functions { tree: "tree-1", pattern: "(function_declaration) @fn" }
+      fixture query_missing_tree { tree: "nonexistent", pattern: "(identifier) @id" } -> error
     }
 
     action nodeAt(tree: T, byteOffset: Int) {
@@ -69,6 +76,8 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
+      fixture node_at_valid { tree: "tree-1", byteOffset: 42 }
+      fixture node_at_missing { tree: "nonexistent", byteOffset: 0 } -> error
     }
 
     action get(tree: T) {
@@ -78,6 +87,8 @@ concept SyntaxTree [T] {
       -> notfound(message: String) {
         The tree does not exist.
       }
+      fixture get_tree { tree: "tree-1" }
+      fixture get_missing { tree: "nonexistent" } -> error
     }
   }
 

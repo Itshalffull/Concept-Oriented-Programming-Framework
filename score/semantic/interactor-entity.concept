@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept InteractorEntity [I] {
 
@@ -28,6 +29,9 @@ concept InteractorEntity [I] {
         properties (dataType, cardinality, optionCount, etc.
         as serialized JSON).
       }
+      fixture register_single_choice { name: "single-choice", category: "selection", properties: "{\"dataType\":\"enum\",\"cardinality\":\"scalar\"}" }
+      fixture register_text_input { name: "text-input", category: "input", properties: "{}" }
+      fixture register_empty_name { name: "", category: "selection", properties: "{}" } -> error
     }
 
     action findByCategory(category: String) {
@@ -35,6 +39,8 @@ concept InteractorEntity [I] {
         Return all interactors in the given category.
         Results as serialized JSON array.
       }
+      fixture find_selection { category: "selection" }
+      fixture find_empty_category { category: "" } -> error
     }
 
     action matchingWidgets(interactor: I, context: String) {
@@ -43,6 +49,8 @@ concept InteractorEntity [I] {
         requirements in the given context. Results as serialized
         JSON array of { widget, affordanceSpecificity, conditionsMet }.
       }
+      fixture matching_desktop { interactor: "interactor-entity-1", context: "desktop" }
+      fixture matching_missing { interactor: "nonexistent-id", context: "mobile" } -> error
     }
 
     action classifiedFields(interactor: I) {
@@ -51,6 +59,8 @@ concept InteractorEntity [I] {
         interactor type. Results as serialized JSON array of
         { concept, field, confidence }.
       }
+      fixture classified_valid { interactor: "interactor-entity-1" }
+      fixture classified_missing { interactor: "nonexistent-id" } -> error
     }
 
     action coverageReport() {
@@ -60,6 +70,7 @@ concept InteractorEntity [I] {
         have gaps for certain contexts. Results as serialized
         JSON array of { interactor, widgetCount, uncoveredContexts }.
       }
+      fixture coverage_report_valid {}
     }
 
     action get(interactor: I) {
@@ -69,6 +80,8 @@ concept InteractorEntity [I] {
       -> notfound() {
         Interactor does not exist.
       }
+      fixture get_interactor { interactor: "interactor-entity-1" }
+      fixture get_missing { interactor: "nonexistent" } -> error
     }
   }
 

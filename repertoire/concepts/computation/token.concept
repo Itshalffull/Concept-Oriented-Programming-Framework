@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Token [T] {
   purpose {
@@ -14,19 +15,27 @@ concept Token [T] {
   actions {
     action replace(text: String, context: String) {
       -> ok(result: String) { Text returned with all recognized tokens substituted. }
+      fixture replace_builtin { text: "Contact [user:mail] at [site:url]" }
+      fixture replace_no_tokens { text: "Hello World" }
     }
 
     action getAvailableTokens(context: String) {
       -> ok(tokens: String) { Returns all tokens available in the given context. }
+      fixture get_tokens_user { context: "user" }
+      fixture get_tokens_empty { context: "" } -> error
     }
 
     action scan(text: String) {
       -> ok(found: String) { Returns all token placeholders found in the text. }
+      fixture scan_text { text: "Hello [user:name], visit [site:url]" }
+      fixture scan_no_tokens { text: "no tokens here" }
     }
 
     action registerProvider(token: T, provider: String) {
       -> ok() { Provider registered for the token type. }
       -> exists() { Provider already registered for this token type. }
+      fixture register_mail { token: "user:mail", provider: "userMailProvider" }
+      fixture register_empty { token: "", provider: "x" } -> error
     }
   }
 

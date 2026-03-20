@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LanguageGrammar [G] {
 
@@ -30,6 +31,8 @@ concept LanguageGrammar [G] {
       -> alreadyRegistered(existing: G) {
         A grammar with this name is already registered.
       }
+      fixture register_typescript { name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }
+      fixture register_empty_name { name: "", extensions: "[]", parserWasmPath: "x.wasm", nodeTypes: "{}" } -> error
     }
 
     action resolve(fileExtension: String) {
@@ -39,6 +42,8 @@ concept LanguageGrammar [G] {
       -> noGrammar(extension: String) {
         No grammar is registered for this file extension.
       }
+      fixture resolve_ts { fileExtension: ".ts" }
+      fixture resolve_unknown { fileExtension: ".xyz" } -> error
     }
 
     action resolveByMime(mimeType: String) {
@@ -48,6 +53,8 @@ concept LanguageGrammar [G] {
       -> noGrammar(mimeType: String) {
         No grammar is registered for this MIME type.
       }
+      fixture resolve_mime_ts { mimeType: "text/typescript" }
+      fixture resolve_mime_unknown { mimeType: "text/unknown" } -> error
     }
 
     action get(grammar: G) {
@@ -57,12 +64,15 @@ concept LanguageGrammar [G] {
       -> notfound(message: String) {
         Grammar does not exist.
       }
+      fixture get_grammar { grammar: "grammar-1" }
+      fixture get_missing { grammar: "nonexistent" } -> error
     }
 
     action list() {
       -> ok(grammars: String) {
         List all registered grammars as serialized JSON array.
       }
+      fixture valid {}
     }
   }
 

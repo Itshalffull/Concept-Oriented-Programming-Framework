@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreKernel [K] {
 
@@ -35,6 +36,8 @@ concept ScoreKernel [K] {
       -> alreadyBooted(kernel: K) {
         A kernel for this project root is already running.
       }
+      fixture boot_project { projectRoot: "/home/user/my-project" }
+      fixture boot_empty { projectRoot: "" } -> error
     }
 
     action discover(kernel: K, basePaths: String) {
@@ -46,6 +49,8 @@ concept ScoreKernel [K] {
       -> notBooted() {
         No kernel has been booted yet. Call boot first.
       }
+      fixture discover_src { kernel: "kernel-1", basePaths: "src,specs" }
+      fixture discover_not_booted { kernel: "nonexistent", basePaths: "src" } -> error
     }
 
     action status(kernel: K) {
@@ -57,6 +62,8 @@ concept ScoreKernel [K] {
       -> notfound() {
         No kernel with this identifier exists.
       }
+      fixture status_valid { kernel: "kernel-1" }
+      fixture status_missing { kernel: "nonexistent" } -> error
     }
 
     action connectRuntime(kernel: K, endpoint: String) {
@@ -71,6 +78,8 @@ concept ScoreKernel [K] {
       -> connectionFailed(reason: String) {
         The endpoint was unreachable or rejected the connection.
       }
+      fixture connect_local { kernel: "kernel-1", endpoint: "ws://localhost:8080/changes" }
+      fixture connect_not_booted { kernel: "nonexistent", endpoint: "ws://localhost:8080" } -> error
     }
   }
 

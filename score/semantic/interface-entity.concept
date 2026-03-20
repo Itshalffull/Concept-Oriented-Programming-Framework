@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept InterfaceEntity [I] {
 
@@ -40,6 +41,9 @@ concept InterfaceEntity [I] {
       -> alreadyRegistered(existing: I) {
         An interface with this name is already registered.
       }
+      fixture register_conduit_api { name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }
+      fixture register_minimal { name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }
+      fixture register_empty_name { name: "", source: "empty.yaml", manifest: "{}" } -> error
     }
 
     action get(name: String) {
@@ -49,6 +53,9 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No interface with this name exists.
       }
+      fixture get_conduit { name: "conduit-api" }
+      fixture get_missing { name: "nonexistent-interface" } -> error
+      fixture get_api { name: "conduit-api" }
     }
 
     action listEndpoints(interface: I, target: String) {
@@ -57,6 +64,8 @@ concept InterfaceEntity [I] {
         grpc). Result as serialized JSON array of { method, path,
         concept, action, params, returnType }.
       }
+      fixture endpoints_rest { interface: "iface-uuid-1", target: "rest" }
+      fixture endpoints_empty_target { interface: "iface-uuid-1", target: "" } -> error
     }
 
     action listCommands(interface: I) {
@@ -64,6 +73,8 @@ concept InterfaceEntity [I] {
         Return all generated CLI commands. Result as serialized JSON
         array of { command, subcommand, concept, action, flags }.
       }
+      fixture commands_valid { interface: "iface-uuid-1" }
+      fixture commands_missing { interface: "nonexistent-id" } -> error
     }
 
     action listTools(interface: I) {
@@ -71,6 +82,8 @@ concept InterfaceEntity [I] {
         Return all generated MCP tools. Result as serialized JSON
         array of { name, concept, action, inputSchema, description }.
       }
+      fixture tools_valid { interface: "iface-uuid-1" }
+      fixture tools_missing { interface: "nonexistent-id" } -> error
     }
 
     action listSkills(interface: I) {
@@ -79,6 +92,8 @@ concept InterfaceEntity [I] {
         serialized JSON array of { name, concept, triggerDescription,
         targetDirs }.
       }
+      fixture skills_valid { interface: "iface-uuid-1" }
+      fixture skills_missing { interface: "nonexistent-id" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -87,6 +102,8 @@ concept InterfaceEntity [I] {
         registered interfaces and targets. Result as serialized JSON
         array of { interface, target, endpoint, concept, action }.
       }
+      fixture find_user_concept { concept: "User" }
+      fixture find_empty_concept { concept: "" } -> error
     }
 
     action findByAction(concept: String, action: String) {
@@ -95,6 +112,8 @@ concept InterfaceEntity [I] {
         Result as serialized JSON array of { interface, target, kind,
         path, method }.
       }
+      fixture find_user_create { concept: "User", action: "create" }
+      fixture find_empty_action { concept: "User", action: "" } -> error
     }
 
     action traceEndpointToAction(target: String, path: String, method: String) {
@@ -106,6 +125,10 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No endpoint matches the given target/path/method.
       }
+      fixture trace_post_users { target: "rest", path: "/api/users", method: "POST" }
+      fixture trace_missing_endpoint { target: "rest", path: "/api/nonexistent", method: "GET" } -> error
+      fixture trace_rest { target: "rest", path: "/api/users", method: "POST" }
+      fixture trace_missing { target: "rest", path: "/nonexistent", method: "GET" } -> error
     }
 
     action traceToolToAction(toolName: String) {
@@ -116,6 +139,9 @@ concept InterfaceEntity [I] {
       -> notfound() {
         No tool matches the given name.
       }
+      fixture trace_tool { toolName: "user-create" }
+      fixture trace_missing_tool { toolName: "nonexistent-tool" } -> error
+      fixture trace_tool_missing { toolName: "nonexistent" } -> error
     }
 
     action generatedSchemas(interface: I) {
@@ -124,6 +150,8 @@ concept InterfaceEntity [I] {
         SDL, Proto). Result as serialized JSON array of { format,
         file, conceptCount, endpointCount }.
       }
+      fixture schemas_valid { interface: "iface-uuid-1" }
+      fixture schemas_missing { interface: "nonexistent-id" } -> error
     }
 
     action validateAgainstSpecs(interface: I) {
@@ -135,6 +163,8 @@ concept InterfaceEntity [I] {
         Interface references missing entities. Result as serialized
         JSON array of { kind, entity, message }.
       }
+      fixture validate_valid { interface: "iface-uuid-1" }
+      fixture validate_missing { interface: "nonexistent-id" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ThemeEntity [T] {
 
@@ -38,6 +39,8 @@ concept ThemeEntity [T] {
       -> alreadyRegistered(existing: T) {
         A theme entity with this name is already registered.
       }
+      fixture register_light { name: "light", source: "themes/light.theme", ast: "{}" }
+      fixture register_empty_name { name: "", source: "x.theme", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -47,6 +50,8 @@ concept ThemeEntity [T] {
       -> notfound() {
         No theme with this name exists.
       }
+      fixture get_light { name: "light" }
+      fixture get_missing { name: "nonexistent" } -> error
     }
 
     action resolveToken(theme: T, tokenPath: String) {
@@ -61,6 +66,8 @@ concept ThemeEntity [T] {
       -> brokenChain(brokenAt: String) {
         Token reference chain is broken at this point.
       }
+      fixture resolve_primary { theme: "theme-entity-1", tokenPath: "palette.primary" }
+      fixture resolve_missing { theme: "nonexistent", tokenPath: "palette.x" } -> error
     }
 
     action contrastAudit(theme: T) {
@@ -69,6 +76,8 @@ concept ThemeEntity [T] {
         Results as serialized JSON array of { rolePair, ratio,
         passes }.
       }
+      fixture audit_theme { theme: "theme-entity-1" }
+      fixture audit_missing { theme: "nonexistent" } -> error
     }
 
     action diffThemes(a: T, b: T) {
@@ -79,6 +88,8 @@ concept ThemeEntity [T] {
       -> same() {
         The themes are identical.
       }
+      fixture diff_light_dark { a: "theme-entity-1", b: "theme-entity-2" }
+      fixture diff_missing { a: "nonexistent", b: "nonexistent" } -> error
     }
 
     action affectedWidgets(theme: T, changedToken: String) {
@@ -86,6 +97,8 @@ concept ThemeEntity [T] {
         Find all widgets whose connect sections reference the
         changed token. Results as serialized JSON array.
       }
+      fixture affected_primary { theme: "theme-entity-1", changedToken: "color.primary" }
+      fixture affected_missing { theme: "nonexistent", changedToken: "x" } -> error
     }
 
     action generatedOutputs(theme: T) {
@@ -94,6 +107,8 @@ concept ThemeEntity [T] {
         platforms (CSS, RN, DTCG JSON, etc.). Results as
         serialized JSON array of { platform, file }.
       }
+      fixture outputs_theme { theme: "theme-entity-1" }
+      fixture outputs_missing { theme: "nonexistent" } -> error
     }
   }
 

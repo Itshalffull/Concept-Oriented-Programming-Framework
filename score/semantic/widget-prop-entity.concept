@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetPropEntity [P] {
 
@@ -27,6 +28,8 @@ concept WidgetPropEntity [P] {
       -> ok(prop: P) {
         Register a prop extracted from a widget spec.
       }
+      fixture register_close_escape { widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }
+      fixture register_empty_widget { widget: "", name: "x", typeExpr: "String", defaultValue: "" } -> error
     }
 
     action findByWidget(widget: String) {
@@ -34,6 +37,8 @@ concept WidgetPropEntity [P] {
         Return all props for the given widget.
         Results as serialized JSON array.
       }
+      fixture find_dialog { widget: "dialog" }
+      fixture find_empty { widget: "" } -> error
     }
 
     action traceToField(prop: P) {
@@ -44,6 +49,8 @@ concept WidgetPropEntity [P] {
       -> noBinding() {
         This prop is not bound to any concept field.
       }
+      fixture trace_prop { prop: "widget-prop-entity-1" }
+      fixture trace_missing { prop: "nonexistent" } -> error
     }
 
     action get(prop: P) {
@@ -53,6 +60,8 @@ concept WidgetPropEntity [P] {
       -> notfound() {
         Prop does not exist.
       }
+      fixture get_prop { prop: "widget-prop-entity-1" }
+      fixture get_missing { prop: "nonexistent" } -> error
     }
   }
 

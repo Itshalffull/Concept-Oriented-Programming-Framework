@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept BindingProvider [P, C] {
 
@@ -33,6 +34,8 @@ concept BindingProvider [P, C] {
       -> configError(message: String) {
         Configuration invalid or missing required fields.
       }
+      fixture init_default { config: "{}" }
+      fixture init_invalid_json { config: "{bad" } -> error
     }
 
     action bind(provider: P, concept: C, mode: String) {
@@ -45,6 +48,8 @@ concept BindingProvider [P, C] {
       -> invalid(message: String) {
         Mode not recognized or concept unreachable.
       }
+      fixture bind_static { provider: "bp-1", concept: "Article", mode: "static" }
+      fixture bind_invalid_mode { provider: "bp-1", concept: "Article", mode: "websocket" } -> error
     }
 
     action sync(provider: P) {
@@ -52,6 +57,8 @@ concept BindingProvider [P, C] {
         Pull latest state from the bound concept and update signals.
       }
       -> error(message: String) { Backend unreachable or binding stale. }
+      fixture sync_valid { provider: "bp-1" }
+      fixture sync_missing { provider: "nonexistent" } -> error
     }
 
     action invoke(provider: P, action: String, input: String) {
@@ -60,6 +67,8 @@ concept BindingProvider [P, C] {
         Routes to appropriate backend based on binding mode.
       }
       -> error(message: String) { Invocation failed. }
+      fixture invoke_action { provider: "bp-1", action: "create", input: "{"title":"Hello"}" }
+      fixture invoke_missing { provider: "nonexistent", action: "create", input: "{}" } -> error
     }
 
     action unbind(provider: P) {
@@ -68,6 +77,8 @@ concept BindingProvider [P, C] {
         dispose all signals.
       }
       -> notfound(message: String) { Binding does not exist. }
+      fixture unbind_valid { provider: "bp-1" }
+      fixture unbind_missing { provider: "nonexistent" } -> error
     }
   }
 
