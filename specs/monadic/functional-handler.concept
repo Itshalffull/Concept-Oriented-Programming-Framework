@@ -74,6 +74,13 @@ concept FunctionalHandler [H] {
         Return all registered functional handlers for the named concept,
         including their action names and declared purity levels.
       }
+
+      fixture list_user_handlers {
+        concept: "User"
+      }
+      fixture list_empty {
+        concept: ""
+      } -> error
     }
 
     action validatePurity(handler: H, program: String) {
@@ -89,6 +96,15 @@ concept FunctionalHandler [H] {
         accessed.
       }
       -> notfound() { No handler is registered with this identifier. }
+
+      fixture validate_consistent {
+        handler: "handler-user-create",
+        program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{}}],\"effects\":{\"reads\":[],\"writes\":[\"users\"]}}"
+      }
+      fixture validate_missing_handler {
+        handler: "nonexistent",
+        program: "{}"
+      } -> error
     }
   }
 

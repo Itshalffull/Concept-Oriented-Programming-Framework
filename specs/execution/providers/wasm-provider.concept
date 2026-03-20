@@ -63,6 +63,9 @@ concept WasmProvider [M] {
       -> timeout(module: String) {
         The WASM execution exceeded the configured time limit.
       }
+
+      fixture call_tokenize { module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }
+      fixture execute_unknown_module { module: "nonexistent", function: "run", args: "[]" } -> notFound
     }
 
     action list() {
@@ -70,6 +73,8 @@ concept WasmProvider [M] {
         Return all loaded modules as a serialized JSON array
         with name, wasmPath, and status.
       }
+
+      fixture valid {}
     }
   }
 

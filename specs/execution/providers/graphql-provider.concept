@@ -27,6 +27,8 @@ concept GraphqlProvider [Q] {
         Return provider metadata for PluginRegistry registration.
         Name is "graphql-provider", kind is "protocol".
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, url: String, headers: String, schemaRef: String) {
@@ -37,6 +39,9 @@ concept GraphqlProvider [Q] {
       -> exists(name: String) {
         An endpoint with this name is already configured.
       }
+
+      fixture configure_github { name: "github-api", url: "https://api.github.com/graphql", headers: "{\"Authorization\":\"Bearer ghp_token\"}", schemaRef: "github-schema" }
+      fixture configure_local { name: "local-gql", url: "http://localhost:4000/graphql", headers: "{}", schemaRef: "" }
     }
 
     action execute(endpoint: String, query: String, variables: String, operationType: String) {
