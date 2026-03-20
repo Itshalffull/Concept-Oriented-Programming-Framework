@@ -67,6 +67,9 @@ concept SeedData [S] {
       -> notfound(message: String) {
         No seed record exists with this identifier.
       }
+
+      fixture valid_apply { seed: "seed-1" }
+      fixture apply_nonexistent { seed: "seed-999" } -> error
     }
 
     action applyAll() {
@@ -75,6 +78,8 @@ concept SeedData [S] {
         Returns counts of applied, skipped (already applied), and
         errored seed sets.
       }
+
+      fixture valid_apply_all { }
     }
 
     action status() {
@@ -85,6 +90,8 @@ concept SeedData [S] {
       }) {
         Return the current state of all registered seed sets.
       }
+
+      fixture valid_status { }
     }
 
     action reset(seed: S) {
@@ -95,6 +102,9 @@ concept SeedData [S] {
       -> notfound(message: String) {
         No seed record exists with this identifier.
       }
+
+      fixture valid_reset { seed: "seed-1" }
+      fixture reset_nonexistent { seed: "seed-999" } -> error
     }
   }
 

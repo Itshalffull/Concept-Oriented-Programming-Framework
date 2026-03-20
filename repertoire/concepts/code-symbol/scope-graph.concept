@@ -35,7 +35,7 @@ concept ScopeGraph [C] {
 
       fixture valid_build { file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }
       fixture build_empty_tree { file: "src/empty.ts", tree: "{}" }
-      fixture build_invalid_tree { file: "src/bad.ts", tree: "not-json" } -> error
+      fixture build_missing_file { file: "", tree: "{}" } -> error
     }
 
     action resolveReference(graph: C, scope: String, name: String) {

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VoteEscrow [VE] {
 
@@ -24,36 +25,52 @@ concept VoteEscrow [VE] {
   }
 
   actions {
-    action configure(maxLockDurationDays: Float) {
+    action configure(token: String, maxLockYears: option Float) {
       -> configured(config: VE) {
-        Maximum lock duration in days. Weight = amount × (remaining / max).
+        Configure vote escrow with a token and maximum lock duration
+        in years. Weight = amount x (remaining / max). Defaults to 4 years.
       }
+
+      fixture configure_default { token: "GOV", maxLockYears: 4.0 }
+      fixture configure_no_token { token: "", maxLockYears: 4.0 } -> error
     }
 
-    action lock(participant: String, amount: Float, lockDurationDays: Float) {
-      -> locked(lock: VE, initialWeight: Float) {
-        Tokens are locked. Weight = amount × (lockDuration / maxLockDuration).
+    action lock(config: VE, locker: String, amount: Float, lockYears: Float) {
+      -> locked(lock: VE, veTokens: Float) {
+        Tokens are locked. Weight = amount x (lockYears / maxLockYears).
         Weight decays linearly as lock approaches expiry.
       }
-      -> exceeds_max(lockDurationDays: Float, maxDays: Float) {
+      -> exceeds_max(lockYears: Float, maxYears: Float) {
         Lock duration exceeds the configured maximum.
       }
+
+      fixture lock_full_term { config: "ve-cfg-001", locker: "alice", amount: 1000.0, lockYears: 4.0 }
+      fixture lock_zero_amount { config: "ve-cfg-001", locker: "alice", amount: 0.0, lockYears: 4.0 } -> error
     }
 
-    action extendLock(lock: VE, additionalDays: Float) {
-      -> extended(lock: VE, newWeight: Float) {
+    action extendLock(lock: VE, additionalYears: Float) {
+      -> extended(lock: VE, veTokens: Float, newLockYears: Float) {
         Lock end is pushed further. Weight increases.
       }
+      -> not_found(lock: VE) {
+        The lock does not exist.
+      }
+
+      fixture extend_by_one { lock: "lock-001", additionalYears: 1.0 }
+      fixture extend_missing_lock { lock: "lock-missing", additionalYears: 1.0 } -> error
     }
 
-    action getWeight(lock: VE) {
-      -> weight(participant: String, currentWeight: Float, decayRate: Float) {
+    action getWeight(config: VE, participant: String) {
+      -> weight(participant: String, veTokens: Float, decayedWeight: Float) {
         Returns current weight based on remaining lock time.
-        Weight = amount × max(0, (lockEnd - now) / maxLockDuration).
+        Weight = amount x max(0, (lockEnd - now) / maxLockDuration).
       }
       -> expired(participant: String) {
         Lock has expired. Weight is zero. Tokens can be withdrawn.
       }
+
+      fixture get_weight_alice { config: "ve-cfg-001", participant: "alice" }
+      fixture get_weight_unknown { config: "ve-cfg-001", participant: "nonexistent" } -> error
     }
 
     action withdraw(lock: VE) {
@@ -63,6 +80,9 @@ concept VoteEscrow [VE] {
       -> still_locked(lock: VE, unlockAt: DateTime) {
         Lock has not expired.
       }
+
+      fixture withdraw_expired { lock: "lock-expired" }
+      fixture withdraw_still_locked { lock: "lock-active" } -> error
     }
   }
 

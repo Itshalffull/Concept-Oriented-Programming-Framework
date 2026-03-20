@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept QuadraticWeight [QW] {
 
@@ -14,19 +15,26 @@ concept QuadraticWeight [QW] {
   }
 
   actions {
-    action configure(tokenSource: String, scalingFactor: Float) {
+    action configure(baseSource: String) {
       -> configured(config: QW) {
-        Weight = scalingFactor × √(balance). ScalingFactor defaults to 1.0.
+        Weight = sqrt(balance). The base source identifies the
+        upstream balance provider.
       }
+
+      fixture configure_token { baseSource: "token-balance" }
+      fixture configure_empty { baseSource: "" } -> error
     }
 
-    action computeWeight(config: QW, balance: Float) {
-      -> weight(value: Float) {
-        Returns scalingFactor × √(balance).
+    action compute(participant: String, balance: Float) {
+      -> weight(participant: String, balance: Float, sqrtWeight: Float) {
+        Returns sqrt(balance) as the quadratic weight.
       }
       -> zero_balance() {
         Balance is zero. Weight is zero.
       }
+
+      fixture compute_hundred { participant: "alice", balance: 100.0 }
+      fixture compute_zero { participant: "alice", balance: 0.0 } -> error
     }
   }
 

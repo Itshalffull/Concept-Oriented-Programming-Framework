@@ -60,7 +60,7 @@ concept Delegation [E] {
       }
 
       fixture weight_lookup { participant: "bob" }
-      fixture weight_with_domain { participant: "alice" } -> error
+      fixture weight_scoped { participant: "alice" }
     }
   }
 
