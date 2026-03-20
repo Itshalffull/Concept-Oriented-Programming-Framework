@@ -9,15 +9,15 @@ concept VoteEscrow [VE] {
   }
 
   state {
+    configs: set VE
+    token: VE -> String
+    maxLockYears: VE -> Float
     locks: set VE
-    participant: VE -> String
+    locker: VE -> String
     amount: VE -> Float
-    lockEnd: VE -> DateTime
-    maxLockDuration: VE -> Float
-    checkpoints: VE -> list {
-      timestamp: DateTime,
-      weight: Float
-    }
+    lockYears: VE -> Float
+    expiresAt: VE -> DateTime
+    veTokens: VE -> Float
   }
 
   capabilities {

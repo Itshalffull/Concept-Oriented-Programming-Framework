@@ -10,8 +10,7 @@ concept QuadraticWeight [QW] {
 
   state {
     configurations: set QW
-    tokenSource: QW -> String
-    scalingFactor: QW -> Float
+    baseSource: QW -> String
   }
 
   actions {
@@ -49,27 +48,27 @@ concept QuadraticWeight [QW] {
   }
 
 
-  always "valid-tokenSource" {
+  always "valid-baseSource" {
 
     forall qw in configurations:
 
-      qw.tokenSource != none
+      qw.baseSource != none
 
   }
 
-  never "orphaned-scalingFactor" {
+  never "orphaned-baseSource" {
 
     exists qw in configurations:
 
-      qw.scalingFactor = none
+      qw.baseSource = none
 
   }
 
   action configure {
 
-    requires: tokenSource != ""
+    requires: baseSource != ""
 
-    ensures configured: tokenSource != none
+    ensures configured: baseSource != none
 
   }
 }

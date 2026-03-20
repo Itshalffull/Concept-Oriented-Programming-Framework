@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StakeWeight [SW] {
 
@@ -7,16 +8,15 @@ concept StakeWeight [SW] {
   }
 
   state {
-    vaults: set SW
+    configurations: set SW
+    token: SW -> String
+    cooldownDays: SW -> Float
     stakes: SW -> list {
-      participant: String,
+      staker: String,
       amount: Float,
-      lockedAt: DateTime,
-      lockDuration: Float,
-      unlockAt: DateTime
+      lockedUntil: String,
+      status: String
     }
-    minimumStake: SW -> Float
-    cooldownPeriod: SW -> Float
   }
 
   capabilities {
@@ -24,38 +24,50 @@ concept StakeWeight [SW] {
   }
 
   actions {
-    action configure(minimumStake: Float, cooldownPeriod: Float) {
-      -> configured(vault: SW) {
-        A staking weight source with minimum stake and cooldown period.
+    action configure(token: String, cooldownDays: option Float) {
+      -> configured(config: SW) {
+        A staking weight source with token and cooldown period in days.
       }
+
+      fixture configure_gov { token: "GOV", cooldownDays: 7.0 }
+      fixture configure_no_token { token: "", cooldownDays: 7.0 } -> error
     }
 
-    action stake(vault: SW, participant: String, amount: Float, lockDurationHours: Float) {
-      -> staked(participant: String, unlockAt: DateTime) {
+    action stake(config: SW, staker: String, amount: Float) {
+      -> staked(stake: SW, lockedUntil: String) {
         Tokens are locked. Weight is active immediately.
       }
-      -> below_minimum(participant: String, amount: Float, minimum: Float) {
+      -> below_minimum(staker: String, amount: Float, minimum: Float) {
         The stake is below the minimum.
       }
+
+      fixture stake_hundred { config: "sw-cfg-001", staker: "alice", amount: 100.0 }
+      fixture stake_zero { config: "sw-cfg-001", staker: "alice", amount: 0.0 } -> error
     }
 
-    action unstake(vault: SW, participant: String) {
-      -> unstaking(participant: String, availableAt: DateTime) {
+    action unstake(stake: SW) {
+      -> unstaked(stake: SW, amount: Float) {
         Cooldown period begins. Weight is removed immediately.
         Tokens available after cooldown.
       }
-      -> still_locked(participant: String, unlockAt: DateTime) {
-        The lock period has not expired.
+      -> not_found(stake: SW) {
+        The stake does not exist.
       }
+
+      fixture unstake_existing { stake: "stake-001" }
+      fixture unstake_missing { stake: "stake-missing" } -> error
     }
 
-    action getWeight(vault: SW, participant: String) {
+    action getWeight(config: SW, participant: String) {
       -> weight(participant: String, stakedAmount: Float) {
         Returns the participant's staked amount as weight.
       }
       -> not_staked(participant: String) {
         The participant has no active stake.
       }
+
+      fixture get_staked { config: "sw-cfg-001", participant: "alice" }
+      fixture get_no_stake { config: "sw-cfg-001", participant: "nonexistent" } -> error
     }
   }
 
@@ -70,19 +82,19 @@ concept StakeWeight [SW] {
   }
 
 
-  always "valid-participant" {
+  always "valid-token" {
 
-    forall sw in vaults:
+    forall sw in configurations:
 
-      sw.participant != none
+      sw.token != none
 
   }
 
   action configure {
 
-    requires: minimumStake != ""
+    requires: token != ""
 
-    ensures configured: minimumStake != none
+    ensures configured: token != none
 
   }
 }

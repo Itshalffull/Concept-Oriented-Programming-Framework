@@ -9,9 +9,8 @@ concept ReputationWeight [RW] {
 
   state {
     configurations: set RW
-    scalingFunction: RW -> {Linear | Logarithmic | Capped}
+    scalingFunction: RW -> String
     cap: RW -> option Float
-    floor: RW -> option Float
   }
 
   capabilities {
@@ -29,14 +28,17 @@ concept ReputationWeight [RW] {
       fixture configure_empty { } -> error
     }
 
-    action computeWeight(config: RW, reputationScore: Float) {
-      -> weight(value: Float) {
+    action compute(config: RW, participant: String, reputationScore: Float) {
+      -> weight(participant: String, weight: Float, rawScore: Float) {
         The reputation score is transformed through the scaling function,
-        clamped by cap and floor.
+        clamped by cap.
       }
       -> no_reputation() {
         The participant has zero or negative reputation. Weight is zero.
       }
+
+      fixture compute_linear { config: "rw-cfg-001", participant: "alice", reputationScore: 50.0 }
+      fixture compute_negative { config: "rw-cfg-001", participant: "bob", reputationScore: -5.0 } -> error
     }
   }
 
