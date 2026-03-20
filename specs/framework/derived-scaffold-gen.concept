@@ -41,6 +41,10 @@ concept DerivedScaffoldGen [D] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name": "Task", "typeParams": ["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name": "addTask", "params": [{"name": "title", "type": "String"}], "matches": {"type": "action", "concept": "Task", "action": "create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }
+      fixture minimal_generate { name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }
+      fixture empty_name { name: "", typeParams: ["T"], purpose: "Should fail", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } -> error
     }
 
     action preview(name: String, typeParam: String, purpose: String,
@@ -60,6 +64,9 @@ concept DerivedScaffoldGen [D] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }
+      fixture empty_preview { name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } -> error
     }
 
     action register() {
@@ -71,6 +78,8 @@ concept DerivedScaffoldGen [D] {
         capabilities: ["derived-spec", "composes", "surface-actions", "principle",
                         "entry-triggers", "derived-context", "block-queries"]
       }
+
+      fixture valid_register {}
     }
   }
 

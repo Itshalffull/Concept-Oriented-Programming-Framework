@@ -98,6 +98,8 @@ concept ToolDiscovery [T] {
         schemas. These are the core tools that should be included
         in the upfront tool list sent to the LLM at session start.
       }
+
+      fixture valid_always_loaded {}
     }
   }
 

@@ -44,6 +44,8 @@ concept RuntimeDiscovery [D] {
         Return all previously scanned projects as a JSON array
         with their directories and runtime counts.
       }
+
+      fixture valid_list_projects {}
     }
 
     action listRuntimes(project: D) {
@@ -55,6 +57,9 @@ concept RuntimeDiscovery [D] {
       -> notfound(project: D) {
         No scanned project exists with this identifier.
       }
+
+      fixture valid_list_runtimes { project: "proj-app-clef-base" }
+      fixture unknown_project_runtimes { project: "proj-nonexistent" } -> notfound
     }
 
     action resolveEndpoint(project: D, runtime: String) {
@@ -70,6 +75,10 @@ concept RuntimeDiscovery [D] {
         The endpoint contains an environment variable reference
         that cannot be resolved from the current environment.
       }
+
+      fixture valid_resolve_endpoint { project: "proj-app-clef-base", runtime: "api" }
+      fixture unknown_runtime_endpoint { project: "proj-app-clef-base", runtime: "nonexistent" } -> notfound
+      fixture unknown_project_endpoint { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
 
     action resolveCredentials(project: D, runtime: String) {
@@ -86,6 +95,9 @@ concept RuntimeDiscovery [D] {
         Some credential references could not be resolved. Returns
         what was resolved and which variables remain missing.
       }
+
+      fixture valid_resolve_creds { project: "proj-app-clef-base", runtime: "api" }
+      fixture unknown_project_creds { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
 
     action selectRuntime(project: D, runtime: String) {
@@ -99,6 +111,9 @@ concept RuntimeDiscovery [D] {
       -> unresolvable(runtime: String, variable: String) {
         The runtime's endpoint cannot be resolved.
       }
+
+      fixture valid_select { project: "proj-app-clef-base", runtime: "api" }
+      fixture unknown_select { project: "proj-nonexistent", runtime: "api" } -> notfound
     }
   }
 
