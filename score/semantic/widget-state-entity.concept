@@ -29,6 +29,9 @@ concept WidgetStateEntity [S] {
         Register a state extracted from a widget spec's FSM.
         Initial is "true" or "false".
       }
+      fixture register_closed { widget: "dialog", name: "closed", initial: "true" }
+      fixture register_open { widget: "dialog", name: "open", initial: "false" }
+      fixture register_empty_widget { widget: "", name: "idle", initial: "true" } -> error
     }
 
     action findByWidget(widget: String) {
@@ -36,6 +39,8 @@ concept WidgetStateEntity [S] {
         Return all states for the given widget.
         Results as serialized JSON array.
       }
+      fixture find_dialog { widget: "dialog" }
+      fixture find_empty { widget: "" } -> error
     }
 
     action reachableFrom(widgetState: S) {
@@ -43,6 +48,8 @@ concept WidgetStateEntity [S] {
         Compute all states reachable from this state via
         transitions. Results as serialized JSON.
       }
+      fixture reachable_valid { widgetState: "widget-state-entity-1" }
+      fixture reachable_missing { widgetState: "nonexistent-id" } -> error
     }
 
     action unreachableStates(widget: String) {
