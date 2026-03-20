@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TypeScriptToolchain [N] {
 
@@ -35,6 +36,10 @@ concept TypeScriptToolchain [N] {
       -> nodeVersionMismatch(installed: String, required: String) {
         Node.js version too old for requested TypeScript features.
       }
+
+      fixture resolve_node { platform: "node", versionConstraint: ">=5.7" }
+      fixture resolve_browser { platform: "browser" }
+      fixture resolve_empty_platform { platform: "" } -> error
     }
 
     action register() {
@@ -45,6 +50,8 @@ concept TypeScriptToolchain [N] {
         capabilities: ["bundler-detection", "package-manager",
         "node-version-check"]
       }
+
+      fixture register_valid {}
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept VersionSpace [V] {
 
@@ -63,6 +64,10 @@ concept VersionSpace [V] {
       -> scope_not_found(scope: String) {
         The scoped entity does not exist.
       }
+
+      fixture fork_from_base { name: "redesign", parent: null, scope: null, visibility: "shared" }
+      fixture fork_private { name: "experiment", parent: null, scope: null, visibility: "private" }
+      fixture fork_bad_parent { name: "child", parent: "vs-nonexistent", scope: null, visibility: "shared" } -> parent_not_found
     }
 
     action enter(space: V, user: String) {
@@ -77,6 +82,10 @@ concept VersionSpace [V] {
       -> archived(space: V) {
         The space is archived and cannot be entered.
       }
+
+      fixture enter_active { space: "vs-redesign", user: "alice" }
+      fixture enter_archived { space: "vs-archived", user: "alice" } -> archived
+      fixture enter_denied { space: "vs-private", user: "stranger" } -> access_denied
     }
 
     action leave(space: V, user: String) {
@@ -85,6 +94,9 @@ concept VersionSpace [V] {
         the only space, the user returns to base. If it was a sub-space,
         the user returns to the parent space.
       }
+
+      fixture leave_active { space: "vs-redesign", user: "alice" }
+      fixture leave_not_in { space: "vs-other", user: "alice" }
     }
 
     action write(space: V, entity_id: String, fields: String) {
@@ -95,6 +107,9 @@ concept VersionSpace [V] {
       -> read_only(space: V, user: String) {
         The user has viewer role and cannot write in this space.
       }
+
+      fixture write_override { space: "vs-redesign", entity_id: "article-42", fields: "{\"title\":\"New Title\"}" }
+      fixture write_missing_space { space: "vs-nonexistent", entity_id: "article-42", fields: "{}" } -> read_only
     }
 
     action create_in_space(space: V, fields: String) {
@@ -102,6 +117,9 @@ concept VersionSpace [V] {
         Creates a new entity that exists only in this version space. The
         entity is invisible from the parent space or base until merged.
       }
+
+      fixture create_entity { space: "vs-redesign", fields: "{\"title\":\"Space-Only Article\"}" }
+      fixture create_minimal { space: "vs-experiment", fields: "{}" }
     }
 
     action delete_in_space(space: V, entity_id: String) {
@@ -110,6 +128,9 @@ concept VersionSpace [V] {
         override. The entity still exists in the parent or base but is
         invisible when navigating within this space.
       }
+
+      fixture delete_entity { space: "vs-redesign", entity_id: "article-42" }
+      fixture delete_nonexistent { space: "vs-redesign", entity_id: "article-999" }
     }
 
     action resolve(space: V, entity_id: String) {
@@ -123,6 +144,9 @@ concept VersionSpace [V] {
         The entity does not exist in this space or any ancestor, or it
         has been deleted in this space.
       }
+
+      fixture resolve_overridden { space: "vs-redesign", entity_id: "article-42" }
+      fixture resolve_base_fallback { space: "vs-redesign", entity_id: "article-99" }
     }
 
     action propose(space: V, target: V, message: String) {
@@ -133,6 +157,9 @@ concept VersionSpace [V] {
       -> already_proposed(space: V) {
         The space is already in proposed status.
       }
+
+      fixture propose_active { space: "vs-redesign", target: "base", message: "Ready for review" }
+      fixture propose_already { space: "vs-proposed", target: "base", message: "Duplicate" } -> already_proposed
     }
 
     action merge(space: V, target: V, strategy: String) {
@@ -145,6 +172,9 @@ concept VersionSpace [V] {
         Unresolvable conflicts exist between the source overrides and the
         target's current state. Returns the conflict set for manual resolution.
       }
+
+      fixture merge_clean { space: "vs-redesign", target: "base", strategy: "ours" }
+      fixture merge_missing { space: "vs-nonexistent", target: "base", strategy: "ours" } -> conflicts
     }
 
     action sync_spaces(space_a: V, space_b: V, direction: String, strategy: String) {
@@ -159,6 +189,9 @@ concept VersionSpace [V] {
       -> incompatible_scope(space_a: V, space_b: V) {
         The two spaces have non-overlapping scopes and share no entities.
       }
+
+      fixture sync_compatible { space_a: "vs-alpha", space_b: "vs-beta", direction: "bidirectional", strategy: "ours" }
+      fixture sync_missing { space_a: "vs-nonexistent", space_b: "vs-beta", direction: "a_to_b", strategy: "ours" } -> incompatible_scope
     }
 
     action cherry_pick(source: V, target: V, entity_id: String) {
@@ -172,6 +205,9 @@ concept VersionSpace [V] {
       -> conflict(existing_override: String, incoming_override: String) {
         The target already has a different override for this entity.
       }
+
+      fixture cherry_pick_exists { source: "vs-alpha", target: "vs-beta", entity_id: "article-42" }
+      fixture cherry_pick_not_overridden { source: "vs-alpha", target: "vs-beta", entity_id: "article-999" } -> not_overridden
     }
 
     action promote_to_base(space: V) {
@@ -188,6 +224,9 @@ concept VersionSpace [V] {
       -> access_denied() {
         Only the space owner and system admins can promote to base.
       }
+
+      fixture promote_leaf { space: "vs-redesign" }
+      fixture promote_missing { space: "vs-nonexistent" } -> access_denied
     }
 
     action rebase(space: V) {
@@ -199,6 +238,9 @@ concept VersionSpace [V] {
       -> conflicts(conflicts: String) {
         Base changes conflict with overrides in this space.
       }
+
+      fixture rebase_active { space: "vs-redesign" }
+      fixture rebase_empty { space: "vs-empty" }
     }
 
     action diff(space: V) {
@@ -206,6 +248,9 @@ concept VersionSpace [V] {
         Returns all overrides in this space as a structured changeset
         showing which entities were created, modified, or deleted.
       }
+
+      fixture diff_with_changes { space: "vs-redesign" }
+      fixture diff_empty { space: "vs-empty" }
     }
 
     action archive(space: V) {
@@ -213,6 +258,9 @@ concept VersionSpace [V] {
         Transitions the space to status=archived. It can no longer be
         entered or modified, but overrides are preserved for reference.
       }
+
+      fixture archive_active { space: "vs-redesign" }
+      fixture archive_already { space: "vs-archived" }
     }
 
     action execute_in_space(space: V, action: String, params: String) {
@@ -224,6 +272,9 @@ concept VersionSpace [V] {
       -> space_not_found(space: V) {
         The specified space does not exist or is archived.
       }
+
+      fixture execute_in_active { space: "vs-redesign", action: "update", params: "{\"id\":\"article-42\"}" }
+      fixture execute_in_missing { space: "vs-nonexistent", action: "update", params: "{}" } -> space_not_found
     }
   }
 

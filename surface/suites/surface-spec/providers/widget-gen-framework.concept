@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept WidgetGenFramework [P] {
 
@@ -16,12 +17,25 @@ concept WidgetGenFramework [P] {
   }
 
   actions {
-    action initialize(provider: P) {
+    action initialize() {
       -> ok(instance: String) { Registered in plugin-registry as widget-gen-provider. }
+
+      fixture valid {}
+      fixture reinitialize {} -> ok
     }
-    action generate(gen: P, componentName: String, props: String, widgetAst: String) {
+    action generate(widgetAst: String) {
       -> ok(output: String) { Framework-agnostic TypeScript class. }
       -> error(message: String) { Generation failed. }
+
+      fixture button_component {
+        widgetAst: "{\"name\":\"Button\",\"props\":[{\"name\":\"label\",\"type\":\"string\"},{\"name\":\"disabled\",\"type\":\"boolean\"}]}"
+      }
+      fixture no_props_widget {
+        widgetAst: "{\"name\":\"Divider\"}"
+      }
+      fixture invalid_ast_json {
+        widgetAst: "not-valid-json{{"
+      } -> error
     }
   }
 

@@ -31,18 +31,27 @@ concept DockerComposeRuntime [D] {
       -> portConflict(port: Int, existingService: String) {
         Port already in use by another container.
       }
+
+      fixture provision_service { concept: "UserService", composePath: "./docker-compose.yml", ports: ["8080:8080"] }
+      fixture provision_empty_concept { concept: "", composePath: "", ports: [] } -> error
     }
 
     action deploy(service: D, imageUri: String) {
       -> ok(service: D, containerId: String) {
         Service image updated and container recreated.
       }
+
+      fixture deploy_service { service: "dc-001", imageUri: "user-service:latest" }
+      fixture deploy_empty_image { service: "dc-001", imageUri: "" } -> error
     }
 
     action setTrafficWeight(service: D, weight: Int) {
       -> ok(service: D) {
         Traffic weight has no effect in Compose. Always 100.
       }
+
+      fixture set_traffic { service: "dc-001", weight: 100 }
+      fixture set_traffic_negative { service: "dc-001", weight: -1 } -> error
     }
 
     action rollback(service: D, targetImage: String) {

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SvelteAdapter [A] {
 
@@ -24,6 +25,23 @@ concept SvelteAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Svelte.
       }
+
+      fixture event_and_class {
+        adapter: "svelte-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"card\",\"bind:value\":\"name\"}"
+      }
+      fixture with_reactive_binding {
+        adapter: "svelte-2"
+        props: "{\"$checked\":true,\"style\":\"color: red\",\"aria-hidden\":\"false\"}"
+      }
+      fixture empty_props {
+        adapter: "svelte-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "svelte-4"
+        props: "not-json"
+      } -> error
     }
   }
 

@@ -37,6 +37,9 @@ concept RustToolchain [R] {
         Requested target triple not installed.
         Hint: "rustup target add wasm32-unknown-unknown"
       }
+
+      fixture resolve_linux { platform: "x86_64-linux", versionConstraint: ">=1.75" }
+      fixture resolve_unsupported { platform: "mips-unknown", versionConstraint: "stable" } -> error
     }
 
     action register() {
@@ -47,6 +50,8 @@ concept RustToolchain [R] {
         capabilities: ["rustup-channels", "target-management",
         "wasm-pack-detection"]
       }
+
+      fixture valid {}
     }
   }
 

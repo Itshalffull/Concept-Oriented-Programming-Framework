@@ -98,11 +98,31 @@ concept EnrichmentRenderer [R] {
       -> unknownFormat(format: String) {
         No handlers registered for this format.
       }
+
+      fixture valid_render {
+        content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}"
+        format: "skill-md"
+      }
+      fixture invalid_json_content {
+        content: "not-json{{"
+        format: "skill-md"
+      } -> invalidContent
+      fixture no_handlers_for_format {
+        content: "{\"data\":\"value\"}"
+        format: "unknown-format"
+      } -> unknownFormat
     }
 
     action listHandlers(format: String) {
       -> ok(handlers: list String, count: Int) {
         Handler keys for the format, in render order.
+      }
+
+      fixture list_skill_md {
+        format: "skill-md"
+      }
+      fixture list_empty_format {
+        format: "nonexistent-format"
       }
     }
 
@@ -113,6 +133,8 @@ concept EnrichmentRenderer [R] {
       -> ok(patterns: list String) {
         Names of built-in patterns available for handler templates.
       }
+
+      fixture valid {}
     }
   }
 

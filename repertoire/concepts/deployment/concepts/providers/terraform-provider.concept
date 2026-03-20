@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept TerraformProvider [T] {
 
@@ -27,6 +28,10 @@ concept TerraformProvider [T] {
         HCL modules generated. Produces main, variables, and
         outputs files per resource group.
       }
+
+      fixture generate_plan { plan: "dp-001" }
+      fixture generate_complex_plan { plan: "dp-multi-region-002" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(workspace: T) {
@@ -39,6 +44,9 @@ concept TerraformProvider [T] {
       -> backendInitRequired(workspace: T) {
         Terraform init has not been run for this backend.
       }
+
+      fixture preview_workspace { workspace: "ws-prod-001" }
+      fixture preview_nonexistent { workspace: "" } -> error
     }
 
     action apply(workspace: T) {
@@ -52,12 +60,18 @@ concept TerraformProvider [T] {
         Apply failed midway. State partially updated.
         Manual terraform state inspection may be needed.
       }
+
+      fixture apply_workspace { workspace: "ws-prod-001" }
+      fixture apply_nonexistent { workspace: "" } -> error
     }
 
     action teardown(workspace: T) {
       -> ok(workspace: T, destroyed: list String) {
         Terraform destroy completed.
       }
+
+      fixture teardown_workspace { workspace: "ws-prod-001" }
+      fixture teardown_nonexistent { workspace: "" } -> error
     }
   }
 

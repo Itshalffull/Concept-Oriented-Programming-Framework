@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GcpSmProvider [G] {
 
@@ -39,12 +40,19 @@ concept GcpSmProvider [G] {
       -> secretNotFound(secretId: String, projectId: String) {
         Secret does not exist in the specified project.
       }
+
+      fixture fetch_db_password { secretId: "db-password", version: "latest" }
+      fixture fetch_specific_version { secretId: "api-key", version: "3" }
+      fixture fetch_empty_id { secretId: "", version: "latest" } -> error
     }
 
     action rotate(secretId: String) {
       -> ok(secretId: String, newVersionId: String) {
         New secret version added to GCP Secret Manager.
       }
+
+      fixture rotate_db_password { secretId: "db-password" }
+      fixture rotate_empty_id { secretId: "" } -> error
     }
   }
 

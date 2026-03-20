@@ -25,6 +25,9 @@ concept EnvProvider [E] {
       -> variableNotSet(name: String) {
         Environment variable is not set in the current process.
       }
+
+      fixture fetch_db_url { name: "DATABASE_URL" }
+      fixture fetch_empty_name { name: "" } -> error
     }
   }
 

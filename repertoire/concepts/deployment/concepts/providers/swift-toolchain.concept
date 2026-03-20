@@ -38,6 +38,9 @@ concept SwiftToolchain [S] {
       -> xcodeRequired(reason: String) {
         Platform target requires Xcode (e.g., iOS, watchOS).
       }
+
+      fixture resolve_macos { platform: "macos", versionConstraint: ">=5.10" }
+      fixture resolve_unsupported { platform: "windows-arm64", versionConstraint: ">=5.9" } -> error
     }
 
     action register() {
@@ -48,6 +51,8 @@ concept SwiftToolchain [S] {
         capabilities: ["xcode-detection", "cross-compile",
         "sdk-resolution"]
       }
+
+      fixture valid {}
     }
   }
 

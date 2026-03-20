@@ -31,6 +31,9 @@ concept CloudflareRuntime [W] {
       -> routeConflict(route: String, existingWorker: String) {
         Route already claimed by another worker.
       }
+
+      fixture provision_worker { concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }
+      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] } -> error
     }
 
     action deploy(worker: W, scriptContent: String) {
@@ -40,24 +43,36 @@ concept CloudflareRuntime [W] {
       -> scriptTooLarge(worker: W, sizeBytes: Int, limitBytes: Int) {
         Worker script exceeds Cloudflare size limits.
       }
+
+      fixture deploy_script { worker: "wkr-001", scriptContent: "export default { fetch() { return new Response('OK') } }" }
+      fixture deploy_empty_worker { worker: "", scriptContent: "" } -> error
     }
 
     action setTrafficWeight(worker: W, weight: Int) {
       -> ok(worker: W) {
         Traffic split configured via worker version.
       }
+
+      fixture set_weight_50 { worker: "wkr-001", weight: 50 }
+      fixture set_weight_negative { worker: "wkr-001", weight: -1 } -> error
     }
 
     action rollback(worker: W, targetVersion: String) {
       -> ok(worker: W, restoredVersion: String) {
         Worker reverted to previous version.
       }
+
+      fixture rollback_to_v1 { worker: "wkr-001", targetVersion: "1" }
+      fixture rollback_empty_version { worker: "wkr-001", targetVersion: "" } -> error
     }
 
     action destroy(worker: W) {
       -> ok(worker: W) {
         Worker script, routes, and bindings deleted.
       }
+
+      fixture destroy_worker { worker: "wkr-001" }
+      fixture destroy_empty { worker: "" } -> error
     }
   }
 

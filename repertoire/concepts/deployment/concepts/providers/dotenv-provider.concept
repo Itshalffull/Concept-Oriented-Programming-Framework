@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DotenvProvider [D] {
 
@@ -33,6 +34,11 @@ concept DotenvProvider [D] {
       -> variableNotSet(name: String, filePath: String) {
         Variable not found in the loaded .env file.
       }
+
+      fixture fetch_db_host { name: "DB_HOST", filePath: ".env" }
+      fixture fetch_api_key { name: "API_KEY", filePath: ".env.production" }
+      fixture fetch_empty_name { name: "", filePath: ".env" } -> error
+      fixture fetch_empty_path { name: "DB_HOST", filePath: "" } -> error
     }
   }
 

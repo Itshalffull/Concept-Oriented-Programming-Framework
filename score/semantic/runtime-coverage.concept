@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RuntimeCoverage [C] {
 
@@ -36,6 +37,9 @@ concept RuntimeCoverage [C] {
       -> created(entry: C) {
         First time this entity was ever exercised.
       }
+      fixture record_action { symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }
+      fixture record_variant { symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }
+      fixture record_empty_symbol { symbol: "", kind: "action", flowId: "flow-003" } -> error
     }
 
     action coverageReport(kind: String, since: String) {
@@ -44,6 +48,9 @@ concept RuntimeCoverage [C] {
         serialized JSON: { totalEntities, exercised,
         unexercised, coveragePct }.
       }
+      fixture coverage_actions { kind: "action", since: "" }
+      fixture coverage_variants_since { kind: "variant", since: "2026-01-01T00:00:00Z" }
+      fixture coverage_empty_kind { kind: "", since: "" } -> error
     }
 
     action variantCoverage(concept: String) {
@@ -52,6 +59,8 @@ concept RuntimeCoverage [C] {
         serialized JSON array of { action, variant, exercised,
         count, lastSeen }.
       }
+      fixture variant_coverage_article { concept: "Article" }
+      fixture variant_coverage_empty { concept: "" } -> error
     }
 
     action syncCoverage(since: String) {
@@ -59,6 +68,8 @@ concept RuntimeCoverage [C] {
         Sync coverage report. Results as serialized JSON array
         of { sync, tier, exercised, count, avgDurationMs }.
       }
+      fixture sync_coverage_all { since: "" }
+      fixture sync_coverage_recent { since: "2026-03-01T00:00:00Z" }
     }
 
     action widgetStateCoverage(widget: String) {
@@ -67,6 +78,8 @@ concept RuntimeCoverage [C] {
         Results as serialized JSON array of { state, entered,
         count, transitionsExercised, transitionsUnexercised }.
       }
+      fixture widget_state_coverage_dialog { widget: "dialog" }
+      fixture widget_state_coverage_empty { widget: "" } -> error
     }
 
     action widgetLifecycleReport(widget: String, since: String) {
@@ -76,6 +89,9 @@ concept RuntimeCoverage [C] {
         percentage, prop change sources, slot activity.
         Report as serialized JSON.
       }
+      fixture lifecycle_dialog { widget: "dialog", since: "" }
+      fixture lifecycle_since { widget: "button", since: "2026-01-15T00:00:00Z" }
+      fixture lifecycle_empty_widget { widget: "", since: "" } -> error
     }
 
     action widgetRenderTrace(widgetInstance: String) {
@@ -88,6 +104,8 @@ concept RuntimeCoverage [C] {
       -> notfound() {
         No render data for this widget instance.
       }
+      fixture render_trace_valid { widgetInstance: "dialog-inst-001" }
+      fixture render_trace_empty { widgetInstance: "" } -> error
     }
 
     action widgetComparison(since: String, topN: Int) {
@@ -97,6 +115,8 @@ concept RuntimeCoverage [C] {
         totalRenders, unnecessaryRenderPct, avgRenderMs,
         p90RenderMs }.
       }
+      fixture comparison_top10 { since: "", topN: 10 }
+      fixture comparison_recent { since: "2026-02-01T00:00:00Z", topN: 5 }
     }
 
     action deadAtRuntime(kind: String) {
@@ -105,6 +125,9 @@ concept RuntimeCoverage [C] {
         have never been exercised at runtime.
         Results as serialized JSON array of symbol strings.
       }
+      fixture dead_variants { kind: "variant" }
+      fixture dead_syncs { kind: "sync" }
+      fixture dead_empty_kind { kind: "" } -> error
     }
   }
 

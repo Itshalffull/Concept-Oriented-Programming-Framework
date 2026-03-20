@@ -42,21 +42,33 @@ concept ExpressionLanguage [E] {
     action parse(expression: E, text: String, language: String) {
       -> ok(ast: String) { Expression parsed into an abstract syntax tree. }
       -> error() { Parse failed due to syntax or grammar mismatch. }
+
+      fixture parse_addition { expression: "expr-1", text: "2 + 3", language: "math" }
+      fixture parse_unknown_lang { expression: "expr-2", text: "2 + 3", language: "unknown" } -> error
     }
 
     action evaluate(expression: E) {
       -> ok(result: String) { Expression evaluated and result returned. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture eval_existing { expression: "expr-1" }
+      fixture eval_missing { expression: "nonexistent" } -> error
     }
 
     action typeCheck(expression: E) {
       -> ok(valid: Bool, errors: String) { Type checking completed with validity status and any errors. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture typecheck_valid { expression: "expr-1" }
+      fixture typecheck_missing { expression: "nonexistent" } -> error
     }
 
     action getCompletions(expression: E, cursor: Int) {
       -> ok(completions: String) { Returns available completions at the cursor position. }
       -> notfound() { Expression has not been parsed or does not exist. }
+
+      fixture completions_at_cursor { expression: "expr-1", cursor: 3 }
+      fixture completions_missing { expression: "nonexistent", cursor: 0 } -> error
     }
   }
 

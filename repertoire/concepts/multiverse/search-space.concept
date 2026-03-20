@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SearchSpace [S] {
 
@@ -35,6 +36,9 @@ concept SearchSpace [S] {
         provider for actual index structure maintenance. The entry stores
         only the delta; the base index is not modified.
       }
+
+      fixture index_text { scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }
+      fixture index_semantic { scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }
     }
 
     action tombstone(scope_id: String, provider: String,
@@ -43,6 +47,9 @@ concept SearchSpace [S] {
         Marks an entity as absent in this scope. At query time, tombstones
         filter out base index results for this entity.
       }
+
+      fixture tombstone_existing { scope_id: "vs-1", provider: "text", entity_id: "article-42" }
+      fixture tombstone_new { scope_id: "vs-2", provider: "text", entity_id: "article-99" }
     }
 
     action query(scope_id: String, provider: String,
@@ -56,6 +63,9 @@ concept SearchSpace [S] {
       -> no_scope(scope_id: String) {
         The scope does not exist. Fall through to base-only query.
       }
+
+      fixture query_text { scope_id: "vs-1", provider: "text", query_expr: "concept" }
+      fixture query_missing_scope { scope_id: "vs-nonexistent", provider: "text", query_expr: "hello" } -> no_scope
     }
 
     action clear(scope_id: String) {
@@ -63,6 +73,9 @@ concept SearchSpace [S] {
         Removes all overlay entries for this scope. Called when a version
         space is archived, merged, or promoted.
       }
+
+      fixture clear_scope { scope_id: "vs-1" }
+      fixture clear_empty { scope_id: "vs-empty" }
     }
 
     action materialize(scope_id: String) {
@@ -71,6 +84,9 @@ concept SearchSpace [S] {
         clears the scope. Each entry dispatches to its provider's
         base-index write action.
       }
+
+      fixture materialize_scope { scope_id: "vs-1" }
+      fixture materialize_empty { scope_id: "vs-empty" }
     }
   }
 

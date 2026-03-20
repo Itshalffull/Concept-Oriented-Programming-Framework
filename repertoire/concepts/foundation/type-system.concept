@@ -24,6 +24,9 @@ concept TypeSystem [T] {
       -> exists(message: String) {
         A type with this identifier already exists.
       }
+
+      fixture register_string_type { type: "email", schema: "{\"type\":\"string\"}", constraints: "{\"format\":\"email\"}" }
+      fixture register_empty_type { type: "", schema: "{}", constraints: "{}" } -> error
     }
 
     action resolve(type: T) {
@@ -33,6 +36,9 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type does not exist.
       }
+
+      fixture resolve_existing { type: "email" }
+      fixture resolve_missing { type: "nonexistent" } -> error
     }
 
     action navigate(type: T, path: String) {
@@ -42,6 +48,9 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type or path does not exist.
       }
+
+      fixture navigate_nested { type: "user", path: "address.city" }
+      fixture navigate_missing_type { type: "nonexistent", path: "field" } -> error
     }
 
     action serialize(type: T, value: String) {
@@ -51,6 +60,9 @@ concept TypeSystem [T] {
       -> notfound(message: String) {
         The type does not exist.
       }
+
+      fixture serialize_value { type: "email", value: "\"user@example.com\"" }
+      fixture serialize_missing_type { type: "nonexistent", value: "\"test\"" } -> error
     }
   }
 

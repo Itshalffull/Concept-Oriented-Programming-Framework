@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Layout [Y] {
 
@@ -31,6 +32,22 @@ concept Layout [Y] {
         "flow", "sidebar", "center".
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture sidebar_layout {
+        layout: "layout-1"
+        name: "main-sidebar"
+        kind: "sidebar"
+      }
+      fixture grid_layout {
+        layout: "layout-2"
+        name: "dashboard-grid"
+        kind: "grid"
+      }
+      fixture invalid_kind {
+        layout: "layout-3"
+        name: "bad-layout"
+        kind: "carousel"
+      } -> invalid
     }
 
     action configure(layout: Y, config: String) {
@@ -39,11 +56,29 @@ concept Layout [Y] {
         areas, alignment, padding.
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture set_direction_and_gap {
+        layout: "layout-1"
+        config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}"
+      }
+      fixture configure_nonexistent {
+        layout: "layout-nonexistent"
+        config: "{\"gap\":\"8px\"}"
+      } -> notfound
     }
 
     action nest(parent: Y, child: Y) {
       -> ok(parent: Y) { Nest layout inside another. }
       -> cycle(message: String) { Would create circular reference. }
+
+      fixture nest_child {
+        parent: "layout-1"
+        child: "layout-2"
+      }
+      fixture nest_missing_parent {
+        parent: "layout-nonexistent"
+        child: "layout-2"
+      } -> cycle
     }
 
     action setResponsive(layout: Y, breakpoints: String) {
@@ -51,11 +86,27 @@ concept Layout [Y] {
         Define responsive overrides keyed by breakpoint (sm, md, lg, xl).
       }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture responsive_overrides {
+        layout: "layout-1"
+        breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}"
+      }
+      fixture responsive_nonexistent {
+        layout: "layout-nonexistent"
+        breakpoints: "{}"
+      } -> notfound
     }
 
     action remove(layout: Y) {
       -> ok(layout: Y) { Remove and detach children. }
       -> notfound(message: String) { Layout does not exist. }
+
+      fixture remove_existing {
+        layout: "layout-1"
+      }
+      fixture remove_nonexistent {
+        layout: "layout-nonexistent"
+      } -> notfound
     }
   }
 

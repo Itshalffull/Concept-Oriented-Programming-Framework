@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept AwsSmProvider [A] {
 
@@ -35,6 +36,10 @@ concept AwsSmProvider [A] {
       -> decryptionFailed(secretId: String, reason: String) {
         Secret exists but decryption failed.
       }
+
+      fixture fetch_db_password { secretId: "prod/db-password", versionStage: "AWSCURRENT" }
+      fixture fetch_api_key { secretId: "prod/api-key", versionStage: "AWSPREVIOUS" }
+      fixture fetch_empty_id { secretId: "", versionStage: "AWSCURRENT" } -> error
     }
 
     action rotate(secretId: String) {
@@ -44,6 +49,9 @@ concept AwsSmProvider [A] {
       -> rotationInProgress(secretId: String) {
         Rotation already running.
       }
+
+      fixture rotate_db_password { secretId: "prod/db-password" }
+      fixture rotate_empty_id { secretId: "" } -> error
     }
   }
 

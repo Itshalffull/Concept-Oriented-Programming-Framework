@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SolidAdapter [A] {
 
@@ -24,6 +25,23 @@ concept SolidAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Solid.
       }
+
+      fixture event_and_class {
+        adapter: "solid-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"btn active\",\"$count\":42}"
+      }
+      fixture with_theme {
+        adapter: "solid-2"
+        props: "{\"theme\":\"{\\\"tokens\\\":{\\\"color-primary\\\":\\\"#10b981\\\"}}\",\"data-testid\":\"widget\"}"
+      }
+      fixture empty_props {
+        adapter: "solid-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "solid-4"
+        props: "{{invalid"
+      } -> error
     }
   }
 

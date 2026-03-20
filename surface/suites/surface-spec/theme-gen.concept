@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ThemeGen [G] {
 
@@ -21,6 +22,32 @@ concept ThemeGen [G] {
         flattened into each target's native format.
       }
       -> error(gen: G, message: String) { Generation failed. }
+
+      fixture css_variables {
+        gen: "g-1"
+        target: "css-variables"
+        themeAst: "{\"tokens\":{\"color.primary\":\"#3b82f6\",\"color.background\":\"#ffffff\"},\"context\":{\"mode\":\"light\"}}"
+      }
+      fixture tailwind_target {
+        gen: "g-2"
+        target: "tailwind"
+        themeAst: "{\"tokens\":{\"color.primary\":\"#10b981\"},\"context\":{\"density\":\"comfortable\"}}"
+      }
+      fixture w3c_dtcg_target {
+        gen: "g-3"
+        target: "w3c-dtcg"
+        themeAst: "{\"tokens\":{\"color.brand\":\"#ef4444\"}}"
+      }
+      fixture unsupported_target {
+        gen: "g-4"
+        target: "scss-modules"
+        themeAst: "{\"tokens\":{}}"
+      } -> error
+      fixture invalid_ast_json {
+        gen: "g-5"
+        target: "css-variables"
+        themeAst: "not-valid-json"
+      } -> error
     }
   }
 

@@ -81,6 +81,9 @@ concept GenerationPlan [R] {
       -> ok(runs: list { run: R, startedAt: DateTime, completedAt: option DateTime, total: Int, executed: Int, cached: Int, failed: Int }) {
         Return recent generation runs.
       }
+
+      fixture history_default {}
+      fixture history_limited { limit: 5 }
     }
   }
 

@@ -29,6 +29,10 @@ concept VercelKVProvider [K] {
       -> provisionFailed(storeName: String, reason: String) {
         Could not create the KV store, e.g. Vercel API error or quota exceeded.
       }
+
+      fixture provision_session_cache { storeName: "session-cache", config: "{}" }
+      fixture provision_rate_limiter { storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }
+      fixture provision_empty_name { storeName: "", config: "{}" } -> error
     }
 
     action getCredentials(storeName: String) {
@@ -38,6 +42,9 @@ concept VercelKVProvider [K] {
       -> notfound(storeName: String) {
         No provisioned store exists with this name.
       }
+
+      fixture get_session_cache { storeName: "session-cache" }
+      fixture get_nonexistent { storeName: "no-such-store" } -> error
     }
 
     action destroy(storeName: String) {
@@ -47,6 +54,9 @@ concept VercelKVProvider [K] {
       -> notfound(storeName: String) {
         No provisioned store exists with this name.
       }
+
+      fixture destroy_session_cache { storeName: "session-cache" }
+      fixture destroy_nonexistent { storeName: "no-such-store" } -> error
     }
   }
 

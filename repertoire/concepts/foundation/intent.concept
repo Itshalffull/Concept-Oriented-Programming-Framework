@@ -25,6 +25,9 @@ concept Intent [I] {
       -> exists(message: String) {
         An intent for this target already exists.
       }
+
+      fixture define_auth { intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }
+      fixture define_empty_intent { intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" } -> error
     }
 
     action update(intent: I, purpose: String, operationalPrinciple: String) {
@@ -34,6 +37,9 @@ concept Intent [I] {
       -> notfound(message: String) {
         The intent does not exist.
       }
+
+      fixture update_purpose { intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" }
+      fixture update_missing { intent: "nonexistent", purpose: "Test", operationalPrinciple: "Test" } -> error
     }
 
     action verify(intent: I) {
@@ -43,18 +49,27 @@ concept Intent [I] {
       -> notfound(message: String) {
         The intent does not exist.
       }
+
+      fixture verify_existing { intent: "auth-intent" }
+      fixture verify_missing { intent: "nonexistent" } -> error
     }
 
     action discover(query: String) {
       -> ok(matches: String) {
         Search intents by purpose text or target name.
       }
+
+      fixture discover_auth { query: "authentication" }
+      fixture discover_empty { query: "" } -> error
     }
 
     action suggestFromDescription(description: String) {
       -> ok(suggested: String) {
         Suggest concept structure from a natural language description.
       }
+
+      fixture suggest_from_desc { description: "A system for managing user accounts with login and registration" }
+      fixture suggest_empty { description: "" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Surface [F] {
 
@@ -27,16 +28,52 @@ concept Surface [F] {
         Auto-detects capabilities.
       }
       -> unsupported(message: String) { Kind not supported in this runtime. }
+
+      fixture browser_dom {
+        surface: "surface-1"
+        kind: "browser-dom"
+        mountPoint: "#app"
+      }
+      fixture terminal_surface {
+        surface: "surface-2"
+        kind: "terminal"
+        mountPoint: none
+      }
+      fixture unsupported_kind {
+        surface: "surface-3"
+        kind: "hologram"
+        mountPoint: none
+      } -> unsupported
     }
 
     action attach(surface: F, renderer: String) {
       -> ok(surface: F) { Attach renderer, validate compatibility. }
       -> incompatible(message: String) { FrameworkAdapter incompatible with surface. }
+
+      fixture attach_react {
+        surface: "surface-1"
+        renderer: "react-adapter"
+      }
+      fixture incompatible_renderer {
+        surface: "surface-1"
+        renderer: "terminal-only-adapter"
+      } -> incompatible
     }
 
     action resize(surface: F, width: Int, height: Int) {
       -> ok(surface: F) { Report size change, trigger viewport recalc. }
       -> notfound(message: String) { Surface does not exist. }
+
+      fixture resize_desktop {
+        surface: "surface-1"
+        width: 1920
+        height: 1080
+      }
+      fixture resize_unknown_surface {
+        surface: "surface-nonexistent"
+        width: 800
+        height: 600
+      } -> notfound
     }
 
     action mount(surface: F, tree: String, zone: option String) {
@@ -48,6 +85,17 @@ concept Surface [F] {
       }
       -> error(message: String) { No adapter attached or mount target missing. }
       -> notfound(message: String) { Surface does not exist. }
+
+      fixture mount_root {
+        surface: "surface-1"
+        tree: "<App />"
+        zone: none
+      }
+      fixture mount_no_adapter {
+        surface: "surface-no-adapter"
+        tree: "<App />"
+        zone: none
+      } -> error
     }
 
     action unmount(surface: F, zone: option String) {
@@ -56,11 +104,27 @@ concept Surface [F] {
         framework-specific cleanup. If no zone, unmounts root.
       }
       -> notfound(message: String) { Nothing mounted in zone. }
+
+      fixture unmount_root {
+        surface: "surface-1"
+        zone: none
+      }
+      fixture unmount_missing_zone {
+        surface: "surface-1"
+        zone: "nonexistent-zone"
+      } -> notfound
     }
 
     action destroy(surface: F) {
       -> ok(surface: F) { Tear down, unmount all renderers. }
       -> notfound(message: String) { Surface does not exist. }
+
+      fixture destroy_existing {
+        surface: "surface-1"
+      }
+      fixture destroy_nonexistent {
+        surface: "surface-nonexistent"
+      } -> notfound
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReactAdapter [A] {
 
@@ -24,6 +25,23 @@ concept ReactAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to React.
       }
+
+      fixture event_and_class {
+        adapter: "react-1"
+        props: "{\"onclick\":\"handleClick\",\"class\":\"btn primary\",\"for\":\"input-name\"}"
+      }
+      fixture with_layout {
+        adapter: "react-2"
+        props: "{\"layout\":\"{\\\"kind\\\":\\\"center\\\",\\\"gap\\\":\\\"16px\\\"}\",\"aria-label\":\"main content\"}"
+      }
+      fixture empty_props {
+        adapter: "react-3"
+        props: ""
+      } -> error
+      fixture invalid_json_props {
+        adapter: "react-4"
+        props: "{broken"
+      } -> error
     }
   }
 

@@ -36,6 +36,9 @@ concept K8sRuntime [K] {
       -> namespaceNotFound(namespace: String) {
         Specified namespace does not exist.
       }
+
+      fixture provision_deployment { concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: 3 }
+      fixture provision_empty_concept { concept: "", namespace: "default", cluster: "prod", replicas: 0 } -> error
     }
 
     action deploy(deployment: K, imageUri: String) {
@@ -54,24 +57,36 @@ concept K8sRuntime [K] {
       -> oomKilled(deployment: K, podName: String, memoryLimit: String) {
         Container exceeded memory limit and was killed (exit code 137).
       }
+
+      fixture deploy_image { deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }
+      fixture deploy_empty_image { deployment: "dep-001", imageUri: "" } -> error
     }
 
     action setTrafficWeight(deployment: K, weight: Int) {
       -> ok(deployment: K) {
         Service traffic weight updated for canary.
       }
+
+      fixture set_canary_weight { deployment: "dep-001", weight: 25 }
+      fixture set_invalid_weight { deployment: "dep-001", weight: -1 } -> error
     }
 
     action rollback(deployment: K, targetRevision: String) {
       -> ok(deployment: K, restoredRevision: String) {
         Deployment rolled back to specified revision.
       }
+
+      fixture rollback_to_rev1 { deployment: "dep-001", targetRevision: "1" }
+      fixture rollback_empty_rev { deployment: "dep-001", targetRevision: "" } -> error
     }
 
     action destroy(deployment: K) {
       -> ok(deployment: K) {
         Deployment, Service, ConfigMap, and Ingress deleted.
       }
+
+      fixture destroy_deployment { deployment: "dep-001" }
+      fixture destroy_empty { deployment: "" } -> error
     }
   }
 

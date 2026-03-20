@@ -31,6 +31,9 @@ concept ContentNode [N] {
       -> exists(message: String) {
         The node already exists.
       }
+
+      fixture create_page_node { node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }
+      fixture create_empty_node { node: "", type: "page", content: "Test", createdBy: "bob" } -> error
     }
 
     action update(node: N, content: String) {
@@ -40,6 +43,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture update_content { node: "node-1", content: "Updated wiki content" }
+      fixture update_missing { node: "nonexistent", content: "Test" } -> error
     }
 
     action delete(node: N) {
@@ -49,6 +55,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture delete_node { node: "node-1" }
+      fixture delete_missing { node: "nonexistent" } -> error
     }
 
     action get(node: N) {
@@ -58,6 +67,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture get_node { node: "node-1" }
+      fixture get_missing { node: "nonexistent" } -> error
     }
 
     action setMetadata(node: N, metadata: String) {
@@ -67,6 +79,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture set_metadata { node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }
+      fixture set_metadata_missing { node: "nonexistent", metadata: "{}" } -> error
     }
 
     action changeType(node: N, type: String) {
@@ -76,6 +91,9 @@ concept ContentNode [N] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture change_to_document { node: "node-1", type: "document" }
+      fixture change_type_missing { node: "nonexistent", type: "page" } -> error
     }
   }
 

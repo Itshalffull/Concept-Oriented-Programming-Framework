@@ -21,6 +21,9 @@ concept Property [P] {
       -> invalid(message: String) {
         The value does not match the registered type.
       }
+
+      fixture set_title { entity: "page-1", key: "title", value: "Hello World" }
+      fixture set_empty_entity { entity: "", key: "title", value: "Hello" } -> error
     }
 
     action get(entity: P, key: String) {
@@ -30,6 +33,9 @@ concept Property [P] {
       -> notfound(message: String) {
         The property does not exist on this entity.
       }
+
+      fixture get_existing { entity: "page-1", key: "title" }
+      fixture get_missing { entity: "nonexistent", key: "title" } -> error
     }
 
     action delete(entity: P, key: String) {
@@ -39,12 +45,18 @@ concept Property [P] {
       -> notfound(message: String) {
         The property does not exist on this entity.
       }
+
+      fixture delete_existing { entity: "page-1", key: "title" }
+      fixture delete_missing { entity: "nonexistent", key: "title" } -> error
     }
 
     action listAll(entity: P) {
       -> ok(properties: String) {
         Return all properties on the entity as JSON.
       }
+
+      fixture list_all_props { entity: "page-1" }
+      fixture list_empty_entity { entity: "" } -> error
     }
   }
 

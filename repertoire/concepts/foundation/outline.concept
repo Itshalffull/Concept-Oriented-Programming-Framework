@@ -24,6 +24,10 @@ concept Outline [O] {
       -> exists(message: String) {
         The node already exists.
       }
+
+      fixture create_root { node: "chapter-1", parent: "" }
+      fixture create_child { node: "section-1", parent: "chapter-1" }
+      fixture create_empty_node { node: "", parent: "" } -> error
     }
 
     action indent(node: O) {
@@ -36,6 +40,9 @@ concept Outline [O] {
       -> invalid(message: String) {
         No previous sibling to indent under.
       }
+
+      fixture indent_node { node: "section-1" }
+      fixture indent_missing { node: "nonexistent" } -> error
     }
 
     action outdent(node: O) {
@@ -48,6 +55,9 @@ concept Outline [O] {
       -> invalid(message: String) {
         Node is already at root level.
       }
+
+      fixture outdent_node { node: "section-1" }
+      fixture outdent_missing { node: "nonexistent" } -> error
     }
 
     action moveUp(node: O) {
@@ -57,6 +67,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture move_up_node { node: "section-1" }
+      fixture move_up_missing { node: "nonexistent" } -> error
     }
 
     action moveDown(node: O) {
@@ -66,6 +79,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture move_down_node { node: "section-1" }
+      fixture move_down_missing { node: "nonexistent" } -> error
     }
 
     action collapse(node: O) {
@@ -75,6 +91,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture collapse_node { node: "chapter-1" }
+      fixture collapse_missing { node: "nonexistent" } -> error
     }
 
     action expand(node: O) {
@@ -84,6 +103,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture expand_node { node: "chapter-1" }
+      fixture expand_missing { node: "nonexistent" } -> error
     }
 
     action reparent(node: O, newParent: O) {
@@ -93,6 +115,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         Node or parent does not exist.
       }
+
+      fixture reparent_node { node: "section-1", newParent: "chapter-2" }
+      fixture reparent_missing { node: "nonexistent", newParent: "chapter-1" } -> error
     }
 
     action getChildren(node: O) {
@@ -102,6 +127,9 @@ concept Outline [O] {
       -> notfound(message: String) {
         The node does not exist.
       }
+
+      fixture get_children { node: "chapter-1" }
+      fixture get_children_missing { node: "nonexistent" } -> error
     }
   }
 

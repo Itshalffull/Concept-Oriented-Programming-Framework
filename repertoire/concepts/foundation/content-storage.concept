@@ -27,6 +27,9 @@ concept ContentStorage [R] {
       -> error(message: String) {
         The storage backend rejected the write due to a connection, permission, or capacity error.
       }
+
+      fixture save_record { record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }
+      fixture save_empty_record { record: "", data: "{}" } -> error
     }
 
     action load(record: R) {
@@ -36,6 +39,9 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture load_existing { record: "user-profile-1" }
+      fixture load_missing { record: "nonexistent" } -> error
     }
 
     action delete(record: R) {
@@ -45,12 +51,18 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture delete_existing { record: "user-profile-1" }
+      fixture delete_missing { record: "nonexistent" } -> error
     }
 
     action query(filter: String) {
       -> ok(results: String) {
         Return matching records as serialized JSON.
       }
+
+      fixture query_by_type { filter: "{\"type\":\"profile\"}" }
+      fixture query_empty { filter: "" } -> error
     }
 
     action generateSchema(record: R) {
@@ -60,6 +72,9 @@ concept ContentStorage [R] {
       -> notfound(message: String) {
         The record does not exist.
       }
+
+      fixture gen_schema { record: "user-profile-1" }
+      fixture gen_schema_missing { record: "nonexistent" } -> error
     }
   }
 

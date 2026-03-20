@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Execution [EX] {
 
@@ -29,6 +30,10 @@ concept Execution [EX] {
       -> scheduled(execution: EX) {
         An execution is created in Pending status with the given actions.
       }
+
+      fixture schedule_transfer { sourceRef: "proposal-001", actions: ["transfer(from: treasury, to: alice, amount: 100)"], executor: "governance-bot" }
+      fixture schedule_multi_action { sourceRef: "proposal-002", actions: ["updateRole(user: bob, role: admin)", "grantAccess(user: bob, resource: vault)"], executor: "admin-bot" }
+      fixture schedule_single { sourceRef: "proposal-003", actions: ["noop()"], executor: "bot" }
     }
 
     action execute(execution: EX) {
@@ -41,6 +46,9 @@ concept Execution [EX] {
       -> unauthorized(execution: EX) {
         The executor does not have permission to perform these actions.
       }
+
+      fixture execute_pending { execution: "execution-001" }
+      fixture execute_nonexistent { execution: "execution-missing" } -> failed
     }
 
     action rollback(execution: EX) {
@@ -50,6 +58,9 @@ concept Execution [EX] {
       -> not_reversible(execution: EX) {
         The execution cannot be rolled back.
       }
+
+      fixture rollback_completed { execution: "execution-001" }
+      fixture rollback_nonexistent { execution: "execution-missing" } -> not_reversible
     }
   }
 

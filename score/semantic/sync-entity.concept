@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SyncEntity [Y] {
 
@@ -34,6 +35,10 @@ concept SyncEntity [Y] {
       -> alreadyRegistered(existing: Y) {
         A sync entity with this name is already registered.
       }
+
+      fixture register_publish_sync { name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }
+      fixture register_minimal { name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }
+      fixture register_empty_name { name: "", source: "syncs/empty.sync", compiled: "{}" } -> error
     }
 
     action findByConcept(concept: String) {
@@ -42,6 +47,9 @@ concept SyncEntity [Y] {
         clause (when, where, or then).
         Results as serialized JSON array.
       }
+
+      fixture find_article { concept: "Article" }
+      fixture find_nonexistent { concept: "NonexistentConcept" }
     }
 
     action findTriggerableBy(action: String, variant: String) {
@@ -50,6 +58,9 @@ concept SyncEntity [Y] {
         action and optional variant filter.
         Results as serialized JSON array.
       }
+
+      fixture find_publish_ok { action: "publish", variant: "ok" }
+      fixture find_create_any { action: "create", variant: "" }
     }
 
     action chainFrom(action: String, variant: String, depth: Int) {
@@ -61,6 +72,9 @@ concept SyncEntity [Y] {
       -> noChain() {
         No syncs trigger on this action/variant combination.
       }
+
+      fixture chain_publish { action: "publish", variant: "ok", depth: 3 }
+      fixture chain_no_match { action: "nonexistent", variant: "ok", depth: 1 } -> error
     }
 
     action findDeadEnds() {
@@ -69,6 +83,8 @@ concept SyncEntity [Y] {
         that have no further sync chain and no interface exposure.
         Results as serialized JSON array.
       }
+
+      fixture find_dead_ends_valid {}
     }
 
     action findOrphanVariants() {
@@ -76,6 +92,8 @@ concept SyncEntity [Y] {
         Find all variant entities that no sync's when-pattern
         matches on. Results as serialized JSON array.
       }
+
+      fixture find_orphans_valid {}
     }
 
     action get(sync: Y) {

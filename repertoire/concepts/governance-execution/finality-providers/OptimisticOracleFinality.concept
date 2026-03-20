@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept OptimisticOracleFinality [OO] {
@@ -30,6 +31,10 @@ concept OptimisticOracleFinality [OO] {
         An optimistic finality assertion is created. If unchallenged
         before expiry, the operation achieves finality.
       }
+
+      fixture assert_standard { operationRef: "proposal-001", asserter: "validator-alice", bond: 100.0, challengeWindowHours: 48.0 }
+      fixture assert_short_window { operationRef: "proposal-002", asserter: "validator-bob", bond: 50.0, challengeWindowHours: 2.0 }
+      fixture assert_large_bond { operationRef: "proposal-003", asserter: "validator-carol", bond: 10000.0, challengeWindowHours: 24.0 }
     }
 
     action challenge(assertion: OO, challenger: String, bond: Float, evidence: String) {
@@ -39,6 +44,9 @@ concept OptimisticOracleFinality [OO] {
       -> expired(assertion: OO) {
         Challenge window has closed.
       }
+
+      fixture challenge_pending { assertion: "oo-001", challenger: "watchdog-carol", bond: 200.0, evidence: "Invalid state transition detected" }
+      fixture challenge_nonexistent { assertion: "oo-missing", challenger: "watchdog-carol", bond: 200.0, evidence: "N/A" } -> error
     }
 
     action resolve(assertion: OO, validAssertion: Bool) {
@@ -49,6 +57,10 @@ concept OptimisticOracleFinality [OO] {
       -> rejected(assertion: OO) {
         The assertion is invalid. Asserter's bond is forfeited.
       }
+
+      fixture resolve_valid { assertion: "oo-001", validAssertion: true }
+      fixture resolve_invalid { assertion: "oo-001", validAssertion: false }
+      fixture resolve_nonexistent { assertion: "oo-missing", validAssertion: true } -> error
     }
 
     action checkExpiry(assertion: OO) {
@@ -58,6 +70,9 @@ concept OptimisticOracleFinality [OO] {
       -> still_pending(assertion: OO, remainingHours: Float) {
         Challenge window is still open.
       }
+
+      fixture check_expired { assertion: "oo-001" }
+      fixture check_nonexistent { assertion: "oo-missing" } -> error
     }
   }
 

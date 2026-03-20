@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept Projection [P] {
 
@@ -54,6 +55,23 @@ concept Projection [P] {
         Two traits are incompatible on the same action
         (e.g. @paginated and @streaming on the same action).
       }
+
+      fixture valid_projection {
+        manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[{\"name\":\"T\"}],\"relations\":[{\"name\":\"items\",\"fields\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}]}],\"actions\":[{\"name\":\"create\",\"params\":[{\"name\":\"title\",\"type\":{\"kind\":\"primitive\",\"name\":\"String\"}}],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}"
+        annotations: "{\"traits\":[{\"name\":\"cached\",\"scope\":\"*\"}],\"resourceMapping\":{\"path\":\"/todos\",\"idField\":\"id\",\"actions\":[\"create\"]}}"
+      }
+      fixture invalid_manifest_json {
+        manifest: "not-valid-json"
+        annotations: "{}"
+      } -> annotationError
+      fixture bad_annotation_json {
+        manifest: "{\"name\":\"Todo\",\"uri\":\"core/Todo\",\"typeParams\":[],\"relations\":[],\"actions\":[]}"
+        annotations: "not-valid-json"
+      } -> annotationError
+      fixture conflicting_traits {
+        manifest: "{\"name\":\"Stream\",\"uri\":\"core/Stream\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"list\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[]}]}]}"
+        annotations: "{\"traits\":[{\"name\":\"paginated\",\"scope\":\"*\"},{\"name\":\"streaming\",\"scope\":\"*\"}]}"
+      } -> traitConflict
     }
 
     action validate(projection: P) {
@@ -71,6 +89,13 @@ concept Projection [P] {
         (e.g. REST target configured but no resource path for
         a concept with non-CRUD actions).
       }
+
+      fixture valid_validate {
+        projection: "proj-abc123"
+      }
+      fixture missing_projection {
+        projection: "proj-nonexistent"
+      } -> incompleteAnnotation
     }
 
     action diff(projection: P, previous: P) {
@@ -81,6 +106,15 @@ concept Projection [P] {
       -> incompatible(reason: String) {
         Projections are from different concepts — can't compare.
       }
+
+      fixture valid_diff {
+        projection: "proj-current"
+        previous: "proj-previous"
+      }
+      fixture missing_previous {
+        projection: "proj-current"
+        previous: "proj-nonexistent"
+      } -> incompatible
     }
 
     action inferResources(projection: P) {
@@ -90,6 +124,13 @@ concept Projection [P] {
         delete/remove produce DELETE, list/find produce GET,
         update/edit produce PUT. Non-CRUD actions produce POST
         to /resource/{id}/action-name.
+      }
+
+      fixture valid_infer {
+        projection: "proj-abc123"
+      }
+      fixture missing_projection_infer {
+        projection: "proj-nonexistent"
       }
     }
   }

@@ -26,12 +26,18 @@ concept DockerComposeIacProvider [I] {
       -> ok(composeFile: I, files: list String) {
         Docker Compose YAML generated from deploy plan.
       }
+
+      fixture generate_compose { plan: "dp-001" }
+      fixture generate_empty_plan { plan: "" } -> error
     }
 
     action preview(composeFile: I) {
       -> ok(composeFile: I, toCreate: Int, toUpdate: Int, toDelete: Int) {
         Dry-run showing what containers would change.
       }
+
+      fixture preview_compose { composeFile: "compose-001" }
+      fixture preview_empty { composeFile: "" } -> error
     }
 
     action apply(composeFile: I) {
@@ -41,12 +47,18 @@ concept DockerComposeIacProvider [I] {
       -> portConflict(port: Int, existingService: String) {
         A port required by the compose file is already in use.
       }
+
+      fixture apply_compose { composeFile: "compose-001" }
+      fixture apply_empty { composeFile: "" } -> error
     }
 
     action teardown(composeFile: I) {
       -> ok(composeFile: I, destroyed: list String) {
         Docker Compose down completed. All containers removed.
       }
+
+      fixture teardown_compose { composeFile: "compose-001" }
+      fixture teardown_empty { composeFile: "" } -> error
     }
   }
 

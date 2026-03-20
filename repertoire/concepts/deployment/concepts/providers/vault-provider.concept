@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VaultProvider [V] {
 
@@ -40,6 +41,10 @@ concept VaultProvider [V] {
       -> pathNotFound(path: String) {
         Secret path does not exist in Vault.
       }
+
+      fixture fetch_db_password { path: "secret/data/db-password" }
+      fixture fetch_api_credentials { path: "secret/data/api/credentials" }
+      fixture fetch_empty_path { path: "" } -> error
     }
 
     action renewLease(leaseId: String) {
@@ -49,12 +54,18 @@ concept VaultProvider [V] {
       -> leaseExpired(leaseId: String) {
         Lease already expired. Must re-fetch.
       }
+
+      fixture renew_active_lease { leaseId: "lease-abc-123" }
+      fixture renew_empty_lease { leaseId: "" } -> error
     }
 
     action rotate(path: String) {
       -> ok(newVersion: Int) {
         New secret version written to Vault.
       }
+
+      fixture rotate_db_secret { path: "secret/data/db-password" }
+      fixture rotate_empty_path { path: "" } -> error
     }
   }
 

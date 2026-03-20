@@ -37,6 +37,9 @@ concept IaC [R] {
         Deploy plan requires a resource type the provider
         cannot express.
       }
+
+      fixture emit_pulumi { plan: "dp-001", provider: "pulumi" }
+      fixture emit_empty_plan { plan: "", provider: "pulumi" } -> error
     }
 
     action preview(plan: String, provider: String) {
@@ -46,6 +49,9 @@ concept IaC [R] {
       -> stateCorrupted(provider: String, reason: String) {
         Provider state file is corrupted or inaccessible.
       }
+
+      fixture preview_plan { plan: "dp-001", provider: "pulumi" }
+      fixture preview_empty { plan: "", provider: "" } -> error
     }
 
     action apply(plan: String, provider: String) {
@@ -59,6 +65,9 @@ concept IaC [R] {
       -> applyFailed(reason: String) {
         Apply failed entirely. No changes made.
       }
+
+      fixture apply_plan { plan: "dp-001", provider: "pulumi" }
+      fixture apply_empty_plan { plan: "", provider: "" } -> error
     }
 
     action detectDrift(provider: String) {
@@ -69,6 +78,9 @@ concept IaC [R] {
       -> noDrift() {
         All resources match expected state.
       }
+
+      fixture detect_drift_pulumi { provider: "pulumi" }
+      fixture detect_drift_empty { provider: "" } -> error
     }
 
     action teardown(plan: String, provider: String) {
@@ -79,6 +91,9 @@ concept IaC [R] {
       -> partial(destroyed: list String, stuck: list String) {
         Some resources could not be destroyed.
       }
+
+      fixture teardown_plan { plan: "dp-001", provider: "pulumi" }
+      fixture teardown_empty { plan: "", provider: "" } -> error
     }
   }
 
