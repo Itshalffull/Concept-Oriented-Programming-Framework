@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept FeatureFlag [F] {
 
@@ -34,6 +35,9 @@ concept FeatureFlag [F] {
       -> notfound() {
         The specified feature flag does not exist.
       }
+
+      fixture enable_existing_flag { flag: "flag-1" }
+      fixture enable_nonexistent_flag { flag: "flag-nonexistent" } -> error
     }
 
     action disable(flag: F) {
@@ -46,6 +50,9 @@ concept FeatureFlag [F] {
       -> notfound() {
         The specified feature flag does not exist.
       }
+
+      fixture disable_existing_flag { flag: "flag-1" }
+      fixture disable_nonexistent_flag { flag: "flag-nonexistent" } -> error
     }
 
     action unify(flags: list F) {
@@ -60,6 +67,9 @@ concept FeatureFlag [F] {
         Feature unification would enable two mutually exclusive features
         on the same module. Reports the conflicting module and feature names.
       }
+
+      fixture unify_compatible_flags { flags: ["flag-1", "flag-2"] }
+      fixture unify_empty_flags { flags: [] } -> error
     }
   }
 

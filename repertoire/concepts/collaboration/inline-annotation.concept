@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept InlineAnnotation [A] {
 
@@ -30,6 +31,9 @@ concept InlineAnnotation [A] {
       -> invalidChangeType(message: String) {
         changeType not one of "insertion", "deletion", "formatting", "move".
       }
+
+      fixture annotate_insertion { contentRef: "doc-readme", changeType: "insertion", scope: "new paragraph content", author: "alice@example.com" }
+      fixture annotate_invalid_type { contentRef: "doc-readme", changeType: "unsupported-type", scope: "content", author: "bob" } -> error
     }
 
     action accept(annotationId: A) {
@@ -42,6 +46,9 @@ concept InlineAnnotation [A] {
       -> alreadyResolved(message: String) {
         Annotation was already accepted or rejected.
       }
+
+      fixture accept_pending { annotationId: "inline-annotation-1" }
+      fixture accept_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 
     action reject(annotationId: A) {
@@ -54,30 +61,45 @@ concept InlineAnnotation [A] {
       -> alreadyResolved(message: String) {
         Annotation was already accepted or rejected.
       }
+
+      fixture reject_pending { annotationId: "inline-annotation-1" }
+      fixture reject_nonexistent { annotationId: "inline-annotation-nonexistent" } -> error
     }
 
     action acceptAll(contentRef: String) {
       -> ok(cleanContent: Bytes, count: Int) {
         All pending annotations accepted. Count returned.
       }
+
+      fixture accept_all_for_doc { contentRef: "doc-readme" }
+      fixture accept_all_empty_ref { contentRef: "" } -> error
     }
 
     action rejectAll(contentRef: String) {
       -> ok(cleanContent: Bytes, count: Int) {
         All pending annotations rejected. Count returned.
       }
+
+      fixture reject_all_for_doc { contentRef: "doc-readme" }
+      fixture reject_all_empty_ref { contentRef: "" } -> error
     }
 
     action toggleTracking(contentRef: String, enabled: Bool) {
       -> ok() {
         Tracking enabled or disabled for this document.
       }
+
+      fixture enable_tracking { contentRef: "doc-readme", enabled: true }
+      fixture disable_tracking { contentRef: "doc-readme", enabled: false }
     }
 
     action listPending(contentRef: String) {
       -> ok(annotations: list A) {
         Returns all annotations with status "pending" for this content.
       }
+
+      fixture list_pending_existing { contentRef: "doc-readme" }
+      fixture list_pending_empty_ref { contentRef: "" } -> error
     }
   }
 

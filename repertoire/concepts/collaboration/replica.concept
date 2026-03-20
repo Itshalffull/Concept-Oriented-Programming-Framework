@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept Replica [R] {
@@ -29,6 +30,9 @@ concept Replica [R] {
       -> invalidOp(message: String) {
         Operation is malformed or not applicable to current state.
       }
+
+      fixture update_insert_op { op: "insert:hello-world" }
+      fixture update_empty_op { op: "" } -> error
     }
 
     action receiveRemote(op: Bytes, fromReplica: String) {
@@ -41,6 +45,9 @@ concept Replica [R] {
       -> unknownReplica(message: String) {
         fromReplica not in the known peers set.
       }
+
+      fixture receive_from_known_peer { op: "update:field=value", fromReplica: "replica-2" }
+      fixture receive_from_unknown_peer { op: "update:field=value", fromReplica: "unknown-replica-999" } -> error
     }
 
     action sync(peer: String) {
@@ -50,18 +57,25 @@ concept Replica [R] {
       -> unreachable(message: String) {
         Peer is not currently reachable.
       }
+
+      fixture sync_known_peer { peer: "replica-2" }
+      fixture sync_unknown_peer { peer: "unknown-peer-999" } -> error
     }
 
     action getState() {
       -> ok(state: Bytes, clock: Bytes) {
         Current local state with causal clock snapshot.
       }
+
+      fixture valid {}
     }
 
     action fork() {
       -> ok(newReplicaId: String) {
         Creates a new replica ID for offline branching.
       }
+
+      fixture valid {}
     }
 
     action addPeer(peerId: String) {
@@ -71,6 +85,9 @@ concept Replica [R] {
       -> alreadyKnown(message: String) {
         Peer already in the set.
       }
+
+      fixture add_new_peer { peerId: "replica-3" }
+      fixture add_empty_peer { peerId: "" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Publisher [U] {
 
@@ -36,6 +37,9 @@ concept Publisher [U] {
       -> invalid(errors: list String) {
         Source path missing, manifest incomplete, or kind unsupported.
       }
+
+      fixture package_library { source_path: "/src/auth", kind: "library", manifest: {"module_id": "auth", "version": "2.0.0", "dependencies": ["crypto"]} }
+      fixture package_invalid_kind { source_path: "/src/auth", kind: "unknown-kind", manifest: {"module_id": "auth", "version": "1.0.0", "dependencies": []} } -> error
     }
 
     action sign(publication: U) {
@@ -46,6 +50,9 @@ concept Publisher [U] {
       -> error(message: String) {
         Signing key unavailable or signing process failed.
       }
+
+      fixture sign_existing { publication: "pub-1" }
+      fixture sign_missing { publication: "pub-nonexistent" } -> error
     }
 
     action attest(publication: U, builder: String,
@@ -54,6 +61,9 @@ concept Publisher [U] {
         Records provenance metadata: builder identity, source repository,
         commit hash, build timestamp, and computed SLSA level.
       }
+
+      fixture attest_ci_build { publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }
+      fixture attest_missing_pub { publication: "pub-nonexistent", builder: "ci", source_repo: "repo", source_commit: "000" } -> error
     }
 
     action generateSbom(publication: U) {
@@ -61,6 +71,9 @@ concept Publisher [U] {
         Generates a Software Bill of Materials for the packaged artifact.
         Stores the SBOM in a standard format (SPDX or CycloneDX).
       }
+
+      fixture generate_sbom_existing { publication: "pub-1" }
+      fixture generate_sbom_missing { publication: "pub-nonexistent" } -> error
     }
 
     action upload(publication: U, registry_url: String) {
@@ -77,6 +90,9 @@ concept Publisher [U] {
       -> error(message: String) {
         Network or server error during upload.
       }
+
+      fixture upload_to_registry { publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }
+      fixture upload_missing_pub { publication: "pub-nonexistent", registry_url: "https://registry.example.com/api/v1" } -> error
     }
   }
 

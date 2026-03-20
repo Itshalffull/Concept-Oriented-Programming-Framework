@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Resolver [R] {
 
@@ -59,6 +60,9 @@ concept Resolver [R] {
         An unexpected error occurred during resolution (e.g., registry
         unreachable, malformed constraint).
       }
+
+      fixture resolve_simple { constraints: [{"module_id": "auth", "version_range": "^1.0.0", "edge_type": "normal", "environment": "all", "features": []}], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "minor"}, locked_versions: null }
+      fixture resolve_empty_constraints { constraints: [], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "minor"}, locked_versions: null } -> error
     }
 
     action update(resolution: R,
@@ -77,6 +81,9 @@ concept Resolver [R] {
         The requested update targets cannot be satisfied within the
         allowed_updates constraints.
       }
+
+      fixture update_single_target { resolution: "res-1", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": true, "allowed_updates": "minor"} }
+      fixture update_missing_resolution { resolution: "res-nonexistent", targets: ["auth"], policy: {"unification_strategy": "highest", "feature_unification": "union", "prefer_locked": false, "allowed_updates": "major"} } -> error
     }
 
     action explain(resolution: R, module_id: String) {
@@ -88,6 +95,9 @@ concept Resolver [R] {
       -> notfound() {
         The specified module is not present in the resolution.
       }
+
+      fixture explain_existing_module { resolution: "res-1", module_id: "auth" }
+      fixture explain_missing_module { resolution: "res-1", module_id: "nonexistent-pkg" } -> error
     }
   }
 

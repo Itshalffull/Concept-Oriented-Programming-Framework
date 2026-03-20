@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept MultiValueResolution [V] {
 
@@ -18,6 +19,8 @@ concept MultiValueResolution [V] {
         Returns provider metadata for PluginRegistry registration.
         name: "multi-value", category: "conflict-resolution", priority: 30
       }
+
+      fixture valid {}
     }
 
     action attemptResolve(base: option Bytes, v1: Bytes, v2: Bytes, context: String) {
@@ -28,6 +31,9 @@ concept MultiValueResolution [V] {
       -> cannotResolve(reason: String) {
         Content type does not support multi-value representation.
       }
+
+      fixture resolve_two_values { base: null, v1: "cart-item-a", v2: "cart-item-b", context: "shopping-cart" }
+      fixture resolve_with_base { base: "original-value", v1: "edit-alice", v2: "edit-bob", context: "annotations" }
     }
   }
 

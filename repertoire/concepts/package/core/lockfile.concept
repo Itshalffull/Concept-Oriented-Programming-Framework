@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Lockfile [L] {
 
@@ -46,6 +47,9 @@ concept Lockfile [L] {
         Serialization failed (e.g., entries contain circular references
         or invalid content hashes).
       }
+
+      fixture write_valid_lockfile { project_hash: "sha256:manifest-hash-001", entries: [{"module_id": "lodash", "version": "4.17.21", "content_hash": "sha256:abc123", "artifact_url": "https://registry.example.com/lodash.tgz", "integrity": "sha256:abc123", "features_enabled": [], "dependencies": []}], metadata: {"resolver_version": "1.0.0", "resolved_at": "2026-01-15T10:00:00Z", "registry_snapshot": "snap-001"} }
+      fixture write_circular_ref { project_hash: "sha256:hash", entries: [{"module_id": "self-ref", "version": "1.0.0", "content_hash": "sha256:abc", "artifact_url": "url", "integrity": "sha256:abc", "features_enabled": [], "dependencies": ["self-ref"]}], metadata: {"resolver_version": "1.0.0", "resolved_at": "2026-01-15T10:00:00Z", "registry_snapshot": "snap-001"} } -> error
     }
 
     action read(lockfile: L) {
@@ -65,6 +69,9 @@ concept Lockfile [L] {
       -> corrupt(message: String) {
         The lockfile exists but cannot be parsed or has been tampered with.
       }
+
+      fixture read_existing_lockfile { lockfile: "lock-1" }
+      fixture read_nonexistent_lockfile { lockfile: "lock-nonexistent" } -> error
     }
 
     action verify(lockfile: L) {
@@ -81,6 +88,9 @@ concept Lockfile [L] {
         One or more entries have content hashes or integrity digests that
         do not match the downloaded artifacts.
       }
+
+      fixture verify_valid_lockfile { lockfile: "lock-1" }
+      fixture verify_nonexistent_lockfile { lockfile: "lock-nonexistent" } -> error
     }
 
     action diff(old_lockfile: L, new_lockfile: L) {
@@ -93,6 +103,9 @@ concept Lockfile [L] {
       -> error(message: String) {
         One or both lockfiles could not be read.
       }
+
+      fixture diff_two_lockfiles { old_lockfile: "lock-1", new_lockfile: "lock-2" }
+      fixture diff_missing_lockfile { old_lockfile: "lock-nonexistent", new_lockfile: "lock-1" } -> error
     }
   }
 

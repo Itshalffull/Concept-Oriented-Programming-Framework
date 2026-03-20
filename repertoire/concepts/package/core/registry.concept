@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Registry [M] {
 
@@ -71,6 +72,9 @@ concept Registry [M] {
         The artifact hash is malformed, a dependency references an unknown
         module, or required metadata fields are missing.
       }
+
+      fixture publish_concept_module { name: "auth", namespace: "clef", version: "1.0.0", kind: concept, artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description": "Auth concept", "license": "MIT", "repository": "https://github.com/org/auth", "authors": ["dev@example.com"], "keywords": ["auth", "security"]} }
+      fixture publish_empty_name { name: "", namespace: "clef", version: "1.0.0", kind: concept, artifact_hash: "sha256:abc", dependencies: [], metadata: {"description": "Test", "license": "MIT", "repository": "", "authors": [], "keywords": []} } -> error
     }
 
     action yank(module: M) {
@@ -81,6 +85,9 @@ concept Registry [M] {
       -> notfound() {
         The specified module does not exist in the registry.
       }
+
+      fixture yank_existing_module { module: "mod-1" }
+      fixture yank_nonexistent { module: "mod-nonexistent" } -> error
     }
 
     action lookup(name: String, namespace: String, version_range: String) {
@@ -91,6 +98,9 @@ concept Registry [M] {
       -> notfound() {
         No modules match the given name and namespace.
       }
+
+      fixture lookup_existing { name: "auth", namespace: "clef", version_range: "^1.0.0" }
+      fixture lookup_nonexistent { name: "nonexistent", namespace: "clef", version_range: "*" } -> error
     }
 
     action search(query: String, kind: option ModuleKind,
@@ -99,6 +109,9 @@ concept Registry [M] {
         Full-text search across module name, description, and keywords.
         Optionally filtered by module kind and/or namespace.
       }
+
+      fixture search_by_keyword { query: "authentication", kind: null, namespace: null }
+      fixture search_filtered { query: "auth", kind: concept, namespace: "clef" }
     }
 
     action listVersions(name: String, namespace: String) {
@@ -109,6 +122,9 @@ concept Registry [M] {
       -> notfound() {
         No module with this name and namespace exists.
       }
+
+      fixture list_versions_existing { name: "auth", namespace: "clef" }
+      fixture list_versions_nonexistent { name: "nonexistent", namespace: "clef" } -> error
     }
 
     action resolveCapability(capability: String) {
@@ -119,6 +135,9 @@ concept Registry [M] {
       -> notfound() {
         No module provides the requested capability.
       }
+
+      fixture resolve_existing_capability { capability: "authentication" }
+      fixture resolve_missing_capability { capability: "nonexistent-capability" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ContentStore [B] {
 
@@ -27,6 +28,9 @@ concept ContentStore [B] {
       -> error(message: String) {
         Storage write failed (disk full, permissions, etc.).
       }
+
+      fixture store_tarball { data: "package-contents-v1", media_type: "application/tar+gzip" }
+      fixture store_empty_media_type { data: "some-data", media_type: "" } -> error
     }
 
     action retrieve(hash: String) {
@@ -36,6 +40,9 @@ concept ContentStore [B] {
       -> notfound() {
         No blob exists with the given hash.
       }
+
+      fixture retrieve_existing { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+      fixture retrieve_missing { hash: "0000000000000000000000000000000000000000000000000000000000000000" } -> error
     }
 
     action verify(hash: String) {
@@ -45,6 +52,9 @@ concept ContentStore [B] {
       -> corrupted(expected: String, actual: String) {
         Stored data does not match its content hash; blob is corrupt.
       }
+
+      fixture verify_valid_hash { hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }
+      fixture verify_nonexistent { hash: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" } -> error
     }
 
     action gc(lockfile_hashes: list String) {
@@ -52,6 +62,9 @@ concept ContentStore [B] {
         Removes all blobs whose hashes are not present in the lockfile_hashes
         list and whose reference_count is zero. Returns the count of blobs removed.
       }
+
+      fixture gc_with_retained_hashes { lockfile_hashes: ["hash1", "hash2", "hash3"] }
+      fixture gc_empty_lockfile { lockfile_hashes: [] }
     }
 
     action stats() {
@@ -59,6 +72,8 @@ concept ContentStore [B] {
         Returns aggregate storage statistics: total blob count, total bytes
         on disk, and bytes saved through deduplication.
       }
+
+      fixture valid {}
     }
   }
 
