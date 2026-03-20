@@ -45,6 +45,9 @@ concept ErrorCorrelation [E] {
         where-clause-failure, transport-error,
         machine-invalid-event, signal-cycle.
       }
+      fixture record_action_error { flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }
+      fixture record_sync_mismatch { flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }
+      fixture record_empty_flow { flowId: "", errorKind: "action-error", message: "fail", rawEvent: "{}" } -> error
     }
 
     action findByEntity(symbol: String, since: String) {
@@ -52,6 +55,9 @@ concept ErrorCorrelation [E] {
         Return all errors associated with a static entity.
         Results as serialized JSON array.
       }
+      fixture find_by_concept { symbol: "ConceptEntity:User", since: "" }
+      fixture find_by_action_since { symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" }
+      fixture find_empty_symbol { symbol: "", since: "" } -> error
     }
 
     action findByKind(errorKind: String, since: String) {
