@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReputationWeight [RW] {
 
@@ -18,12 +19,14 @@ concept ReputationWeight [RW] {
   }
 
   actions {
-    action configure(scalingFunction: String, cap: option Float, floor: option Float) {
+    action configure(scalingFunction: option String, cap: option Float) {
       -> configured(config: RW) {
         Weight = f(reputation) where f is the configured scaling function.
-        Cap sets maximum weight. Floor sets minimum weight for any
-        participant with positive reputation.
+        Cap sets maximum weight. Defaults to linear scaling with no cap.
       }
+
+      fixture configure_linear { scalingFunction: "linear", cap: 100.0 }
+      fixture configure_empty { } -> error
     }
 
     action computeWeight(config: RW, reputationScore: Float) {
