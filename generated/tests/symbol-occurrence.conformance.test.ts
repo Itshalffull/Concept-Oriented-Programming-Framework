@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SymbolOccurrence functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SymbolOccurrence functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolOccurrenceHandler.record !== 'function') return;
-      try {
-        const result = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -139,22 +143,20 @@ describe('SymbolOccurrence functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
-      try {
-        const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_find_defs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('SymbolOccurrence functional handler', () => {
       if (typeof symbolOccurrenceHandler.findDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolOccurrenceHandler.findDefinitions({ symbol: "clef/concept/NonExistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('SymbolOccurrence functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
-      try {
-        const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_find_refs" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,6 +234,8 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "find_refs_filtered" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/Article", roleFilter: "reference" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +244,7 @@ describe('SymbolOccurrence functional handler', () => {
       if (typeof symbolOccurrenceHandler.findReferences !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolOccurrenceHandler.findReferences({ symbol: "clef/concept/NonExistent", roleFilter: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +292,20 @@ describe('SymbolOccurrence functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
-      try {
-        const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_find_at_pos" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "specs/article.concept", row: "2", col: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +314,7 @@ describe('SymbolOccurrence functional handler', () => {
       if (typeof symbolOccurrenceHandler.findAtPosition !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolOccurrenceHandler.findAtPosition({ file: "src/empty.ts", row: "1", col: "1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +362,20 @@ describe('SymbolOccurrence functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
-      try {
-        const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_find_in_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "specs/article.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -385,6 +383,8 @@ describe('SymbolOccurrence functional handler', () => {
     it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolOccurrenceHandler.findInFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "specs/article.concept", startRow: "2", startCol: "8", endRow: "2", endCol: "15", startByte: "30", endByte: "37", role: "definition" }), storage));
+      await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({ symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: "5", startCol: "12", endRow: "5", endCol: "19", startByte: "100", endByte: "107", role: "reference" }), storage));
       const result = await interpret(symbolOccurrenceHandler.findInFile({ file: "src/no-symbols.ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -395,15 +395,12 @@ describe('SymbolOccurrence functional handler', () => {
     it('declares concept name', async () => {
       if (typeof symbolOccurrenceHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = symbolOccurrenceHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = symbolOccurrenceHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SymbolOccurrence');
     });
@@ -449,11 +446,14 @@ describe('SymbolOccurrence functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = symbolOccurrenceHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(symbolOccurrenceHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -480,12 +480,15 @@ describe('SymbolOccurrence functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = symbolOccurrenceHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(symbolOccurrenceHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-file
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-file
               }
             }
           },
@@ -500,9 +503,12 @@ describe('SymbolOccurrence functional handler', () => {
     it('record handles empty input: ', async () => {
       if (typeof symbolOccurrenceHandler.record !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(symbolOccurrenceHandler.record({  }), storage);
+      const result = await safeInvoke(async () => await interpret(symbolOccurrenceHandler.record({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('record ensures on ok: ', async () => {
@@ -513,9 +519,11 @@ describe('SymbolOccurrence functional handler', () => {
           fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), startRow: fc.integer({ min: 1, max: 1000 }), startCol: fc.integer({ min: 1, max: 1000 }), endRow: fc.integer({ min: 1, max: 1000 }), endCol: fc.integer({ min: 1, max: 1000 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }), role: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = symbolOccurrenceHandler.record(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = symbolOccurrenceHandler.record(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

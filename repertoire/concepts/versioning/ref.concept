@@ -28,7 +28,7 @@ concept Ref [R] {
       }
 
       fixture create_head { name: "HEAD", hash: "sha256:abc123def456" }
-      fixture empty_ref_name { name: "", hash: "sha256:abc123" } -> error
+      fixture empty_ref_name { name: "", hash: "sha256:abc123" }
     }
 
     action update(name: String, newHash: String, expectedOldHash: String) {

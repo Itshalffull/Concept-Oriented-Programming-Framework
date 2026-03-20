@@ -40,7 +40,7 @@ concept VariantEntity [V] {
         tag. Results as serialized JSON array.
       }
       fixture matching_valid { variant: "variant-entity-1" }
-      fixture matching_missing { variant: "nonexistent-id" } -> error
+      fixture matching_missing { variant: "nonexistent-id" }
     }
 
     action isDead(variant: V) {

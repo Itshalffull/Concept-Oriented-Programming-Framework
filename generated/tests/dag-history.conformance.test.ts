@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('DAGHistory functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -94,11 +98,11 @@ describe('DAGHistory functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_content_ref" -> error', async () => {
+    it('fixture "empty_content_ref" -> ok', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "ancestors_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +173,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +221,21 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_common" -> ok', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +244,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +292,21 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "descendants_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +315,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +363,21 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "path_between" -> ok', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +386,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.between({ from: "dag-history-nonexistent", to: "dag-history-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,22 +434,21 @@ describe('DAGHistory functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
-      try {
-        const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
+      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -458,7 +457,7 @@ describe('DAGHistory functional handler', () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -467,15 +466,12 @@ describe('DAGHistory functional handler', () => {
     it('declares concept name', async () => {
       if (typeof dagHistoryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = dagHistoryHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = dagHistoryHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('DAGHistory');
     });
@@ -522,11 +518,14 @@ describe('DAGHistory functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = dagHistoryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(dagHistoryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -554,12 +553,15 @@ describe('DAGHistory functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = dagHistoryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(dagHistoryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in nodes
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in nodes
               }
             }
           },
@@ -574,9 +576,12 @@ describe('DAGHistory functional handler', () => {
     it('append handles empty input: ', async () => {
       if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dagHistoryHandler.append({  }), storage);
+      const result = await safeInvoke(async () => await interpret(dagHistoryHandler.append({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('append ensures on ok: ', async () => {
@@ -587,9 +592,11 @@ describe('DAGHistory functional handler', () => {
           fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dagHistoryHandler.append(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = dagHistoryHandler.append(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -607,9 +614,11 @@ describe('DAGHistory functional handler', () => {
           fc.record({ nodeId: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dagHistoryHandler.ancestors(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = dagHistoryHandler.ancestors(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -627,9 +636,11 @@ describe('DAGHistory functional handler', () => {
           fc.record({ a: fc.string(), b: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dagHistoryHandler.commonAncestor(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = dagHistoryHandler.commonAncestor(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

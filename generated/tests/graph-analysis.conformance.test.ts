@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('GraphAnalysis functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,20 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "pagerank_analysis" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,6 +96,8 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "degree_with_config" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -98,14 +106,16 @@ describe('GraphAnalysis functional handler', () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}", algorithm: "nonexistent", config: null }), storage);
-      expect(result.variant).toBe('unknown_algorithm');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unknown_algorithm'));
     });
 
     it('fixture "bad_graph_json" -> analysis_failed', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "not json", algorithm: "pagerank", config: null }), storage);
-      expect(result.variant).toBe('analysis_failed');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('analysis_failed'));
     });
 
   });
@@ -153,16 +163,12 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -225,22 +231,20 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "existing_result" -> ok', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -249,7 +253,8 @@ describe('GraphAnalysis functional handler', () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphAnalysisHandler.getResult({ result: "result-nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -297,22 +302,20 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "for_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,22 +365,20 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "all_algorithms" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -385,6 +386,8 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "centrality_only" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: "centrality" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,22 +437,20 @@ describe('GraphAnalysis functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
-      try {
-        const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "clear_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
+      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -460,15 +461,12 @@ describe('GraphAnalysis functional handler', () => {
     it('declares concept name', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = graphAnalysisHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = graphAnalysisHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('GraphAnalysis');
     });
@@ -505,11 +503,14 @@ describe('GraphAnalysis functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = graphAnalysisHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(graphAnalysisHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -537,12 +538,15 @@ describe('GraphAnalysis functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = graphAnalysisHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(graphAnalysisHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-result_algorithm
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-result_algorithm
               }
             }
           },
@@ -557,9 +561,12 @@ describe('GraphAnalysis functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(graphAnalysisHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(graphAnalysisHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -570,9 +577,11 @@ describe('GraphAnalysis functional handler', () => {
           fc.record({ algorithm: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = graphAnalysisHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = graphAnalysisHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

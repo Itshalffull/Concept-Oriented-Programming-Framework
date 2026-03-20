@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Permission functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Permission functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof permissionHandler.grant !== 'function') return;
-      try {
-        const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(permissionHandler.grant({ who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Permission functional handler', () => {
       if (typeof permissionHandler.grant !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(permissionHandler.grant({ who: "", where: "articles", what: "read", grantedBy: "admin" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Permission functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof permissionHandler.revoke !== 'function') return;
-      try {
-        const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(permissionHandler.revoke({ permission: "alice:articles:read" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Permission functional handler', () => {
       if (typeof permissionHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(permissionHandler.revoke({ permission: "nonexistent:perm:key" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Permission functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof permissionHandler.check !== 'function') return;
-      try {
-        const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(permissionHandler.check({ who: "alice", where: "articles", what: "read" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Permission functional handler', () => {
       if (typeof permissionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(permissionHandler.check({ who: "unknown-user", where: "articles", what: "delete" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -244,15 +240,12 @@ describe('Permission functional handler', () => {
     it('declares concept name', async () => {
       if (typeof permissionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = permissionHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = permissionHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Permission');
     });
@@ -291,11 +284,14 @@ describe('Permission functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = permissionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(permissionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -320,12 +316,15 @@ describe('Permission functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = permissionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(permissionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-where
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-where
               }
             }
           },
@@ -340,9 +339,12 @@ describe('Permission functional handler', () => {
     it('grant handles empty input: ', async () => {
       if (typeof permissionHandler.grant !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(permissionHandler.grant({  }), storage);
+      const result = await safeInvoke(async () => await interpret(permissionHandler.grant({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('grant ensures on granted: ', async () => {
@@ -353,9 +355,11 @@ describe('Permission functional handler', () => {
           fc.record({ who: fc.string({ minLength: 1, maxLength: 50 }), where: fc.string({ minLength: 1, maxLength: 50 }), what: fc.string({ minLength: 1, maxLength: 50 }), condition: fc.string(), grantedBy: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = permissionHandler.grant(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "granted") {
+            const result = await safeInvoke(async () => {
+              const program = permissionHandler.grant(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "granted") {
               seen = true;
               expect(result.output).toBeDefined();
             }

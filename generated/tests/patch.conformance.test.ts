@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Patch functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Patch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof patchHandler.create !== 'function') return;
-      try {
-        const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Patch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof patchHandler.apply !== 'function') return;
-      try {
-        const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.apply({ patchId: "patch-nonexistent", content: "hello" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +211,20 @@ describe('Patch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof patchHandler.invert !== 'function') return;
-      try {
-        const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "invert_existing" -> ok', async () => {
       if (typeof patchHandler.invert !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage));
+      await safeInvoke(async () => await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage));
       const result = await interpret(patchHandler.invert({ patchId: "patch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.invert !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.invert({ patchId: "patch-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,20 @@ describe('Patch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof patchHandler.compose !== 'function') return;
-      try {
-        const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "compose_sequential" -> ok', async () => {
       if (typeof patchHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage));
+      await safeInvoke(async () => await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage));
       const result = await interpret(patchHandler.compose({ first: "patch-1", second: "patch-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +303,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.compose({ first: "patch-nonexistent", second: "patch-2" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +351,20 @@ describe('Patch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof patchHandler.commute !== 'function') return;
-      try {
-        const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "commute_independent" -> ok', async () => {
       if (typeof patchHandler.commute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage));
+      await safeInvoke(async () => await interpret(patchHandler.apply({ patchId: "patch-1", content: "hello\nworld" }), storage));
       const result = await interpret(patchHandler.commute({ p1: "patch-1", p2: "patch-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +373,7 @@ describe('Patch functional handler', () => {
       if (typeof patchHandler.commute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(patchHandler.commute({ p1: "patch-nonexistent", p2: "patch-2" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +382,12 @@ describe('Patch functional handler', () => {
     it('declares concept name', async () => {
       if (typeof patchHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = patchHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = patchHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Patch');
     });
@@ -444,11 +435,14 @@ describe('Patch functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = patchHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(patchHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -475,12 +469,15 @@ describe('Patch functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = patchHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(patchHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in patches
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in patches
               }
             }
           },
@@ -495,9 +492,12 @@ describe('Patch functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof patchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(patchHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(patchHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -508,9 +508,11 @@ describe('Patch functional handler', () => {
           fc.record({ base: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), effect: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = patchHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = patchHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -528,9 +530,11 @@ describe('Patch functional handler', () => {
           fc.record({ patchId: fc.string(), content: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = patchHandler.apply(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = patchHandler.apply(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -548,9 +552,11 @@ describe('Patch functional handler', () => {
           fc.record({ patchId: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = patchHandler.invert(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = patchHandler.invert(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

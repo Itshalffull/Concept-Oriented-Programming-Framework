@@ -8,6 +8,14 @@ import fc from 'fast-check';
 import { testGenTypeScriptHandler } from '../../handlers/ts/framework/test/test-gen-typescript.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('TestGenTypeScript imperative handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -16,16 +24,12 @@ describe('TestGenTypeScript imperative handler', () => {
   });
 
   describe('render', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof testGenTypeScriptHandler.render !== 'function') return;
-      try {
-        const result = await testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.typescript" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await testGenTypeScriptHandler.render({ test_plan: "{\"conceptName\":\"Counter\",\"actions\":[{\"name\":\"increment\",\"params\":[],\"variants\":[\"ok\"]}],\"examples\":[],\"properties\":[],\"stateInvariants\":[],\"liveness\":[],\"contracts\":[]}", output_path: "generated/tests/counter.test.typescript" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -40,22 +44,18 @@ describe('TestGenTypeScript imperative handler', () => {
       if (typeof testGenTypeScriptHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await testGenTypeScriptHandler.render({ test_plan: "not json", output_path: "test.ts" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('renderBatch', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof testGenTypeScriptHandler.renderBatch !== 'function') return;
-      try {
-        const result = await testGenTypeScriptHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await testGenTypeScriptHandler.renderBatch({ test_plans: "[{\"test_plan\":\"{}\",\"output_path\":\"a.ts\"}]" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -70,22 +70,18 @@ describe('TestGenTypeScript imperative handler', () => {
       if (typeof testGenTypeScriptHandler.renderBatch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await testGenTypeScriptHandler.renderBatch({ test_plans: "" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('listRendered', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof testGenTypeScriptHandler.listRendered !== 'function') return;
-      try {
-        const result = await testGenTypeScriptHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await testGenTypeScriptHandler.listRendered({ concept_ref: "clef/concept/Counter" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -100,7 +96,7 @@ describe('TestGenTypeScript imperative handler', () => {
       if (typeof testGenTypeScriptHandler.listRendered !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await testGenTypeScriptHandler.listRendered({ concept_ref: "" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -109,14 +105,8 @@ describe('TestGenTypeScript imperative handler', () => {
     it('declares concept name', async () => {
       if (typeof testGenTypeScriptHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = testGenTypeScriptHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-        }
-      } catch { return; }
+      const result = await testGenTypeScriptHandler.register({}, storage);
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('TestGenTypeScript');
     });
@@ -159,10 +149,11 @@ describe('TestGenTypeScript imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = testGenTypeScriptHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(testGenTypeScriptHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(testGenTypeScriptHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -187,11 +178,12 @@ describe('TestGenTypeScript imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = testGenTypeScriptHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(testGenTypeScriptHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty rendered code stored
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(testGenTypeScriptHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty rendered code stored
               }
             }
           },

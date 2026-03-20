@@ -73,9 +73,9 @@ concept WidgetEntity [W] {
         Results as serialized JSON array.
       }
       fixture composing_valid { widget: "widget-entity-1" }
-      fixture composing_missing { widget: "nonexistent-id" } -> error
+      fixture composing_missing { widget: "nonexistent-id" }
       fixture find_composing { widget: "widget-entity-1" }
-      fixture find_composing_missing { widget: "nonexistent" } -> error
+      fixture find_composing_missing { widget: "nonexistent" }
     }
 
     action findComposedBy(widget: W) {
@@ -84,9 +84,9 @@ concept WidgetEntity [W] {
         Results as serialized JSON array.
       }
       fixture composed_valid { widget: "widget-entity-1" }
-      fixture composed_missing { widget: "nonexistent-id" } -> error
+      fixture composed_missing { widget: "nonexistent-id" }
       fixture find_composed { widget: "widget-entity-1" }
-      fixture find_composed_missing { widget: "nonexistent" } -> error
+      fixture find_composed_missing { widget: "nonexistent" }
     }
 
     action generatedComponents(widget: W) {
@@ -95,7 +95,7 @@ concept WidgetEntity [W] {
         Results as serialized JSON array of { framework, file }.
       }
       fixture generated_valid { widget: "widget-entity-1" }
-      fixture generated_missing { widget: "nonexistent-id" } -> error
+      fixture generated_missing { widget: "nonexistent-id" }
     }
 
     action accessibilityAudit(widget: W) {

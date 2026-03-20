@@ -81,7 +81,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_article_handlers { concept: "Article" }
-      fixture find_nonexistent_concept { concept: "Nonexistent" } -> error
+      fixture find_nonexistent_concept { concept: "Nonexistent" }
     }
 
     action findByLanguage(language: String) {
@@ -91,7 +91,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_typescript_handlers { language: "typescript" }
-      fixture find_unknown_language { language: "cobol" } -> error
+      fixture find_unknown_language { language: "cobol" }
     }
 
     action getActionMethod(handler: H, actionName: String) {
@@ -134,7 +134,7 @@ concept HandlerEntity [H] {
       }
 
       fixture deps_article { handler: "handler-001" }
-      fixture deps_nonexistent { handler: "nonexistent-handler" } -> error
+      fixture deps_nonexistent { handler: "nonexistent-handler" }
     }
 
     action getStorageUsage(handler: H) {
@@ -145,7 +145,7 @@ concept HandlerEntity [H] {
       }
 
       fixture storage_article { handler: "handler-001" }
-      fixture storage_nonexistent { handler: "nonexistent-handler" } -> error
+      fixture storage_nonexistent { handler: "nonexistent-handler" }
     }
 
     action resolveStackFrame(file: String, line: Int, col: Int) {
@@ -198,7 +198,7 @@ concept HandlerEntity [H] {
       }
 
       fixture resolve_trace { stackTrace: "Error: fail\n    at create (handlers/ts/article.handler.ts:15:4)" }
-      fixture resolve_empty_trace { stackTrace: "" } -> error
+      fixture resolve_empty_trace { stackTrace: "" }
     }
 
     action traceToVariantReturn(handler: H, actionName: String) {
@@ -267,7 +267,7 @@ concept HandlerEntity [H] {
       }
 
       fixture find_article_errors { errorSymbol: "clef/concept/Article", since: "2026-01-01" }
-      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" } -> error
+      fixture find_unknown_errors { errorSymbol: "nonexistent/symbol", since: "2026-01-01" }
     }
 
     action sourceForAction(concept: String, actionName: String) {

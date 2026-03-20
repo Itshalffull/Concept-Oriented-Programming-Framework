@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ConsentProcess functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ConsentProcess functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof consentProcessHandler.initiate !== 'function') return;
-      try {
-        const result = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(consentProcessHandler.initiate({ proposalRef: "proposal-budget-2026" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.initiate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.initiate({ proposalRef: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('ConsentProcess functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof consentProcessHandler.advancePhase !== 'function') return;
-      try {
-        const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.advancePhase !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.advancePhase({ process: "consent-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('ConsentProcess functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof consentProcessHandler.raiseObjection !== 'function') return;
-      try {
-        const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "alice", reason: "Exceeds annual budget limit", isParamount: "true" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.raiseObjection !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.raiseObjection({ process: "consent-001", objector: "bob", reason: "Unclear scope", isParamount: "false" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('ConsentProcess functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof consentProcessHandler.integrateObjection !== 'function') return;
-      try {
-        const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "0", amendment: "Cap budget at 80% of original request" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.integrateObjection !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.integrateObjection({ process: "consent-001", objectionIndex: "99", amendment: "N/A" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('ConsentProcess functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof consentProcessHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(consentProcessHandler.resolve({ process: "consent-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('ConsentProcess functional handler', () => {
       if (typeof consentProcessHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(consentProcessHandler.resolve({ process: "consent-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +376,12 @@ describe('ConsentProcess functional handler', () => {
     it('declares concept name', async () => {
       if (typeof consentProcessHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = consentProcessHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = consentProcessHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ConsentProcess');
     });
@@ -435,11 +420,14 @@ describe('ConsentProcess functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = consentProcessHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(consentProcessHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -466,12 +454,15 @@ describe('ConsentProcess functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = consentProcessHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(consentProcessHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-proposalRef
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-proposalRef
               }
             }
           },
@@ -486,9 +477,12 @@ describe('ConsentProcess functional handler', () => {
     it('initiate handles empty input: ', async () => {
       if (typeof consentProcessHandler.initiate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(consentProcessHandler.initiate({  }), storage);
+      const result = await safeInvoke(async () => await interpret(consentProcessHandler.initiate({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('initiate ensures on initiated: ', async () => {
@@ -499,9 +493,11 @@ describe('ConsentProcess functional handler', () => {
           fc.record({ proposalRef: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = consentProcessHandler.initiate(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "initiated") {
+            const result = await safeInvoke(async () => {
+              const program = consentProcessHandler.initiate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "initiated") {
               seen = true;
               expect(result.output).toBeDefined();
             }

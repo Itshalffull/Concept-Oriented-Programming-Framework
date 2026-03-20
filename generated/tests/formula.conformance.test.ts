@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Formula functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Formula functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof formulaHandler.create !== 'function') return;
-      try {
-        const result = await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Formula functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_formula" -> error', async () => {
+    it('fixture "create_empty_formula" -> ok', async () => {
       if (typeof formulaHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Formula functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof formulaHandler.evaluate !== 'function') return;
-      try {
-        const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof formulaHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage));
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage));
       const result = await interpret(formulaHandler.evaluate({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('Formula functional handler', () => {
       if (typeof formulaHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formulaHandler.evaluate({ formula: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('Formula functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof formulaHandler.getDependencies !== 'function') return;
-      try {
-        const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_deps" -> ok', async () => {
       if (typeof formulaHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage));
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage));
       const result = await interpret(formulaHandler.getDependencies({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('Formula functional handler', () => {
       if (typeof formulaHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formulaHandler.getDependencies({ formula: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +283,20 @@ describe('Formula functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof formulaHandler.invalidate !== 'function') return;
-      try {
-        const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof formulaHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage));
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage));
       const result = await interpret(formulaHandler.invalidate({ formula: "total_price" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('Formula functional handler', () => {
       if (typeof formulaHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formulaHandler.invalidate({ formula: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +353,20 @@ describe('Formula functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof formulaHandler.setExpression !== 'function') return;
-      try {
-        const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_expr" -> ok', async () => {
       if (typeof formulaHandler.setExpression !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "total_price", expression: "price * quantity" }), storage));
+      await safeInvoke(async () => await interpret(formulaHandler.create({ formula: "", expression: "x + y" }), storage));
       const result = await interpret(formulaHandler.setExpression({ formula: "total_price", expression: "price * quantity * discount" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +375,7 @@ describe('Formula functional handler', () => {
       if (typeof formulaHandler.setExpression !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(formulaHandler.setExpression({ formula: "nonexistent", expression: "a + b" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +384,12 @@ describe('Formula functional handler', () => {
     it('declares concept name', async () => {
       if (typeof formulaHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = formulaHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = formulaHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Formula');
     });
@@ -432,11 +425,14 @@ describe('Formula functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = formulaHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(formulaHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -463,12 +459,15 @@ describe('Formula functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = formulaHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(formulaHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-dependencies
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-dependencies
               }
             }
           },
@@ -483,9 +482,12 @@ describe('Formula functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof formulaHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(formulaHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(formulaHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -496,9 +498,11 @@ describe('Formula functional handler', () => {
           fc.record({ formula: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = formulaHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = formulaHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

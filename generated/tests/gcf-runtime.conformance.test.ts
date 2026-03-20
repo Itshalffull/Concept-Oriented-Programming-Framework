@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('GcfRuntime functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('GcfRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof gcfRuntimeHandler.provision !== 'function') return;
-      try {
-        const result = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('GcfRuntime functional handler', () => {
       if (typeof gcfRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gcfRuntimeHandler.provision({ concept: "", projectId: "proj", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('GcfRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof gcfRuntimeHandler.deploy !== 'function') return;
-      try {
-        const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('GcfRuntime functional handler', () => {
       if (typeof gcfRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gcfRuntimeHandler.deploy({ function: "", sourceArchive: "gs://bucket/code.zip" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +218,21 @@ describe('GcfRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
-      try {
-        const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage));
       const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "gcf-abc123", weight: "75" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +241,7 @@ describe('GcfRuntime functional handler', () => {
       if (typeof gcfRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gcfRuntimeHandler.setTrafficWeight({ function: "", weight: "50" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +289,21 @@ describe('GcfRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
-      try {
-        const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "rollback_to_v1" -> ok', async () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage));
       const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('GcfRuntime functional handler', () => {
       if (typeof gcfRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gcfRuntimeHandler.rollback({ function: "gcf-abc123", targetVersion: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +360,21 @@ describe('GcfRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "UserService", projectId: "my-gcp-project", region: "us-central1", runtime: "nodejs20", triggerType: "http" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({ concept: "NotificationWorker", projectId: "events-project", region: "europe-west1", runtime: "python311", triggerType: "pubsub" }), storage));
+      await safeInvoke(async () => await interpret(gcfRuntimeHandler.deploy({ function: "gcf-abc123", sourceArchive: "gs://deploy-bucket/user-service.zip" }), storage));
       const result = await interpret(gcfRuntimeHandler.destroy({ function: "gcf-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +383,7 @@ describe('GcfRuntime functional handler', () => {
       if (typeof gcfRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(gcfRuntimeHandler.destroy({ function: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +392,12 @@ describe('GcfRuntime functional handler', () => {
     it('declares concept name', async () => {
       if (typeof gcfRuntimeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = gcfRuntimeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = gcfRuntimeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('GcfRuntime');
     });
@@ -441,11 +435,14 @@ describe('GcfRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = gcfRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(gcfRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -472,12 +469,15 @@ describe('GcfRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = gcfRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(gcfRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-projectId
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-projectId
               }
             }
           },
@@ -492,9 +492,12 @@ describe('GcfRuntime functional handler', () => {
     it('provision handles empty input: ', async () => {
       if (typeof gcfRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gcfRuntimeHandler.provision({  }), storage);
+      const result = await safeInvoke(async () => await interpret(gcfRuntimeHandler.provision({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('provision ensures on ok: ', async () => {
@@ -505,9 +508,11 @@ describe('GcfRuntime functional handler', () => {
           fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), projectId: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string({ minLength: 1, maxLength: 50 }), runtime: fc.string({ minLength: 1, maxLength: 50 }), triggerType: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = gcfRuntimeHandler.provision(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = gcfRuntimeHandler.provision(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

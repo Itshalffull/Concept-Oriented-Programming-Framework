@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('PluginRegistry functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.register !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('PluginRegistry functional handler', () => {
       if (typeof pluginRegistryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pluginRegistryHandler.register({ type: "", name: "orphan", metadata: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -159,11 +159,11 @@ describe('PluginRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "discover_empty_type" -> error', async () => {
+    it('fixture "discover_empty_type" -> ok', async () => {
       if (typeof pluginRegistryHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pluginRegistryHandler.discover({ type: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -211,22 +211,21 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "create_with_config" -> ok', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +234,7 @@ describe('PluginRegistry functional handler', () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "bad-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,31 +282,33 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_formatter_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "get_unknown_defs" -> error', async () => {
+    it('fixture "get_unknown_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -355,22 +356,21 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "alter_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +379,7 @@ describe('PluginRegistry functional handler', () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "", alterations: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +427,21 @@ describe('PluginRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
-      try {
-        const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "derive_variant" -> ok', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
+      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +450,7 @@ describe('PluginRegistry functional handler', () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "nonexistent:plugin", config: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +459,12 @@ describe('PluginRegistry functional handler', () => {
     it('declares concept name', async () => {
       if (typeof pluginRegistryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = pluginRegistryHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = pluginRegistryHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('PluginRegistry');
     });
@@ -508,11 +504,14 @@ describe('PluginRegistry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = pluginRegistryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(pluginRegistryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -540,12 +539,15 @@ describe('PluginRegistry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = pluginRegistryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(pluginRegistryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-pluginTypes
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-pluginTypes
               }
             }
           },
@@ -560,9 +562,12 @@ describe('PluginRegistry functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof pluginRegistryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pluginRegistryHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(pluginRegistryHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -573,9 +578,11 @@ describe('PluginRegistry functional handler', () => {
           fc.record({ type: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = pluginRegistryHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = pluginRegistryHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

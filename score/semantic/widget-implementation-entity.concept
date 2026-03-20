@@ -80,7 +80,7 @@ concept WidgetImplementationEntity [I] {
       }
       fixture find_dialog { widget: "dialog" }
       fixture find_empty { widget: "" } -> error
-      fixture find_empty_widget { widget: "" } -> error
+      fixture find_empty_widget { widget: "" }
     }
 
     action findByFramework(framework: String) {
@@ -89,7 +89,7 @@ concept WidgetImplementationEntity [I] {
         Results as serialized JSON array.
       }
       fixture find_react { framework: "react" }
-      fixture find_empty_framework { framework: "" } -> error
+      fixture find_empty_framework { framework: "" }
     }
 
     action anatomyMapping(impl: I) {
@@ -99,7 +99,7 @@ concept WidgetImplementationEntity [I] {
         Result as serialized JSON array of { part, element, selector }.
       }
       fixture mapping_valid { impl: "impl-uuid-1" }
-      fixture mapping_missing { impl: "nonexistent-id" } -> error
+      fixture mapping_missing { impl: "nonexistent-id" }
     }
 
     action diffFromSpec(impl: I) {

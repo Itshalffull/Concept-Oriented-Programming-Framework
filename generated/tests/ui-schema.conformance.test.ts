@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('UISchema functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.inspect !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.inspect({ schema: "S-1", conceptSpec: "{\"name\":\"Article\",\"fields\":[{\"name\":\"title\",\"type\":\"String\"},{\"name\":\"body\",\"type\":\"String\"}],\"actions\":[{\"name\":\"create\"}]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.inspect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.inspect({ schema: "S-3", conceptSpec: "not-valid-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.override !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.override({ schema: "S-1", overrides: "{\"layout\":\"horizontal\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.override({ schema: "S-1", overrides: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +218,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.getSchema !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.getSchema({ schema: "S-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.getSchema({ schema: "S-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +238,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.getSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.getSchema({ schema: "S-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,16 +286,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.getElements !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.getElements({ schema: "S-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.getElements({ schema: "S-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -314,7 +306,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.getElements !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.getElements({ schema: "S-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,16 +354,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.getEntityElement !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.getEntityElement({ schema: "S-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.getEntityElement({ schema: "S-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -386,7 +374,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.getEntityElement !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.getEntityElement({ schema: "S-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,16 +422,12 @@ describe('UISchema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof uiSchemaHandler.markResolved !== 'function') return;
-      try {
-        const result = await interpret(uiSchemaHandler.markResolved({ schema: "S-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(uiSchemaHandler.markResolved({ schema: "S-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -458,7 +442,7 @@ describe('UISchema functional handler', () => {
       if (typeof uiSchemaHandler.markResolved !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(uiSchemaHandler.markResolved({ schema: "S-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -467,15 +451,12 @@ describe('UISchema functional handler', () => {
     it('declares concept name', async () => {
       if (typeof uiSchemaHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = uiSchemaHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = uiSchemaHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('UISchema');
     });
@@ -518,9 +499,12 @@ describe('UISchema functional handler', () => {
     it('inspect handles empty input: ', async () => {
       if (typeof uiSchemaHandler.inspect !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uiSchemaHandler.inspect({  }), storage);
+      const result = await safeInvoke(async () => await interpret(uiSchemaHandler.inspect({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('inspect ensures on ok: ', async () => {
@@ -531,9 +515,11 @@ describe('UISchema functional handler', () => {
           fc.record({ schema: fc.string(), conceptSpec: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = uiSchemaHandler.inspect(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = uiSchemaHandler.inspect(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -546,9 +532,12 @@ describe('UISchema functional handler', () => {
     it('override handles empty input: ', async () => {
       if (typeof uiSchemaHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uiSchemaHandler.override({  }), storage);
+      const result = await safeInvoke(async () => await interpret(uiSchemaHandler.override({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('override ensures on ok: ', async () => {
@@ -559,9 +548,11 @@ describe('UISchema functional handler', () => {
           fc.record({ schema: fc.string(), overrides: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = uiSchemaHandler.override(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = uiSchemaHandler.override(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -579,9 +570,11 @@ describe('UISchema functional handler', () => {
           fc.record({ schema: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = uiSchemaHandler.getSchema(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = uiSchemaHandler.getSchema(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

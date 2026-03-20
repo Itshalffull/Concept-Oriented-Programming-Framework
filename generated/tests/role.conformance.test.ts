@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Role functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Role functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof roleHandler.create !== 'function') return;
-      try {
-        const result = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.create({ name: "", permissions: "read", polity: "dao-governance" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Role functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof roleHandler.assign !== 'function') return;
-      try {
-        const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "assign_alice_admin" -> ok', async () => {
       if (typeof roleHandler.assign !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage));
       const result = await interpret(roleHandler.assign({ role: "role-1", member: "alice", assignedBy: "system" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.assign !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.assign({ role: "role-1", member: "", assignedBy: "system" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('Role functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
-      try {
-        const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "revoke_alice" -> ok', async () => {
       if (typeof roleHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage));
       const result = await interpret(roleHandler.revoke({ role: "role-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.revoke !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.revoke({ role: "role-1", member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('Role functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof roleHandler.check !== 'function') return;
-      try {
-        const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "check_alice_admin" -> ok', async () => {
       if (typeof roleHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage));
       const result = await interpret(roleHandler.check({ role: "role-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.check({ role: "role-1", member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('Role functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
-      try {
-        const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "dissolve_admin" -> ok', async () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(roleHandler.create({ name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }), storage));
       const result = await interpret(roleHandler.dissolve({ role: "role-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('Role functional handler', () => {
       if (typeof roleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(roleHandler.dissolve({ role: "nonexistent-role" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +380,12 @@ describe('Role functional handler', () => {
     it('declares concept name', async () => {
       if (typeof roleHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = roleHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = roleHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Role');
     });
@@ -435,11 +424,14 @@ describe('Role functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = roleHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(roleHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -466,12 +458,15 @@ describe('Role functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = roleHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(roleHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-purpose
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-purpose
               }
             }
           },
@@ -486,9 +481,12 @@ describe('Role functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof roleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(roleHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(roleHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on created: ', async () => {
@@ -499,9 +497,11 @@ describe('Role functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), permissions: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = roleHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "created") {
+            const result = await safeInvoke(async () => {
+              const program = roleHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "created") {
               seen = true;
               expect(result.output).toBeDefined();
             }

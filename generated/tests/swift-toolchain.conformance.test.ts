@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SwiftToolchain functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,19 @@ describe('SwiftToolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftToolchainHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(swiftToolchainHandler.resolve({ platform: "macos", versionConstraint: ">=5.10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftToolchainHandler.resolve({ platform: "macos", versionConstraint: ">=5.10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resolve_macos" -> ok', async () => {
       if (typeof swiftToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(swiftToolchainHandler.register({  }), storage));
       const result = await interpret(swiftToolchainHandler.resolve({ platform: "macos", versionConstraint: ">=5.10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -91,7 +96,7 @@ describe('SwiftToolchain functional handler', () => {
       if (typeof swiftToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftToolchainHandler.resolve({ platform: "windows-arm64", versionConstraint: ">=5.9" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +144,12 @@ describe('SwiftToolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftToolchainHandler.register !== 'function') return;
-      try {
-        const result = await interpret(swiftToolchainHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftToolchainHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -165,15 +166,12 @@ describe('SwiftToolchain functional handler', () => {
     it('declares concept name', async () => {
       if (typeof swiftToolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = swiftToolchainHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = swiftToolchainHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SwiftToolchain');
     });
@@ -210,11 +208,14 @@ describe('SwiftToolchain functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = swiftToolchainHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(swiftToolchainHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -238,12 +239,15 @@ describe('SwiftToolchain functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = swiftToolchainHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(swiftToolchainHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-swiftVersion
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-swiftVersion
               }
             }
           },

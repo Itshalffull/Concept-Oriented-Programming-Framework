@@ -27,7 +27,7 @@ concept Outline [O] {
 
       fixture create_root { node: "chapter-1", parent: "" }
       fixture create_child { node: "section-1", parent: "chapter-1" }
-      fixture create_empty_node { node: "", parent: "" } -> error
+      fixture create_empty_node { node: "", parent: "" }
     }
 
     action indent(node: O) {

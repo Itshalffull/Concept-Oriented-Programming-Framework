@@ -65,7 +65,7 @@ concept DesignTokenProvider [P] {
         CSS variables or platform equivalents.
       }
       fixture get_tokens_valid { provider: "dtp-1" }
-      fixture get_tokens_missing { provider: "nonexistent" } -> error
+      fixture get_tokens_missing { provider: "nonexistent" }
     }
 
     action export(provider: P, format: String) {

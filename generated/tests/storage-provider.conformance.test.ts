@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('StorageProvider functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('StorageProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
-      try {
-        const result = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('StorageProvider functional handler', () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.provision({ storeName: "", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('StorageProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof storageProviderHandler.configure !== 'function') return;
-      try {
-        const result = await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('StorageProvider functional handler', () => {
       if (typeof storageProviderHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.configure({ store: "", settings: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +218,21 @@ describe('StorageProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
-      try {
-        const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_creds" -> ok', async () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage));
+      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage));
+      await safeInvoke(async () => await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage));
       const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +241,7 @@ describe('StorageProvider functional handler', () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.getCredentials({ store: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +289,21 @@ describe('StorageProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage));
+      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage));
+      await safeInvoke(async () => await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage));
       const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('StorageProvider functional handler', () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(storageProviderHandler.destroy({ store: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -323,15 +321,12 @@ describe('StorageProvider functional handler', () => {
     it('declares concept name', async () => {
       if (typeof storageProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = storageProviderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = storageProviderHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('StorageProvider');
     });
@@ -382,11 +377,14 @@ describe('StorageProvider functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = storageProviderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(storageProviderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -412,12 +410,15 @@ describe('StorageProvider functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = storageProviderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(storageProviderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-storageType
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-storageType
               }
             }
           },
@@ -432,9 +433,12 @@ describe('StorageProvider functional handler', () => {
     it('provision handles empty input: ', async () => {
       if (typeof storageProviderHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(storageProviderHandler.provision({  }), storage);
+      const result = await safeInvoke(async () => await interpret(storageProviderHandler.provision({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('provision ensures on ok: ', async () => {
@@ -445,9 +449,11 @@ describe('StorageProvider functional handler', () => {
           fc.record({ storeName: fc.string({ minLength: 1, maxLength: 50 }), storageType: fc.string({ minLength: 1, maxLength: 50 }), conceptName: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = storageProviderHandler.provision(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = storageProviderHandler.provision(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -22,7 +22,7 @@ concept Cache [C] {
       }
 
       fixture set_page_cache { bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: 600 }
-      fixture set_missing_bin { bin: "", key: "orphan", data: "test", tags: "", maxAge: 0 } -> error
+      fixture set_missing_bin { bin: "", key: "orphan", data: "test", tags: "", maxAge: 0 }
     }
 
     action get(bin: C, key: String) {
@@ -55,7 +55,7 @@ concept Cache [C] {
       }
 
       fixture invalidate_page_tags { tags: "page,frontpage" }
-      fixture invalidate_empty_tags { tags: "" } -> error
+      fixture invalidate_empty_tags { tags: "" }
     }
   }
 

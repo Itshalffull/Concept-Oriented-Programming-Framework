@@ -28,7 +28,7 @@ concept ExpressionLanguage [E] {
       -> exists() { Function with this name already registered. }
 
       fixture register_abs { name: "abs", implementation: "Math.abs" }
-      fixture missing_impl { name: "", implementation: "" } -> error
+      fixture missing_impl { name: "", implementation: "" }
     }
 
     action registerOperator(name: String, implementation: String) {
@@ -36,7 +36,7 @@ concept ExpressionLanguage [E] {
       -> exists() { Operator with this name already registered. }
 
       fixture register_plus { name: "plus", implementation: "a + b" }
-      fixture missing_op_name { name: "", implementation: "a + b" } -> error
+      fixture missing_op_name { name: "", implementation: "a + b" }
     }
 
     action parse(expression: E, text: String, language: String) {

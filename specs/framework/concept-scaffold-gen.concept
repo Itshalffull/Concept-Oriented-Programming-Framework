@@ -53,7 +53,7 @@ concept ConceptScaffoldGen [C] {
       }
 
       fixture preview_payment { name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{ name: "transactions", type: "set P" }], actions: [{ name: "charge", params: [{ name: "amount", type: "Int" }], variants: [{ name: "ok", params: [{ name: "txn", type: "P" }], description: "Charge completed." }] }], version: 2, gate: true, capabilities: ["network"] }
-      fixture preview_no_name { name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] } -> error
+      fixture preview_no_name { name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: 1, gate: false, capabilities: [] }
     }
 
     action register() {

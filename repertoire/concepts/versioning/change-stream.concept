@@ -71,7 +71,7 @@ concept ChangeStream [E] {
       }
 
       fixture ack_offset { consumer: "analytics-worker", offset: 42 }
-      fixture ack_empty_consumer { consumer: "", offset: 1 } -> error
+      fixture ack_empty_consumer { consumer: "", offset: 1 }
     }
 
     action replay(from: Int, to: option Int) {

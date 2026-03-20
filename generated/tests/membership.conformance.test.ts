@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Membership functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.join !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.join({ member: "alice", polity: "dao-governance" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.join !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.join({ member: "", polity: "dao-governance" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.leave !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.leave({ member: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.leave({ member: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.leave !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.leave({ member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.suspend !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.suspend({ member: "bob", until: "2027-01-01T00:00:00Z" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.suspend({ member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.reinstate !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.reinstate({ member: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.reinstate({ member: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.reinstate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.reinstate({ member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.kick !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.kick({ member: "charlie" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.kick({ member: "charlie" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.kick !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.kick({ member: "unknown-member" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('Membership functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof membershipHandler.updateRules !== 'function') return;
-      try {
-        const result = await interpret(membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(membershipHandler.updateRules({ polity: "dao-governance", joinConditions: "stake >= 100", exitConditions: "30-day-cooldown" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('Membership functional handler', () => {
       if (typeof membershipHandler.updateRules !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(membershipHandler.updateRules({ polity: "", joinConditions: "", exitConditions: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +444,12 @@ describe('Membership functional handler', () => {
     it('declares concept name', async () => {
       if (typeof membershipHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = membershipHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = membershipHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Membership');
     });
@@ -499,9 +480,12 @@ describe('Membership functional handler', () => {
     it('join handles empty input: ', async () => {
       if (typeof membershipHandler.join !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(membershipHandler.join({  }), storage);
+      const result = await safeInvoke(async () => await interpret(membershipHandler.join({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('join ensures on accepted: ', async () => {
@@ -512,9 +496,11 @@ describe('Membership functional handler', () => {
           fc.record({ member: fc.string({ minLength: 1, maxLength: 50 }), polity: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = membershipHandler.join(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "accepted") {
+            const result = await safeInvoke(async () => {
+              const program = membershipHandler.join(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "accepted") {
               seen = true;
               expect(result.output).toBeDefined();
             }

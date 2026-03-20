@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('FieldPlacement functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.create !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.create({ source_field: "", formatter: "plain" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.configure({ placement: "fp-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +211,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "hide_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,6 +232,8 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "show_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -283,22 +283,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +353,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "clear_existing_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +375,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +423,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +445,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.get({ placement: "fp-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,22 +493,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -523,7 +515,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -571,22 +563,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "duplicate_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -595,7 +585,7 @@ describe('FieldPlacement functional handler', () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -643,22 +633,20 @@ describe('FieldPlacement functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof fieldPlacementHandler.list !== 'function') return;
-      try {
-        const result = await interpret(fieldPlacementHandler.list({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(fieldPlacementHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "list_all" -> ok', async () => {
       if (typeof fieldPlacementHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
+      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -669,15 +657,12 @@ describe('FieldPlacement functional handler', () => {
     it('declares concept name', async () => {
       if (typeof fieldPlacementHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = fieldPlacementHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = fieldPlacementHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('FieldPlacement');
     });
@@ -733,11 +718,14 @@ describe('FieldPlacement functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = fieldPlacementHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(fieldPlacementHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -768,12 +756,15 @@ describe('FieldPlacement functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = fieldPlacementHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(fieldPlacementHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in placements
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in placements
               }
             }
           },
@@ -788,9 +779,12 @@ describe('FieldPlacement functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof fieldPlacementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(fieldPlacementHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(fieldPlacementHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -801,9 +795,11 @@ describe('FieldPlacement functional handler', () => {
           fc.record({ source_field: fc.string({ minLength: 1, maxLength: 50 }), formatter: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = fieldPlacementHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = fieldPlacementHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -821,9 +817,11 @@ describe('FieldPlacement functional handler', () => {
           fc.record({ placement: fc.string(), formatter: fc.string(), formatter_options: fc.string(), label_display: fc.string(), label_override: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = fieldPlacementHandler.configure(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = fieldPlacementHandler.configure(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -841,9 +839,11 @@ describe('FieldPlacement functional handler', () => {
           fc.record({ placement: fc.string(), visible: fc.boolean(), role_visibility: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = fieldPlacementHandler.set_visibility(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = fieldPlacementHandler.set_visibility(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

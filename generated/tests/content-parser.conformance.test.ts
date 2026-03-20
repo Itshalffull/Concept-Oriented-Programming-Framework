@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ContentParser functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.registerFormat !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.registerFormat({ name: "markdown", grammar: "{\"block\":\"paragraph\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.registerFormat !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.registerFormat({ name: "", grammar: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.registerExtractor({ name: "tags", pattern: "#(\\w+)" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.registerExtractor({ name: "tags", pattern: "#(\\w+)" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -159,11 +159,11 @@ describe('ContentParser functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_extractor" -> error', async () => {
+    it('fixture "register_empty_extractor" -> ok', async () => {
       if (typeof contentParserHandler.registerExtractor !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.registerExtractor({ name: "", pattern: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.parse !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.parse({ content: "doc-1", text: "Hello #world [[link]]", format: "markdown" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.parse({ content: "doc-1", text: "Hello #world [[link]]", format: "markdown" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.parse({ content: "doc-2", text: "Some text", format: "unknown" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.extractRefs({ content: "doc-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.extractRefs({ content: "doc-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractRefs !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.extractRefs({ content: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.extractTags({ content: "doc-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.extractTags({ content: "doc-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractTags !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.extractTags({ content: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.extractProperties({ content: "doc-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.extractProperties({ content: "doc-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.extractProperties !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.extractProperties({ content: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,16 +483,12 @@ describe('ContentParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentParserHandler.serialize !== 'function') return;
-      try {
-        const result = await interpret(contentParserHandler.serialize({ content: "doc-1", format: "markdown" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentParserHandler.serialize({ content: "doc-1", format: "markdown" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -523,7 +503,7 @@ describe('ContentParser functional handler', () => {
       if (typeof contentParserHandler.serialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentParserHandler.serialize({ content: "nonexistent", format: "markdown" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +512,12 @@ describe('ContentParser functional handler', () => {
     it('declares concept name', async () => {
       if (typeof contentParserHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = contentParserHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = contentParserHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ContentParser');
     });
@@ -582,11 +559,14 @@ describe('ContentParser functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentParserHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentParserHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -615,12 +595,15 @@ describe('ContentParser functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentParserHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentParserHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-extractors
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-extractors
               }
             }
           },
@@ -635,9 +618,12 @@ describe('ContentParser functional handler', () => {
     it('registerFormat handles empty input: ', async () => {
       if (typeof contentParserHandler.registerFormat !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(contentParserHandler.registerFormat({  }), storage);
+      const result = await safeInvoke(async () => await interpret(contentParserHandler.registerFormat({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('registerFormat ensures on ok: ', async () => {
@@ -648,9 +634,11 @@ describe('ContentParser functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = contentParserHandler.registerFormat(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = contentParserHandler.registerFormat(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

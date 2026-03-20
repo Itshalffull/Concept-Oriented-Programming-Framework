@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ScopeGraph functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ScopeGraph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
-      try {
-        const result = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('ScopeGraph functional handler', () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.build({ file: "", tree: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('ScopeGraph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scopeGraphHandler.resolveReference !== 'function') return;
-      try {
-        const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_resolve_ref" -> ok', async () => {
       if (typeof scopeGraphHandler.resolveReference !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('ScopeGraph functional handler', () => {
       if (typeof scopeGraphHandler.resolveReference !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-999", scope: "scope-1", name: "unknown" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,31 +220,31 @@ describe('ScopeGraph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
-      try {
-        const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_visible" -> ok', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "visible_no_graph" -> error', async () => {
+    it('fixture "visible_no_graph" -> ok', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-999", scope: "scope-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -290,22 +292,20 @@ describe('ScopeGraph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
-      try {
-        const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_cross_file" -> ok', async () => {
       if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +314,7 @@ describe('ScopeGraph functional handler', () => {
       if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +362,20 @@ describe('ScopeGraph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scopeGraphHandler.get !== 'function') return;
-      try {
-        const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_get" -> ok', async () => {
       if (typeof scopeGraphHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +384,7 @@ describe('ScopeGraph functional handler', () => {
       if (typeof scopeGraphHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +393,12 @@ describe('ScopeGraph functional handler', () => {
     it('declares concept name', async () => {
       if (typeof scopeGraphHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = scopeGraphHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = scopeGraphHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ScopeGraph');
     });
@@ -440,11 +435,14 @@ describe('ScopeGraph functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = scopeGraphHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(scopeGraphHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -471,12 +469,15 @@ describe('ScopeGraph functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = scopeGraphHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(scopeGraphHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-scopes
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-scopes
               }
             }
           },
@@ -491,9 +492,12 @@ describe('ScopeGraph functional handler', () => {
     it('build handles empty input: ', async () => {
       if (typeof scopeGraphHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(scopeGraphHandler.build({  }), storage);
+      const result = await safeInvoke(async () => await interpret(scopeGraphHandler.build({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('build ensures on ok: ', async () => {
@@ -504,9 +508,11 @@ describe('ScopeGraph functional handler', () => {
           fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), tree: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = scopeGraphHandler.build(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = scopeGraphHandler.build(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

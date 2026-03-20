@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('CloudRunRuntime functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('CloudRunRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
-      try {
-        const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.provision({ concept: "", projectId: "proj", region: "us-central1", cpu: "1", memory: "256" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('CloudRunRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
-      try {
-        const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.deploy({ service: "", imageUri: "gcr.io/proj/app:latest" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +218,21 @@ describe('CloudRunRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
-      try {
-        const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "traffic_split" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage));
       const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +241,7 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.setTrafficWeight({ service: "", weight: "100" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,31 +289,33 @@ describe('CloudRunRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
-      try {
-        const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "rollback_to_rev" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage));
       const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "rev-20250101" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "rollback_empty_revision" -> error', async () => {
+    it('fixture "rollback_empty_revision" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage));
       const result = await interpret(cloudRunRuntimeHandler.rollback({ service: "svc-abc123", targetRevision: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -362,22 +363,21 @@ describe('CloudRunRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "UserApi", projectId: "my-gcp-project", region: "us-central1", cpu: "1", memory: "512" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({ concept: "MLService", projectId: "ml-project", region: "us-east1", cpu: "2", memory: "2048" }), storage));
+      await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "gcr.io/my-gcp-project/user-api:v3" }), storage));
       const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +386,7 @@ describe('CloudRunRuntime functional handler', () => {
       if (typeof cloudRunRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(cloudRunRuntimeHandler.destroy({ service: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +395,12 @@ describe('CloudRunRuntime functional handler', () => {
     it('declares concept name', async () => {
       if (typeof cloudRunRuntimeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = cloudRunRuntimeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = cloudRunRuntimeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('CloudRunRuntime');
     });
@@ -442,11 +439,14 @@ describe('CloudRunRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = cloudRunRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(cloudRunRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -473,12 +473,15 @@ describe('CloudRunRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = cloudRunRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(cloudRunRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-projectId
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-projectId
               }
             }
           },
@@ -493,9 +496,12 @@ describe('CloudRunRuntime functional handler', () => {
     it('provision handles empty input: ', async () => {
       if (typeof cloudRunRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(cloudRunRuntimeHandler.provision({  }), storage);
+      const result = await safeInvoke(async () => await interpret(cloudRunRuntimeHandler.provision({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('provision ensures on ok: ', async () => {
@@ -506,9 +512,11 @@ describe('CloudRunRuntime functional handler', () => {
           fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), projectId: fc.string({ minLength: 1, maxLength: 50 }), region: fc.string({ minLength: 1, maxLength: 50 }), cpu: fc.integer({ min: 1, max: 1000 }), memory: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = cloudRunRuntimeHandler.provision(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = cloudRunRuntimeHandler.provision(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

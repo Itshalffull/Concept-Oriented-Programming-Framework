@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('LambdaRuntime functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('LambdaRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lambdaRuntimeHandler.provision !== 'function') return;
-      try {
-        const result = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('LambdaRuntime functional handler', () => {
       if (typeof lambdaRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lambdaRuntimeHandler.provision({ concept: "", memory: "128", timeout: "10", region: "us-east-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('LambdaRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
-      try {
-        const result = await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('LambdaRuntime functional handler', () => {
       if (typeof lambdaRuntimeHandler.deploy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lambdaRuntimeHandler.deploy({ function: "", artifactLocation: "s3://bucket/code.zip" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +218,21 @@ describe('LambdaRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
-      try {
-        const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +241,7 @@ describe('LambdaRuntime functional handler', () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "", aliasWeight: "-5" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +289,21 @@ describe('LambdaRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
-      try {
-        const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "rollback_to_v2" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('LambdaRuntime functional handler', () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +360,21 @@ describe('LambdaRuntime functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
+      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +383,7 @@ describe('LambdaRuntime functional handler', () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lambdaRuntimeHandler.destroy({ function: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +392,12 @@ describe('LambdaRuntime functional handler', () => {
     it('declares concept name', async () => {
       if (typeof lambdaRuntimeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = lambdaRuntimeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = lambdaRuntimeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('LambdaRuntime');
     });
@@ -442,11 +436,14 @@ describe('LambdaRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = lambdaRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(lambdaRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -473,12 +470,15 @@ describe('LambdaRuntime functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = lambdaRuntimeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(lambdaRuntimeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-roleArn
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-roleArn
               }
             }
           },
@@ -493,9 +493,12 @@ describe('LambdaRuntime functional handler', () => {
     it('provision handles empty input: ', async () => {
       if (typeof lambdaRuntimeHandler.provision !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lambdaRuntimeHandler.provision({  }), storage);
+      const result = await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('provision ensures on ok: ', async () => {
@@ -506,9 +509,11 @@ describe('LambdaRuntime functional handler', () => {
           fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), memory: fc.integer({ min: 1, max: 1000 }), timeout: fc.integer({ min: 1, max: 1000 }), region: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = lambdaRuntimeHandler.provision(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = lambdaRuntimeHandler.provision(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

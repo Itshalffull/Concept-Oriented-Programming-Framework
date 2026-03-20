@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Publisher functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Publisher functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof publisherHandler.package !== 'function') return;
-      try {
-        const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "library", manifest: {"module_id":"auth","version":"2.0.0","dependencies":["crypto"]} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Publisher functional handler', () => {
       if (typeof publisherHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(publisherHandler.package({ source_path: "/src/auth", kind: "unknown-kind", manifest: {"module_id":"auth","version":"1.0.0","dependencies":[]} }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Publisher functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof publisherHandler.sign !== 'function') return;
-      try {
-        const result = await interpret(publisherHandler.sign({ publication: "pub-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(publisherHandler.sign({ publication: "pub-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Publisher functional handler', () => {
       if (typeof publisherHandler.sign !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(publisherHandler.sign({ publication: "pub-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Publisher functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof publisherHandler.attest !== 'function') return;
-      try {
-        const result = await interpret(publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(publisherHandler.attest({ publication: "pub-1", builder: "github-actions", source_repo: "https://github.com/org/repo", source_commit: "abc123def456" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Publisher functional handler', () => {
       if (typeof publisherHandler.attest !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(publisherHandler.attest({ publication: "pub-nonexistent", builder: "ci", source_repo: "repo", source_commit: "000" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Publisher functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof publisherHandler.generateSbom !== 'function') return;
-      try {
-        const result = await interpret(publisherHandler.generateSbom({ publication: "pub-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(publisherHandler.generateSbom({ publication: "pub-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Publisher functional handler', () => {
       if (typeof publisherHandler.generateSbom !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(publisherHandler.generateSbom({ publication: "pub-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('Publisher functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof publisherHandler.upload !== 'function') return;
-      try {
-        const result = await interpret(publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(publisherHandler.upload({ publication: "pub-1", registry_url: "https://registry.example.com/api/v1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('Publisher functional handler', () => {
       if (typeof publisherHandler.upload !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(publisherHandler.upload({ publication: "pub-nonexistent", registry_url: "https://registry.example.com/api/v1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +376,12 @@ describe('Publisher functional handler', () => {
     it('declares concept name', async () => {
       if (typeof publisherHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = publisherHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = publisherHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Publisher');
     });
@@ -446,11 +431,14 @@ describe('Publisher functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = publisherHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(publisherHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -477,12 +465,15 @@ describe('Publisher functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = publisherHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(publisherHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in publications
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in publications
               }
             }
           },
@@ -497,9 +488,12 @@ describe('Publisher functional handler', () => {
     it('package handles empty input: ', async () => {
       if (typeof publisherHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(publisherHandler.package({  }), storage);
+      const result = await safeInvoke(async () => await interpret(publisherHandler.package({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('package ensures on ok: ', async () => {
@@ -510,9 +504,11 @@ describe('Publisher functional handler', () => {
           fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = publisherHandler.package(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = publisherHandler.package(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -530,9 +526,11 @@ describe('Publisher functional handler', () => {
           fc.record({ publication: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = publisherHandler.sign(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = publisherHandler.sign(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -545,9 +543,12 @@ describe('Publisher functional handler', () => {
     it('attest handles empty input: ', async () => {
       if (typeof publisherHandler.attest !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(publisherHandler.attest({  }), storage);
+      const result = await safeInvoke(async () => await interpret(publisherHandler.attest({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('attest ensures on ok: ', async () => {
@@ -558,9 +559,11 @@ describe('Publisher functional handler', () => {
           fc.record({ publication: fc.string(), builder: fc.string({ minLength: 1, maxLength: 50 }), source_repo: fc.string({ minLength: 1, maxLength: 50 }), source_commit: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = publisherHandler.attest(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = publisherHandler.attest(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

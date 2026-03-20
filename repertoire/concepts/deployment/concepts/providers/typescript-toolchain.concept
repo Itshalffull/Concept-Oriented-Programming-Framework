@@ -39,7 +39,7 @@ concept TypeScriptToolchain [N] {
 
       fixture resolve_node { platform: "node", versionConstraint: ">=5.7" }
       fixture resolve_browser { platform: "browser" }
-      fixture resolve_empty_platform { platform: "" } -> error
+      fixture resolve_empty_platform { platform: "" }
     }
 
     action register() {

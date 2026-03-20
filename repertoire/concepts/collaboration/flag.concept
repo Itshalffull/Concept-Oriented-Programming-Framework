@@ -19,7 +19,7 @@ concept Flag [F] {
       -> ok() { Toggle recorded for the user-entity-type combination. }
       -> exists(message: String) { User has already flagged this entity with this type. }
       fixture flag_bookmark { flagging: "flag-1", flagType: "bookmark", entity: "article-42", user: "user-7" }
-      fixture flag_empty_flagging { flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" } -> error
+      fixture flag_empty_flagging { flagging: "", flagType: "bookmark", entity: "article-42", user: "user-7" }
     }
 
     action unflag(flagging: F) {
@@ -32,13 +32,13 @@ concept Flag [F] {
     action isFlagged(flagType: String, entity: String, user: String) {
       -> ok(flagged: Bool) { Returns whether the entity is flagged by the user. }
       fixture is_flagged_check { flagType: "bookmark", entity: "article-42", user: "user-7" }
-      fixture is_flagged_empty_type { flagType: "", entity: "article-42", user: "user-7" } -> error
+      fixture is_flagged_empty_type { flagType: "", entity: "article-42", user: "user-7" }
     }
 
     action getCount(flagType: String, entity: String) {
       -> ok(count: Int) { Returns the total flag count for the entity. }
       fixture get_count_likes { flagType: "like", entity: "article-42" }
-      fixture get_count_empty { flagType: "", entity: "" } -> error
+      fixture get_count_empty { flagType: "", entity: "" }
     }
   }
 

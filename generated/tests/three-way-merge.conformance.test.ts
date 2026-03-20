@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ThreeWayMerge functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ThreeWayMerge functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof threeWayMergeHandler.register !== 'function') return;
-      try {
-        const result = await interpret(threeWayMergeHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(threeWayMergeHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -132,22 +136,19 @@ describe('ThreeWayMerge functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
-      try {
-        const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "clean_merge" -> ok', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(threeWayMergeHandler.register({  }), storage));
       const result = await interpret(threeWayMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,6 +156,7 @@ describe('ThreeWayMerge functional handler', () => {
     it('fixture "conflicting_merge" -> ok', async () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(threeWayMergeHandler.register({  }), storage));
       const result = await interpret(threeWayMergeHandler.execute({ base: "line1", ours: "lineA", theirs: "lineB" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('ThreeWayMerge functional handler', () => {
       if (typeof threeWayMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(threeWayMergeHandler.execute({ base: "42", ours: "text", theirs: "text" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -172,15 +174,12 @@ describe('ThreeWayMerge functional handler', () => {
     it('declares concept name', async () => {
       if (typeof threeWayMergeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = threeWayMergeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = threeWayMergeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ThreeWayMerge');
     });

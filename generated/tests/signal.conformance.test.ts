@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Signal functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Signal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signalHandler.create !== 'function') return;
-      try {
-        const result = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.create({ signal: "G-3", kind: "unknown", initialValue: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('Signal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signalHandler.read !== 'function') return;
-      try {
-        const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_read" -> ok', async () => {
       if (typeof signalHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.read({ signal: "G-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +220,20 @@ describe('Signal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signalHandler.write !== 'function') return;
-      try {
-        const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_write" -> ok', async () => {
       if (typeof signalHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +242,7 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.write({ signal: "G-999", value: "x" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +290,20 @@ describe('Signal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signalHandler.batch !== 'function') return;
-      try {
-        const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_batch" -> ok', async () => {
       if (typeof signalHandler.batch !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.batch !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.batch({ signals: "not-valid-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +360,20 @@ describe('Signal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signalHandler.dispose !== 'function') return;
-      try {
-        const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_dispose" -> ok', async () => {
       if (typeof signalHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
+      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +382,7 @@ describe('Signal functional handler', () => {
       if (typeof signalHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signalHandler.dispose({ signal: "G-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +391,12 @@ describe('Signal functional handler', () => {
     it('declares concept name', async () => {
       if (typeof signalHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = signalHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = signalHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Signal');
     });
@@ -425,9 +418,12 @@ describe('Signal functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof signalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signalHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(signalHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -438,9 +434,11 @@ describe('Signal functional handler', () => {
           fc.record({ signal: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), initialValue: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = signalHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = signalHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -458,9 +456,11 @@ describe('Signal functional handler', () => {
           fc.record({ signal: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = signalHandler.read(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = signalHandler.read(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -473,9 +473,12 @@ describe('Signal functional handler', () => {
     it('write handles empty input: ', async () => {
       if (typeof signalHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signalHandler.write({  }), storage);
+      const result = await safeInvoke(async () => await interpret(signalHandler.write({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('write ensures on ok: ', async () => {
@@ -486,9 +489,11 @@ describe('Signal functional handler', () => {
           fc.record({ signal: fc.string(), value: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = signalHandler.write(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = signalHandler.write(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

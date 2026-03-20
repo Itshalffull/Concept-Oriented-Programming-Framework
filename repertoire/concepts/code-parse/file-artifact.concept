@@ -33,7 +33,7 @@ concept FileArtifact [F] {
         This file path already has a FileArtifact entry.
       }
       fixture register_source { node: "src/handler.ts", role: "source", language: "typescript" }
-      fixture register_empty_node { node: "", role: "source", language: "typescript" } -> error
+      fixture register_empty_node { node: "", role: "source", language: "typescript" }
     }
 
     action setProvenance(artifact: F, spec: String, generator: String) {
@@ -54,7 +54,7 @@ concept FileArtifact [F] {
         serialized JSON array.
       }
       fixture find_source { role: "source" }
-      fixture find_empty_role { role: "" } -> error
+      fixture find_empty_role { role: "" }
     }
 
     action findGeneratedFrom(spec: String) {

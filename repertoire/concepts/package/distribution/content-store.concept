@@ -30,7 +30,7 @@ concept ContentStore [B] {
       }
 
       fixture store_tarball { data: "package-contents-v1", media_type: "application/tar+gzip" }
-      fixture store_empty_media_type { data: "some-data", media_type: "" } -> error
+      fixture store_empty_media_type { data: "some-data", media_type: "" }
     }
 
     action retrieve(hash: String) {

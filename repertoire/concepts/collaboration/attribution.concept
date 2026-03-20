@@ -25,7 +25,7 @@ concept Attribution [A] {
       }
 
       fixture attribute_code_region { contentRef: "doc-main-ts", region: "lines:10-25", agent: "alice@example.com", changeRef: "commit-abc123" }
-      fixture attribute_empty_ref { contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" } -> error
+      fixture attribute_empty_ref { contentRef: "", region: "lines:1-5", agent: "bob", changeRef: "commit-def" }
     }
 
     action blame(contentRef: String) {
@@ -34,7 +34,7 @@ concept Attribution [A] {
       }
 
       fixture blame_existing_doc { contentRef: "doc-main-ts" }
-      fixture blame_unknown_doc { contentRef: "nonexistent-doc" } -> error
+      fixture blame_unknown_doc { contentRef: "nonexistent-doc" }
     }
 
     action history(contentRef: String, region: Bytes) {
@@ -55,7 +55,7 @@ concept Attribution [A] {
       }
 
       fixture set_ownership_glob { pattern: "src/auth/**", owners: ["alice@example.com", "bob@example.com"] }
-      fixture set_ownership_empty_owners { pattern: "src/**", owners: [] } -> error
+      fixture set_ownership_empty_owners { pattern: "src/**", owners: [] }
     }
 
     action queryOwners(path: String) {

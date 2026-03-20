@@ -1,4 +1,4 @@
-// @clef-handler style=imperative
+// @clef-handler style=functional
 // VercelKVProvider Concept Implementation — Functional Style
 // Provisions Vercel KV (Upstash Redis) stores via the Vercel API.
 // Uses perform("http", ...) for all Vercel API calls, routing through

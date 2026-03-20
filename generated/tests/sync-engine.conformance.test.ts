@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SyncEngine functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.registerSync !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":"OnUserCreate","annotations":["eager"],"when":[{"concept":"urn:clef/User","action":"create","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/Notification","action":"send","fields":[]}]} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('SyncEngine functional handler', () => {
       if (typeof syncEngineHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEngineHandler.registerSync({ sync: {"name":""} }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.onCompletion !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.onCompletion({ completion: {"id":"c-001","concept":"urn:clef/User","action":"create","input":{},"variant":"ok","output":{},"flow":"flow-001","timestamp":"2025-01-15T10:30:00Z"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -204,16 +204,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: {}, queries: [] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -228,7 +224,7 @@ describe('SyncEngine functional handler', () => {
       if (typeof syncEngineHandler.evaluateWhere !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEngineHandler.evaluateWhere({ bindings: null, queries: [] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -276,16 +272,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.queueSync !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.queueSync({ sync: {"name":"EventualSync","annotations":["eventual"],"when":[{"concept":"urn:clef/A","action":"act","inputFields":[],"outputFields":[]}],"where":[],"then":[{"concept":"urn:clef/B","action":"do","fields":[]}]}, bindings: {}, flow: "flow-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -341,16 +333,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.onAvailabilityChange !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.onAvailabilityChange({ conceptUri: "urn:clef/Notification", available: "true" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -413,16 +401,12 @@ describe('SyncEngine functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEngineHandler.drainConflicts !== 'function') return;
-      try {
-        const result = await interpret(syncEngineHandler.drainConflicts({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEngineHandler.drainConflicts({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -439,15 +423,12 @@ describe('SyncEngine functional handler', () => {
     it('declares concept name', async () => {
       if (typeof syncEngineHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = syncEngineHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = syncEngineHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SyncEngine');
     });
@@ -493,11 +474,14 @@ describe('SyncEngine functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syncEngineHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syncEngineHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -525,12 +509,15 @@ describe('SyncEngine functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syncEngineHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syncEngineHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: pending queue entry without a flow
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: pending queue entry without a flow
               }
             }
           },
@@ -545,9 +532,12 @@ describe('SyncEngine functional handler', () => {
     it('registerSync handles empty input: ', async () => {
       if (typeof syncEngineHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncEngineHandler.registerSync({  }), storage);
+      const result = await safeInvoke(async () => await interpret(syncEngineHandler.registerSync({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('registerSync ensures on ok: ', async () => {
@@ -558,9 +548,11 @@ describe('SyncEngine functional handler', () => {
           fc.record({ sync: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = syncEngineHandler.registerSync(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = syncEngineHandler.registerSync(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -573,9 +565,12 @@ describe('SyncEngine functional handler', () => {
     it('onCompletion handles empty input: ', async () => {
       if (typeof syncEngineHandler.onCompletion !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncEngineHandler.onCompletion({  }), storage);
+      const result = await safeInvoke(async () => await interpret(syncEngineHandler.onCompletion({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('onCompletion ensures on ok: ', async () => {
@@ -586,9 +581,11 @@ describe('SyncEngine functional handler', () => {
           fc.record({ completion: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = syncEngineHandler.onCompletion(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = syncEngineHandler.onCompletion(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

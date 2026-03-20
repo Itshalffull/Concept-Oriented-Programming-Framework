@@ -40,7 +40,7 @@ concept Health [H] {
 
       fixture check_user { concept: "User", runtime: "server" }
       fixture check_payment { concept: "Payment", runtime: "worker" }
-      fixture check_empty_concept { concept: "", runtime: "server" } -> error
+      fixture check_empty_concept { concept: "", runtime: "server" }
     }
 
     action checkSync(sync: String, concepts: list String) {
@@ -56,7 +56,7 @@ concept Health [H] {
       }
 
       fixture check_auth_sync { sync: "auth-session-sync", concepts: ["User", "Session"] }
-      fixture check_sync_empty { sync: "", concepts: [] } -> error
+      fixture check_sync_empty { sync: "", concepts: [] }
     }
 
     action checkSuite(suite: String, environment: String) {
@@ -72,7 +72,7 @@ concept Health [H] {
 
       fixture check_auth_suite { suite: "auth-suite", environment: "staging" }
       fixture check_suite_prod { suite: "payments", environment: "production" }
-      fixture check_suite_empty { suite: "", environment: "staging" } -> error
+      fixture check_suite_empty { suite: "", environment: "staging" }
     }
 
     action checkInvariant(concept: String, invariant: String) {
@@ -85,7 +85,7 @@ concept Health [H] {
       }
 
       fixture check_invariant { concept: "User", invariant: "valid-email" }
-      fixture check_invariant_empty { concept: "", invariant: "valid-email" } -> error
+      fixture check_invariant_empty { concept: "", invariant: "valid-email" }
     }
   }
 

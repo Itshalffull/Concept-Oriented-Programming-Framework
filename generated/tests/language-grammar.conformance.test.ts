@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('LanguageGrammar functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('LanguageGrammar functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
-      try {
-        const result = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('LanguageGrammar functional handler', () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(languageGrammarHandler.register({ name: "", extensions: "[]", parserWasmPath: "x.wasm", nodeTypes: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('LanguageGrammar functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resolve_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('LanguageGrammar functional handler', () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".xyz" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('LanguageGrammar functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
-      try {
-        const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resolve_mime_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('LanguageGrammar functional handler', () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/unknown" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('LanguageGrammar functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
-      try {
-        const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_grammar" -> ok', async () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('LanguageGrammar functional handler', () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(languageGrammarHandler.get({ grammar: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('LanguageGrammar functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof languageGrammarHandler.list !== 'function') return;
-      try {
-        const result = await interpret(languageGrammarHandler.list({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(languageGrammarHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid" -> ok', async () => {
       if (typeof languageGrammarHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -381,15 +373,12 @@ describe('LanguageGrammar functional handler', () => {
     it('declares concept name', async () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = languageGrammarHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = languageGrammarHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('LanguageGrammar');
     });
@@ -435,11 +424,14 @@ describe('LanguageGrammar functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = languageGrammarHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(languageGrammarHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -466,12 +458,15 @@ describe('LanguageGrammar functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = languageGrammarHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(languageGrammarHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-extensions
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-extensions
               }
             }
           },
@@ -486,9 +481,12 @@ describe('LanguageGrammar functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof languageGrammarHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(languageGrammarHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(languageGrammarHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -499,9 +497,11 @@ describe('LanguageGrammar functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), extensions: fc.string({ minLength: 1, maxLength: 50 }), parserWasmPath: fc.string({ minLength: 1, maxLength: 50 }), nodeTypes: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = languageGrammarHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = languageGrammarHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

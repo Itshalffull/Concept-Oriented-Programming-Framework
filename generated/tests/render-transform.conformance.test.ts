@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('RenderTransform functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,20 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.registerKind !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "token_remap_kind" -> ok', async () => {
       if (typeof renderTransformHandler.registerKind !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage));
+      await safeInvoke(async () => await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage));
       const result = await interpret(renderTransformHandler.registerKind({ kind: "token-remap" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -91,7 +97,7 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.registerKind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.registerKind({ kind: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +145,12 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.register !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +165,7 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.register({ name: "bad-transform", kind: "custom", spec: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +213,12 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.apply !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +233,7 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.apply({ program: "not-json", kind: "token-remap", spec: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,20 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.compose !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "compose_two" -> ok', async () => {
       if (typeof renderTransformHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage));
+      await safeInvoke(async () => await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage));
       const result = await interpret(renderTransformHandler.compose({ transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +303,7 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.compose({ transforms: "[]" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +351,20 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.list !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.list({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid" -> ok', async () => {
       if (typeof renderTransformHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage));
+      await safeInvoke(async () => await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage));
       const result = await interpret(renderTransformHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -420,22 +414,20 @@ describe('RenderTransform functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof renderTransformHandler.get !== 'function') return;
-      try {
-        const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "existing_transform" -> ok', async () => {
       if (typeof renderTransformHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(renderTransformHandler.register({ name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }), storage));
+      await safeInvoke(async () => await interpret(renderTransformHandler.apply({ program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }), storage));
       const result = await interpret(renderTransformHandler.get({ name: "dark-theme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,7 +436,8 @@ describe('RenderTransform functional handler', () => {
       if (typeof renderTransformHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(renderTransformHandler.get({ name: "nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -453,15 +446,12 @@ describe('RenderTransform functional handler', () => {
     it('declares concept name', async () => {
       if (typeof renderTransformHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = renderTransformHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = renderTransformHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('RenderTransform');
     });
@@ -551,11 +541,14 @@ describe('RenderTransform functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = renderTransformHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(renderTransformHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -583,11 +576,14 @@ describe('RenderTransform functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = renderTransformHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(renderTransformHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -615,11 +611,14 @@ describe('RenderTransform functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = renderTransformHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(renderTransformHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },

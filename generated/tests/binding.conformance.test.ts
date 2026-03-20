@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Binding functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Binding functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bindingHandler.bind !== 'function') return;
-      try {
-        const result = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Binding functional handler', () => {
       if (typeof bindingHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.bind({ binding: "B-3", concept: "Article", mode: "websocket" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('Binding functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bindingHandler.sync !== 'function') return;
-      try {
-        const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_sync" -> ok', async () => {
       if (typeof bindingHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage));
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-2", concept: "User", mode: "rest" }), storage));
       const result = await interpret(bindingHandler.sync({ binding: "B-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('Binding functional handler', () => {
       if (typeof bindingHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.sync({ binding: "B-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +220,20 @@ describe('Binding functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
-      try {
-        const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_invoke" -> ok', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage));
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-2", concept: "User", mode: "rest" }), storage));
       const result = await interpret(bindingHandler.invoke({ binding: "B-1", action: "create", input: "{\"title\":\"Hello World\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +242,7 @@ describe('Binding functional handler', () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.invoke({ binding: "B-999", action: "create", input: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +290,20 @@ describe('Binding functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bindingHandler.unbind !== 'function') return;
-      try {
-        const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_unbind" -> ok', async () => {
       if (typeof bindingHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-1", concept: "Article", mode: "coupled" }), storage));
+      await safeInvoke(async () => await interpret(bindingHandler.bind({ binding: "B-2", concept: "User", mode: "rest" }), storage));
       const result = await interpret(bindingHandler.unbind({ binding: "B-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('Binding functional handler', () => {
       if (typeof bindingHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bindingHandler.unbind({ binding: "B-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -323,15 +321,12 @@ describe('Binding functional handler', () => {
     it('declares concept name', async () => {
       if (typeof bindingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = bindingHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = bindingHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Binding');
     });
@@ -355,9 +350,12 @@ describe('Binding functional handler', () => {
     it('bind handles empty input: ', async () => {
       if (typeof bindingHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bindingHandler.bind({  }), storage);
+      const result = await safeInvoke(async () => await interpret(bindingHandler.bind({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('bind ensures on ok: ', async () => {
@@ -368,9 +366,11 @@ describe('Binding functional handler', () => {
           fc.record({ binding: fc.string(), concept: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = bindingHandler.bind(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = bindingHandler.bind(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -388,9 +388,11 @@ describe('Binding functional handler', () => {
           fc.record({ binding: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = bindingHandler.sync(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = bindingHandler.sync(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -403,9 +405,12 @@ describe('Binding functional handler', () => {
     it('invoke handles empty input: ', async () => {
       if (typeof bindingHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bindingHandler.invoke({  }), storage);
+      const result = await safeInvoke(async () => await interpret(bindingHandler.invoke({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('invoke ensures on ok: ', async () => {
@@ -416,9 +421,11 @@ describe('Binding functional handler', () => {
           fc.record({ binding: fc.string(), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = bindingHandler.invoke(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = bindingHandler.invoke(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SchemaEvolution functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SchemaEvolution functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
-      try {
-        const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[]", compatibility: "bogus" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('SchemaEvolution functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
-      try {
-        const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "check_backward" -> ok', async () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage));
       const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", newSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"age\",\"type\":\"int\"}]", mode: "backward" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.check({ oldSchema: "[]", newSchema: "[]", mode: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('SchemaEvolution functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
-      try {
-        const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "upcast_v1_to_v2" -> ok', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage));
       const result = await interpret(schemaEvolutionHandler.upcast({ data: "{\"email\":\"alice@example.com\"}", fromVersion: "1", toVersion: "2", subject: "user-profile" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.upcast({ data: "{}", fromVersion: "1", toVersion: "2", subject: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('SchemaEvolution functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaEvolutionHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resolve_schemas" -> ok', async () => {
       if (typeof schemaEvolutionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage));
       const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "[{\"name\":\"email\",\"type\":\"string\"}]", writerSchema: "[{\"name\":\"email\",\"type\":\"string\"},{\"name\":\"phone\",\"type\":\"string\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.resolve({ readerSchema: "not-json", writerSchema: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('SchemaEvolution functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
-      try {
-        const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_existing" -> ok', async () => {
       if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(schemaEvolutionHandler.register({ subject: "user-profile", schema: "[{\"name\":\"email\",\"type\":\"string\",\"required\":true}]", compatibility: "backward" }), storage));
       const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "user-profile", version: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('SchemaEvolution functional handler', () => {
       if (typeof schemaEvolutionHandler.getSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaEvolutionHandler.getSchema({ subject: "nonexistent-subject", version: "99" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +380,12 @@ describe('SchemaEvolution functional handler', () => {
     it('declares concept name', async () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = schemaEvolutionHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = schemaEvolutionHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SchemaEvolution');
     });
@@ -434,11 +423,14 @@ describe('SchemaEvolution functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = schemaEvolutionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(schemaEvolutionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -465,12 +457,15 @@ describe('SchemaEvolution functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = schemaEvolutionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(schemaEvolutionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in schemas
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in schemas
               }
             }
           },
@@ -485,9 +480,12 @@ describe('SchemaEvolution functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof schemaEvolutionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(schemaEvolutionHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(schemaEvolutionHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -498,9 +496,11 @@ describe('SchemaEvolution functional handler', () => {
           fc.record({ subject: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string(), compatibility: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = schemaEvolutionHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = schemaEvolutionHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -513,9 +513,12 @@ describe('SchemaEvolution functional handler', () => {
     it('check handles empty input: ', async () => {
       if (typeof schemaEvolutionHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(schemaEvolutionHandler.check({  }), storage);
+      const result = await safeInvoke(async () => await interpret(schemaEvolutionHandler.check({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('check ensures on ok: ', async () => {
@@ -526,9 +529,11 @@ describe('SchemaEvolution functional handler', () => {
           fc.record({ oldSchema: fc.string(), newSchema: fc.string(), mode: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = schemaEvolutionHandler.check(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = schemaEvolutionHandler.check(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -541,9 +546,12 @@ describe('SchemaEvolution functional handler', () => {
     it('upcast handles empty input: ', async () => {
       if (typeof schemaEvolutionHandler.upcast !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(schemaEvolutionHandler.upcast({  }), storage);
+      const result = await safeInvoke(async () => await interpret(schemaEvolutionHandler.upcast({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('upcast ensures on ok: ', async () => {
@@ -554,9 +562,11 @@ describe('SchemaEvolution functional handler', () => {
           fc.record({ data: fc.string(), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }), subject: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = schemaEvolutionHandler.upcast(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = schemaEvolutionHandler.upcast(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

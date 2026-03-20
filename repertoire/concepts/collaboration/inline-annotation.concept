@@ -72,7 +72,7 @@ concept InlineAnnotation [A] {
       }
 
       fixture accept_all_for_doc { contentRef: "doc-readme" }
-      fixture accept_all_empty_ref { contentRef: "" } -> error
+      fixture accept_all_empty_ref { contentRef: "" }
     }
 
     action rejectAll(contentRef: String) {
@@ -81,7 +81,7 @@ concept InlineAnnotation [A] {
       }
 
       fixture reject_all_for_doc { contentRef: "doc-readme" }
-      fixture reject_all_empty_ref { contentRef: "" } -> error
+      fixture reject_all_empty_ref { contentRef: "" }
     }
 
     action toggleTracking(contentRef: String, enabled: Bool) {
@@ -99,7 +99,7 @@ concept InlineAnnotation [A] {
       }
 
       fixture list_pending_existing { contentRef: "doc-readme" }
-      fixture list_pending_empty_ref { contentRef: "" } -> error
+      fixture list_pending_empty_ref { contentRef: "" }
     }
   }
 

@@ -1,4 +1,4 @@
-// @clef-handler style=imperative
+// @clef-handler style=functional
 // ============================================================
 // WidgetEntity Concept Implementation (Functional)
 //

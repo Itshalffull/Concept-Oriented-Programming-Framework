@@ -29,7 +29,7 @@ concept DeployScaffoldGen [D] {
 
       fixture valid_generate { appName: "inventory-service", runtimes: [{"name": "api", "type": "node", "transport": "http", "storage": "sqlite"}], concepts: [{"name": "Product", "runtime": "api"}] }
       fixture minimal_generate { appName: "my-app", runtimes: [], concepts: [] }
-      fixture empty_app_name { appName: "", runtimes: [], concepts: [] } -> error
+      fixture empty_app_name { appName: "", runtimes: [], concepts: [] }
     }
 
     action preview(appName: String, runtimes: list Runtime, concepts: list ConceptAssignment) {

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Property functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Property functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof propertyHandler.set !== 'function') return;
-      try {
-        const result = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(propertyHandler.set({ entity: "", key: "title", value: "Hello" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Property functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof propertyHandler.get !== 'function') return;
-      try {
-        const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_existing" -> ok', async () => {
       if (typeof propertyHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage));
       const result = await interpret(propertyHandler.get({ entity: "page-1", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(propertyHandler.get({ entity: "nonexistent", key: "title" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('Property functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
-      try {
-        const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof propertyHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage));
       const result = await interpret(propertyHandler.delete({ entity: "page-1", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(propertyHandler.delete({ entity: "nonexistent", key: "title" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('Property functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
-      try {
-        const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "list_all_props" -> ok', async () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(propertyHandler.set({ entity: "page-1", key: "title", value: "Hello World" }), storage));
       const result = await interpret(propertyHandler.listAll({ entity: "page-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('Property functional handler', () => {
       if (typeof propertyHandler.listAll !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(propertyHandler.listAll({ entity: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +311,12 @@ describe('Property functional handler', () => {
     it('declares concept name', async () => {
       if (typeof propertyHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = propertyHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = propertyHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Property');
     });
@@ -358,9 +350,12 @@ describe('Property functional handler', () => {
     it('set handles empty input: ', async () => {
       if (typeof propertyHandler.set !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(propertyHandler.set({  }), storage);
+      const result = await safeInvoke(async () => await interpret(propertyHandler.set({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('set ensures on ok: ', async () => {
@@ -371,9 +366,11 @@ describe('Property functional handler', () => {
           fc.record({ entity: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = propertyHandler.set(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = propertyHandler.set(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

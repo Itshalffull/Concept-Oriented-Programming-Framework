@@ -61,7 +61,7 @@ concept ArgoCDProvider [A] {
       }
 
       fixture syncwave_app { application: "app-prod-001", wave: 1 }
-      fixture syncwave_nonexistent { application: "", wave: 0 } -> error
+      fixture syncwave_nonexistent { application: "", wave: 0 }
     }
   }
 

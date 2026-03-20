@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Authentication functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Authentication functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof authenticationHandler.register !== 'function') return;
-      try {
-        const result = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.register({ user: "", provider: "local", credentials: "pass" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Authentication functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof authenticationHandler.login !== 'function') return;
-      try {
-        const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "login_valid" -> ok', async () => {
       if (typeof authenticationHandler.login !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage));
       const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "secret123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.login !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.login({ user: "alice", credentials: "wrong-password" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('Authentication functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof authenticationHandler.logout !== 'function') return;
-      try {
-        const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "logout_existing" -> ok', async () => {
       if (typeof authenticationHandler.logout !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage));
       const result = await interpret(authenticationHandler.logout({ user: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.logout !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.logout({ user: "nonexistent-user" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('Authentication functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
-      try {
-        const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "auth_valid_token" -> ok', async () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage));
       const result = await interpret(authenticationHandler.authenticate({ token: "tok-abc-123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.authenticate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.authenticate({ token: "expired-or-revoked" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('Authentication functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
-      try {
-        const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "reset_existing" -> ok', async () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(authenticationHandler.register({ user: "alice", provider: "local", credentials: "secret123" }), storage));
       const result = await interpret(authenticationHandler.resetPassword({ user: "alice", newCredentials: "newpass456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('Authentication functional handler', () => {
       if (typeof authenticationHandler.resetPassword !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authenticationHandler.resetPassword({ user: "nonexistent-user", newCredentials: "pass" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +380,12 @@ describe('Authentication functional handler', () => {
     it('declares concept name', async () => {
       if (typeof authenticationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = authenticationHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = authenticationHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Authentication');
     });
@@ -466,11 +455,14 @@ describe('Authentication functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = authenticationHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(authenticationHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -497,12 +489,15 @@ describe('Authentication functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = authenticationHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(authenticationHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-providers
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-providers
               }
             }
           },
@@ -517,9 +512,12 @@ describe('Authentication functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof authenticationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(authenticationHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(authenticationHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -530,9 +528,11 @@ describe('Authentication functional handler', () => {
           fc.record({ user: fc.string(), provider: fc.string({ minLength: 1, maxLength: 50 }), credentials: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = authenticationHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = authenticationHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

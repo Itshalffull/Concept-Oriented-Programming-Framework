@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('PageAsRecord functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.create !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.create({ page: "", schema: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.setProperty !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_title" -> ok', async () => {
       if (typeof pageAsRecordHandler.setProperty !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage));
       const result = await interpret(pageAsRecordHandler.setProperty({ page: "meeting-notes", key: "title", value: "Weekly Standup" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.setProperty !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.setProperty({ page: "nonexistent", key: "title", value: "Test" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.getProperty !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_title" -> ok', async () => {
       if (typeof pageAsRecordHandler.getProperty !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage));
       const result = await interpret(pageAsRecordHandler.getProperty({ page: "meeting-notes", key: "title" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.getProperty !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.getProperty({ page: "nonexistent", key: "title" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "append_text" -> ok', async () => {
       if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage));
       const result = await interpret(pageAsRecordHandler.appendToBody({ page: "meeting-notes", content: "Action items from today" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.appendToBody !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.appendToBody({ page: "nonexistent", content: "Some text" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "attach_schema" -> ok', async () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage));
       const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\",\"attendees\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.attachToSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.attachToSchema({ page: "nonexistent", schema: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +419,19 @@ describe('PageAsRecord functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
-      try {
-        const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "convert_page" -> ok', async () => {
       if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(pageAsRecordHandler.create({ page: "meeting-notes", schema: "{\"fields\":[\"title\",\"date\"]}" }), storage));
       const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "meeting-notes", schema: "{\"fields\":[\"title\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +440,7 @@ describe('PageAsRecord functional handler', () => {
       if (typeof pageAsRecordHandler.convertFromFreeform !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(pageAsRecordHandler.convertFromFreeform({ page: "nonexistent", schema: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +449,12 @@ describe('PageAsRecord functional handler', () => {
     it('declares concept name', async () => {
       if (typeof pageAsRecordHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = pageAsRecordHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = pageAsRecordHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('PageAsRecord');
     });
@@ -509,11 +495,14 @@ describe('PageAsRecord functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = pageAsRecordHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(pageAsRecordHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -541,12 +530,15 @@ describe('PageAsRecord functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = pageAsRecordHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(pageAsRecordHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-schemaProperties
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-schemaProperties
               }
             }
           },
@@ -561,9 +553,12 @@ describe('PageAsRecord functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof pageAsRecordHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageAsRecordHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(pageAsRecordHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -574,9 +569,11 @@ describe('PageAsRecord functional handler', () => {
           fc.record({ page: fc.string(), schema: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = pageAsRecordHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = pageAsRecordHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

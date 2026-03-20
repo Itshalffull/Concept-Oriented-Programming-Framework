@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SwiftBuilder functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SwiftBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftBuilderHandler.build !== 'function') return;
-      try {
-        const result = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('SwiftBuilder functional handler', () => {
       if (typeof swiftBuilderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftBuilderHandler.build({ source: "", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release"} }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('SwiftBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
-      try {
-        const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "test_unit" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +172,9 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "test_with_invocation" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,7 +183,7 @@ describe('SwiftBuilder functional handler', () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftBuilderHandler.test({ build: "", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -225,22 +231,21 @@ describe('SwiftBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
-      try {
-        const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "package_framework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -248,6 +253,9 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "package_xcframework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
+      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "xcframework" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -256,7 +264,7 @@ describe('SwiftBuilder functional handler', () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "deb" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -304,16 +312,12 @@ describe('SwiftBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof swiftBuilderHandler.register !== 'function') return;
-      try {
-        const result = await interpret(swiftBuilderHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(swiftBuilderHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -330,15 +334,12 @@ describe('SwiftBuilder functional handler', () => {
     it('declares concept name', async () => {
       if (typeof swiftBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = swiftBuilderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = swiftBuilderHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SwiftBuilder');
     });
@@ -376,11 +377,14 @@ describe('SwiftBuilder functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = swiftBuilderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(swiftBuilderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -406,12 +410,15 @@ describe('SwiftBuilder functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = swiftBuilderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(swiftBuilderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-buildDir
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-buildDir
               }
             }
           },

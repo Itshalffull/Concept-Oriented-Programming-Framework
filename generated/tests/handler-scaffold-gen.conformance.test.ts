@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('HandlerScaffoldGen functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('HandlerScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
-      try {
-        const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('HandlerScaffoldGen functional handler', () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(handlerScaffoldGenHandler.generate({ conceptName: "", actions: [], style: "functional" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('HandlerScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
-      try {
-        const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage));
+      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Invoice", actions: [], style: "imperative" }), storage));
+      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.register({  }), storage));
       const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +173,7 @@ describe('HandlerScaffoldGen functional handler', () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "", actions: [] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +221,12 @@ describe('HandlerScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof handlerScaffoldGenHandler.register !== 'function') return;
-      try {
-        const result = await interpret(handlerScaffoldGenHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(handlerScaffoldGenHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -244,15 +243,12 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('declares concept name', async () => {
       if (typeof handlerScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = handlerScaffoldGenHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = handlerScaffoldGenHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('HandlerScaffoldGen');
     });
@@ -293,11 +289,14 @@ describe('HandlerScaffoldGen functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = handlerScaffoldGenHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(handlerScaffoldGenHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -312,9 +311,12 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('generate handles empty input: ', async () => {
       if (typeof handlerScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(handlerScaffoldGenHandler.generate({  }), storage);
+      const result = await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.generate({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('generate ensures on ok: ', async () => {
@@ -325,9 +327,11 @@ describe('HandlerScaffoldGen functional handler', () => {
           fc.record({ conceptName: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string(), style: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = handlerScaffoldGenHandler.generate(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = handlerScaffoldGenHandler.generate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Lockfile functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Lockfile functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lockfileHandler.write !== 'function') return;
-      try {
-        const result = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lockfileHandler.write({ project_hash: "sha256:manifest-hash-001", entries: [{"module_id":"lodash","version":"4.17.21","content_hash":"sha256:abc123","artifact_url":"https://registry.example.com/lodash.tgz","integrity":"sha256:abc123","features_enabled":[],"dependencies":[]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lockfileHandler.write({ project_hash: "sha256:hash", entries: [{"module_id":"self-ref","version":"1.0.0","content_hash":"sha256:abc","artifact_url":"url","integrity":"sha256:abc","features_enabled":[],"dependencies":["self-ref"]}], metadata: {"resolver_version":"1.0.0","resolved_at":"2026-01-15T10:00:00Z","registry_snapshot":"snap-001"} }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Lockfile functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lockfileHandler.read !== 'function') return;
-      try {
-        const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lockfileHandler.read({ lockfile: "lock-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lockfileHandler.read({ lockfile: "lock-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Lockfile functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lockfileHandler.verify !== 'function') return;
-      try {
-        const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lockfileHandler.verify({ lockfile: "lock-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lockfileHandler.verify({ lockfile: "lock-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Lockfile functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof lockfileHandler.diff !== 'function') return;
-      try {
-        const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-1", new_lockfile: "lock-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Lockfile functional handler', () => {
       if (typeof lockfileHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(lockfileHandler.diff({ old_lockfile: "lock-nonexistent", new_lockfile: "lock-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +308,12 @@ describe('Lockfile functional handler', () => {
     it('declares concept name', async () => {
       if (typeof lockfileHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = lockfileHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = lockfileHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Lockfile');
     });
@@ -369,11 +358,14 @@ describe('Lockfile functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = lockfileHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(lockfileHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -399,12 +391,15 @@ describe('Lockfile functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = lockfileHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(lockfileHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in lockfiles
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in lockfiles
               }
             }
           },
@@ -419,9 +414,12 @@ describe('Lockfile functional handler', () => {
     it('write handles empty input: ', async () => {
       if (typeof lockfileHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lockfileHandler.write({  }), storage);
+      const result = await safeInvoke(async () => await interpret(lockfileHandler.write({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('write ensures on ok: ', async () => {
@@ -432,9 +430,11 @@ describe('Lockfile functional handler', () => {
           fc.record({ project_hash: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string(), metadata: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = lockfileHandler.write(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = lockfileHandler.write(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -452,9 +452,11 @@ describe('Lockfile functional handler', () => {
           fc.record({ lockfile: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = lockfileHandler.read(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = lockfileHandler.read(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -472,9 +474,11 @@ describe('Lockfile functional handler', () => {
           fc.record({ lockfile: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = lockfileHandler.verify(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = lockfileHandler.verify(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

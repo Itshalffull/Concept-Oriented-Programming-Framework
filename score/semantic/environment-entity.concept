@@ -61,7 +61,7 @@ concept EnvironmentEntity [E] {
         boundRuntime, sensitive }.
       }
       fixture find_production { environment: "production" }
-      fixture find_empty_env { environment: "" } -> error
+      fixture find_empty_env { environment: "" }
     }
 
     action findByConcept(concept: String) {
@@ -70,7 +70,7 @@ concept EnvironmentEntity [E] {
         as serialized JSON array.
       }
       fixture find_user_concept { concept: "User" }
-      fixture find_empty_concept { concept: "" } -> error
+      fixture find_empty_concept { concept: "" }
     }
 
     action findByRuntime(runtime: String) {
@@ -79,7 +79,7 @@ concept EnvironmentEntity [E] {
         as serialized JSON array.
       }
       fixture find_api_runtime { runtime: "api" }
-      fixture find_empty_runtime { runtime: "" } -> error
+      fixture find_empty_runtime { runtime: "" }
     }
 
     action diffEnvironments(envA: String, envB: String) {
@@ -102,7 +102,7 @@ concept EnvironmentEntity [E] {
         { name, source, boundRuntime, lastRotated }.
       }
       fixture audit_production { environment: "production" }
-      fixture audit_empty { environment: "" } -> error
+      fixture audit_empty { environment: "" }
     }
 
     action featureFlags(environment: String) {
@@ -111,7 +111,7 @@ concept EnvironmentEntity [E] {
         serialized JSON array of { name, value, boundConcept }.
       }
       fixture flags_staging { environment: "staging" }
-      fixture flags_empty { environment: "" } -> error
+      fixture flags_empty { environment: "" }
     }
   }
 

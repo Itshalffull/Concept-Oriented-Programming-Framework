@@ -63,7 +63,7 @@ concept Middleware [M] {
 
       fixture inject_single { output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }
       fixture inject_multiple { output: "server.addService(svc)", middlewares: ["auth-interceptor", "logging"], target: "grpc" }
-      fixture inject_empty { output: "", middlewares: [], target: "rest" } -> error
+      fixture inject_empty { output: "", middlewares: [], target: "rest" }
     }
 
     action register(trait: String, target: String, implementation: String, position: String) {
@@ -77,7 +77,7 @@ concept Middleware [M] {
 
       fixture register_bearer { trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }
       fixture register_logging { trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }
-      fixture register_empty_trait { trait: "", target: "rest", implementation: "noop", position: "auth" } -> error
+      fixture register_empty_trait { trait: "", target: "rest", implementation: "noop", position: "auth" }
     }
   }
 

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Schema functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.defineSchema !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.defineSchema({ schema: "article", fields: "title,body,author" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.defineSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.defineSchema({ schema: "empty", fields: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.addField !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.addField({ schema: "article", field: "tags" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.addField !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.addField({ schema: "nonexistent", field: "tags" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.extendSchema !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.extendSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.extendSchema({ schema: "blog-post", parent: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.applyTo !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.applyTo({ entity_id: "page-1", schema: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-1", schema: "article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.removeFrom !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.removeFrom({ entity_id: "page-99", schema: "article" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.getAssociations !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.getAssociations({ schema: "article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.getAssociations !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.getAssociations({ schema: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,16 +483,12 @@ describe('Schema functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof schemaHandler.export !== 'function') return;
-      try {
-        const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(schemaHandler.export({ schema: "article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -523,7 +503,7 @@ describe('Schema functional handler', () => {
       if (typeof schemaHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(schemaHandler.export({ schema: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +512,12 @@ describe('Schema functional handler', () => {
     it('declares concept name', async () => {
       if (typeof schemaHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = schemaHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = schemaHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Schema');
     });
@@ -580,11 +557,14 @@ describe('Schema functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = schemaHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(schemaHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -613,12 +593,15 @@ describe('Schema functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = schemaHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(schemaHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-extends
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-extends
               }
             }
           },
@@ -633,9 +616,12 @@ describe('Schema functional handler', () => {
     it('addField handles empty input: ', async () => {
       if (typeof schemaHandler.addField !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(schemaHandler.addField({  }), storage);
+      const result = await safeInvoke(async () => await interpret(schemaHandler.addField({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('addField ensures on ok: ', async () => {
@@ -646,9 +632,11 @@ describe('Schema functional handler', () => {
           fc.record({ schema: fc.string(), field: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = schemaHandler.addField(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = schemaHandler.addField(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

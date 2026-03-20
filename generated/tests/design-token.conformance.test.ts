@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('DesignToken functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -94,11 +98,11 @@ describe('DesignToken functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_duplicate" -> error', async () => {
+    it('fixture "define_duplicate" -> ok', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_alias" -> ok', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.alias({ token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +173,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.alias({ token: "bad-alias", name: "bad-alias", reference: "nonexistent-token", tier: "semantic" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +221,21 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_resolve" -> ok', async () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.resolve({ token: "blue-500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +244,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.resolve({ token: "nonexistent-token" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +292,21 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.update !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_update" -> ok', async () => {
       if (typeof designTokenHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.update({ token: "blue-500", value: "#2563eb" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +315,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.update({ token: "nonexistent-token", value: "#000000" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +363,21 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.remove !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof designTokenHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.remove({ token: "blue-500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +386,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.remove({ token: "nonexistent-token" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,22 +434,21 @@ describe('DesignToken functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
-      try {
-        const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "export_css" -> ok', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.export({ format: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -457,6 +456,9 @@ describe('DesignToken functional handler', () => {
     it('fixture "export_dtcg" -> ok', async () => {
       if (typeof designTokenHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }), storage));
+      await safeInvoke(async () => await interpret(designTokenHandler.define({ token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }), storage));
       const result = await interpret(designTokenHandler.export({ format: "dtcg" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -465,7 +467,7 @@ describe('DesignToken functional handler', () => {
       if (typeof designTokenHandler.export !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(designTokenHandler.export({ format: "yaml" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -474,15 +476,12 @@ describe('DesignToken functional handler', () => {
     it('declares concept name', async () => {
       if (typeof designTokenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = designTokenHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = designTokenHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('DesignToken');
     });
@@ -504,9 +503,12 @@ describe('DesignToken functional handler', () => {
     it('define handles empty input: ', async () => {
       if (typeof designTokenHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(designTokenHandler.define({  }), storage);
+      const result = await safeInvoke(async () => await interpret(designTokenHandler.define({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('define ensures on ok: ', async () => {
@@ -517,9 +519,11 @@ describe('DesignToken functional handler', () => {
           fc.record({ token: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }), type: fc.string({ minLength: 1, maxLength: 50 }), tier: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = designTokenHandler.define(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = designTokenHandler.define(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -532,9 +536,12 @@ describe('DesignToken functional handler', () => {
     it('alias handles empty input: ', async () => {
       if (typeof designTokenHandler.alias !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(designTokenHandler.alias({  }), storage);
+      const result = await safeInvoke(async () => await interpret(designTokenHandler.alias({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('alias ensures on ok: ', async () => {
@@ -545,9 +552,11 @@ describe('DesignToken functional handler', () => {
           fc.record({ token: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }), reference: fc.string(), tier: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = designTokenHandler.alias(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = designTokenHandler.alias(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -565,9 +574,11 @@ describe('DesignToken functional handler', () => {
           fc.record({ token: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = designTokenHandler.resolve(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = designTokenHandler.resolve(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

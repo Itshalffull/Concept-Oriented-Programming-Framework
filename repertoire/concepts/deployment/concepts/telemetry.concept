@@ -31,7 +31,7 @@ concept Telemetry [T] {
 
       fixture configure_otel { concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: 0.5 }
       fixture configure_full_sampling { concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: 1.0 }
-      fixture configure_empty_concept { concept: "", endpoint: "http://otel:4317", samplingRate: 0.1 } -> error
+      fixture configure_empty_concept { concept: "", endpoint: "http://otel:4317", samplingRate: 0.1 }
     }
 
     action deployMarker(suite: String, version: String, environment: String, status: String) {

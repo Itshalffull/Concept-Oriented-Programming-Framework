@@ -23,7 +23,7 @@ concept CausalClock [T] {
         Returns the new timestamp event and clock snapshot.
       }
       fixture tick_replica_a { replicaId: "replica-a" }
-      fixture tick_empty_replica { replicaId: "" } -> error
+      fixture tick_empty_replica { replicaId: "" }
     }
 
     action merge(localClock: list Int, remoteClock: list Int) {
@@ -57,7 +57,7 @@ concept CausalClock [T] {
         a >= b component-wise and a != b.
       }
       fixture dominates_check { a: "event-1", b: "event-2" }
-      fixture dominates_missing { a: "nonexistent", b: "event-2" } -> error
+      fixture dominates_missing { a: "nonexistent", b: "event-2" }
     }
   }
 

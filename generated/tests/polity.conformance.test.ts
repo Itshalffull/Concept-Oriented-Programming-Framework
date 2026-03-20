@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Polity functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Polity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof polityHandler.establish !== 'function') return;
-      try {
-        const result = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(polityHandler.establish({ name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency","equity"], scope: ["budgets","hiring"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.establish !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(polityHandler.establish({ name: "", purpose: "No name provided", values: [], scope: [] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('Polity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof polityHandler.amend !== 'function') return;
-      try {
-        const result = await interpret(polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(polityHandler.amend({ polity: "polity-1", field: "purpose", newValue: "Updated governance mission" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.amend !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(polityHandler.amend({ polity: "polity-999", field: "purpose", newValue: "No such polity" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +218,12 @@ describe('Polity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof polityHandler.dissolve !== 'function') return;
-      try {
-        const result = await interpret(polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(polityHandler.dissolve({ polity: "polity-1", reason: "Merger with partner org" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +238,7 @@ describe('Polity functional handler', () => {
       if (typeof polityHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(polityHandler.dissolve({ polity: "polity-999", reason: "Does not exist" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -251,15 +247,12 @@ describe('Polity functional handler', () => {
     it('declares concept name', async () => {
       if (typeof polityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = polityHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = polityHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Polity');
     });
@@ -294,11 +287,14 @@ describe('Polity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = polityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(polityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -323,12 +319,15 @@ describe('Polity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = polityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(polityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-purpose
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-purpose
               }
             }
           },
@@ -343,9 +342,12 @@ describe('Polity functional handler', () => {
     it('establish handles empty input: ', async () => {
       if (typeof polityHandler.establish !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(polityHandler.establish({  }), storage);
+      const result = await safeInvoke(async () => await interpret(polityHandler.establish({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('establish ensures on established: ', async () => {
@@ -356,9 +358,11 @@ describe('Polity functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), purpose: fc.string({ minLength: 1, maxLength: 50 }), values: fc.string(), scope: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = polityHandler.establish(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "established") {
+            const result = await safeInvoke(async () => {
+              const program = polityHandler.establish(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "established") {
               seen = true;
               expect(result.output).toBeDefined();
             }

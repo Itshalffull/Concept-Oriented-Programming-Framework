@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Connector functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Connector functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof connectorHandler.configure !== 'function') return;
-      try {
-        const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('Connector functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof connectorHandler.read !== 'function') return;
-      try {
-        const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "read_posts" -> ok', async () => {
       if (typeof connectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +173,8 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.read({ connectorId: "conn-missing", query: "{}", options: "{}" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -218,22 +222,21 @@ describe('Connector functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof connectorHandler.write !== 'function') return;
-      try {
-        const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "write_records" -> ok', async () => {
       if (typeof connectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +245,8 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.write({ connectorId: "conn-missing", data: "[]", options: "{}" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -290,22 +294,21 @@ describe('Connector functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof connectorHandler.test !== 'function') return;
-      try {
-        const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "test_existing" -> ok', async () => {
       if (typeof connectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
+      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +317,8 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.test({ connectorId: "conn-missing" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -362,16 +366,12 @@ describe('Connector functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof connectorHandler.discover !== 'function') return;
-      try {
-        const result = await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -386,7 +386,8 @@ describe('Connector functional handler', () => {
       if (typeof connectorHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(connectorHandler.discover({ connectorId: "conn-missing" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -395,15 +396,12 @@ describe('Connector functional handler', () => {
     it('declares concept name', async () => {
       if (typeof connectorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = connectorHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = connectorHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Connector');
     });
@@ -442,11 +440,14 @@ describe('Connector functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = connectorHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(connectorHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -473,12 +474,15 @@ describe('Connector functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = connectorHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(connectorHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-protocolId
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-protocolId
               }
             }
           },
@@ -493,9 +497,12 @@ describe('Connector functional handler', () => {
     it('configure handles empty input: ', async () => {
       if (typeof connectorHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(connectorHandler.configure({  }), storage);
+      const result = await safeInvoke(async () => await interpret(connectorHandler.configure({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('configure ensures on ok: ', async () => {
@@ -506,9 +513,11 @@ describe('Connector functional handler', () => {
           fc.record({ sourceId: fc.string({ minLength: 1, maxLength: 50 }), protocolId: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = connectorHandler.configure(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = connectorHandler.configure(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

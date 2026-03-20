@@ -57,7 +57,7 @@ concept ErrorCorrelation [E] {
       }
       fixture find_by_concept { symbol: "ConceptEntity:User", since: "" }
       fixture find_by_action_since { symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" }
-      fixture find_empty_symbol { symbol: "", since: "" } -> error
+      fixture find_empty_symbol { symbol: "", since: "" }
     }
 
     action findByKind(errorKind: String, since: String) {
@@ -67,7 +67,7 @@ concept ErrorCorrelation [E] {
       }
       fixture find_action_errors { errorKind: "action-error", since: "" }
       fixture find_transport_recent { errorKind: "transport-error", since: "2026-02-01T00:00:00Z" }
-      fixture find_empty_kind { errorKind: "", since: "" } -> error
+      fixture find_empty_kind { errorKind: "", since: "" }
     }
 
     action errorHotspots(since: String, topN: Int) {

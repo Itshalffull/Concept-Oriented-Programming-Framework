@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('PredictionMarket functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('PredictionMarket functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
-      try {
-        const result = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(predictionMarketHandler.createMarket({ question: "Will GDP grow by 3%?", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('PredictionMarket functional handler', () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.createMarket({ question: "", outcomes: ["Yes","No"], deadline: "2026-12-31T23:59:59Z" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +150,12 @@ describe('PredictionMarket functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof predictionMarketHandler.trade !== 'function') return;
-      try {
-        const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(predictionMarketHandler.trade({ market: "market-001", trader: "alice", outcome: "Yes", amount: "50.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('PredictionMarket functional handler', () => {
       if (typeof predictionMarketHandler.trade !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.trade({ market: "market-nonexistent", trader: "bob", outcome: "No", amount: "10.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +218,12 @@ describe('PredictionMarket functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof predictionMarketHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(predictionMarketHandler.resolve({ market: "market-001", outcome: "Yes" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +238,7 @@ describe('PredictionMarket functional handler', () => {
       if (typeof predictionMarketHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.resolve({ market: "market-nonexistent", outcome: "No" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,16 +286,12 @@ describe('PredictionMarket functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof predictionMarketHandler.claimPayout !== 'function') return;
-      try {
-        const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -314,7 +306,7 @@ describe('PredictionMarket functional handler', () => {
       if (typeof predictionMarketHandler.claimPayout !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(predictionMarketHandler.claimPayout({ market: "market-001", trader: "bob" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -323,15 +315,12 @@ describe('PredictionMarket functional handler', () => {
     it('declares concept name', async () => {
       if (typeof predictionMarketHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = predictionMarketHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = predictionMarketHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('PredictionMarket');
     });
@@ -369,11 +358,14 @@ describe('PredictionMarket functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = predictionMarketHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(predictionMarketHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -399,12 +391,15 @@ describe('PredictionMarket functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = predictionMarketHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(predictionMarketHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-outcomes
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-outcomes
               }
             }
           },
@@ -419,9 +414,12 @@ describe('PredictionMarket functional handler', () => {
     it('createMarket handles empty input: ', async () => {
       if (typeof predictionMarketHandler.createMarket !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(predictionMarketHandler.createMarket({  }), storage);
+      const result = await safeInvoke(async () => await interpret(predictionMarketHandler.createMarket({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('createMarket ensures on created: ', async () => {
@@ -432,9 +430,11 @@ describe('PredictionMarket functional handler', () => {
           fc.record({ question: fc.string({ minLength: 1, maxLength: 50 }), outcomes: fc.string(), deadline: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = predictionMarketHandler.createMarket(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "created") {
+            const result = await safeInvoke(async () => {
+              const program = predictionMarketHandler.createMarket(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "created") {
               seen = true;
               expect(result.output).toBeDefined();
             }

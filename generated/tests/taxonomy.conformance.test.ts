@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Taxonomy functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Taxonomy functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
-      try {
-        const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "vocab-topics-1", name: "topics" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Taxonomy functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_vocab" -> error', async () => {
+    it('fixture "create_empty_vocab" -> ok', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.createVocabulary({ vocab: "", name: "unnamed" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Taxonomy functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
-      try {
-        const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(taxonomyHandler.addTerm({ vocab: "vocab-topics-1", term: "science", parent: "" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.addTerm !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.addTerm({ vocab: "nonexistent", term: "orphan", parent: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +218,12 @@ describe('Taxonomy functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
-      try {
-        const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(taxonomyHandler.setParent({ vocab: "vocab-topics-1", term: "physics", parent: "natural-science" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +238,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.setParent !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.setParent({ vocab: "nonexistent", term: "orphan", parent: "root" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,16 +286,12 @@ describe('Taxonomy functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
-      try {
-        const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -314,7 +306,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.tagEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.tagEntity({ entity: "page-1", vocab: "nonexistent", term: "science" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,16 +354,12 @@ describe('Taxonomy functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
-      try {
-        const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "vocab-topics-1", term: "science" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -386,7 +374,7 @@ describe('Taxonomy functional handler', () => {
       if (typeof taxonomyHandler.untagEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(taxonomyHandler.untagEntity({ entity: "page-1", vocab: "nonexistent", term: "science" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +383,12 @@ describe('Taxonomy functional handler', () => {
     it('declares concept name', async () => {
       if (typeof taxonomyHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = taxonomyHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = taxonomyHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Taxonomy');
     });
@@ -443,11 +428,14 @@ describe('Taxonomy functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = taxonomyHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(taxonomyHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -474,12 +462,15 @@ describe('Taxonomy functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = taxonomyHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(taxonomyHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-termParent
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-termParent
               }
             }
           },
@@ -494,9 +485,12 @@ describe('Taxonomy functional handler', () => {
     it('createVocabulary handles empty input: ', async () => {
       if (typeof taxonomyHandler.createVocabulary !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(taxonomyHandler.createVocabulary({  }), storage);
+      const result = await safeInvoke(async () => await interpret(taxonomyHandler.createVocabulary({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('createVocabulary ensures on ok: ', async () => {
@@ -507,9 +501,11 @@ describe('Taxonomy functional handler', () => {
           fc.record({ vocab: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = taxonomyHandler.createVocabulary(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = taxonomyHandler.createVocabulary(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

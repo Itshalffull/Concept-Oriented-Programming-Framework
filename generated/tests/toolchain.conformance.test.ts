@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Toolchain functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Toolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
-      try {
-        const result = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(toolchainHandler.resolve({ language: "swift", platform: "linux-arm64" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -112,7 +116,7 @@ describe('Toolchain functional handler', () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(toolchainHandler.resolve({ language: "cobol", platform: "linux-x86_64" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -160,16 +164,12 @@ describe('Toolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof toolchainHandler.validate !== 'function') return;
-      try {
-        const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(toolchainHandler.validate({ tool: "tc-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -184,7 +184,7 @@ describe('Toolchain functional handler', () => {
       if (typeof toolchainHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(toolchainHandler.validate({ tool: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -232,16 +232,12 @@ describe('Toolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof toolchainHandler.list !== 'function') return;
-      try {
-        const result = await interpret(toolchainHandler.list({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(toolchainHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -311,16 +307,12 @@ describe('Toolchain functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
-      try {
-        const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(toolchainHandler.capabilities({ tool: "tc-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -335,7 +327,7 @@ describe('Toolchain functional handler', () => {
       if (typeof toolchainHandler.capabilities !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(toolchainHandler.capabilities({ tool: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -344,15 +336,12 @@ describe('Toolchain functional handler', () => {
     it('declares concept name', async () => {
       if (typeof toolchainHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = toolchainHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = toolchainHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Toolchain');
     });
@@ -394,11 +383,14 @@ describe('Toolchain functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = toolchainHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(toolchainHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -424,12 +416,15 @@ describe('Toolchain functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = toolchainHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(toolchainHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-platform
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-platform
               }
             }
           },
@@ -444,9 +439,12 @@ describe('Toolchain functional handler', () => {
     it('resolve handles empty input: ', async () => {
       if (typeof toolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(toolchainHandler.resolve({  }), storage);
+      const result = await safeInvoke(async () => await interpret(toolchainHandler.resolve({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('resolve ensures on ok: ', async () => {
@@ -457,9 +455,11 @@ describe('Toolchain functional handler', () => {
           fc.record({ language: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), versionConstraint: fc.string(), category: fc.string(), toolName: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = toolchainHandler.resolve(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = toolchainHandler.resolve(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

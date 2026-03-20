@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Proposal functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Proposal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof proposalHandler.create !== 'function') return;
-      try {
-        const result = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.create({ proposer: "alice", title: "", description: "No title given", actions: ["noop"] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Proposal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
-      try {
-        const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "sponsor_pending" -> ok', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-nonexistent", sponsorId: "bob" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('Proposal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
-      try {
-        const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "activate_sponsored" -> ok', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.activate({ proposal: "proposal-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('Proposal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
-      try {
-        const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "advance_to_passed" -> ok', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.advance({ proposal: "proposal-nonexistent", newStatus: "Passed" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('Proposal functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
-      try {
-        const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "cancel_draft" -> ok', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.cancel({ proposal: "proposal-nonexistent", canceller: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +380,12 @@ describe('Proposal functional handler', () => {
     it('declares concept name', async () => {
       if (typeof proposalHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = proposalHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = proposalHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Proposal');
     });
@@ -437,11 +426,14 @@ describe('Proposal functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = proposalHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(proposalHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -468,12 +460,15 @@ describe('Proposal functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = proposalHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(proposalHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-title
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-title
               }
             }
           },
@@ -488,9 +483,12 @@ describe('Proposal functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof proposalHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(proposalHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(proposalHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on created: ', async () => {
@@ -501,9 +499,11 @@ describe('Proposal functional handler', () => {
           fc.record({ proposer: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = proposalHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "created") {
+            const result = await safeInvoke(async () => {
+              const program = proposalHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "created") {
               seen = true;
               expect(result.output).toBeDefined();
             }

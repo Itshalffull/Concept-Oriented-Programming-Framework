@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Element functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.create !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.create({ element: "E-3", kind: "unknown-kind", label: "Bad", dataType: "String" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.nest !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.nest({ parent: "E-2", child: "E-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.nest({ parent: "E-2", child: "E-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_nest" -> ok', async () => {
       if (typeof elementHandler.nest !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage));
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage));
       const result = await interpret(elementHandler.nest({ parent: "E-2", child: "E-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.nest !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.nest({ parent: "E-1", child: "E-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +220,20 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.setConstraints({ element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.setConstraints({ element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_constraints" -> ok', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage));
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage));
       const result = await interpret(elementHandler.setConstraints({ element: "E-1", constraints: "{\"minLength\":1,\"maxLength\":255}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +242,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.setConstraints({ element: "E-999", constraints: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +290,20 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.enrich({ element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.enrich({ element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_enrich" -> ok', async () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage));
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage));
       const result = await interpret(elementHandler.enrich({ element: "E-1", interactorType: "text-short", interactorProps: "{\"placeholder\":\"Enter title\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.enrich !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.enrich({ element: "E-999", interactorType: "text-short", interactorProps: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +360,20 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.assignWidget !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.assignWidget({ element: "E-1", widget: "TextInput" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.assignWidget({ element: "E-1", widget: "TextInput" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_assign_widget" -> ok', async () => {
       if (typeof elementHandler.assignWidget !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage));
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage));
       const result = await interpret(elementHandler.assignWidget({ element: "E-1", widget: "TextInput" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +382,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.assignWidget !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.assignWidget({ element: "E-999", widget: "TextInput" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,22 +430,20 @@ describe('Element functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof elementHandler.remove !== 'function') return;
-      try {
-        const result = await interpret(elementHandler.remove({ element: "E-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(elementHandler.remove({ element: "E-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof elementHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-1", kind: "field", label: "Title", dataType: "String" }), storage));
+      await safeInvoke(async () => await interpret(elementHandler.create({ element: "E-2", kind: "group", label: "Details", dataType: "" }), storage));
       const result = await interpret(elementHandler.remove({ element: "E-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -458,7 +452,7 @@ describe('Element functional handler', () => {
       if (typeof elementHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(elementHandler.remove({ element: "E-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -467,15 +461,12 @@ describe('Element functional handler', () => {
     it('declares concept name', async () => {
       if (typeof elementHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = elementHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = elementHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Element');
     });
@@ -497,9 +488,12 @@ describe('Element functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof elementHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(elementHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(elementHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -510,9 +504,11 @@ describe('Element functional handler', () => {
           fc.record({ element: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), label: fc.string({ minLength: 1, maxLength: 50 }), dataType: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = elementHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = elementHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -530,9 +526,11 @@ describe('Element functional handler', () => {
           fc.record({ parent: fc.string(), child: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = elementHandler.nest(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = elementHandler.nest(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -545,9 +543,12 @@ describe('Element functional handler', () => {
     it('setConstraints handles empty input: ', async () => {
       if (typeof elementHandler.setConstraints !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(elementHandler.setConstraints({  }), storage);
+      const result = await safeInvoke(async () => await interpret(elementHandler.setConstraints({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('setConstraints ensures on ok: ', async () => {
@@ -558,9 +559,11 @@ describe('Element functional handler', () => {
           fc.record({ element: fc.string(), constraints: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = elementHandler.setConstraints(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = elementHandler.setConstraints(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

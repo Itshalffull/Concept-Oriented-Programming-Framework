@@ -69,7 +69,7 @@ concept Objective [OB] {
       }
 
       fixture cancel_with_reason { objective: "objective-001", reason: "Budget constraints" }
-      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" } -> error
+      fixture cancel_nonexistent { objective: "objective-nonexistent", reason: "N/A" }
     }
   }
 

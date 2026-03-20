@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Graph functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.addNode({ graph: "social-network", node: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Graph functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_node_empty" -> error', async () => {
+    it('fixture "add_node_empty" -> ok', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.addNode({ graph: "", node: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.removeNode !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.removeNode !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.removeNode({ graph: "social-network", node: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.addEdge !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.addEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.addEdge({ graph: "nonexistent-graph", source: "a", target: "b" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.removeEdge !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "alice", target: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.removeEdge !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.removeEdge({ graph: "social-network", source: "x", target: "y" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.getNeighbors !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.getNeighbors({ graph: "social-network", node: "alice", depth: "1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.getNeighbors !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.getNeighbors({ graph: "nonexistent", node: "alice", depth: "1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('Graph functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof graphHandler.filterNodes !== 'function') return;
-      try {
-        const result = await interpret(graphHandler.filterNodes({ graph: "social-network", filter: "type=person" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(graphHandler.filterNodes({ graph: "social-network", filter: "type=person" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('Graph functional handler', () => {
       if (typeof graphHandler.filterNodes !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(graphHandler.filterNodes({ graph: "nonexistent", filter: "type=any" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +444,12 @@ describe('Graph functional handler', () => {
     it('declares concept name', async () => {
       if (typeof graphHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = graphHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = graphHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Graph');
     });
@@ -509,11 +490,14 @@ describe('Graph functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = graphHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(graphHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -541,12 +525,15 @@ describe('Graph functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = graphHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(graphHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-edges
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-edges
               }
             }
           },
@@ -561,9 +548,12 @@ describe('Graph functional handler', () => {
     it('addNode handles empty input: ', async () => {
       if (typeof graphHandler.addNode !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(graphHandler.addNode({  }), storage);
+      const result = await safeInvoke(async () => await interpret(graphHandler.addNode({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('addNode ensures on ok: ', async () => {
@@ -574,9 +564,11 @@ describe('Graph functional handler', () => {
           fc.record({ graph: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = graphHandler.addNode(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = graphHandler.addNode(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

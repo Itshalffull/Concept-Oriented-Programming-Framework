@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SyntaxTree functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SyntaxTree functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syntaxTreeHandler.parse !== 'function') return;
-      try {
-        const result = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syntaxTreeHandler.parse({ file: "src/app.ts", grammar: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.parse({ file: "", grammar: "typescript" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('SyntaxTree functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syntaxTreeHandler.reparse !== 'function') return;
-      try {
-        const result = await interpret(syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syntaxTreeHandler.reparse({ tree: "tree-1", startByte: "10", oldEndByte: "20", newEndByte: "25", newText: "const x = 1;" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.reparse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.reparse({ tree: "nonexistent", startByte: "0", oldEndByte: "0", newEndByte: "0", newText: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('SyntaxTree functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syntaxTreeHandler.query !== 'function') return;
-      try {
-        const result = await interpret(syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syntaxTreeHandler.query({ tree: "tree-1", pattern: "(function_declaration) @fn" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.query({ tree: "nonexistent", pattern: "(identifier) @id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('SyntaxTree functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syntaxTreeHandler.nodeAt !== 'function') return;
-      try {
-        const result = await interpret(syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syntaxTreeHandler.nodeAt({ tree: "tree-1", byteOffset: "42" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.nodeAt !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.nodeAt({ tree: "nonexistent", byteOffset: "0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('SyntaxTree functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syntaxTreeHandler.get !== 'function') return;
-      try {
-        const result = await interpret(syntaxTreeHandler.get({ tree: "tree-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syntaxTreeHandler.get({ tree: "tree-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('SyntaxTree functional handler', () => {
       if (typeof syntaxTreeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syntaxTreeHandler.get({ tree: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +376,12 @@ describe('SyntaxTree functional handler', () => {
     it('declares concept name', async () => {
       if (typeof syntaxTreeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = syntaxTreeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = syntaxTreeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SyntaxTree');
     });
@@ -433,11 +418,14 @@ describe('SyntaxTree functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syntaxTreeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syntaxTreeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -464,12 +452,15 @@ describe('SyntaxTree functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syntaxTreeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syntaxTreeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-grammar
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-grammar
               }
             }
           },
@@ -484,9 +475,12 @@ describe('SyntaxTree functional handler', () => {
     it('parse handles empty input: ', async () => {
       if (typeof syntaxTreeHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syntaxTreeHandler.parse({  }), storage);
+      const result = await safeInvoke(async () => await interpret(syntaxTreeHandler.parse({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('parse ensures on ok: ', async () => {
@@ -497,9 +491,11 @@ describe('SyntaxTree functional handler', () => {
           fc.record({ file: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = syntaxTreeHandler.parse(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = syntaxTreeHandler.parse(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

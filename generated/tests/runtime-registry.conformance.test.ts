@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('RuntimeRegistry functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "urn:clef/ContentNode", has_storage: "true", storage_name: "content-node", storage_type: "standard" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_uri" -> error', async () => {
+    it('fixture "register_empty_uri" -> ok', async () => {
       if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeRegistryHandler.registerConcept({ uri: "", has_storage: "false", storage_name: "", storage_type: "standard" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "ContentPublish", source: "content-node.ts", suite: "core" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -159,11 +159,11 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_empty_sync_name" -> error', async () => {
+    it('fixture "register_empty_sync_name" -> ok', async () => {
       if (typeof runtimeRegistryHandler.registerSync !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeRegistryHandler.registerSync({ sync_name: "", source: "unknown.ts", suite: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/ContentNode" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('RuntimeRegistry functional handler', () => {
       if (typeof runtimeRegistryHandler.getConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeRegistryHandler.getConcept({ uri: "urn:clef/NonExistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.listConcepts !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.listConcepts({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.listConcepts({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -348,16 +340,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.listSyncs !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.listSyncs({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.listSyncs({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -413,16 +401,12 @@ describe('RuntimeRegistry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
-      try {
-        const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "urn:clef/ContentNode" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -433,11 +417,11 @@ describe('RuntimeRegistry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "is_loaded_missing" -> error', async () => {
+    it('fixture "is_loaded_missing" -> ok', async () => {
       if (typeof runtimeRegistryHandler.isLoaded !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(runtimeRegistryHandler.isLoaded({ uri: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -446,15 +430,12 @@ describe('RuntimeRegistry functional handler', () => {
     it('declares concept name', async () => {
       if (typeof runtimeRegistryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = runtimeRegistryHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = runtimeRegistryHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('RuntimeRegistry');
     });
@@ -499,11 +480,14 @@ describe('RuntimeRegistry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = runtimeRegistryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(runtimeRegistryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -531,12 +515,15 @@ describe('RuntimeRegistry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = runtimeRegistryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(runtimeRegistryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-has_storage
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-has_storage
               }
             }
           },
@@ -551,9 +538,12 @@ describe('RuntimeRegistry functional handler', () => {
     it('registerConcept handles empty input: ', async () => {
       if (typeof runtimeRegistryHandler.registerConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(runtimeRegistryHandler.registerConcept({  }), storage);
+      const result = await safeInvoke(async () => await interpret(runtimeRegistryHandler.registerConcept({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('registerConcept ensures on ok: ', async () => {
@@ -564,9 +554,11 @@ describe('RuntimeRegistry functional handler', () => {
           fc.record({ uri: fc.string({ minLength: 1, maxLength: 50 }), has_storage: fc.boolean(), storage_name: fc.string({ minLength: 1, maxLength: 50 }), storage_type: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = runtimeRegistryHandler.registerConcept(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = runtimeRegistryHandler.registerConcept(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

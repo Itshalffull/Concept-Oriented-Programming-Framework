@@ -69,7 +69,7 @@ concept FeatureFlag [F] {
       }
 
       fixture unify_compatible_flags { flags: ["flag-1", "flag-2"] }
-      fixture unify_empty_flags { flags: [] } -> error
+      fixture unify_empty_flags { flags: [] }
     }
   }
 

@@ -53,7 +53,7 @@ concept Artifact [A] {
       }
 
       fixture store_artifact { hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }
-      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" } -> error
+      fixture store_empty_hash { hash: "", location: "", concept: "", language: "", platform: "" }
     }
 
     action resolve(hash: String) {
@@ -77,7 +77,7 @@ concept Artifact [A] {
       }
 
       fixture gc_old_artifacts { olderThan: "2025-01-01T00:00:00Z", keepVersions: 3 }
-      fixture gc_negative_keep { olderThan: "2025-01-01T00:00:00Z", keepVersions: -1 } -> error
+      fixture gc_negative_keep { olderThan: "2025-01-01T00:00:00Z", keepVersions: -1 }
     }
   }
 

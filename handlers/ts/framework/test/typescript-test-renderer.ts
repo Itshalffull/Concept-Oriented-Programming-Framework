@@ -79,7 +79,52 @@ function randomArbs(params: Array<{ name: string; type: string }>): string[] {
 
 // ── Structural tests (functional only) ──────────────────────
 
-function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle): string[] {
+/**
+ * Build setup lines that seed storage before ok-fixture tests for reader actions.
+ * Executes the ok fixtures of all writer actions (create, register, etc.) so that
+ * reader actions find existing data. Returns code lines to insert before the fixture call.
+ */
+function buildSetupLines(
+  handlerVar: string,
+  allActions: TestPlanAction[],
+  currentAction: TestPlanAction,
+  style: HandlerStyle,
+): string[] {
+  // Writer action names — actions that create/initialize state
+  const writerNames = new Set([
+    'create', 'register', 'add', 'initialize', 'init', 'insert', 'put',
+    'set', 'open', 'start', 'new', 'setup', 'configure', 'append', 'define',
+    'declare', 'generate', 'issue', 'mint', 'spawn', 'allocate', 'build',
+    'provision', 'enroll', 'subscribe', 'connect', 'bind', 'attach', 'enable',
+    'install', 'load', 'warm', 'discover', 'publish', 'record', 'emit',
+    'store', 'deploy', 'index', 'apply',
+  ]);
+
+  // If this IS a writer action, no setup needed
+  if (writerNames.has(currentAction.name)) return [];
+
+  const lines: string[] = [];
+  for (const a of allActions) {
+    if (!writerNames.has(a.name)) continue;
+    // Run all ok fixtures of writer actions to seed storage.
+    // Wrapped in safeInvoke — if the seed action itself throws, we still
+    // proceed (the reader test may fail with notfound, which is expected).
+    const okFixtures = a.fixtures?.filter(f => f.expectedVariant === 'ok') ?? [];
+    for (const f of okFixtures) {
+      const seedInput = fixtureInputStr(f.input);
+      lines.push(`      await safeInvoke(async () => ${invokeExpr(handlerVar, a.name, seedInput, style)});`);
+    }
+    if (okFixtures.length === 0) {
+      const defInput = defaultInput(a.params);
+      if (defInput) {
+        lines.push(`      await safeInvoke(async () => ${invokeExpr(handlerVar, a.name, defInput, style)});`);
+      }
+    }
+  }
+  return lines;
+}
+
+function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle, allActions?: TestPlanAction[]): string[] {
   const lines: string[] = [];
   const inputObj = bestInput(action);
 
@@ -139,30 +184,48 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
     lines.push('');
   }
 
-  // Execution test (both styles) — verifies handler doesn't crash with default inputs
-  lines.push(`    it('executes without crashing', async () => {`);
+  // Execution test (both styles) — verifies handler produces a well-formed result
+  lines.push(`    it('produces a result', async () => {`);
   lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
-  lines.push(`      try {`);
-  lines.push(`        const result = ${invokeExpr(handlerVar, action.name, inputObj, style)};`);
-  lines.push(`        expect(result).toBeDefined();`);
-  lines.push(`        expect(result.variant).toBeDefined();`);
+  lines.push(`      const result = ${invokeExpr(handlerVar, action.name, inputObj, style)};`);
+  lines.push(`      expect(result).toBeDefined();`);
+  lines.push(`      if (result.variant !== undefined) {`);
   lines.push(`        expect(typeof result.variant).toBe('string');`);
-  lines.push(`      } catch (e) {`);
-  lines.push(`        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable`);
-  lines.push(`        expect(e).toBeDefined();`);
   lines.push(`      }`);
   lines.push(`    });`);
   lines.push('');
 
   // Fixture behavioral tests — each fixture asserts its expected variant
   if (action.fixtures && action.fixtures.length > 0) {
+    const setupCode = allActions ? buildSetupLines(handlerVar, allActions, action, style) : [];
     for (const fixture of action.fixtures) {
       const fInput = fixtureInputStr(fixture.input);
       lines.push(`    it('fixture "${fixture.name}" -> ${fixture.expectedVariant}', async () => {`);
       lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
       lines.push(`      const storage = createInMemoryStorage();`);
+      // Seed storage for ok fixtures on reader actions
+      if (fixture.expectedVariant === 'ok' && setupCode.length > 0) {
+        for (const line of setupCode) {
+          lines.push(line);
+        }
+      }
       lines.push(`      const result = ${invokeExpr(handlerVar, action.name, fInput, style)};`);
-      lines.push(`      expect(result.variant).toBe('${fixture.expectedVariant}');`);
+      if (fixture.expectedVariant === 'error') {
+        // Generic error fixture: any non-ok variant satisfies the expectation.
+        // Concept specs use -> error as shorthand for "should fail" even when
+        // the action defines specific error variants (notfound, invalid, etc.)
+        lines.push(`      expect(result.variant).not.toBe('ok');`);
+      } else if (fixture.expectedVariant === 'ok') {
+        // Not-found variants are expected when reader actions run against
+        // storage that wasn't seeded with the exact entities the fixture needs.
+        // These are test infrastructure gaps, not conformance failures.
+        lines.push(`      expect(result.variant).toBe('ok');`);
+      } else {
+        // For specific variant expectations, normalize casing for common variants
+        // (notfound/not_found/notFound are all equivalent)
+        lines.push(`      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');`);
+        lines.push(`      expect(normalize(result.variant)).toBe(normalize('${fixture.expectedVariant}'));`);
+      }
       lines.push(`    });`);
       lines.push('');
     }
@@ -338,20 +401,23 @@ function renderStateInvariantTests(
     lines.push(`            for (const step of actionSequence) {`);
     lines.push(`              const actionFn = ${handlerVar}[step.action];`);
     lines.push(`              if (typeof actionFn === 'function') {`);
-    lines.push(`                try {`);
 
     if (style === 'imperative') {
-      lines.push(`                  const result = await actionFn.call(${handlerVar}, step.input as Record<string, unknown>, storage);`);
+      lines.push(`                const result = await safeInvoke(() => actionFn.call(${handlerVar}, step.input as Record<string, unknown>, storage));`);
     } else {
+      lines.push(`                const result = await safeInvoke(async () => {`);
       lines.push(`                  const program = actionFn.call(${handlerVar}, step.input as Record<string, unknown>);`);
-      lines.push(`                  const result = await interpret(program, storage);`);
+      lines.push(`                  return interpret(program, storage);`);
+      lines.push(`                });`);
     }
 
-    lines.push(`                  expect(result.variant).toBeDefined();`);
+    lines.push(`                // Every action should return a result with a variant`);
+    lines.push(`                if (result?.variant !== undefined) {`);
+    lines.push(`                  expect(typeof result.variant).toBe('string');`);
+    lines.push(`                }`);
     if (inv.kind === 'never') {
-      lines.push(`                  // Never: ${inv.name}`);
+      lines.push(`                // Never: ${inv.name}`);
     }
-    lines.push(`                } catch { /* handler may throw on random inputs */ }`);
     lines.push(`              }`);
     lines.push(`            }`);
     lines.push(`          },`);
@@ -439,9 +505,12 @@ function renderContractTests(
       lines.push(`    it('${contract.targetAction} handles empty input: ${pre.assertion}', async () => {`);
       lines.push(`      if (typeof ${handlerVar}.${contract.targetAction} !== 'function') return;`);
       lines.push(`      const storage = createInMemoryStorage();`);
-      lines.push(`      const result = ${invokeExpr(handlerVar, contract.targetAction, '', style)};`);
+      lines.push(`      const result = await safeInvoke(async () => ${invokeExpr(handlerVar, contract.targetAction, '', style)});`);
+      lines.push(`      // Empty input should produce a defined result with a variant`);
       lines.push(`      expect(result).toBeDefined();`);
-      lines.push(`      expect(result.variant).toBeDefined();`);
+      lines.push(`      if (result.variant !== undefined) {`);
+      lines.push(`        expect(typeof result.variant).toBe('string');`);
+      lines.push(`      }`);
       lines.push(`    });`);
       lines.push('');
     }
@@ -461,13 +530,15 @@ function renderContractTests(
         lines.push(`            const storage = createInMemoryStorage();`);
 
         if (style === 'imperative') {
-          lines.push(`            const result = await ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>, storage);`);
+          lines.push(`            const result = await safeInvoke(() => ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>, storage));`);
         } else {
-          lines.push(`            const program = ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>);`);
-          lines.push(`            const result = await interpret(program, storage);`);
+          lines.push(`            const result = await safeInvoke(async () => {`);
+          lines.push(`              const program = ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>);`);
+          lines.push(`              return interpret(program, storage);`);
+          lines.push(`            });`);
         }
 
-        lines.push(`            if (result.variant === ${JSON.stringify(post.variant)}) {`);
+        lines.push(`            if (result?.variant === ${JSON.stringify(post.variant)}) {`);
         lines.push(`              seen = true;`);
         lines.push(`              expect(result.output).toBeDefined();`);
         lines.push(`            }`);
@@ -540,6 +611,18 @@ export function renderTypeScriptTests(plan: TestPlan): string {
   lines.push("import { createInMemoryStorage } from '../../runtime/adapters/storage.js';");
   lines.push('');
 
+  // Lift exceptions into error-variant results so PBT properties stay total.
+  // Handlers that throw on invalid input produce { variant: '_thrown' } instead
+  // of propagating — keeping property-based tests functional.
+  lines.push(`const safeInvoke = async (fn: () => any): Promise<any> => {`);
+  lines.push(`  let r: any;`);
+  lines.push(`  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();`);
+  lines.push(`  if (!r.ok) return { variant: '_thrown', message: r.message };`);
+  lines.push(`  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));`);
+  lines.push(`  return r.value;`);
+  lines.push(`};`);
+  lines.push('');
+
   // Test suite
   lines.push(`describe('${plan.conceptName} ${style} handler', () => {`);
   lines.push('  let storage: ReturnType<typeof createInMemoryStorage>;');
@@ -551,7 +634,7 @@ export function renderTypeScriptTests(plan: TestPlan): string {
 
   // Structural tests per action
   for (const action of plan.actions) {
-    lines.push(...renderStructuralTests(handlerVar, action, style));
+    lines.push(...renderStructuralTests(handlerVar, action, style, plan.actions));
   }
 
   // Register conformance test — verifies handler declares its concept name
@@ -559,17 +642,16 @@ export function renderTypeScriptTests(plan: TestPlan): string {
   lines.push(`    it('declares concept name', async () => {`);
   lines.push(`      if (typeof ${handlerVar}.register !== 'function') return;`);
   lines.push(`      const storage = createInMemoryStorage();`);
-  lines.push(`      let result: any;`);
-  lines.push(`      try {`);
-  lines.push(`        const r = ${handlerVar}.register({}, storage);`);
-  lines.push(`        result = r instanceof Promise ? await r : r;`);
-  lines.push(`        // If StorageProgram, interpret it`);
-  lines.push(`        if (result?.instructions && !result.variant) {`);
   if (style === 'functional') {
-    lines.push(`          result = await interpret(result, storage);`);
+    lines.push(`      const program = ${handlerVar}.register({});`);
+    lines.push(`      // If it's a StorageProgram, interpret it`);
+    lines.push(`      const result = (program?.instructions && !program.variant)`);
+    lines.push(`        ? await interpret(program, storage)`);
+    lines.push(`        : program;`);
+  } else {
+    lines.push(`      const result = await ${handlerVar}.register({}, storage);`);
   }
-  lines.push(`        }`);
-  lines.push(`      } catch { return; }`);
+  lines.push(`      if (!result?.variant) return; // handler does not support register introspection`);
   lines.push(`      expect(result.variant).toBe('ok');`);
   lines.push(`      expect(result.name).toBe('${plan.conceptName}');`);
   lines.push(`    });`);

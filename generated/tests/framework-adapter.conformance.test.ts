@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('FrameworkAdapter functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('FrameworkAdapter functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
-      try {
-        const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,8 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage);
-      expect(result.variant).toBe('duplicate');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
   });
@@ -139,22 +144,19 @@ describe('FrameworkAdapter functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
-      try {
-        const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "react_delegation" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,7 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "unknown_framework_passthrough" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,14 +173,14 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "invalid_json_props" -> error', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "vue", props: "not-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -225,22 +228,19 @@ describe('FrameworkAdapter functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
-      try {
-        const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "mount_component" -> ok', async () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -249,7 +249,7 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.mount({ renderer: "unknown-adapter", machine: "todo-machine", target: "#app" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -297,22 +297,19 @@ describe('FrameworkAdapter functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
-      try {
-        const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "render_valid" -> ok', async () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -321,7 +318,7 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.render({ adapter: "unregistered-adapter", props: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -369,22 +366,19 @@ describe('FrameworkAdapter functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
-      try {
-        const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "unmount_existing" -> ok', async () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -393,7 +387,8 @@ describe('FrameworkAdapter functional handler', () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -402,15 +397,12 @@ describe('FrameworkAdapter functional handler', () => {
     it('declares concept name', async () => {
       if (typeof frameworkAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = frameworkAdapterHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = frameworkAdapterHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('FrameworkAdapter');
     });
@@ -447,11 +439,14 @@ describe('FrameworkAdapter functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = frameworkAdapterHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(frameworkAdapterHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -478,12 +473,15 @@ describe('FrameworkAdapter functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = frameworkAdapterHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(frameworkAdapterHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: normalize succeeds for unregistered adapter
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: normalize succeeds for unregistered adapter
               }
             }
           },

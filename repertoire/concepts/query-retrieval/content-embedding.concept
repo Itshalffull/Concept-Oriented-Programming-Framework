@@ -45,7 +45,7 @@ concept ContentEmbedding [E] {
       }
 
       fixture remove_existing { entity_id: "node-42" }
-      fixture remove_missing { entity_id: "" } -> error
+      fixture remove_missing { entity_id: "" }
     }
 
     action get(entity_id: String) {

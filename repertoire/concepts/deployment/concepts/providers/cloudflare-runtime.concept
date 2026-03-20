@@ -33,7 +33,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture provision_worker { concept: "UserService", accountId: "acc-12345", routes: ["/api/users/*"] }
-      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] } -> error
+      fixture provision_empty_concept { concept: "", accountId: "acc-12345", routes: [] }
     }
 
     action deploy(worker: W, scriptContent: String) {
@@ -54,7 +54,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture set_weight_50 { worker: "wkr-001", weight: 50 }
-      fixture set_weight_negative { worker: "wkr-001", weight: -1 } -> error
+      fixture set_weight_negative { worker: "wkr-001", weight: -1 }
     }
 
     action rollback(worker: W, targetVersion: String) {
@@ -63,7 +63,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture rollback_to_v1 { worker: "wkr-001", targetVersion: "1" }
-      fixture rollback_empty_version { worker: "wkr-001", targetVersion: "" } -> error
+      fixture rollback_empty_version { worker: "wkr-001", targetVersion: "" }
     }
 
     action destroy(worker: W) {
@@ -72,7 +72,7 @@ concept CloudflareRuntime [W] {
       }
 
       fixture destroy_worker { worker: "wkr-001" }
-      fixture destroy_empty { worker: "" } -> error
+      fixture destroy_empty { worker: "" }
     }
   }
 

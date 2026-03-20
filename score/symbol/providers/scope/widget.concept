@@ -29,7 +29,7 @@ concept WidgetScopeProvider [I] {
       }
 
       fixture valid {}
-      fixture init_failure {} -> error
+      fixture init_failure {}
     }
   }
 

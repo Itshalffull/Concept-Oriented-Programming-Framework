@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Signature functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Signature functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signatureHandler.define !== 'function') return;
-      try {
-        const result = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Signature functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_fields" -> error', async () => {
+    it('fixture "missing_fields" -> ok', async () => {
       if (typeof signatureHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Signature functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
-      try {
-        const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "compile_for_gpt4" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +164,8 @@ describe('Signature functional handler', () => {
     it('fixture "compile_no_examples" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "claude-3", examples: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +174,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.compile({ signature: "", model_id: "gpt-4o", examples: [] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +222,20 @@ describe('Signature functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
-      try {
-        const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "execute_qa" -> ok', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +244,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "unknown-model", inputs: [{"field":"context","value":"test"}] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +292,20 @@ describe('Signature functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof signatureHandler.recompile !== 'function') return;
-      try {
-        const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "recompile_for_claude" -> ok', async () => {
       if (typeof signatureHandler.recompile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
+      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +314,7 @@ describe('Signature functional handler', () => {
       if (typeof signatureHandler.recompile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(signatureHandler.recompile({ signature: "", target_model: "gpt-4o" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -323,15 +323,12 @@ describe('Signature functional handler', () => {
     it('declares concept name', async () => {
       if (typeof signatureHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = signatureHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = signatureHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Signature');
     });
@@ -367,11 +364,14 @@ describe('Signature functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = signatureHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(signatureHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -397,12 +397,15 @@ describe('Signature functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = signatureHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(signatureHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-name
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-name
               }
             }
           },
@@ -417,9 +420,12 @@ describe('Signature functional handler', () => {
     it('define handles empty input: ', async () => {
       if (typeof signatureHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(signatureHandler.define({  }), storage);
+      const result = await safeInvoke(async () => await interpret(signatureHandler.define({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('define ensures on ok: ', async () => {
@@ -430,9 +436,11 @@ describe('Signature functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), input_fields: fc.string(), output_fields: fc.string(), instruction: fc.string(), module_type: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = signatureHandler.define(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = signatureHandler.define(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

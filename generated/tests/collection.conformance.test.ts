@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Collection functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Collection functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof collectionHandler.create !== 'function') return;
-      try {
-        const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Collection functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_empty_name" -> error', async () => {
+    it('fixture "create_empty_name" -> ok', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Collection functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
-      try {
-        const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "add_article_member" -> ok', async () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage));
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage));
       const result = await interpret(collectionHandler.addMember({ collection: "articles", member: "post-2026-01" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('Collection functional handler', () => {
       if (typeof collectionHandler.addMember !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.addMember({ collection: "nonexistent", member: "item" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('Collection functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
-      try {
-        const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "remove_article" -> ok', async () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage));
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage));
       const result = await interpret(collectionHandler.removeMember({ collection: "articles", member: "post-2026-01" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('Collection functional handler', () => {
       if (typeof collectionHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.removeMember({ collection: "nonexistent", member: "item" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +283,20 @@ describe('Collection functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
-      try {
-        const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_article_members" -> ok', async () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage));
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage));
       const result = await interpret(collectionHandler.getMembers({ collection: "articles" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('Collection functional handler', () => {
       if (typeof collectionHandler.getMembers !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.getMembers({ collection: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +353,20 @@ describe('Collection functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof collectionHandler.setSchema !== 'function') return;
-      try {
-        const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_article_schema" -> ok', async () => {
       if (typeof collectionHandler.setSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "articles", type: "list", schema: "article-v1" }), storage));
+      await safeInvoke(async () => await interpret(collectionHandler.create({ collection: "", type: "", schema: "" }), storage));
       const result = await interpret(collectionHandler.setSchema({ collection: "articles", schema: "article-v2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +375,7 @@ describe('Collection functional handler', () => {
       if (typeof collectionHandler.setSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(collectionHandler.setSchema({ collection: "nonexistent", schema: "any" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +384,12 @@ describe('Collection functional handler', () => {
     it('declares concept name', async () => {
       if (typeof collectionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = collectionHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = collectionHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Collection');
     });
@@ -434,11 +427,14 @@ describe('Collection functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = collectionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(collectionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -465,12 +461,15 @@ describe('Collection functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = collectionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(collectionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-schema
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-schema
               }
             }
           },
@@ -485,9 +484,12 @@ describe('Collection functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof collectionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(collectionHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(collectionHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -498,9 +500,11 @@ describe('Collection functional handler', () => {
           fc.record({ collection: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = collectionHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = collectionHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

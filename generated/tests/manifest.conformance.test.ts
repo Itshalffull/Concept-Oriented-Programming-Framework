@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Manifest functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.add !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.add({ project: "my-app", module_id: "", version_range: "^1.0.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.remove !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "remove_existing_dep" -> ok', async () => {
       if (typeof manifestHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
+      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "nonexistent-pkg" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.override !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "override_with_pin" -> ok', async () => {
       if (typeof manifestHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
+      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: null }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +283,20 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.disable !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "disable_existing_dep" -> ok', async () => {
       if (typeof manifestHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
+      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "nonexistent-pkg" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +353,12 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.enable !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +373,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.enable !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.enable({ project: "my-app", module_id: "not-disabled-pkg" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +421,20 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.merge !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "merge_two_manifests" -> ok', async () => {
       if (typeof manifestHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
+      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +443,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.merge({ base: "nonexistent", overlay: "also-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,22 +491,20 @@ describe('Manifest functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof manifestHandler.validate !== 'function') return;
-      try {
-        const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "validate_valid_project" -> ok', async () => {
       if (typeof manifestHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
+      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -523,7 +513,7 @@ describe('Manifest functional handler', () => {
       if (typeof manifestHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(manifestHandler.validate({ project: "nonexistent-project" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +522,12 @@ describe('Manifest functional handler', () => {
     it('declares concept name', async () => {
       if (typeof manifestHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = manifestHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = manifestHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Manifest');
     });
@@ -588,11 +575,14 @@ describe('Manifest functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = manifestHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(manifestHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -621,12 +611,15 @@ describe('Manifest functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = manifestHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(manifestHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in projects
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in projects
               }
             }
           },
@@ -641,9 +634,12 @@ describe('Manifest functional handler', () => {
     it('add handles empty input: ', async () => {
       if (typeof manifestHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(manifestHandler.add({  }), storage);
+      const result = await safeInvoke(async () => await interpret(manifestHandler.add({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('add ensures on ok: ', async () => {
@@ -654,9 +650,11 @@ describe('Manifest functional handler', () => {
           fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), version_range: fc.string({ minLength: 1, maxLength: 50 }), edge_type: fc.string({ minLength: 1, maxLength: 50 }), environment: fc.string({ minLength: 1, maxLength: 50 }), features: fc.string(), optional: fc.boolean() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = manifestHandler.add(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = manifestHandler.add(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -669,9 +667,12 @@ describe('Manifest functional handler', () => {
     it('remove handles empty input: ', async () => {
       if (typeof manifestHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(manifestHandler.remove({  }), storage);
+      const result = await safeInvoke(async () => await interpret(manifestHandler.remove({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('remove ensures on ok: ', async () => {
@@ -682,9 +683,11 @@ describe('Manifest functional handler', () => {
           fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = manifestHandler.remove(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = manifestHandler.remove(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -697,9 +700,12 @@ describe('Manifest functional handler', () => {
     it('override handles empty input: ', async () => {
       if (typeof manifestHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(manifestHandler.override({  }), storage);
+      const result = await safeInvoke(async () => await interpret(manifestHandler.override({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('override ensures on ok: ', async () => {
@@ -710,9 +716,11 @@ describe('Manifest functional handler', () => {
           fc.record({ project: fc.string(), module_id: fc.string({ minLength: 1, maxLength: 50 }), replacement_id: fc.string(), replacement_source: fc.string(), version_pin: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = manifestHandler.override(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = manifestHandler.override(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

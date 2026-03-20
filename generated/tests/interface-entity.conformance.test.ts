@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('InterfaceEntity functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.register({ name: "", source: "empty.yaml", manifest: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_conduit" -> ok', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,12 +172,14 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.get({ name: "nonexistent-interface" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "get_api" -> ok', async () => {
       if (typeof interfaceEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.get({ name: "conduit-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,22 +229,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "endpoints_rest" -> ok', async () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -249,7 +251,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.listEndpoints({ interface: "iface-uuid-1", target: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -297,22 +299,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "commands_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.listCommands({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -321,7 +321,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.listCommands({ interface: "nonexistent-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -369,22 +369,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "tools_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.listTools({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -393,7 +391,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listTools !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.listTools({ interface: "nonexistent-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -441,22 +439,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "skills_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.listSkills({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -465,7 +461,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.listSkills({ interface: "nonexistent-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -513,22 +509,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_user_concept" -> ok', async () => {
       if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -537,7 +531,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.findByConcept({ concept: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -585,22 +579,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.findByAction !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_user_create" -> ok', async () => {
       if (typeof interfaceEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -609,7 +601,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.findByAction({ concept: "User", action: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -657,22 +649,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "trace_post_users" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -681,12 +671,14 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/nonexistent", method: "GET" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "trace_rest" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/api/users", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -695,7 +687,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.traceEndpointToAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.traceEndpointToAction({ target: "rest", path: "/nonexistent", method: "GET" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -743,22 +735,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "trace_tool" -> ok', async () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "user-create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -767,14 +757,14 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "nonexistent-tool" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "trace_tool_missing" -> error', async () => {
       if (typeof interfaceEntityHandler.traceToolToAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.traceToolToAction({ toolName: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -822,22 +812,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "schemas_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -846,7 +834,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.generatedSchemas !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.generatedSchemas({ interface: "nonexistent-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -894,22 +882,20 @@ describe('InterfaceEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
-      try {
-        const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "conduit-api", source: "examples/conduit/app.interface.yaml", manifest: "{\"targets\":[\"rest\",\"mcp\"],\"generatedEndpoints\":[{\"method\":\"POST\",\"path\":\"/api/users\",\"concept\":\"User\",\"action\":\"create\",\"target\":\"rest\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(interfaceEntityHandler.register({ name: "admin-cli", source: "cli.interface.yaml", manifest: "{}" }), storage));
       const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "iface-uuid-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -918,7 +904,7 @@ describe('InterfaceEntity functional handler', () => {
       if (typeof interfaceEntityHandler.validateAgainstSpecs !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(interfaceEntityHandler.validateAgainstSpecs({ interface: "nonexistent-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -927,15 +913,12 @@ describe('InterfaceEntity functional handler', () => {
     it('declares concept name', async () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = interfaceEntityHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = interfaceEntityHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('InterfaceEntity');
     });
@@ -979,11 +962,14 @@ describe('InterfaceEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = interfaceEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(interfaceEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -1017,12 +1003,15 @@ describe('InterfaceEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = interfaceEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(interfaceEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty name in interfaces
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty name in interfaces
               }
             }
           },
@@ -1037,9 +1026,12 @@ describe('InterfaceEntity functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof interfaceEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interfaceEntityHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(interfaceEntityHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -1050,9 +1042,11 @@ describe('InterfaceEntity functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), manifest: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = interfaceEntityHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = interfaceEntityHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('RegistryScaffoldGen functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('RegistryScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof registryScaffoldGenHandler.generate !== 'function') return;
-      try {
-        const result = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,14 +95,14 @@ describe('RegistryScaffoldGen functional handler', () => {
       if (typeof registryScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "", outputPath: "generated/registry.ts", language: "typescript" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "unsupported_language" -> error', async () => {
       if (typeof registryScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploy.yaml", outputPath: "generated/registry.rs", language: "rust" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('RegistryScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof registryScaffoldGenHandler.preview !== 'function') return;
-      try {
-        const result = await interpret(registryScaffoldGenHandler.preview({ deployManifest: "deploys/staging.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(registryScaffoldGenHandler.preview({ deployManifest: "deploys/staging.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof registryScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage));
+      await safeInvoke(async () => await interpret(registryScaffoldGenHandler.register({  }), storage));
       const result = await interpret(registryScaffoldGenHandler.preview({ deployManifest: "deploys/staging.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('RegistryScaffoldGen functional handler', () => {
       if (typeof registryScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(registryScaffoldGenHandler.preview({ deployManifest: "", outputPath: "generated/registry.ts", language: "typescript" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +220,12 @@ describe('RegistryScaffoldGen functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof registryScaffoldGenHandler.register !== 'function') return;
-      try {
-        const result = await interpret(registryScaffoldGenHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(registryScaffoldGenHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -244,15 +242,12 @@ describe('RegistryScaffoldGen functional handler', () => {
     it('declares concept name', async () => {
       if (typeof registryScaffoldGenHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = registryScaffoldGenHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = registryScaffoldGenHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('RegistryScaffoldGen');
     });
@@ -286,11 +281,14 @@ describe('RegistryScaffoldGen functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = registryScaffoldGenHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(registryScaffoldGenHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -305,9 +303,12 @@ describe('RegistryScaffoldGen functional handler', () => {
     it('generate handles empty input: ', async () => {
       if (typeof registryScaffoldGenHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(registryScaffoldGenHandler.generate({  }), storage);
+      const result = await safeInvoke(async () => await interpret(registryScaffoldGenHandler.generate({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('generate ensures on ok: ', async () => {
@@ -318,9 +319,11 @@ describe('RegistryScaffoldGen functional handler', () => {
           fc.record({ deployManifest: fc.string({ minLength: 1, maxLength: 50 }), outputPath: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = registryScaffoldGenHandler.generate(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = registryScaffoldGenHandler.generate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

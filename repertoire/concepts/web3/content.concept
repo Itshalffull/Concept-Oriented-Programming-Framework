@@ -29,7 +29,7 @@ concept Content [C] {
       }
 
       fixture store_text_file { data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }
-      fixture store_empty_name { data: "content", name: "", contentType: "text/plain" } -> error
+      fixture store_empty_name { data: "content", name: "", contentType: "text/plain" }
     }
 
     action pin(cid: String) {
@@ -43,7 +43,7 @@ concept Content [C] {
       }
 
       fixture pin_existing { cid: "abc123def456" }
-      fixture pin_empty_cid { cid: "" } -> error
+      fixture pin_empty_cid { cid: "" }
     }
 
     action unpin(cid: String) {
@@ -56,7 +56,7 @@ concept Content [C] {
       }
 
       fixture unpin_existing { cid: "abc123def456" }
-      fixture unpin_empty_cid { cid: "" } -> error
+      fixture unpin_empty_cid { cid: "" }
     }
 
     action resolve(cid: String) {

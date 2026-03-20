@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ContentNode functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.create !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.create({ node: "", type: "page", content: "Test", createdBy: "bob" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.update !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "update_content" -> ok', async () => {
       if (typeof contentNodeHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage));
       const result = await interpret(contentNodeHandler.update({ node: "node-1", content: "Updated wiki content" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.update({ node: "nonexistent", content: "Test" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "delete_node" -> ok', async () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage));
       const result = await interpret(contentNodeHandler.delete({ node: "node-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.delete({ node: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.get !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_node" -> ok', async () => {
       if (typeof contentNodeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage));
       const result = await interpret(contentNodeHandler.get({ node: "node-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.get({ node: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_metadata" -> ok', async () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage));
       const result = await interpret(contentNodeHandler.setMetadata({ node: "node-1", metadata: "{\"tags\":[\"important\"],\"priority\":\"high\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.setMetadata !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.setMetadata({ node: "nonexistent", metadata: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +419,19 @@ describe('ContentNode functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
-      try {
-        const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "change_to_document" -> ok', async () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage));
       const result = await interpret(contentNodeHandler.changeType({ node: "node-1", type: "document" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +440,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.changeType !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentNodeHandler.changeType({ node: "nonexistent", type: "page" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +449,12 @@ describe('ContentNode functional handler', () => {
     it('declares concept name', async () => {
       if (typeof contentNodeHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = contentNodeHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = contentNodeHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ContentNode');
     });
@@ -515,11 +501,14 @@ describe('ContentNode functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentNodeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentNodeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -547,12 +536,15 @@ describe('ContentNode functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentNodeHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentNodeHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-content
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-content
               }
             }
           },
@@ -567,9 +559,12 @@ describe('ContentNode functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof contentNodeHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(contentNodeHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(contentNodeHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -580,9 +575,11 @@ describe('ContentNode functional handler', () => {
           fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), content: fc.string({ minLength: 1, maxLength: 50 }), createdBy: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = contentNodeHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = contentNodeHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

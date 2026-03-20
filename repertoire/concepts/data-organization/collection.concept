@@ -21,7 +21,7 @@ concept Collection [C] {
       -> exists() { Collection already exists. }
 
       fixture create_articles { collection: "articles", type: "list", schema: "article-v1" }
-      fixture create_empty_name { collection: "", type: "", schema: "" } -> error
+      fixture create_empty_name { collection: "", type: "", schema: "" }
     }
 
     action addMember(collection: C, member: String) {

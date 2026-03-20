@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Migration functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Migration functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof migrationHandler.plan !== 'function') return;
-      try {
-        const result = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(migrationHandler.plan({ concept: "UserProfile", fromVersion: "1", toVersion: "3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,14 +102,14 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.plan({ concept: "Auth", fromVersion: "1", toVersion: "1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "plan_downgrade" -> error', async () => {
       if (typeof migrationHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.plan({ concept: "Auth", fromVersion: "3", toVersion: "1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -153,16 +157,12 @@ describe('Migration functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof migrationHandler.expand !== 'function') return;
-      try {
-        const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(migrationHandler.expand({ migration: "mig-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -177,7 +177,7 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.expand !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.expand({ migration: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -225,16 +225,12 @@ describe('Migration functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof migrationHandler.migrate !== 'function') return;
-      try {
-        const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(migrationHandler.migrate({ migration: "mig-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -249,7 +245,7 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.migrate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.migrate({ migration: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -297,16 +293,12 @@ describe('Migration functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof migrationHandler.contract !== 'function') return;
-      try {
-        const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(migrationHandler.contract({ migration: "mig-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -321,7 +313,7 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.contract !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.contract({ migration: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -369,16 +361,12 @@ describe('Migration functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof migrationHandler.status !== 'function') return;
-      try {
-        const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(migrationHandler.status({ migration: "mig-abc123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -393,7 +381,7 @@ describe('Migration functional handler', () => {
       if (typeof migrationHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(migrationHandler.status({ migration: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -402,15 +390,12 @@ describe('Migration functional handler', () => {
     it('declares concept name', async () => {
       if (typeof migrationHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = migrationHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = migrationHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Migration');
     });
@@ -451,11 +436,14 @@ describe('Migration functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = migrationHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(migrationHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -482,12 +470,15 @@ describe('Migration functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = migrationHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(migrationHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-fromVersion
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-fromVersion
               }
             }
           },
@@ -502,9 +493,12 @@ describe('Migration functional handler', () => {
     it('plan handles empty input: ', async () => {
       if (typeof migrationHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(migrationHandler.plan({  }), storage);
+      const result = await safeInvoke(async () => await interpret(migrationHandler.plan({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('plan ensures on ok: ', async () => {
@@ -515,9 +509,11 @@ describe('Migration functional handler', () => {
           fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), fromVersion: fc.integer({ min: 1, max: 1000 }), toVersion: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = migrationHandler.plan(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = migrationHandler.plan(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

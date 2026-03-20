@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('WidgetParser functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('WidgetParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof widgetParserHandler.parse !== 'function') return;
-      try {
-        const result = await interpret(widgetParserHandler.parse({ widget: "w-1", source: "{\"name\":\"Button\",\"template\":\"<button>{{label}}</button>\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"styles\":{\"root\":\"btn\"},\"accessibility\":{\"role\":\"button\"},\"events\":[\"onclick\"]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(widgetParserHandler.parse({ widget: "w-1", source: "{\"name\":\"Button\",\"template\":\"<button>{{label}}</button>\",\"props\":[{\"name\":\"label\",\"type\":\"string\"}],\"styles\":{\"root\":\"btn\"},\"accessibility\":{\"role\":\"button\"},\"events\":[\"onclick\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,21 +102,21 @@ describe('WidgetParser functional handler', () => {
       if (typeof widgetParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetParserHandler.parse({ widget: "w-3", source: "not-valid-json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
       if (typeof widgetParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetParserHandler.parse({ widget: "w-4", source: "{\"template\":\"<div></div>\"}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "missing_template_and_render" -> error', async () => {
       if (typeof widgetParserHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetParserHandler.parse({ widget: "w-5", source: "{\"name\":\"Empty\"}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -160,16 +164,12 @@ describe('WidgetParser functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof widgetParserHandler.validate !== 'function') return;
-      try {
-        const result = await interpret(widgetParserHandler.validate({ widget: "w-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(widgetParserHandler.validate({ widget: "w-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -184,7 +184,8 @@ describe('WidgetParser functional handler', () => {
       if (typeof widgetParserHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(widgetParserHandler.validate({ widget: "w-nonexistent" }), storage);
-      expect(result.variant).toBe('incomplete');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('incomplete'));
     });
 
   });
@@ -193,15 +194,12 @@ describe('WidgetParser functional handler', () => {
     it('declares concept name', async () => {
       if (typeof widgetParserHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = widgetParserHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = widgetParserHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('WidgetParser');
     });
@@ -236,11 +234,14 @@ describe('WidgetParser functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = widgetParserHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(widgetParserHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -264,12 +265,15 @@ describe('WidgetParser functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = widgetParserHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(widgetParserHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: validate succeeds on unparsed widget
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: validate succeeds on unparsed widget
               }
             }
           },

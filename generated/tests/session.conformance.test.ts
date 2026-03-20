@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Session functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.create !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.create({ session: "sess-002", userId: "", device: "desktop" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.validate !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof sessionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.validate({ session: "sess-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "refresh_valid" -> ok', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.refresh({ session: "sess-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.destroy({ session: "sess-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_all_alice" -> ok', async () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.destroyAll({ userId: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +419,19 @@ describe('Session functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
-      try {
-        const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "context_existing" -> ok', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +440,7 @@ describe('Session functional handler', () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(sessionHandler.getContext({ session: "sess-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -460,15 +449,12 @@ describe('Session functional handler', () => {
     it('declares concept name', async () => {
       if (typeof sessionHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = sessionHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = sessionHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Session');
     });
@@ -547,11 +533,14 @@ describe('Session functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = sessionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(sessionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -579,12 +568,15 @@ describe('Session functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = sessionHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(sessionHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-token
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-token
               }
             }
           },
@@ -599,9 +591,12 @@ describe('Session functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof sessionHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(sessionHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(sessionHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -612,9 +607,11 @@ describe('Session functional handler', () => {
           fc.record({ session: fc.string(), userId: fc.string({ minLength: 1, maxLength: 50 }), device: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = sessionHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = sessionHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

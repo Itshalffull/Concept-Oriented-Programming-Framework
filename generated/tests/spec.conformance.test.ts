@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Spec functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Spec functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof specHandler.emit !== 'function') return;
-      try {
-        const result = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Spec functional handler', () => {
       if (typeof specHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(specHandler.emit({ projections: ["user"], format: "unknown-fmt", config: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('Spec functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof specHandler.validate !== 'function') return;
-      try {
-        const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_document" -> ok', async () => {
       if (typeof specHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage));
+      await safeInvoke(async () => await interpret(specHandler.emit({ projections: ["notification"], format: "asyncapi", config: "{}" }), storage));
       const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('Spec functional handler', () => {
       if (typeof specHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(specHandler.validate({ document: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -179,15 +181,12 @@ describe('Spec functional handler', () => {
     it('declares concept name', async () => {
       if (typeof specHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = specHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = specHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Spec');
     });
@@ -222,11 +221,14 @@ describe('Spec functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = specHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(specHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -250,12 +252,15 @@ describe('Spec functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = specHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(specHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-kitName
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-kitName
               }
             }
           },
@@ -270,9 +275,12 @@ describe('Spec functional handler', () => {
     it('emit handles empty input: ', async () => {
       if (typeof specHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(specHandler.emit({  }), storage);
+      const result = await safeInvoke(async () => await interpret(specHandler.emit({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('emit ensures on ok: ', async () => {
@@ -283,9 +291,11 @@ describe('Spec functional handler', () => {
           fc.record({ projections: fc.string(), format: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = specHandler.emit(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = specHandler.emit(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

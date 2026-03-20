@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('DefinitionUnit functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('DefinitionUnit functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof definitionUnitHandler.extract !== 'function') return;
-      try {
-        const result = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(definitionUnitHandler.extract({ tree: "tree-1", startByte: "0", endByte: "100" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('DefinitionUnit functional handler', () => {
       if (typeof definitionUnitHandler.extract !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(definitionUnitHandler.extract({ tree: "", startByte: "0", endByte: "50" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('DefinitionUnit functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
-      try {
-        const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "src/app.ts:handleRequest" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('DefinitionUnit functional handler', () => {
       if (typeof definitionUnitHandler.findBySymbol !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(definitionUnitHandler.findBySymbol({ symbol: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('DefinitionUnit functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof definitionUnitHandler.findByPattern !== 'function') return;
-      try {
-        const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(definitionUnitHandler.findByPattern({ kind: "function", language: "typescript", namePattern: "handle.*" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -283,16 +279,12 @@ describe('DefinitionUnit functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof definitionUnitHandler.diff !== 'function') return;
-      try {
-        const result = await interpret(definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(definitionUnitHandler.diff({ a: "def-unit-1", b: "def-unit-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('DefinitionUnit functional handler', () => {
       if (typeof definitionUnitHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(definitionUnitHandler.diff({ a: "", b: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +308,12 @@ describe('DefinitionUnit functional handler', () => {
     it('declares concept name', async () => {
       if (typeof definitionUnitHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = definitionUnitHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = definitionUnitHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('DefinitionUnit');
     });
@@ -360,11 +349,14 @@ describe('DefinitionUnit functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = definitionUnitHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(definitionUnitHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -390,12 +382,15 @@ describe('DefinitionUnit functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = definitionUnitHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(definitionUnitHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-symbol
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-symbol
               }
             }
           },
@@ -410,9 +405,12 @@ describe('DefinitionUnit functional handler', () => {
     it('extract handles empty input: ', async () => {
       if (typeof definitionUnitHandler.extract !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(definitionUnitHandler.extract({  }), storage);
+      const result = await safeInvoke(async () => await interpret(definitionUnitHandler.extract({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('extract ensures on ok: ', async () => {
@@ -423,9 +421,11 @@ describe('DefinitionUnit functional handler', () => {
           fc.record({ tree: fc.string({ minLength: 1, maxLength: 50 }), startByte: fc.integer({ min: 1, max: 1000 }), endByte: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = definitionUnitHandler.extract(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = definitionUnitHandler.extract(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

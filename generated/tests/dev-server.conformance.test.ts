@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('DevServer functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('DevServer functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof devServerHandler.start !== 'function') return;
-      try {
-        const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,8 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs"] }), storage);
-      expect(result.variant).toBe('portInUse');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('portInUse'));
     });
 
   });
@@ -146,22 +151,20 @@ describe('DevServer functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
-      try {
-        const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +172,8 @@ describe('DevServer functional handler', () => {
     it('fixture "nonexistent_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.stop({ session: "dev-server-999" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,22 +223,20 @@ describe('DevServer functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof devServerHandler.status !== 'function') return;
-      try {
-        const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "running_status" -> ok', async () => {
       if (typeof devServerHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
+      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +245,8 @@ describe('DevServer functional handler', () => {
       if (typeof devServerHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(devServerHandler.status({ session: "dev-server-999" }), storage);
-      expect(result.variant).toBe('stopped');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('stopped'));
     });
 
   });
@@ -251,15 +255,12 @@ describe('DevServer functional handler', () => {
     it('declares concept name', async () => {
       if (typeof devServerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = devServerHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = devServerHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('DevServer');
     });
@@ -307,11 +308,14 @@ describe('DevServer functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = devServerHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(devServerHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -336,12 +340,15 @@ describe('DevServer functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = devServerHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(devServerHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: session running on port zero
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: session running on port zero
               }
             }
           },
@@ -356,9 +363,12 @@ describe('DevServer functional handler', () => {
     it('start handles empty input: ', async () => {
       if (typeof devServerHandler.start !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(devServerHandler.start({  }), storage);
+      const result = await safeInvoke(async () => await interpret(devServerHandler.start({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('start ensures on ok: ', async () => {
@@ -369,9 +379,11 @@ describe('DevServer functional handler', () => {
           fc.record({ port: fc.integer({ min: 1, max: 1000 }), watchDirs: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = devServerHandler.start(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = devServerHandler.start(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

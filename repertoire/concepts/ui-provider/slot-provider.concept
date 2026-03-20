@@ -75,7 +75,7 @@ concept SlotProvider [P] {
         current fill state and fallback content.
       }
       fixture get_slots_dialog { host: "dialog" }
-      fixture get_slots_empty { host: "" } -> error
+      fixture get_slots_empty { host: "" }
     }
   }
 

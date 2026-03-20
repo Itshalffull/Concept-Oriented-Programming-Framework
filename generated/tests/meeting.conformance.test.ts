@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Meeting functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.schedule !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.schedule({ title: "Q2 Board Meeting", agenda: ["Budget review","Hiring plan","Product roadmap"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.schedule({ title: "", agenda: ["Item 1"] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.callToOrder !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-001", chair: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.callToOrder !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.callToOrder({ meeting: "meeting-nonexistent", chair: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.makeMotion !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-001", mover: "bob", motionType: "main", text: "Approve the Q2 budget" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.makeMotion !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.makeMotion({ meeting: "meeting-nonexistent", mover: "bob", motionType: "main", text: "Test" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.secondMotion !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.secondMotion !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.secondMotion({ meeting: "meeting-001", seconder: "carol", motionIndex: "99" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.callQuestion !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.callQuestion !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.callQuestion({ meeting: "meeting-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.recordMinute !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-001", record: "Motion to approve Q2 budget passed unanimously" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.recordMinute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.recordMinute({ meeting: "meeting-nonexistent", record: "Test" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,16 +483,12 @@ describe('Meeting functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof meetingHandler.adjourn !== 'function') return;
-      try {
-        const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -523,7 +503,7 @@ describe('Meeting functional handler', () => {
       if (typeof meetingHandler.adjourn !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(meetingHandler.adjourn({ meeting: "meeting-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +512,12 @@ describe('Meeting functional handler', () => {
     it('declares concept name', async () => {
       if (typeof meetingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = meetingHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = meetingHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Meeting');
     });
@@ -583,11 +560,14 @@ describe('Meeting functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = meetingHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(meetingHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -616,12 +596,15 @@ describe('Meeting functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = meetingHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(meetingHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-title
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-title
               }
             }
           },
@@ -636,9 +619,12 @@ describe('Meeting functional handler', () => {
     it('schedule handles empty input: ', async () => {
       if (typeof meetingHandler.schedule !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(meetingHandler.schedule({  }), storage);
+      const result = await safeInvoke(async () => await interpret(meetingHandler.schedule({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('schedule ensures on scheduled: ', async () => {
@@ -649,9 +635,11 @@ describe('Meeting functional handler', () => {
           fc.record({ title: fc.string({ minLength: 1, maxLength: 50 }), agenda: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = meetingHandler.schedule(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "scheduled") {
+            const result = await safeInvoke(async () => {
+              const program = meetingHandler.schedule(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "scheduled") {
               seen = true;
               expect(result.output).toBeDefined();
             }

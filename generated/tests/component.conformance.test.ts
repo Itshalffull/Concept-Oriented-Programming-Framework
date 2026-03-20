@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Component functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Component functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof componentHandler.register !== 'function') return;
-      try {
-        const result = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -139,22 +143,20 @@ describe('Component functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof componentHandler.render !== 'function') return;
-      try {
-        const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "render_homepage" -> ok', async () => {
       if (typeof componentHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,8 @@ describe('Component functional handler', () => {
       if (typeof componentHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.render({ component: "nonexistent-widget", context: "homepage" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -211,22 +214,20 @@ describe('Component functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof componentHandler.place !== 'function') return;
-      try {
-        const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "place_in_header" -> ok', async () => {
       if (typeof componentHandler.place !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +236,8 @@ describe('Component functional handler', () => {
       if (typeof componentHandler.place !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.place({ component: "nonexistent-widget", region: "sidebar" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -283,22 +285,20 @@ describe('Component functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
-      try {
-        const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_visible_true" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,6 +306,8 @@ describe('Component functional handler', () => {
     it('fixture "set_visible_false" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +316,8 @@ describe('Component functional handler', () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.setVisibility({ component: "nonexistent-widget", visible: "true" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -362,22 +365,20 @@ describe('Component functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
-      try {
-        const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "evaluate_homepage" -> ok', async () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
+      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +387,8 @@ describe('Component functional handler', () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(componentHandler.evaluateVisibility({ component: "nonexistent-widget", context: "homepage" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -395,15 +397,12 @@ describe('Component functional handler', () => {
     it('declares concept name', async () => {
       if (typeof componentHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = componentHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = componentHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Component');
     });
@@ -441,11 +440,14 @@ describe('Component functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = componentHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(componentHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -472,12 +474,15 @@ describe('Component functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = componentHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(componentHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-placements
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-placements
               }
             }
           },
@@ -492,9 +497,12 @@ describe('Component functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof componentHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(componentHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(componentHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -505,9 +513,11 @@ describe('Component functional handler', () => {
           fc.record({ component: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = componentHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = componentHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

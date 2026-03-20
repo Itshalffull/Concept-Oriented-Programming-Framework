@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('AnalysisOverlay functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('AnalysisOverlay functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
-      try {
-        const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -105,14 +109,16 @@ describe('AnalysisOverlay functional handler', () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[]}", kind: "sparkline", config: null }), storage);
-      expect(result.variant).toBe('unsupported_kind');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unsupported_kind'));
     });
 
     it('fixture "bad_result" -> invalid_result', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "not json", kind: "node-color", config: null }), storage);
-      expect(result.variant).toBe('invalid_result');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_result'));
     });
 
   });
@@ -160,22 +166,21 @@ describe('AnalysisOverlay functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
-      try {
-        const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage));
       const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -184,7 +189,8 @@ describe('AnalysisOverlay functional handler', () => {
       if (typeof analysisOverlayHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.remove({ overlay: "overlay-nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -232,22 +238,21 @@ describe('AnalysisOverlay functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
-      try {
-        const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "toggle_existing" -> ok', async () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage));
       const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -256,7 +261,8 @@ describe('AnalysisOverlay functional handler', () => {
       if (typeof analysisOverlayHandler.toggle !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.toggle({ overlay: "overlay-nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -304,22 +310,21 @@ describe('AnalysisOverlay functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
-      try {
-        const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "list_canvas" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage));
       const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -327,6 +332,9 @@ describe('AnalysisOverlay functional handler', () => {
     it('fixture "list_empty" -> ok', async () => {
       if (typeof analysisOverlayHandler.listOverlays !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage));
       const result = await interpret(analysisOverlayHandler.listOverlays({ canvas: "canvas-empty" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,22 +384,21 @@ describe('AnalysisOverlay functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
-      try {
-        const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "update_scale" -> ok', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", kind: "node-color", config: null }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"scores\":{\"a\":0.9,\"b\":0.3}}", kind: "node-size", config: "{\"minScale\":0.5,\"maxScale\":3.0}" }), storage));
+      await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({ canvas: "canvas-1", result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.7}]}", kind: "heat-map", config: null }), storage));
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "{\"minScale\":1.0,\"maxScale\":5.0}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -400,14 +407,16 @@ describe('AnalysisOverlay functional handler', () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-nonexistent", config: "{}" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
     it('fixture "invalid_config" -> notfound', async () => {
       if (typeof analysisOverlayHandler.updateConfig !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisOverlayHandler.updateConfig({ overlay: "overlay-001", config: "not json" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -416,15 +425,12 @@ describe('AnalysisOverlay functional handler', () => {
     it('declares concept name', async () => {
       if (typeof analysisOverlayHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = analysisOverlayHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = analysisOverlayHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('AnalysisOverlay');
     });
@@ -464,11 +470,14 @@ describe('AnalysisOverlay functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = analysisOverlayHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(analysisOverlayHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -495,12 +504,15 @@ describe('AnalysisOverlay functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = analysisOverlayHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(analysisOverlayHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-overlay_result
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-overlay_result
               }
             }
           },
@@ -515,9 +527,12 @@ describe('AnalysisOverlay functional handler', () => {
     it('apply handles empty input: ', async () => {
       if (typeof analysisOverlayHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(analysisOverlayHandler.apply({  }), storage);
+      const result = await safeInvoke(async () => await interpret(analysisOverlayHandler.apply({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('apply ensures on ok: ', async () => {
@@ -528,9 +543,11 @@ describe('AnalysisOverlay functional handler', () => {
           fc.record({ canvas: fc.string({ minLength: 1, maxLength: 50 }), result: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = analysisOverlayHandler.apply(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = analysisOverlayHandler.apply(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

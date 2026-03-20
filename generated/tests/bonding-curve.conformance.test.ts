@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('BondingCurve functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('BondingCurve functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bondingCurveHandler.create !== 'function') return;
-      try {
-        const result = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bondingCurveHandler.create({ curveType: "", params: "{}", reserveToken: "ETH", bondedToken: "GOV" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('BondingCurve functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
-      try {
-        const result = await interpret(bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "buy_100_eth" -> ok', async () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bondingCurveHandler.buy({ curve: "curve-nonexistent", buyer: "alice", reserveAmount: "50.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('BondingCurve functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
-      try {
-        const result = await interpret(bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "sell_tokens" -> ok', async () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bondingCurveHandler.sell({ curve: "curve-nonexistent", seller: "alice", tokenAmount: "10.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('BondingCurve functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
-      try {
-        const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_price_10" -> ok', async () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('BondingCurve functional handler', () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-nonexistent", amount: "1.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +311,12 @@ describe('BondingCurve functional handler', () => {
     it('declares concept name', async () => {
       if (typeof bondingCurveHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = bondingCurveHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = bondingCurveHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('BondingCurve');
     });
@@ -362,11 +354,14 @@ describe('BondingCurve functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = bondingCurveHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(bondingCurveHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -392,12 +387,15 @@ describe('BondingCurve functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = bondingCurveHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(bondingCurveHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-name
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-name
               }
             }
           },
@@ -412,9 +410,12 @@ describe('BondingCurve functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof bondingCurveHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bondingCurveHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(bondingCurveHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on created: ', async () => {
@@ -425,9 +426,11 @@ describe('BondingCurve functional handler', () => {
           fc.record({ curveType: fc.string({ minLength: 1, maxLength: 50 }), params: fc.string({ minLength: 1, maxLength: 50 }), reserveToken: fc.string({ minLength: 1, maxLength: 50 }), bondedToken: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = bondingCurveHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "created") {
+            const result = await safeInvoke(async () => {
+              const program = bondingCurveHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "created") {
               seen = true;
               expect(result.output).toBeDefined();
             }

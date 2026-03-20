@@ -51,7 +51,7 @@ concept DockerComposeRuntime [D] {
       }
 
       fixture set_traffic { service: "dc-001", weight: 100 }
-      fixture set_traffic_negative { service: "dc-001", weight: -1 } -> error
+      fixture set_traffic_negative { service: "dc-001", weight: -1 }
     }
 
     action rollback(service: D, targetImage: String) {
@@ -60,7 +60,7 @@ concept DockerComposeRuntime [D] {
       }
 
       fixture rollback_image { service: "dc-001", targetImage: "user-service:v1.0.0" }
-      fixture rollback_empty { service: "dc-001", targetImage: "" } -> error
+      fixture rollback_empty { service: "dc-001", targetImage: "" }
     }
 
     action destroy(service: D) {

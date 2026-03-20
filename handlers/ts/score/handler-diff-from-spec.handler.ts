@@ -1,4 +1,4 @@
-// @clef-handler style=imperative
+// @clef-handler style=functional
 // HandlerEntity diffFromSpec — Functional (Monadic) Implementation
 //
 // Compares a handler implementation against its concept spec to find drift:

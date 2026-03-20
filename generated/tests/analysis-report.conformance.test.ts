@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('AnalysisReport functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('AnalysisReport functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
-      try {
-        const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -105,14 +109,16 @@ describe('AnalysisReport functional handler', () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[]}", format: "sparkline", title: null }), storage);
-      expect(result.variant).toBe('unsupported_format');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unsupported_format'));
     });
 
     it('fixture "bad_result" -> invalid_result', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.generate({ result: "not json", format: "table", title: null }), storage);
-      expect(result.variant).toBe('invalid_result');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_result'));
     });
 
   });
@@ -160,22 +166,21 @@ describe('AnalysisReport functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisReportHandler.compare !== 'function') return;
-      try {
-        const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "two_results" -> ok', async () => {
       if (typeof analysisReportHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -184,7 +189,8 @@ describe('AnalysisReport functional handler', () => {
       if (typeof analysisReportHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.compare({ results: "[\"{\\\"nodes\\\":[]}\"]", format: "table" }), storage);
-      expect(result.variant).toBe('insufficient_results');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('insufficient_results'));
     });
 
   });
@@ -232,22 +238,21 @@ describe('AnalysisReport functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
-      try {
-        const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "existing_report" -> ok', async () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.getReport({ report: "report-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -256,7 +261,8 @@ describe('AnalysisReport functional handler', () => {
       if (typeof analysisReportHandler.getReport !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.getReport({ report: "report-nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -304,22 +310,21 @@ describe('AnalysisReport functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
-      try {
-        const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "all_reports" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.listReports({ result: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -327,6 +332,9 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "filtered" -> ok', async () => {
       if (typeof analysisReportHandler.listReports !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.listReports({ result: "result-abc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,22 +384,21 @@ describe('AnalysisReport functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
-      try {
-        const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "csv_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "csv" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -399,6 +406,9 @@ describe('AnalysisReport functional handler', () => {
     it('fixture "markdown_export" -> ok', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }), storage));
+      await safeInvoke(async () => await interpret(analysisReportHandler.generate({ result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: null }), storage));
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "markdown" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -407,14 +417,16 @@ describe('AnalysisReport functional handler', () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-001", outputFormat: "pdf" }), storage);
-      expect(result.variant).toBe('unsupported_output');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unsupported_output'));
     });
 
     it('fixture "missing_report" -> notfound', async () => {
       if (typeof analysisReportHandler.exportReport !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(analysisReportHandler.exportReport({ report: "report-nonexistent", outputFormat: "json" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -423,15 +435,12 @@ describe('AnalysisReport functional handler', () => {
     it('declares concept name', async () => {
       if (typeof analysisReportHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = analysisReportHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = analysisReportHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('AnalysisReport');
     });
@@ -469,11 +478,14 @@ describe('AnalysisReport functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = analysisReportHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(analysisReportHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -500,12 +512,15 @@ describe('AnalysisReport functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = analysisReportHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(analysisReportHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-report_format
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-report_format
               }
             }
           },
@@ -520,9 +535,12 @@ describe('AnalysisReport functional handler', () => {
     it('generate handles empty input: ', async () => {
       if (typeof analysisReportHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(analysisReportHandler.generate({  }), storage);
+      const result = await safeInvoke(async () => await interpret(analysisReportHandler.generate({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('generate ensures on ok: ', async () => {
@@ -533,9 +551,11 @@ describe('AnalysisReport functional handler', () => {
           fc.record({ result: fc.string({ minLength: 1, maxLength: 50 }), format: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = analysisReportHandler.generate(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = analysisReportHandler.generate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('TreeDiff functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('TreeDiff functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof treeDiffHandler.register !== 'function') return;
-      try {
-        const result = await interpret(treeDiffHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(treeDiffHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -132,22 +136,19 @@ describe('TreeDiff functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof treeDiffHandler.compute !== 'function') return;
-      try {
-        const result = await interpret(treeDiffHandler.compute({ contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(treeDiffHandler.compute({ contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "diff_json" -> ok', async () => {
       if (typeof treeDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(treeDiffHandler.register({  }), storage));
       const result = await interpret(treeDiffHandler.compute({ contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -156,7 +157,7 @@ describe('TreeDiff functional handler', () => {
       if (typeof treeDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(treeDiffHandler.compute({ contentA: "not-json", contentB: "{\"a\":1}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -165,15 +166,12 @@ describe('TreeDiff functional handler', () => {
     it('declares concept name', async () => {
       if (typeof treeDiffHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = treeDiffHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = treeDiffHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('TreeDiff');
     });

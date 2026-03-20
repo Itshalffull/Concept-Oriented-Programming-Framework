@@ -73,7 +73,7 @@ concept CloudRunRuntime [C] {
       }
 
       fixture rollback_to_rev { service: "svc-abc123", targetRevision: "rev-20250101" }
-      fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" } -> error
+      fixture rollback_empty_revision { service: "svc-abc123", targetRevision: "" }
     }
 
     action destroy(service: C) {

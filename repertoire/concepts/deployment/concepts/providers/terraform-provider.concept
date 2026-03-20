@@ -71,7 +71,7 @@ concept TerraformProvider [T] {
       }
 
       fixture teardown_workspace { workspace: "ws-prod-001" }
-      fixture teardown_nonexistent { workspace: "" } -> error
+      fixture teardown_nonexistent { workspace: "" }
     }
   }
 

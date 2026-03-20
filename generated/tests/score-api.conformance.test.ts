@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ScoreApi functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listFiles !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.listFiles !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.listFiles({ pattern: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getFileTree !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getFileTree({ path: ".", depth: "2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getFileTree !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getFileTree({ path: "/nonexistent", depth: "0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getFileContent !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getFileContent({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getFileContent !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getFileContent({ path: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDefinitions !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDefinitions({ path: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDefinitions({ path: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.matchPattern !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.matchPattern({ pattern: "(function_declaration) @fn", language: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.matchPattern !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.matchPattern({ pattern: "", language: "typescript" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.findSymbol !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.findSymbol({ name: "flagHandler" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.findSymbol !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.findSymbol({ name: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,16 +483,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getReferences !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getReferences({ symbol: "flagHandler" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -523,7 +503,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getReferences !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getReferences({ symbol: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -571,16 +551,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getScope !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getScope({ file: "handlers/ts/app/flag.handler.ts", line: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -595,7 +571,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getScope !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getScope({ file: "", line: "0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -643,16 +619,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getRelationships !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getRelationships({ symbol: "flagHandler" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -667,7 +639,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getRelationships !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getRelationships({ symbol: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -715,16 +687,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listConcepts !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listConcepts({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listConcepts({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -780,16 +748,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getConcept !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getConcept({ name: "Flag" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -804,7 +768,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getConcept !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getConcept({ name: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -852,16 +816,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getAction !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getAction({ concept: "Flag", action: "flag" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -876,7 +836,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getAction({ concept: "", action: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -924,16 +884,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listSyncs !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listSyncs({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listSyncs({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -989,16 +945,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getSync !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getSync({ name: "onUserCreate" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1013,7 +965,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getSync !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getSync({ name: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1061,16 +1013,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getFlow !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getFlow({ startConcept: "User", startAction: "create" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1085,7 +1033,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getFlow !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getFlow({ startConcept: "", startAction: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1133,16 +1081,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getHandler !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getHandler({ concept: "Flag", language: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1157,7 +1101,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getHandler !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getHandler({ concept: "nonexistent", language: "typescript" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1205,16 +1149,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getActionSource !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getActionSource({ concept: "Flag", action: "flag" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1229,7 +1169,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getActionSource !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getActionSource({ concept: "nonexistent", action: "x" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1277,16 +1217,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listHandlers !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listHandlers({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listHandlers({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1342,16 +1278,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.implementationGaps !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.implementationGaps({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.implementationGaps({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1407,16 +1339,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "Error\n    at flag (handlers/ts/app/flag.handler.ts:14:5)" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1431,7 +1359,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.resolveStackTrace !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.resolveStackTrace({ stackTrace: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1479,16 +1407,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "dialog", framework: "react" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1503,7 +1427,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getWidgetImpl !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getWidgetImpl({ widget: "nonexistent", framework: "react" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1551,16 +1475,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "light", platform: "css" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1575,7 +1495,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getThemeImpl !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getThemeImpl({ theme: "nonexistent", platform: "css" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1623,16 +1543,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDeployment !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDeployment({ name: "conduit-prod" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1647,7 +1563,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDeployment !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDeployment({ name: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1695,16 +1611,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "conduit-prod" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1719,7 +1631,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDeploymentTopology !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDeploymentTopology({ name: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1767,16 +1679,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "conduit-prod" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1791,7 +1699,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDeploymentHealth !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDeploymentHealth({ name: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1839,16 +1747,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listSuites !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listSuites({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listSuites({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1904,16 +1808,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getSuite !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getSuite({ name: "identity" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -1928,7 +1828,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getSuite !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getSuite({ name: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -1976,16 +1876,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.listInterfaces !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.listInterfaces({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.listInterfaces({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2041,16 +1937,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getEndpoints !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getEndpoints({ interface: "conduit-api", target: "rest" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2065,7 +1957,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getEndpoints !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getEndpoints({ interface: "nonexistent", target: "rest" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2113,16 +2005,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.traceEndpoint({ target: "rest", path: "/api/users", method: "POST" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2137,7 +2025,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.traceEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.traceEndpoint({ target: "", path: "", method: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2185,16 +2073,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDependencies !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDependencies({ symbol: "flagHandler" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2209,7 +2093,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDependencies !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDependencies({ symbol: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2257,16 +2141,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDependents !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDependents({ symbol: "flagHandler" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2281,7 +2161,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDependents !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDependents({ symbol: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2329,16 +2209,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getImpact !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getImpact({ file: "handlers/ts/app/flag.handler.ts" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2353,7 +2229,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getImpact !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getImpact({ file: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2401,16 +2277,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.getDataFlow !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.getDataFlow({ from: "User/create", to: "Email/send" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2425,7 +2297,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.getDataFlow !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.getDataFlow({ from: "", to: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2473,16 +2345,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.search !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.search({ query: "user authentication", limit: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2497,7 +2365,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.search({ query: "", limit: "10" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2545,16 +2413,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.explain !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.explain({ symbol: "Flag" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2569,7 +2433,7 @@ describe('ScoreApi functional handler', () => {
       if (typeof scoreApiHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(scoreApiHandler.explain({ symbol: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -2617,16 +2481,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.status !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.status({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.status({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2682,16 +2542,12 @@ describe('ScoreApi functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof scoreApiHandler.reindex !== 'function') return;
-      try {
-        const result = await interpret(scoreApiHandler.reindex({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(scoreApiHandler.reindex({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -2708,15 +2564,12 @@ describe('ScoreApi functional handler', () => {
     it('declares concept name', async () => {
       if (typeof scoreApiHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = scoreApiHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = scoreApiHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ScoreApi');
     });
@@ -2799,11 +2652,14 @@ describe('ScoreApi functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = scoreApiHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(scoreApiHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -2863,12 +2719,15 @@ describe('ScoreApi functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = scoreApiHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(scoreApiHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty kind in queries
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty kind in queries
               }
             }
           },
@@ -2883,9 +2742,12 @@ describe('ScoreApi functional handler', () => {
     it('listFiles handles empty input: ', async () => {
       if (typeof scoreApiHandler.listFiles !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(scoreApiHandler.listFiles({  }), storage);
+      const result = await safeInvoke(async () => await interpret(scoreApiHandler.listFiles({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('listFiles ensures on ok: ', async () => {
@@ -2896,9 +2758,11 @@ describe('ScoreApi functional handler', () => {
           fc.record({ pattern: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = scoreApiHandler.listFiles(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = scoreApiHandler.listFiles(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

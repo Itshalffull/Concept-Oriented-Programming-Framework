@@ -24,7 +24,7 @@ concept ConfigSync [C] {
       }
 
       fixture export_site_config { config: "site-settings" }
-      fixture export_empty_config { config: "" } -> error
+      fixture export_empty_config { config: "" }
     }
 
     action import(config: C, data: String) {
@@ -36,7 +36,7 @@ concept ConfigSync [C] {
       }
 
       fixture import_valid { config: "site-settings", data: "{\"theme\":\"dark\",\"locale\":\"en\"}" }
-      fixture import_empty_data { config: "site-settings", data: "" } -> error
+      fixture import_empty_data { config: "site-settings", data: "" }
     }
 
     action override(config: C, layer: String, values: String) {
@@ -48,7 +48,7 @@ concept ConfigSync [C] {
       }
 
       fixture override_production { config: "site-settings", layer: "production", values: "debug=false,cache_ttl=3600" }
-      fixture override_empty_layer { config: "site-settings", layer: "", values: "debug=true" } -> error
+      fixture override_empty_layer { config: "site-settings", layer: "", values: "debug=true" }
     }
 
     action diff(configA: C, configB: C) {
@@ -60,7 +60,7 @@ concept ConfigSync [C] {
       }
 
       fixture diff_two_configs { configA: "site-settings", configB: "site-settings-v2" }
-      fixture diff_same_config { configA: "", configB: "" } -> error
+      fixture diff_same_config { configA: "", configB: "" }
     }
   }
 

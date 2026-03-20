@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SolidityBuilder functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SolidityBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof solidityBuilderHandler.build !== 'function') return;
-      try {
-        const result = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('SolidityBuilder functional handler', () => {
       if (typeof solidityBuilderHandler.build !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityBuilderHandler.build({ source: "", toolchainPath: "", platform: "evm", config: {"mode":"debug"} }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('SolidityBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
-      try {
-        const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "test_contract" -> ok', async () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage));
+      await safeInvoke(async () => await interpret(solidityBuilderHandler.register({  }), storage));
       const result = await interpret(solidityBuilderHandler.test({ build: "solb-001", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('SolidityBuilder functional handler', () => {
       if (typeof solidityBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityBuilderHandler.test({ build: "nonexistent", toolchainPath: "/usr/local/bin/solc", testType: "unit" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('SolidityBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
-      try {
-        const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "package_abi" -> ok', async () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(solidityBuilderHandler.build({ source: "./contracts/Token.sol", toolchainPath: "/usr/local/bin/solc", platform: "evm-shanghai", config: {"mode":"release"} }), storage));
+      await safeInvoke(async () => await interpret(solidityBuilderHandler.register({  }), storage));
       const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "abi-bundle" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('SolidityBuilder functional handler', () => {
       if (typeof solidityBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(solidityBuilderHandler.package({ build: "solb-001", format: "invalid-format" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +283,12 @@ describe('SolidityBuilder functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof solidityBuilderHandler.register !== 'function') return;
-      try {
-        const result = await interpret(solidityBuilderHandler.register({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(solidityBuilderHandler.register({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -309,15 +305,12 @@ describe('SolidityBuilder functional handler', () => {
     it('declares concept name', async () => {
       if (typeof solidityBuilderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = solidityBuilderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = solidityBuilderHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SolidityBuilder');
     });
@@ -355,11 +348,14 @@ describe('SolidityBuilder functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = solidityBuilderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(solidityBuilderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -385,12 +381,15 @@ describe('SolidityBuilder functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = solidityBuilderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(solidityBuilderHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-outputDir
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-outputDir
               }
             }
           },

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Query functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,19 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.parse !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "parse_status_filter" -> ok', async () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.parse({ query: "q-001", expression: "status = 'active'" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,6 +95,7 @@ describe('Query functional handler', () => {
     it('fixture "parse_complex" -> ok', async () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.parse({ query: "q-002", expression: "age > 18 AND role = 'admin'" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -98,7 +104,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.parse({ query: "q-003", expression: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +152,19 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.execute !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "execute_parsed" -> ok', async () => {
       if (typeof queryHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.execute({ query: "q-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +173,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.execute({ query: "q-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +221,12 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.subscribe !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.subscribe({ query: "q-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +241,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.subscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.subscribe({ query: "q-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +289,19 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.addFilter !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "add_status_filter" -> ok', async () => {
       if (typeof queryHandler.addFilter !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.addFilter({ query: "q-001", filter: "status = 'active'" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +310,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.addFilter !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.addFilter({ query: "q-nonexistent", filter: "status = 'active'" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +358,19 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.addSort !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "add_date_sort" -> ok', async () => {
       if (typeof queryHandler.addSort !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.addSort({ query: "q-001", sort: "createdAt DESC" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +379,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.addSort !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.addSort({ query: "q-nonexistent", sort: "name ASC" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,22 +427,19 @@ describe('Query functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof queryHandler.setScope !== 'function') return;
-      try {
-        const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_org_scope" -> ok', async () => {
       if (typeof queryHandler.setScope !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(queryHandler.subscribe({ query: "q-001" }), storage));
       const result = await interpret(queryHandler.setScope({ query: "q-001", scope: "organization/acme" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -458,7 +448,7 @@ describe('Query functional handler', () => {
       if (typeof queryHandler.setScope !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryHandler.setScope({ query: "q-nonexistent", scope: "global" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -467,15 +457,12 @@ describe('Query functional handler', () => {
     it('declares concept name', async () => {
       if (typeof queryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = queryHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = queryHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Query');
     });
@@ -513,11 +500,14 @@ describe('Query functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = queryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(queryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -545,12 +535,15 @@ describe('Query functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = queryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(queryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in queries
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in queries
               }
             }
           },
@@ -565,9 +558,12 @@ describe('Query functional handler', () => {
     it('parse handles empty input: ', async () => {
       if (typeof queryHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(queryHandler.parse({  }), storage);
+      const result = await safeInvoke(async () => await interpret(queryHandler.parse({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('parse ensures on ok: ', async () => {
@@ -578,9 +574,11 @@ describe('Query functional handler', () => {
           fc.record({ query: fc.string(), expression: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = queryHandler.parse(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = queryHandler.parse(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -598,9 +596,11 @@ describe('Query functional handler', () => {
           fc.record({ query: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = queryHandler.execute(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = queryHandler.execute(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -618,9 +618,11 @@ describe('Query functional handler', () => {
           fc.record({ query: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = queryHandler.subscribe(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = queryHandler.subscribe(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

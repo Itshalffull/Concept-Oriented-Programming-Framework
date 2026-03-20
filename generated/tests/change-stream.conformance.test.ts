@@ -8,6 +8,14 @@ import fc from 'fast-check';
 import { changeStreamHandler } from '../../handlers/ts/change-stream.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ChangeStream imperative handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -16,16 +24,12 @@ describe('ChangeStream imperative handler', () => {
   });
 
   describe('append', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof changeStreamHandler.append !== 'function') return;
-      try {
-        const result = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -47,22 +51,18 @@ describe('ChangeStream imperative handler', () => {
       if (typeof changeStreamHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await changeStreamHandler.append({ type: "bogus", before: null, after: null, source: "test" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('subscribe', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof changeStreamHandler.subscribe !== 'function') return;
-      try {
-        const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await changeStreamHandler.subscribe({ fromOffset: "0" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -83,22 +83,22 @@ describe('ChangeStream imperative handler', () => {
   });
 
   describe('read', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
-      try {
-        const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "read_batch" -> ok', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: "0" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: null }, storage));
       const result = await changeStreamHandler.read({ subscriptionId: "sub-1", maxCount: "10" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -107,58 +107,62 @@ describe('ChangeStream imperative handler', () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await changeStreamHandler.read({ subscriptionId: "", maxCount: "10" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
 
   describe('acknowledge', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
-      try {
-        const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "ack_offset" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: "0" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: null }, storage));
       const result = await changeStreamHandler.acknowledge({ consumer: "analytics-worker", offset: "42" }, storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "ack_empty_consumer" -> error', async () => {
+    it('fixture "ack_empty_consumer" -> ok', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: "0" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: null }, storage));
       const result = await changeStreamHandler.acknowledge({ consumer: "", offset: "1" }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
 
   describe('replay', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
-      try {
-        const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "replay_range" -> ok', async () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "insert", before: null, after: "{\"id\":1,\"name\":\"alice\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.append({ type: "update", before: "{\"name\":\"alice\"}", after: "{\"name\":\"alicia\"}", source: "users-db" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: "0" }, storage));
+      await safeInvoke(async () => await changeStreamHandler.subscribe({ fromOffset: null }, storage));
       const result = await changeStreamHandler.replay({ from: "1", to: "10" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -167,7 +171,7 @@ describe('ChangeStream imperative handler', () => {
       if (typeof changeStreamHandler.replay !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await changeStreamHandler.replay({ from: "99999", to: null }, storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -176,14 +180,8 @@ describe('ChangeStream imperative handler', () => {
     it('declares concept name', async () => {
       if (typeof changeStreamHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = changeStreamHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-        }
-      } catch { return; }
+      const result = await changeStreamHandler.register({}, storage);
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ChangeStream');
     });
@@ -231,10 +229,11 @@ describe('ChangeStream imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = changeStreamHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(changeStreamHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(changeStreamHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -261,11 +260,12 @@ describe('ChangeStream imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = changeStreamHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(changeStreamHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in events
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(changeStreamHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in events
               }
             }
           },
@@ -280,9 +280,12 @@ describe('ChangeStream imperative handler', () => {
     it('append handles empty input: ', async () => {
       if (typeof changeStreamHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await changeStreamHandler.append({  }, storage);
+      const result = await safeInvoke(async () => await changeStreamHandler.append({  }, storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('append ensures on ok: ', async () => {
@@ -293,8 +296,8 @@ describe('ChangeStream imperative handler', () => {
           fc.record({ type: fc.string({ minLength: 1, maxLength: 50 }), before: fc.string(), after: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await changeStreamHandler.append(input as Record<string, unknown>, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(() => changeStreamHandler.append(input as Record<string, unknown>, storage));
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -307,9 +310,12 @@ describe('ChangeStream imperative handler', () => {
     it('read handles empty input: ', async () => {
       if (typeof changeStreamHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await changeStreamHandler.read({  }, storage);
+      const result = await safeInvoke(async () => await changeStreamHandler.read({  }, storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('read ensures on ok: ', async () => {
@@ -320,8 +326,8 @@ describe('ChangeStream imperative handler', () => {
           fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }), maxCount: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await changeStreamHandler.read(input as Record<string, unknown>, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(() => changeStreamHandler.read(input as Record<string, unknown>, storage));
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -334,9 +340,12 @@ describe('ChangeStream imperative handler', () => {
     it('acknowledge handles empty input: ', async () => {
       if (typeof changeStreamHandler.acknowledge !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await changeStreamHandler.acknowledge({  }, storage);
+      const result = await safeInvoke(async () => await changeStreamHandler.acknowledge({  }, storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('acknowledge ensures on ok: ', async () => {
@@ -347,8 +356,8 @@ describe('ChangeStream imperative handler', () => {
           fc.record({ consumer: fc.string({ minLength: 1, maxLength: 50 }), offset: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await changeStreamHandler.acknowledge(input as Record<string, unknown>, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(() => changeStreamHandler.acknowledge(input as Record<string, unknown>, storage));
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

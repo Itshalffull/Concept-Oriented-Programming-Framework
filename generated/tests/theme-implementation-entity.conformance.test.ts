@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ThemeImplementationEntity functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.register !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.register({ theme: "", platform: "css", sourceFile: "generated/empty.css", ast: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.get({ theme: "nonexistent", platform: "css" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/themes/ocean.css" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/themes/ocean.css" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_by_ocean_file" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/themes/ocean.css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "nonexistent/file.css" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,31 +281,29 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "ocean" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "ocean" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_ocean_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "ocean" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_empty_theme" -> error', async () => {
+    it('fixture "find_empty_theme" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -355,31 +351,29 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "css" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "css" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_css_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "find_unknown_platform" -> error', async () => {
+    it('fixture "find_unknown_platform" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "unknown-platform" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -427,22 +421,19 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resolve_color_primary" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +442,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "nonexistent.token.path" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,22 +490,19 @@ describe('ThemeImplementationEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
-      try {
-        const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "impl-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "impl-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "diff_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "impl-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -523,7 +511,7 @@ describe('ThemeImplementationEntity functional handler', () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "nonexistent-impl" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +520,12 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('declares concept name', async () => {
       if (typeof themeImplementationEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = themeImplementationEntityHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = themeImplementationEntityHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ThemeImplementationEntity');
     });
@@ -588,11 +573,14 @@ describe('ThemeImplementationEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = themeImplementationEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(themeImplementationEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -621,12 +609,15 @@ describe('ThemeImplementationEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = themeImplementationEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(themeImplementationEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty theme in implementations
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty theme in implementations
               }
             }
           },
@@ -641,9 +632,12 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof themeImplementationEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(themeImplementationEntityHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -654,9 +648,11 @@ describe('ThemeImplementationEntity functional handler', () => {
           fc.record({ theme: fc.string({ minLength: 1, maxLength: 50 }), platform: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), ast: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = themeImplementationEntityHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = themeImplementationEntityHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

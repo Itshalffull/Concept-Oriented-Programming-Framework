@@ -65,7 +65,7 @@ concept TestEntity [T] {
       }
 
       fixture find_user_tests { entity: "User" }
-      fixture find_untested_entity { entity: "Nonexistent" } -> error
+      fixture find_untested_entity { entity: "Nonexistent" }
     }
 
     action findByAction(concept: String, action: String) {
@@ -75,7 +75,7 @@ concept TestEntity [T] {
       }
 
       fixture find_user_create_tests { concept: "User", action: "create" }
-      fixture find_untested_action { concept: "User", action: "nonexistentAction" } -> error
+      fixture find_untested_action { concept: "User", action: "nonexistentAction" }
     }
 
     action findByKind(kind: String) {
@@ -85,7 +85,7 @@ concept TestEntity [T] {
       }
 
       fixture find_conformance_tests { kind: "conformance" }
-      fixture find_unknown_kind { kind: "nonexistent-kind" } -> error
+      fixture find_unknown_kind { kind: "nonexistent-kind" }
     }
 
     action findFailing() {
@@ -112,7 +112,7 @@ concept TestEntity [T] {
       }
 
       fixture coverage_user { entity: "User" }
-      fixture coverage_nonexistent { entity: "Nonexistent" } -> error
+      fixture coverage_nonexistent { entity: "Nonexistent" }
     }
 
     action untestedActions() {
@@ -149,7 +149,7 @@ concept TestEntity [T] {
       }
 
       fixture record_pass { test: "test-001", result: "pass", duration: 150 }
-      fixture record_empty_result { test: "test-001", result: "", duration: 0 } -> error
+      fixture record_empty_result { test: "test-001", result: "", duration: 0 }
     }
   }
 

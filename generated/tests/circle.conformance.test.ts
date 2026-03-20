@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Circle functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.create !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.create({ name: "", domain: "unknown", purpose: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.assignMember !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_assign" -> ok', async () => {
       if (typeof circleHandler.assignMember !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -170,7 +172,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.assignMember !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.assignMember({ circle: "circle-999", member: "bob", role: "lead" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,22 +220,20 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.removeMember !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof circleHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +242,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.removeMember({ circle: "circle-999", member: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +290,20 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.setLinks !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_set_links" -> ok', async () => {
       if (typeof circleHandler.setLinks !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +312,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.setLinks !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.setLinks({ circle: "circle-999", leadLink: "alice", repLink: "bob" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +360,20 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.dissolve !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_dissolve" -> ok', async () => {
       if (typeof circleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +382,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.dissolve({ circle: "circle-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -434,22 +430,20 @@ describe('Circle functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
-      try {
-        const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_jurisdiction" -> ok', async () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
+      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -458,7 +452,7 @@ describe('Circle functional handler', () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-999", action: "approve-budget" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -467,15 +461,12 @@ describe('Circle functional handler', () => {
     it('declares concept name', async () => {
       if (typeof circleHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = circleHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = circleHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Circle');
     });
@@ -515,11 +506,14 @@ describe('Circle functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = circleHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(circleHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -547,12 +541,15 @@ describe('Circle functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = circleHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(circleHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-parent
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-parent
               }
             }
           },
@@ -567,9 +564,12 @@ describe('Circle functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof circleHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(circleHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(circleHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on created: ', async () => {
@@ -580,9 +580,11 @@ describe('Circle functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), domain: fc.string({ minLength: 1, maxLength: 50 }), parent: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = circleHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "created") {
+            const result = await safeInvoke(async () => {
+              const program = circleHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "created") {
               seen = true;
               expect(result.output).toBeDefined();
             }

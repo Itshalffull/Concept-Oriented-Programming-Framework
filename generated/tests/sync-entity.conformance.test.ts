@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SyncEntity functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.register !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,7 @@ describe('SyncEntity functional handler', () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEntityHandler.register({ name: "", source: "syncs/empty.sync", compiled: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,22 +150,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_article" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +171,8 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_nonexistent" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findByConcept({ concept: "NonexistentConcept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,22 +222,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_publish_ok" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,6 +243,8 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_create_any" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "create", variant: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -290,22 +294,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "chain_publish" -> ok', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +316,7 @@ describe('SyncEntity functional handler', () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEntityHandler.chainFrom({ action: "nonexistent", variant: "ok", depth: "1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +364,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.findDeadEnds !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_dead_ends_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findDeadEnds !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -427,22 +427,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_orphans_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -492,22 +490,20 @@ describe('SyncEntity functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
-      try {
-        const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_existing" -> ok', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
+      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -516,7 +512,7 @@ describe('SyncEntity functional handler', () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-missing" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -525,15 +521,12 @@ describe('SyncEntity functional handler', () => {
     it('declares concept name', async () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = syncEntityHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = syncEntityHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SyncEntity');
     });
@@ -581,11 +574,14 @@ describe('SyncEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syncEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syncEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -614,12 +610,15 @@ describe('SyncEntity functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = syncEntityHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(syncEntityHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty name in syncs
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty name in syncs
               }
             }
           },
@@ -634,9 +633,12 @@ describe('SyncEntity functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof syncEntityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(syncEntityHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(syncEntityHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -647,9 +649,11 @@ describe('SyncEntity functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), compiled: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = syncEntityHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = syncEntityHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

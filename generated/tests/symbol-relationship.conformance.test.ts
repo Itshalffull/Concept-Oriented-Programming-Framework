@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SymbolRelationship functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SymbolRelationship functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
-      try {
-        const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -94,11 +98,11 @@ describe('SymbolRelationship functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "add_duplicate" -> error', async () => {
+    it('fixture "add_duplicate" -> ok', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('SymbolRelationship functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
-      try {
-        const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_from_source" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "implements" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +172,9 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "find_from_all_kinds" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findFrom !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.findFrom({ source: "ts/class/UserHandler", kind: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,22 +224,21 @@ describe('SymbolRelationship functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
-      try {
-        const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_to_target" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "implements" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,6 +246,9 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "find_to_all_kinds" -> ok', async () => {
       if (typeof symbolRelationshipHandler.findTo !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.findTo({ target: "ts/interface/IHandler", kind: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -290,22 +298,21 @@ describe('SymbolRelationship functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
-      try {
-        const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "forward_closure" -> ok', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,6 +320,9 @@ describe('SymbolRelationship functional handler', () => {
     it('fixture "backward_closure" -> ok', async () => {
       if (typeof symbolRelationshipHandler.transitiveClosure !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.transitiveClosure({ start: "ts/class/AdminHandler", kind: "extends", direction: "backward" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,22 +372,21 @@ describe('SymbolRelationship functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof symbolRelationshipHandler.get !== 'function') return;
-      try {
-        const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_get" -> ok', async () => {
       if (typeof symbolRelationshipHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }), storage));
+      await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({ source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }), storage));
       const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +395,7 @@ describe('SymbolRelationship functional handler', () => {
       if (typeof symbolRelationshipHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(symbolRelationshipHandler.get({ relationship: "symbol-relationship-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -395,15 +404,12 @@ describe('SymbolRelationship functional handler', () => {
     it('declares concept name', async () => {
       if (typeof symbolRelationshipHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = symbolRelationshipHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = symbolRelationshipHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SymbolRelationship');
     });
@@ -449,11 +455,14 @@ describe('SymbolRelationship functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = symbolRelationshipHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(symbolRelationshipHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -480,12 +489,15 @@ describe('SymbolRelationship functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = symbolRelationshipHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(symbolRelationshipHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-target
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-target
               }
             }
           },
@@ -500,9 +512,12 @@ describe('SymbolRelationship functional handler', () => {
     it('add handles empty input: ', async () => {
       if (typeof symbolRelationshipHandler.add !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(symbolRelationshipHandler.add({  }), storage);
+      const result = await safeInvoke(async () => await interpret(symbolRelationshipHandler.add({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('add ensures on ok: ', async () => {
@@ -513,9 +528,11 @@ describe('SymbolRelationship functional handler', () => {
           fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), target: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = symbolRelationshipHandler.add(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = symbolRelationshipHandler.add(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

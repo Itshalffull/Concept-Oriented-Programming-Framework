@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Telemetry functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Telemetry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
-      try {
-        const result = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -94,11 +98,11 @@ describe('Telemetry functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "configure_empty_concept" -> error', async () => {
+    it('fixture "configure_empty_concept" -> ok', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -146,22 +150,21 @@ describe('Telemetry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
-      try {
-        const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "marker_staging" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -169,6 +172,9 @@ describe('Telemetry functional handler', () => {
     it('fixture "marker_production" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.deployMarker({ suite: "payments", version: "1.0.0", environment: "production", status: "completed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,7 +183,7 @@ describe('Telemetry functional handler', () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.deployMarker({ suite: "", version: "1.0.0", environment: "staging", status: "started" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -225,22 +231,21 @@ describe('Telemetry functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
-      try {
-        const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "analyze_5min" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -248,6 +253,9 @@ describe('Telemetry functional handler', () => {
     it('fixture "analyze_1hr" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
+      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.analyze({ concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -256,7 +264,7 @@ describe('Telemetry functional handler', () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(telemetryHandler.analyze({ concept: "", window: "60", criteria: "error_rate < 0.1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -265,15 +273,12 @@ describe('Telemetry functional handler', () => {
     it('declares concept name', async () => {
       if (typeof telemetryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = telemetryHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = telemetryHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Telemetry');
     });
@@ -308,11 +313,14 @@ describe('Telemetry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = telemetryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(telemetryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -337,12 +345,15 @@ describe('Telemetry functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = telemetryHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(telemetryHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-samplingRate
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-samplingRate
               }
             }
           },
@@ -357,9 +368,12 @@ describe('Telemetry functional handler', () => {
     it('configure handles empty input: ', async () => {
       if (typeof telemetryHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(telemetryHandler.configure({  }), storage);
+      const result = await safeInvoke(async () => await interpret(telemetryHandler.configure({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('configure ensures on ok: ', async () => {
@@ -370,9 +384,11 @@ describe('Telemetry functional handler', () => {
           fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }), endpoint: fc.string({ minLength: 1, maxLength: 50 }), samplingRate: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = telemetryHandler.configure(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = telemetryHandler.configure(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

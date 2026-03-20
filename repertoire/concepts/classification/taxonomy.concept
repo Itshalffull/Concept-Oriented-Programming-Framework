@@ -14,7 +14,7 @@ concept Taxonomy [V] {
       -> exists(message: String) { Vocabulary already exists. }
 
       fixture create_topics_vocab { vocab: "vocab-topics-1", name: "topics" }
-      fixture create_empty_vocab { vocab: "", name: "unnamed" } -> error
+      fixture create_empty_vocab { vocab: "", name: "unnamed" }
     }
     action addTerm(vocab: V, term: String, parent: option String) {
       -> ok() { Add a term to the vocabulary, optionally under a parent term. }

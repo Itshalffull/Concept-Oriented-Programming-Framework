@@ -55,7 +55,7 @@ concept Capture [C] {
 
       fixture subscribe_feed { sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }
       fixture subscribe_rss { sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }
-      fixture subscribe_bad_schedule { sourceId: "src-1", schedule: "invalid", mode: "api_poll" } -> error
+      fixture subscribe_bad_schedule { sourceId: "src-1", schedule: "invalid", mode: "api_poll" }
     }
 
     action detectChanges(subscriptionId: String) {

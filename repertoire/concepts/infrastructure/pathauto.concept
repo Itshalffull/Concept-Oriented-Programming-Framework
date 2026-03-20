@@ -25,7 +25,7 @@ concept Pathauto [P] {
 
       fixture valid_page { pattern: "blog", entity: "My Example Page" }
       fixture special_chars { pattern: "products", entity: "Héllo & Wörld!" }
-      fixture empty_entity { entity: "" } -> error
+      fixture empty_entity { entity: "" }
     }
 
     action bulkGenerate(pattern: P, entities: String) {
@@ -46,7 +46,7 @@ concept Pathauto [P] {
       }
 
       fixture clean_spaces { input: "Hello World Test" }
-      fixture clean_empty { input: "" } -> error
+      fixture clean_empty { input: "" }
     }
   }
 

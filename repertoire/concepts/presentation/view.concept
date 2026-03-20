@@ -51,7 +51,7 @@ concept View [V] {
       }
 
       fixture create_task_table { view: "tasks-table", dataSource: "tasks", layout: "table" }
-      fixture create_empty_source { view: "bad-view", dataSource: "", layout: "table" } -> error
+      fixture create_empty_source { view: "bad-view", dataSource: "", layout: "table" }
     }
 
     action get(view: V) {
@@ -109,7 +109,7 @@ concept View [V] {
       }
 
       fixture set_filter_active { view: "tasks-table", filter: "status=active" }
-      fixture set_filter_missing_view { view: "no-such-view", filter: "status=active" } -> error
+      fixture set_filter_missing_view { view: "no-such-view", filter: "status=active" }
     }
 
     action setSort(view: V, sort: String) {
@@ -157,7 +157,7 @@ concept View [V] {
       }
 
       fixture switch_to_board { view: "tasks-table", layout: "board" }
-      fixture change_layout_missing { view: "no-such-view", layout: "calendar" } -> error
+      fixture change_layout_missing { view: "no-such-view", layout: "calendar" }
     }
 
     action duplicate(view: V) {

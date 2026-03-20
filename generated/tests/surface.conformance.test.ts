@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Surface functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.create !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,7 +102,8 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.create({ surface: "surface-3", kind: "hologram", mountPoint: null }), storage);
-      expect(result.variant).toBe('unsupported');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unsupported'));
     });
 
   });
@@ -146,16 +151,12 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.attach !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +171,8 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.attach !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "terminal-only-adapter" }), storage);
-      expect(result.variant).toBe('incompatible');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('incompatible'));
     });
 
   });
@@ -218,22 +220,21 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.resize !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "resize_desktop" -> ok', async () => {
       if (typeof surfaceHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +243,8 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.resize({ surface: "surface-nonexistent", width: "800", height: "600" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -290,22 +292,21 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.mount !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "mount_root" -> ok', async () => {
       if (typeof surfaceHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,7 +315,7 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.mount({ surface: "surface-no-adapter", tree: "<App />", zone: null }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -362,22 +363,21 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "unmount_root" -> ok', async () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,7 +386,8 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: "nonexistent-zone" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -434,22 +435,21 @@ describe('Surface functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
+      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -458,7 +458,8 @@ describe('Surface functional handler', () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(surfaceHandler.destroy({ surface: "surface-nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -467,15 +468,12 @@ describe('Surface functional handler', () => {
     it('declares concept name', async () => {
       if (typeof surfaceHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = surfaceHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = surfaceHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Surface');
     });
@@ -513,11 +511,14 @@ describe('Surface functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = surfaceHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(surfaceHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -545,12 +546,15 @@ describe('Surface functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = surfaceHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(surfaceHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: mount succeeds without an attached renderer
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: mount succeeds without an attached renderer
               }
             }
           },

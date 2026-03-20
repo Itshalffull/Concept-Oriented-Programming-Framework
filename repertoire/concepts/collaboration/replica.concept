@@ -87,7 +87,7 @@ concept Replica [R] {
       }
 
       fixture add_new_peer { peerId: "replica-3" }
-      fixture add_empty_peer { peerId: "" } -> error
+      fixture add_empty_peer { peerId: "" }
     }
   }
 

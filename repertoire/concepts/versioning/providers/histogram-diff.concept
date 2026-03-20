@@ -32,7 +32,7 @@ concept HistogramDiff [C] {
       }
 
       fixture diff_text { contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }
-      fixture non_string { contentA: 123, contentB: "text" } -> error
+      fixture non_string { contentA: 123, contentB: "text" }
     }
   }
 

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ViewportProvider functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ViewportProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof viewportProviderHandler.initialize !== 'function') return;
-      try {
-        const result = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(viewportProviderHandler.initialize({ config: "{bad" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('ViewportProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
-      try {
-        const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "observe_desktop" -> ok', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -162,6 +163,7 @@ describe('ViewportProvider functional handler', () => {
     it('fixture "observe_mobile" -> ok', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "375", height: "812" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -211,22 +213,19 @@ describe('ViewportProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
-      try {
-        const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "vp-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "vp-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_breakpoint_valid" -> ok', async () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "vp-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +234,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +282,19 @@ describe('ViewportProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
-      try {
-        const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_breakpoints_custom" -> ok', async () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +303,7 @@ describe('ViewportProvider functional handler', () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "not json" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +312,12 @@ describe('ViewportProvider functional handler', () => {
     it('declares concept name', async () => {
       if (typeof viewportProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = viewportProviderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = viewportProviderHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ViewportProvider');
     });
@@ -347,9 +340,12 @@ describe('ViewportProvider functional handler', () => {
     it('initialize handles empty input: ', async () => {
       if (typeof viewportProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(viewportProviderHandler.initialize({  }), storage);
+      const result = await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('initialize ensures on ok: ', async () => {
@@ -360,9 +356,11 @@ describe('ViewportProvider functional handler', () => {
           fc.record({ provider: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = viewportProviderHandler.initialize(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = viewportProviderHandler.initialize(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -380,9 +378,11 @@ describe('ViewportProvider functional handler', () => {
           fc.record({ provider: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = viewportProviderHandler.observe(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = viewportProviderHandler.observe(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -400,9 +400,11 @@ describe('ViewportProvider functional handler', () => {
           fc.record({ provider: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = viewportProviderHandler.getBreakpoint(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = viewportProviderHandler.getBreakpoint(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

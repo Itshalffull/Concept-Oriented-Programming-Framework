@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Metric functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Metric functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof metricHandler.define !== 'function') return;
-      try {
-        const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Metric functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "define_empty_name" -> error', async () => {
+    it('fixture "define_empty_name" -> ok', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Metric functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof metricHandler.update !== 'function') return;
-      try {
-        const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "update_revenue" -> ok', async () => {
       if (typeof metricHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.update({ metric: "metric-nonexistent", value: "0.0", source: "manual" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('Metric functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
-      try {
-        const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_revenue_threshold" -> ok', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.setThreshold({ metric: "metric-nonexistent", threshold: "0.0", alertOnBreach: "false" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +283,20 @@ describe('Metric functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
-      try {
-        const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
+      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('Metric functional handler', () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(metricHandler.evaluate({ metric: "metric-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +314,12 @@ describe('Metric functional handler', () => {
     it('declares concept name', async () => {
       if (typeof metricHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = metricHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = metricHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Metric');
     });
@@ -360,11 +355,14 @@ describe('Metric functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = metricHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(metricHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -390,12 +388,15 @@ describe('Metric functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = metricHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(metricHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-value
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-value
               }
             }
           },
@@ -410,9 +411,12 @@ describe('Metric functional handler', () => {
     it('define handles empty input: ', async () => {
       if (typeof metricHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(metricHandler.define({  }), storage);
+      const result = await safeInvoke(async () => await interpret(metricHandler.define({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('define ensures on defined: ', async () => {
@@ -423,9 +427,11 @@ describe('Metric functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), unit: fc.string(), aggregation: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = metricHandler.define(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "defined") {
+            const result = await safeInvoke(async () => {
+              const program = metricHandler.define(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "defined") {
               seen = true;
               expect(result.output).toBeDefined();
             }

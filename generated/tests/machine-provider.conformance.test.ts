@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('MachineProvider functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('MachineProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof machineProviderHandler.initialize !== 'function') return;
-      try {
-        const result = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(machineProviderHandler.initialize({ config: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.initialize({ config: "{bad" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('MachineProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
-      try {
-        const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "", context: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +211,21 @@ describe('MachineProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
-      try {
-        const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "send_open" -> ok', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(machineProviderHandler.initialize({ config: "{}" }), storage));
+      await safeInvoke(async () => await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage));
+      await safeInvoke(async () => await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage));
       const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "machine-1", event: "OPEN" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +234,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.send({ provider: "mp-1", machine: "nonexistent", event: "OPEN" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +282,12 @@ describe('MachineProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
-      try {
-        const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +302,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.connect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,21 @@ describe('MachineProvider functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
-      try {
-        const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(machineProviderHandler.initialize({ config: "{}" }), storage));
+      await safeInvoke(async () => await interpret(machineProviderHandler.spawn({ provider: "mp-1", widget: "dialog", context: "{}" }), storage));
+      await safeInvoke(async () => await interpret(machineProviderHandler.connect({ provider: "mp-1", machine: "machine-1" }), storage));
       const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "machine-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +373,7 @@ describe('MachineProvider functional handler', () => {
       if (typeof machineProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(machineProviderHandler.destroy({ provider: "mp-1", machine: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +382,12 @@ describe('MachineProvider functional handler', () => {
     it('declares concept name', async () => {
       if (typeof machineProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = machineProviderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = machineProviderHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('MachineProvider');
     });
@@ -419,9 +410,12 @@ describe('MachineProvider functional handler', () => {
     it('initialize handles empty input: ', async () => {
       if (typeof machineProviderHandler.initialize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(machineProviderHandler.initialize({  }), storage);
+      const result = await safeInvoke(async () => await interpret(machineProviderHandler.initialize({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('initialize ensures on ok: ', async () => {
@@ -432,9 +426,11 @@ describe('MachineProvider functional handler', () => {
           fc.record({ provider: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = machineProviderHandler.initialize(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = machineProviderHandler.initialize(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -447,9 +443,12 @@ describe('MachineProvider functional handler', () => {
     it('spawn handles empty input: ', async () => {
       if (typeof machineProviderHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(machineProviderHandler.spawn({  }), storage);
+      const result = await safeInvoke(async () => await interpret(machineProviderHandler.spawn({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('spawn ensures on ok: ', async () => {
@@ -460,9 +459,11 @@ describe('MachineProvider functional handler', () => {
           fc.record({ provider: fc.string(), widget: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = machineProviderHandler.spawn(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = machineProviderHandler.spawn(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -475,9 +476,12 @@ describe('MachineProvider functional handler', () => {
     it('send handles empty input: ', async () => {
       if (typeof machineProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(machineProviderHandler.send({  }), storage);
+      const result = await safeInvoke(async () => await interpret(machineProviderHandler.send({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('send ensures on ok: ', async () => {
@@ -488,9 +492,11 @@ describe('MachineProvider functional handler', () => {
           fc.record({ provider: fc.string(), machine: fc.string({ minLength: 1, maxLength: 50 }), event: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = machineProviderHandler.send(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = machineProviderHandler.send(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

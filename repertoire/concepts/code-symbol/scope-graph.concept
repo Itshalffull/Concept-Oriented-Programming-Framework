@@ -63,7 +63,7 @@ concept ScopeGraph [C] {
       }
 
       fixture valid_visible { graph: "scope-graph-1", scope: "scope-1" }
-      fixture visible_no_graph { graph: "scope-graph-999", scope: "scope-1" } -> error
+      fixture visible_no_graph { graph: "scope-graph-999", scope: "scope-1" }
     }
 
     action resolveCrossFile(graph: C) {

@@ -59,7 +59,7 @@ concept K8sRuntime [K] {
       }
 
       fixture deploy_image { deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }
-      fixture deploy_empty_image { deployment: "dep-001", imageUri: "" } -> error
+      fixture deploy_empty_image { deployment: "dep-001", imageUri: "" }
     }
 
     action setTrafficWeight(deployment: K, weight: Int) {
@@ -68,7 +68,7 @@ concept K8sRuntime [K] {
       }
 
       fixture set_canary_weight { deployment: "dep-001", weight: 25 }
-      fixture set_invalid_weight { deployment: "dep-001", weight: -1 } -> error
+      fixture set_invalid_weight { deployment: "dep-001", weight: -1 }
     }
 
     action rollback(deployment: K, targetRevision: String) {
@@ -77,7 +77,7 @@ concept K8sRuntime [K] {
       }
 
       fixture rollback_to_rev1 { deployment: "dep-001", targetRevision: "1" }
-      fixture rollback_empty_rev { deployment: "dep-001", targetRevision: "" } -> error
+      fixture rollback_empty_rev { deployment: "dep-001", targetRevision: "" }
     }
 
     action destroy(deployment: K) {

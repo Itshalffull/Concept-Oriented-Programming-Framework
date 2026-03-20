@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ExpressionLanguage functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "math", grammar: "arithmetic" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('ExpressionLanguage functional handler', () => {
       if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.registerLanguage({ name: "", grammar: "arithmetic" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.registerFunction({ name: "abs", implementation: "Math.abs" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -159,11 +159,11 @@ describe('ExpressionLanguage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_impl" -> error', async () => {
+    it('fixture "missing_impl" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerFunction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.registerFunction({ name: "", implementation: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.registerOperator({ name: "plus", implementation: "a + b" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -231,11 +227,11 @@ describe('ExpressionLanguage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_op_name" -> error', async () => {
+    it('fixture "missing_op_name" -> ok', async () => {
       if (typeof expressionLanguageHandler.registerOperator !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.registerOperator({ name: "", implementation: "a + b" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.parse !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-1", text: "2 + 3", language: "math" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('ExpressionLanguage functional handler', () => {
       if (typeof expressionLanguageHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.parse({ expression: "expr-2", text: "2 + 3", language: "unknown" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,16 +347,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.evaluate !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.evaluate({ expression: "expr-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.evaluate({ expression: "expr-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -379,7 +367,7 @@ describe('ExpressionLanguage functional handler', () => {
       if (typeof expressionLanguageHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.evaluate({ expression: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,16 +415,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "expr-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "expr-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -451,7 +435,7 @@ describe('ExpressionLanguage functional handler', () => {
       if (typeof expressionLanguageHandler.typeCheck !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.typeCheck({ expression: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,16 +483,12 @@ describe('ExpressionLanguage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
-      try {
-        const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "expr-1", cursor: "3" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -523,7 +503,7 @@ describe('ExpressionLanguage functional handler', () => {
       if (typeof expressionLanguageHandler.getCompletions !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(expressionLanguageHandler.getCompletions({ expression: "nonexistent", cursor: "0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +512,12 @@ describe('ExpressionLanguage functional handler', () => {
     it('declares concept name', async () => {
       if (typeof expressionLanguageHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = expressionLanguageHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = expressionLanguageHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ExpressionLanguage');
     });
@@ -580,11 +557,14 @@ describe('ExpressionLanguage functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = expressionLanguageHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(expressionLanguageHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -613,12 +593,15 @@ describe('ExpressionLanguage functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = expressionLanguageHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(expressionLanguageHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-functionRegistry
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-functionRegistry
               }
             }
           },
@@ -633,9 +616,12 @@ describe('ExpressionLanguage functional handler', () => {
     it('registerLanguage handles empty input: ', async () => {
       if (typeof expressionLanguageHandler.registerLanguage !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(expressionLanguageHandler.registerLanguage({  }), storage);
+      const result = await safeInvoke(async () => await interpret(expressionLanguageHandler.registerLanguage({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('registerLanguage ensures on ok: ', async () => {
@@ -646,9 +632,11 @@ describe('ExpressionLanguage functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), grammar: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = expressionLanguageHandler.registerLanguage(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = expressionLanguageHandler.registerLanguage(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

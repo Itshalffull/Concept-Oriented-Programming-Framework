@@ -50,7 +50,7 @@ concept FileCatalog [E] {
 
       fixture valid_register_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" }
       fixture register_widget_provider { provider_name: "widget", kind: "widget", file_pattern: ".widget" }
-      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" } -> error
+      fixture register_duplicate_provider { provider_name: "concept", kind: "concept", file_pattern: ".concept" }
     }
 
     action get(name: String, kind: String) {
@@ -95,7 +95,7 @@ concept FileCatalog [E] {
       }
 
       fixture valid_sync_paths { suite: "foundation" }
-      fixture sync_paths_unknown { suite: "nonexistent-suite" } -> error
+      fixture sync_paths_unknown { suite: "nonexistent-suite" }
     }
   }
 

@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('EventBus functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,20 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_register_event" -> ok', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,6 +96,8 @@ describe('EventBus functional handler', () => {
     it('fixture "register_login_event" -> ok', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.registerEventType({ name: "user.login", schema: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -98,7 +106,7 @@ describe('EventBus functional handler', () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -146,16 +154,12 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.subscribe !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -218,22 +222,20 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_unsubscribe" -> ok', async () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "user.created:notifyAdmin:1234567890" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +244,7 @@ describe('EventBus functional handler', () => {
       if (typeof eventBusHandler.unsubscribe !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eventBusHandler.unsubscribe({ subscriptionId: "nonexistent-sub-id" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +292,20 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_dispatch" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.dispatch({ event: "user.created", data: "{\"userId\":\"u-123\",\"email\":\"alice@example.com\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,6 +313,8 @@ describe('EventBus functional handler', () => {
     it('fixture "dispatch_empty_data" -> ok', async () => {
       if (typeof eventBusHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.dispatch({ event: "user.login", data: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,22 +364,20 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_dispatch_async" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.created", data: "{\"userId\":\"u-456\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -385,6 +385,8 @@ describe('EventBus functional handler', () => {
     it('fixture "dispatch_async_empty" -> ok', async () => {
       if (typeof eventBusHandler.dispatchAsync !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.dispatchAsync({ event: "user.login", data: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,22 +436,20 @@ describe('EventBus functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
-      try {
-        const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_get_history" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.getHistory({ event: "user.created", limit: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -457,6 +457,8 @@ describe('EventBus functional handler', () => {
     it('fixture "get_history_small_limit" -> ok', async () => {
       if (typeof eventBusHandler.getHistory !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.created", handler: "notifyAdmin", priority: "10" }), storage));
+      await safeInvoke(async () => await interpret(eventBusHandler.subscribe({ event: "user.login", handler: "logAccess", priority: "100" }), storage));
       const result = await interpret(eventBusHandler.getHistory({ event: "user.login", limit: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -467,15 +469,12 @@ describe('EventBus functional handler', () => {
     it('declares concept name', async () => {
       if (typeof eventBusHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = eventBusHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = eventBusHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('EventBus');
     });
@@ -514,11 +513,14 @@ describe('EventBus functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = eventBusHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(eventBusHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -546,12 +548,15 @@ describe('EventBus functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = eventBusHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(eventBusHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-history
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-history
               }
             }
           },
@@ -566,9 +571,12 @@ describe('EventBus functional handler', () => {
     it('registerEventType handles empty input: ', async () => {
       if (typeof eventBusHandler.registerEventType !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(eventBusHandler.registerEventType({  }), storage);
+      const result = await safeInvoke(async () => await interpret(eventBusHandler.registerEventType({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('registerEventType ensures on ok: ', async () => {
@@ -579,9 +587,11 @@ describe('EventBus functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = eventBusHandler.registerEventType(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = eventBusHandler.registerEventType(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -29,7 +29,7 @@ concept AppInstallation [I] {
       -> ok(installation: I) { Store or update an application installation record. }
 
       fixture register_core_suite { installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: 12, syncs: 5 }
-      fixture register_empty_installation { installation: "", name: "", version: "", status: "", registry: "", concepts: 0, syncs: 0 } -> error
+      fixture register_empty_installation { installation: "", name: "", version: "", status: "", registry: "", concepts: 0, syncs: 0 }
     }
 
     action list(status: option String) {

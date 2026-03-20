@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Branch functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.create !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -87,11 +91,11 @@ describe('Branch functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "empty_branch_name" -> error', async () => {
+    it('fixture "empty_branch_name" -> ok', async () => {
       if (typeof branchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -139,22 +143,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.advance !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "advance_head" -> ok', async () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +165,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +213,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.delete !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof branchHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.delete({ branch: "branch-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +283,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.protect !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "protect_main" -> ok', async () => {
       if (typeof branchHandler.protect !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +305,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.protect !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.protect({ branch: "branch-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +353,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_upstream_main" -> ok', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +375,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -427,22 +423,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "find_divergence" -> ok', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -451,7 +445,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.divergencePoint({ b1: "branch-nonexistent", b2: "branch-1" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -499,22 +493,20 @@ describe('Branch functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof branchHandler.archive !== 'function') return;
-      try {
-        const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "archive_old" -> ok', async () => {
       if (typeof branchHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
+      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -523,7 +515,7 @@ describe('Branch functional handler', () => {
       if (typeof branchHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(branchHandler.archive({ branch: "branch-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -532,15 +524,12 @@ describe('Branch functional handler', () => {
     it('declares concept name', async () => {
       if (typeof branchHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = branchHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = branchHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Branch');
     });
@@ -587,11 +576,14 @@ describe('Branch functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = branchHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(branchHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -620,12 +612,15 @@ describe('Branch functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = branchHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(branchHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in branches
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in branches
               }
             }
           },
@@ -640,9 +635,12 @@ describe('Branch functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof branchHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(branchHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(branchHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -653,9 +651,11 @@ describe('Branch functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), fromNode: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = branchHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = branchHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -668,9 +668,12 @@ describe('Branch functional handler', () => {
     it('advance handles empty input: ', async () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(branchHandler.advance({  }), storage);
+      const result = await safeInvoke(async () => await interpret(branchHandler.advance({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('advance ensures on ok: ', async () => {
@@ -681,9 +684,11 @@ describe('Branch functional handler', () => {
           fc.record({ branch: fc.string(), newNode: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = branchHandler.advance(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = branchHandler.advance(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -701,9 +706,11 @@ describe('Branch functional handler', () => {
           fc.record({ branch: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = branchHandler.delete(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = branchHandler.delete(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

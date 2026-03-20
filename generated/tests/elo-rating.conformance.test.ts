@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('EloRating functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('EloRating functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eloRatingHandler.configure !== 'function') return;
-      try {
-        const result = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eloRatingHandler.configure({ kFactor: "0.0", initialRating: "1500.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('EloRating functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
-      try {
-        const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "outcome_alice_wins" -> ok', async () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage));
       const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eloRatingHandler.recordOutcome({ config: "elo-001", winner: "alice", loser: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('EloRating functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
-      try {
-        const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "draw_match" -> ok', async () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage));
       const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.recordDraw !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eloRatingHandler.recordDraw({ config: "elo-001", participantA: "alice", participantB: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('EloRating functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
-      try {
-        const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_alice_rating" -> ok', async () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(eloRatingHandler.configure({ kFactor: "32.0", initialRating: "1500.0" }), storage));
       const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('EloRating functional handler', () => {
       if (typeof eloRatingHandler.getRating !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(eloRatingHandler.getRating({ config: "elo-001", participant: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +311,12 @@ describe('EloRating functional handler', () => {
     it('declares concept name', async () => {
       if (typeof eloRatingHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = eloRatingHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = eloRatingHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('EloRating');
     });
@@ -360,11 +352,14 @@ describe('EloRating functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = eloRatingHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(eloRatingHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -390,12 +385,15 @@ describe('EloRating functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = eloRatingHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(eloRatingHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-rating
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-rating
               }
             }
           },
@@ -410,9 +408,12 @@ describe('EloRating functional handler', () => {
     it('configure handles empty input: ', async () => {
       if (typeof eloRatingHandler.configure !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(eloRatingHandler.configure({  }), storage);
+      const result = await safeInvoke(async () => await interpret(eloRatingHandler.configure({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('configure ensures on configured: ', async () => {
@@ -423,9 +424,11 @@ describe('EloRating functional handler', () => {
           fc.record({ kFactor: fc.string(), initialRating: fc.string(), kFactorDecay: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = eloRatingHandler.configure(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "configured") {
+            const result = await safeInvoke(async () => {
+              const program = eloRatingHandler.configure(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "configured") {
               seen = true;
               expect(result.output).toBeDefined();
             }

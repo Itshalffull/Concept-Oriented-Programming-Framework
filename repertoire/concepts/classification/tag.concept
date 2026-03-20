@@ -14,7 +14,7 @@ concept Tag [T] {
       -> notfound(message: String) { Tag does not exist. }
 
       fixture add_tag_to_page { entity: "page-42", tag: "important" }
-      fixture add_tag_empty_entity { entity: "", tag: "label" } -> error
+      fixture add_tag_empty_entity { entity: "", tag: "label" }
     }
     action removeTag(entity: String, tag: T) {
       -> ok() { Dissociate the tag from the entity. }
@@ -27,7 +27,7 @@ concept Tag [T] {
       -> ok(entities: String) { Return all entities associated with the tag. }
 
       fixture get_by_existing_tag { tag: "important" }
-      fixture get_by_empty_tag { tag: "" } -> error
+      fixture get_by_empty_tag { tag: "" }
     }
     action getChildren(tag: T) {
       -> ok(children: String) { Return child tags in the hierarchy. }

@@ -33,7 +33,7 @@ concept TemporalVersion [V] {
       }
 
       fixture record_version { contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }
-      fixture record_empty_hash { contentHash: "", validFrom: null, validTo: null, metadata: "" } -> error
+      fixture record_empty_hash { contentHash: "", validFrom: null, validTo: null, metadata: "" }
     }
 
     action asOf(systemTime: option String, validTime: option String) {

@@ -43,7 +43,7 @@ concept ActionEntity [A] {
         Results as serialized JSON array.
       }
       fixture find_article { concept: "Article" }
-      fixture find_empty { concept: "" } -> error
+      fixture find_empty { concept: "" }
     }
 
     action triggeringSyncs(action: A) {

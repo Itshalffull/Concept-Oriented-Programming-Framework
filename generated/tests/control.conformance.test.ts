@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Control functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Control functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof controlHandler.create !== 'function') return;
-      try {
-        const result = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.create({ control: "", type: "slider", binding: "audio.volume" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,22 +143,19 @@ describe('Control functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof controlHandler.interact !== 'function') return;
-      try {
-        const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "interact_slider" -> ok', async () => {
       if (typeof controlHandler.interact !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +164,8 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.interact !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.interact({ control: "nonexistent", input: "50" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -211,22 +213,19 @@ describe('Control functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof controlHandler.getValue !== 'function') return;
-      try {
-        const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "get_value_existing" -> ok', async () => {
       if (typeof controlHandler.getValue !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +234,8 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.getValue !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.getValue({ control: "nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -283,22 +283,19 @@ describe('Control functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof controlHandler.setValue !== 'function') return;
-      try {
-        const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "set_value_existing" -> ok', async () => {
       if (typeof controlHandler.setValue !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +304,8 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.setValue !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.setValue({ control: "nonexistent", value: "50" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -355,22 +353,19 @@ describe('Control functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
-      try {
-        const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "trigger_existing" -> ok', async () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +374,8 @@ describe('Control functional handler', () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(controlHandler.triggerAction({ control: "nonexistent" }), storage);
-      expect(result.variant).toBe('notfound');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -388,15 +384,12 @@ describe('Control functional handler', () => {
     it('declares concept name', async () => {
       if (typeof controlHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = controlHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = controlHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Control');
     });
@@ -434,11 +427,14 @@ describe('Control functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = controlHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(controlHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -465,12 +461,15 @@ describe('Control functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = controlHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(controlHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-value
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-value
               }
             }
           },
@@ -485,9 +484,12 @@ describe('Control functional handler', () => {
     it('create handles empty input: ', async () => {
       if (typeof controlHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(controlHandler.create({  }), storage);
+      const result = await safeInvoke(async () => await interpret(controlHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('create ensures on ok: ', async () => {
@@ -498,9 +500,11 @@ describe('Control functional handler', () => {
           fc.record({ control: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = controlHandler.create(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = controlHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

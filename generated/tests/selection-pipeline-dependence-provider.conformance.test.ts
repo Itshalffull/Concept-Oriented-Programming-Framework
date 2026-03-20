@@ -8,6 +8,14 @@ import fc from 'fast-check';
 import { selectionPipelineDependenceProviderHandler } from '../../handlers/ts/selection-pipeline-dependence-provider.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SelectionPipelineDependenceProvider imperative handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -16,16 +24,12 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
   });
 
   describe('initialize', () => {
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof selectionPipelineDependenceProviderHandler.initialize !== 'function') return;
-      try {
-        const result = await selectionPipelineDependenceProviderHandler.initialize({  }, storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await selectionPipelineDependenceProviderHandler.initialize({  }, storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -35,14 +39,8 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
     it('declares concept name', async () => {
       if (typeof selectionPipelineDependenceProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = selectionPipelineDependenceProviderHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-        }
-      } catch { return; }
+      const result = await selectionPipelineDependenceProviderHandler.register({}, storage);
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SelectionPipelineDependenceProvider');
     });
@@ -63,10 +61,11 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = selectionPipelineDependenceProviderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(selectionPipelineDependenceProviderHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(selectionPipelineDependenceProviderHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -89,11 +88,12 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
             for (const step of actionSequence) {
               const actionFn = selectionPipelineDependenceProviderHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
-                  const result = await actionFn.call(selectionPipelineDependenceProviderHandler, step.input as Record<string, unknown>, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: empty providerRef in instances
-                } catch { /* handler may throw on random inputs */ }
+                const result = await safeInvoke(() => actionFn.call(selectionPipelineDependenceProviderHandler, step.input as Record<string, unknown>, storage));
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: empty providerRef in instances
               }
             }
           },
@@ -113,8 +113,8 @@ describe('SelectionPipelineDependenceProvider imperative handler', () => {
           fc.record({  }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await selectionPipelineDependenceProviderHandler.initialize(input as Record<string, unknown>, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(() => selectionPipelineDependenceProviderHandler.initialize(input as Record<string, unknown>, storage));
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

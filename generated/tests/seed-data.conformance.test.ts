@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('SeedData functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.discover !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.discover !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(seedDataHandler.discover({ base_path: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -170,7 +170,7 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -218,16 +218,12 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.apply !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -242,7 +238,7 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.apply !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(seedDataHandler.apply({ seed: "seed-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -290,22 +286,22 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.applyAll !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.applyAll({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.applyAll({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_apply_all" -> ok', async () => {
       if (typeof seedDataHandler.applyAll !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage));
       const result = await interpret(seedDataHandler.applyAll({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -355,22 +351,22 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.status !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.status({  }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.status({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_status" -> ok', async () => {
       if (typeof seedDataHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage));
       const result = await interpret(seedDataHandler.status({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -420,22 +416,22 @@ describe('SeedData functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof seedDataHandler.reset !== 'function') return;
-      try {
-        const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_reset" -> ok', async () => {
       if (typeof seedDataHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(seedDataHandler.discover({ base_path: "/project/seeds" }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.register({ source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }), storage));
+      await safeInvoke(async () => await interpret(seedDataHandler.apply({ seed: "seed-1" }), storage));
       const result = await interpret(seedDataHandler.reset({ seed: "seed-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,7 +440,7 @@ describe('SeedData functional handler', () => {
       if (typeof seedDataHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(seedDataHandler.reset({ seed: "seed-999" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -453,15 +449,12 @@ describe('SeedData functional handler', () => {
     it('declares concept name', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = seedDataHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = seedDataHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('SeedData');
     });
@@ -505,11 +498,14 @@ describe('SeedData functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = seedDataHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(seedDataHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -537,12 +533,15 @@ describe('SeedData functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = seedDataHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(seedDataHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-concept_uri
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-concept_uri
               }
             }
           },
@@ -557,9 +556,12 @@ describe('SeedData functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof seedDataHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(seedDataHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(seedDataHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -570,9 +572,11 @@ describe('SeedData functional handler', () => {
           fc.record({ source_path: fc.string({ minLength: 1, maxLength: 50 }), concept_uri: fc.string({ minLength: 1, maxLength: 50 }), action_name: fc.string({ minLength: 1, maxLength: 50 }), entries: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = seedDataHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = seedDataHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

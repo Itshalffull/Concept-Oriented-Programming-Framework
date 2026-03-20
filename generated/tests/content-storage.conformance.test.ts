@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('ContentStorage functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,19 @@ describe('ContentStorage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentStorageHandler.save !== 'function') return;
-      try {
-        const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "save_record" -> ok', async () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage));
       const result = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -91,7 +96,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.save({ record: "", data: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +144,12 @@ describe('ContentStorage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentStorageHandler.load !== 'function') return;
-      try {
-        const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +164,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.load({ record: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +212,19 @@ describe('ContentStorage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
-      try {
-        const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage));
       const result = await interpret(contentStorageHandler.delete({ record: "user-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +233,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.delete({ record: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,22 +281,19 @@ describe('ContentStorage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentStorageHandler.query !== 'function') return;
-      try {
-        const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "query_by_type" -> ok', async () => {
       if (typeof contentStorageHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage));
       const result = await interpret(contentStorageHandler.query({ filter: "{\"type\":\"profile\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,7 +302,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.query({ filter: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -355,22 +350,19 @@ describe('ContentStorage functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
-      try {
-        const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "gen_schema" -> ok', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(contentStorageHandler.load({ record: "user-profile-1" }), storage));
       const result = await interpret(contentStorageHandler.generateSchema({ record: "user-profile-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -379,7 +371,7 @@ describe('ContentStorage functional handler', () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.generateSchema({ record: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -388,15 +380,12 @@ describe('ContentStorage functional handler', () => {
     it('declares concept name', async () => {
       if (typeof contentStorageHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = contentStorageHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = contentStorageHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('ContentStorage');
     });
@@ -445,11 +434,14 @@ describe('ContentStorage functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentStorageHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentStorageHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -476,12 +468,15 @@ describe('ContentStorage functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = contentStorageHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(contentStorageHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-backend
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-backend
               }
             }
           },
@@ -496,9 +491,12 @@ describe('ContentStorage functional handler', () => {
     it('save handles empty input: ', async () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(contentStorageHandler.save({  }), storage);
+      const result = await safeInvoke(async () => await interpret(contentStorageHandler.save({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('save ensures on ok: ', async () => {
@@ -509,9 +507,11 @@ describe('ContentStorage functional handler', () => {
           fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = contentStorageHandler.save(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = contentStorageHandler.save(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

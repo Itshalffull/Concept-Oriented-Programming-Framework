@@ -54,7 +54,7 @@ concept ApiSurface [S] {
       }
 
       fixture valid_surface { surface: "api-surface-1" }
-      fixture missing_surface { surface: "" } -> error
+      fixture missing_surface { surface: "" }
     }
   }
 

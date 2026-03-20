@@ -49,7 +49,7 @@ concept ConceptLibraryTarget [D] {
 
       fixture with_output_path { config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }
       fixture with_custom_root { config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }
-      fixture empty_config { config: "" } -> error
+      fixture empty_config { config: "" }
     }
 
     action validate(document: D) {

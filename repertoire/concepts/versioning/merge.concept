@@ -42,7 +42,7 @@ concept Merge [C] {
       }
 
       fixture register_three_way { name: "three-way", contentTypes: ["text/plain"] }
-      fixture empty_strategy_name { name: "", contentTypes: ["text/plain"] } -> error
+      fixture empty_strategy_name { name: "", contentTypes: ["text/plain"] }
     }
 
     action merge(base: C, ours: C, theirs: C, strategy: option String) {

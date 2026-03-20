@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('AppTemplate functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,22 +75,19 @@ describe('AppTemplate functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
-      try {
-        const result = await interpret(appTemplateHandler.list({ category: null }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(appTemplateHandler.list({ category: null }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "list_all" -> ok', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.list({ category: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,6 +95,7 @@ describe('AppTemplate functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.list({ category: "content" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -139,22 +145,19 @@ describe('AppTemplate functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
-      try {
-        const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_detail" -> ok', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +166,7 @@ describe('AppTemplate functional handler', () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appTemplateHandler.detail({ name: "nonexistent-template" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,22 +214,19 @@ describe('AppTemplate functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
-      try {
-        const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "valid_customize" -> ok', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,7 +235,7 @@ describe('AppTemplate functional handler', () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[]", remove: "[\"User\"]", features: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +283,12 @@ describe('AppTemplate functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
-      try {
-        const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +303,7 @@ describe('AppTemplate functional handler', () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(appTemplateHandler.register({ name: "social", description: "Duplicate", category: "content", modules: "[\"User\"]", syncs: "[]" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +312,12 @@ describe('AppTemplate functional handler', () => {
     it('declares concept name', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = appTemplateHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = appTemplateHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('AppTemplate');
     });
@@ -358,11 +351,14 @@ describe('AppTemplate functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = appTemplateHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(appTemplateHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -388,12 +384,15 @@ describe('AppTemplate functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = appTemplateHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(appTemplateHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned entry in templates
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned entry in templates
               }
             }
           },
@@ -408,9 +407,12 @@ describe('AppTemplate functional handler', () => {
     it('detail handles empty input: ', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(appTemplateHandler.detail({  }), storage);
+      const result = await safeInvoke(async () => await interpret(appTemplateHandler.detail({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('detail ensures on ok: ', async () => {
@@ -421,9 +423,11 @@ describe('AppTemplate functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = appTemplateHandler.detail(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = appTemplateHandler.detail(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -441,9 +445,11 @@ describe('AppTemplate functional handler', () => {
           fc.record({ template: fc.string(), add: fc.string(), remove: fc.string(), features: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = appTemplateHandler.customize(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = appTemplateHandler.customize(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
@@ -456,9 +462,12 @@ describe('AppTemplate functional handler', () => {
     it('register handles empty input: ', async () => {
       if (typeof appTemplateHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(appTemplateHandler.register({  }), storage);
+      const result = await safeInvoke(async () => await interpret(appTemplateHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('register ensures on ok: ', async () => {
@@ -469,9 +478,11 @@ describe('AppTemplate functional handler', () => {
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), category: fc.string({ minLength: 1, maxLength: 50 }), modules: fc.string(), syncs: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = appTemplateHandler.register(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = appTemplateHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }

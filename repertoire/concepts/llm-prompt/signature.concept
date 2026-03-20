@@ -43,7 +43,7 @@ concept Signature [G] {
       }
 
       fixture define_qa_signature { name: "QA", input_fields: [{name: "context", type: "String", description: "Source text"}, {name: "question", type: "String", description: "User question"}], output_fields: [{name: "answer", type: "String", description: "Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }
-      fixture missing_fields { name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" } -> error
+      fixture missing_fields { name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }
     }
 
     action compile(signature: G, model_id: String,

@@ -1,4 +1,4 @@
-// @clef-handler style=imperative
+// @clef-handler style=functional
 // ThemeImplementationEntity diffFromSpec — Functional (Monadic) Implementation
 //
 // Compares a generated theme implementation against its theme spec to find

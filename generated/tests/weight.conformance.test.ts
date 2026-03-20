@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Weight functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Weight functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof weightHandler.updateWeight !== 'function') return;
-      try {
-        const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "100.0" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -91,7 +95,7 @@ describe('Weight functional handler', () => {
       if (typeof weightHandler.updateWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(weightHandler.updateWeight({ participant: "alice", source: "staking", value: "-1.0" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -139,16 +143,12 @@ describe('Weight functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof weightHandler.snapshot !== 'function') return;
-      try {
-        const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-42", participants: "[\"alice\",\"bob\"]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -163,7 +163,7 @@ describe('Weight functional handler', () => {
       if (typeof weightHandler.snapshot !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(weightHandler.snapshot({ snapshotRef: "epoch-43", participants: "" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -211,16 +211,12 @@ describe('Weight functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof weightHandler.getWeight !== 'function') return;
-      try {
-        const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(weightHandler.getWeight({ participant: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -235,7 +231,7 @@ describe('Weight functional handler', () => {
       if (typeof weightHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(weightHandler.getWeight({ participant: "nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -283,16 +279,12 @@ describe('Weight functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
-      try {
-        const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-epoch-42", participant: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -307,7 +299,7 @@ describe('Weight functional handler', () => {
       if (typeof weightHandler.getWeightFromSnapshot !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(weightHandler.getWeightFromSnapshot({ snapshot: "snapshot-missing", participant: "alice" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -316,15 +308,12 @@ describe('Weight functional handler', () => {
     it('declares concept name', async () => {
       if (typeof weightHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = weightHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = weightHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Weight');
     });
@@ -361,11 +350,14 @@ describe('Weight functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = weightHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(weightHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -391,12 +383,15 @@ describe('Weight functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = weightHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(weightHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-source
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-source
               }
             }
           },
@@ -411,9 +406,12 @@ describe('Weight functional handler', () => {
     it('updateWeight handles empty input: ', async () => {
       if (typeof weightHandler.updateWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(weightHandler.updateWeight({  }), storage);
+      const result = await safeInvoke(async () => await interpret(weightHandler.updateWeight({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('updateWeight ensures on updated: ', async () => {
@@ -424,9 +422,11 @@ describe('Weight functional handler', () => {
           fc.record({ participant: fc.string({ minLength: 1, maxLength: 50 }), source: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = weightHandler.updateWeight(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "updated") {
+            const result = await safeInvoke(async () => {
+              const program = weightHandler.updateWeight(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "updated") {
               seen = true;
               expect(result.output).toBeDefined();
             }

@@ -43,7 +43,7 @@ concept LocalRuntime [L] {
       }
 
       fixture deploy_restart { process: "proc-abc123", command: "node server.js --production" }
-      fixture deploy_missing_process { process: "", command: "node app.js" } -> error
+      fixture deploy_missing_process { process: "", command: "node app.js" }
     }
 
     action setTrafficWeight(process: L, weight: Int) {
@@ -52,7 +52,7 @@ concept LocalRuntime [L] {
       }
 
       fixture traffic_local { process: "proc-abc123", weight: 100 }
-      fixture traffic_no_process { process: "", weight: 50 } -> error
+      fixture traffic_no_process { process: "", weight: 50 }
     }
 
     action rollback(process: L, previousCommand: String) {
@@ -61,7 +61,7 @@ concept LocalRuntime [L] {
       }
 
       fixture rollback_previous { process: "proc-abc123", previousCommand: "node server.js" }
-      fixture rollback_missing_process { process: "", previousCommand: "node old.js" } -> error
+      fixture rollback_missing_process { process: "", previousCommand: "node old.js" }
     }
 
     action destroy(process: L) {

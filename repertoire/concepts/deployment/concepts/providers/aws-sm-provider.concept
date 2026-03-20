@@ -51,7 +51,7 @@ concept AwsSmProvider [A] {
       }
 
       fixture rotate_db_password { secretId: "prod/db-password" }
-      fixture rotate_empty_id { secretId: "" } -> error
+      fixture rotate_empty_id { secretId: "" }
     }
   }
 

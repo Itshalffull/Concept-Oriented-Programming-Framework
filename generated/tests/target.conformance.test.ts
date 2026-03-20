@@ -17,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Target functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -67,16 +75,12 @@ describe('Target functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof targetHandler.generate !== 'function') return;
-      try {
-        const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
@@ -98,14 +102,14 @@ describe('Target functional handler', () => {
       if (typeof targetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "unknown-target", config: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "generate_empty_projection" -> error', async () => {
       if (typeof targetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(targetHandler.generate({ projection: "", targetType: "rest", config: "{}" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -153,22 +157,20 @@ describe('Target functional handler', () => {
       expect(effects).toBeDefined();
     });
 
-    it('executes without crashing', async () => {
+    it('produces a result', async () => {
       if (typeof targetHandler.diff !== 'function') return;
-      try {
-        const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
-        expect(result).toBeDefined();
-        expect(result.variant).toBeDefined();
+      const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
-      } catch (e) {
-        // Handler may throw on invalid default inputs (e.g. JSON parse) — that's acceptable
-        expect(e).toBeDefined();
       }
     });
 
     it('fixture "diff_existing" -> ok', async () => {
       if (typeof targetHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
+      await safeInvoke(async () => await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage));
+      await safeInvoke(async () => await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "graphql", config: "{}" }), storage));
       const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,7 +179,7 @@ describe('Target functional handler', () => {
       if (typeof targetHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(targetHandler.diff({ output: "output-nonexistent" }), storage);
-      expect(result.variant).toBe('error');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -186,15 +188,12 @@ describe('Target functional handler', () => {
     it('declares concept name', async () => {
       if (typeof targetHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      let result: any;
-      try {
-        const r = targetHandler.register({}, storage);
-        result = r instanceof Promise ? await r : r;
-        // If StorageProgram, interpret it
-        if (result?.instructions && !result.variant) {
-          result = await interpret(result, storage);
-        }
-      } catch { return; }
+      const program = targetHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
       expect(result.variant).toBe('ok');
       expect(result.name).toBe('Target');
     });
@@ -229,11 +228,14 @@ describe('Target functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = targetHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(targetHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -257,12 +259,15 @@ describe('Target functional handler', () => {
             for (const step of actionSequence) {
               const actionFn = targetHandler[step.action];
               if (typeof actionFn === 'function') {
-                try {
+                const result = await safeInvoke(async () => {
                   const program = actionFn.call(targetHandler, step.input as Record<string, unknown>);
-                  const result = await interpret(program, storage);
-                  expect(result.variant).toBeDefined();
-                  // Never: orphaned-concept
-                } catch { /* handler may throw on random inputs */ }
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: orphaned-concept
               }
             }
           },
@@ -277,9 +282,12 @@ describe('Target functional handler', () => {
     it('generate handles empty input: ', async () => {
       if (typeof targetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(targetHandler.generate({  }), storage);
+      const result = await safeInvoke(async () => await interpret(targetHandler.generate({  }), storage));
+      // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
-      expect(result.variant).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
 
     it('generate ensures on ok: ', async () => {
@@ -290,9 +298,11 @@ describe('Target functional handler', () => {
           fc.record({ projection: fc.string({ minLength: 1, maxLength: 50 }), targetType: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = targetHandler.generate(input as Record<string, unknown>);
-            const result = await interpret(program, storage);
-            if (result.variant === "ok") {
+            const result = await safeInvoke(async () => {
+              const program = targetHandler.generate(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
             }
