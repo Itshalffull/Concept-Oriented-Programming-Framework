@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T14:23:42.349Z",
+  "generatedAt": "2026-03-20T14:29:13.500Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -3242,6 +3242,18 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
+      "relativePath": "openapi/openapi.yaml",
+      "hash": "a5b0c8fc529545c426dec3882b39c98d5a8df76f78ae3f21ef120d629d3617a9",
+      "target": "openapi"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
+      "relativePath": "asyncapi/asyncapi.yaml",
+      "hash": "01303f1f84748c5faf5f83a3f46758c893056005347f84305b376062cc5c06c5",
+      "target": "asyncapi"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/claude-skills.ts",
       "relativePath": "claude-skills/claude-skills.ts",
       "hash": "0d70e0c302eab8c92af99e6beb9bde2af47c095a31c0c02cdcb270a1cf28e77e",
@@ -3260,6 +3272,18 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.ts",
+      "relativePath": "openapi/openapi.ts",
+      "hash": "04a09bafdb0925226b18e50c41f931c8a89e3856cec6010b838ddd073cf1a81c",
+      "target": "openapi"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.ts",
+      "relativePath": "asyncapi/asyncapi.ts",
+      "hash": "c20b9b7b9ea5bfe4cd80da2722e011b24d82ddd0c1307696d4c4a29d59b8960a",
+      "target": "asyncapi"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/project-instructions.ts",
       "relativePath": "project-instructions/project-instructions.ts",
       "hash": "74cdcdd94927ee524cc3d77739055960ae7539761d8a19bde571b5375a202795",
@@ -3270,6 +3294,8 @@
     "claude-skills": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills",
     "cli": "/home/user/Concept-Oriented-Programming-Framework/cli/src",
     "mcp": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp",
+    "openapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
+    "asyncapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
     "project-instructions": "/home/user/Concept-Oriented-Programming-Framework",
     "_default": "/home/user/Concept-Oriented-Programming-Framework/generated/devtools"
   }

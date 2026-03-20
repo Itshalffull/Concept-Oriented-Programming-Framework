@@ -44,6 +44,22 @@ targets:
       Score queries, and code generation tools for any
       MCP-compatible LLM client.
 
+  openapi:
+    name: clef-devtools
+    outputDir: ./generated/specs
+    version: 0.2.0
+    description: >
+      OpenAPI 3.1 specification for the Clef DevTools API.
+      Generated from concept specs — all actions exposed as REST endpoints.
+
+  asyncapi:
+    name: clef-devtools
+    outputDir: ./generated/specs
+    version: 0.2.0
+    description: >
+      AsyncAPI 3.0 specification for Clef DevTools events.
+      Generated from concept specs — write actions produce async events.
+
   project-instructions:
     description: >
       Generate project instruction files for AI coding assistants.

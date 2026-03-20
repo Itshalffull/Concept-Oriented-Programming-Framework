@@ -237,7 +237,7 @@ function _buildHandler(
 
       const mappings = getMappings();
       for (const target of manifest.targets) {
-        if (!mappings.targetProviders[target]) {
+        if (!mappings.targetProviders[target] && !mappings.specProviders[target] && !mappings.sdkProviders[target]) {
           let p = createProgram();
           return complete(p, 'missingProvider', { target });
         }

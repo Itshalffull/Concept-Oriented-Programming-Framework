@@ -537,17 +537,21 @@ async function interfaceGenerate(
 
     // Build target → provider mapping from registration metadata
     const targetToProvider: Record<string, string> = {};
+    const providerTypes: Record<string, string> = {};
     for (const [name, provider] of Object.entries(providers)) {
       if (!provider.register) continue;
       try {
         const meta = await provider.register({}, createInMemoryStorage());
         if (meta?.variant === 'ok' && meta.targetKey) {
           targetToProvider[meta.targetKey as string] = name;
+          providerTypes[name] = (meta.providerType as string) || 'target';
         }
       } catch { /* skip */ }
     }
 
-    // Only dispatch to targets declared in the manifest
+    // Dispatch to targets declared in the manifest.
+    // "target" providers get one call per concept (projection).
+    // "spec" providers get one call with all concepts (allProjections).
     const manifestTargets = (effectManifestYaml.targets as Record<string, unknown>) || {};
     const allGenFiles: GeneratedFile[] = [];
     const genErrors: string[] = [];
@@ -557,14 +561,17 @@ async function interfaceGenerate(
       if (!providerName) continue;
       const provider = providers[providerName];
       if (!provider?.generate) continue;
+      const pType = providerTypes[providerName] || 'target';
 
-      for (const proj of effectProjections) {
+      if (pType === 'spec') {
+        // Spec providers (OpenAPI, AsyncAPI) receive all projections at once
         try {
           const providerStorage = createInMemoryStorage();
           const result = await provider.generate(
             {
-              projection: JSON.stringify(proj),
+              allProjections: JSON.stringify(effectProjections),
               config: JSON.stringify(targetConfig || {}),
+              manifestYaml: JSON.stringify(effectManifestYaml),
               providerName,
               target: targetKey,
             },
@@ -572,20 +579,48 @@ async function interfaceGenerate(
           );
 
           if (result.variant === 'ok' && result.files) {
-            const files = result.files as GeneratedFile[];
-            // Prefix file paths with target key for output dir resolution
-            for (const f of files) {
+            for (const f of result.files as GeneratedFile[]) {
               allGenFiles.push({
                 path: f.path.startsWith(targetKey + '/') ? f.path : `${targetKey}/${f.path}`,
                 content: f.content as string,
               });
             }
           } else if (result.variant !== 'ok') {
-            genErrors.push(`${providerName}/${proj.conceptName}: ${result.variant}`);
+            genErrors.push(`${providerName}: ${result.variant} — ${(result as Record<string, unknown>).reason || ''}`);
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
-          genErrors.push(`${providerName}/${proj.conceptName}: ${msg}`);
+          genErrors.push(`${providerName}: ${msg}`);
+        }
+      } else {
+        // Target providers (skills, CLI, MCP) receive one projection at a time
+        for (const proj of effectProjections) {
+          try {
+            const providerStorage = createInMemoryStorage();
+            const result = await provider.generate(
+              {
+                projection: JSON.stringify(proj),
+                config: JSON.stringify(targetConfig || {}),
+                providerName,
+                target: targetKey,
+              },
+              providerStorage,
+            );
+
+            if (result.variant === 'ok' && result.files) {
+              for (const f of result.files as GeneratedFile[]) {
+                allGenFiles.push({
+                  path: f.path.startsWith(targetKey + '/') ? f.path : `${targetKey}/${f.path}`,
+                  content: f.content as string,
+                });
+              }
+            } else if (result.variant !== 'ok') {
+              genErrors.push(`${providerName}/${proj.conceptName}: ${result.variant}`);
+            }
+          } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : String(err);
+            genErrors.push(`${providerName}/${proj.conceptName}: ${msg}`);
+          }
         }
       }
     }
