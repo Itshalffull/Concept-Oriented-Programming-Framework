@@ -57,6 +57,8 @@ concept WidgetStateEntity [S] {
         Find states in this widget's FSM that no transition
         leads to (dead states). Results as serialized JSON array.
       }
+      fixture unreachable_dialog { widget: "dialog" }
+      fixture unreachable_empty { widget: "" } -> error
     }
 
     action traceEvent(widget: String, event: String) {
@@ -69,6 +71,8 @@ concept WidgetStateEntity [S] {
         States where this event has no transition.
         Results as serialized JSON array.
       }
+      fixture trace_open_event { widget: "dialog", event: "open" }
+      fixture trace_empty_widget { widget: "", event: "close" } -> error
     }
 
     action get(widgetState: S) {
@@ -78,6 +82,8 @@ concept WidgetStateEntity [S] {
       -> notfound() {
         State does not exist.
       }
+      fixture get_valid { widgetState: "widget-state-entity-1" }
+      fixture get_missing { widgetState: "nonexistent-id" } -> error
     }
   }
 
