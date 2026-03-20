@@ -62,6 +62,10 @@ concept KindSystem [K] {
         Edge would create a cycle in the kind graph,
         or from/to kinds don't exist.
       }
+
+      fixture connect_parse { from: "ConceptDSL", to: "ConceptAST", relation: "parses_to", transformName: "ConceptParser" }
+      fixture connect_self_loop { from: "ConceptAST", to: "ConceptAST", relation: "normalizes_to" } -> invalid
+      fixture connect_missing_kind { from: "NonexistentKind", to: "ConceptAST", relation: "parses_to" } -> invalid
     }
 
     action route(from: K, to: K) {
@@ -73,6 +77,9 @@ concept KindSystem [K] {
       -> unreachable(message: String) {
         No valid path exists between these kinds.
       }
+
+      fixture route_connected { from: "ConceptDSL", to: "TypeScriptFiles" }
+      fixture route_same { from: "ConceptAST", to: "ConceptAST" }
     }
 
     action validate(from: K, to: K) {
@@ -85,6 +92,9 @@ concept KindSystem [K] {
         No direct edge exists. Returns nearest valid target
         kinds reachable from `from` as suggestions.
       }
+
+      fixture validate_direct { from: "ConceptDSL", to: "ConceptAST" }
+      fixture validate_no_edge { from: "ConceptDSL", to: "RustFiles" } -> invalid
     }
 
     action dependents(kind: K) {
@@ -93,6 +103,9 @@ concept KindSystem [K] {
         Used by BuildCache for cascading invalidation: "if
         ConceptManifest changed, what other kinds are affected?"
       }
+
+      fixture dependents_ast { kind: "ConceptAST" }
+      fixture dependents_leaf { kind: "TypeScriptFiles" }
     }
 
     action producers(kind: K) {
@@ -100,6 +113,9 @@ concept KindSystem [K] {
         What transforms can produce this kind?
         Used for discoverability and reverse dependency analysis.
       }
+
+      fixture producers_ast { kind: "ConceptAST" }
+      fixture producers_source { kind: "ConceptDSL" }
     }
 
     action consumers(kind: K) {
@@ -107,6 +123,9 @@ concept KindSystem [K] {
         What transforms consume this kind?
         Used for forward impact analysis.
       }
+
+      fixture consumers_ast { kind: "ConceptAST" }
+      fixture consumers_artifact { kind: "TypeScriptFiles" }
     }
 
     action graph() {

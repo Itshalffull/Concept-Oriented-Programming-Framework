@@ -53,6 +53,9 @@ concept Migration [M] {
       -> failed(migration: M, reason: String) {
         Storage backend rejected schema expansion.
       }
+
+      fixture expand_valid { migration: "mig-abc123" }
+      fixture expand_missing { migration: "" } -> error
     }
 
     action migrate(migration: M) {
@@ -63,6 +66,9 @@ concept Migration [M] {
       -> partial(migration: M, migrated: Int, failed: Int, errors: list String) {
         Some records failed migration. Manual review needed.
       }
+
+      fixture migrate_valid { migration: "mig-abc123" }
+      fixture migrate_missing { migration: "" } -> error
     }
 
     action contract(migration: M) {
@@ -74,12 +80,18 @@ concept Migration [M] {
         Contraction failed. Reverted to expanded state.
         Both schemas still present.
       }
+
+      fixture contract_valid { migration: "mig-abc123" }
+      fixture contract_missing { migration: "" } -> error
     }
 
     action status(migration: M) {
       -> ok(migration: M, phase: String, progress: Float) {
         Current migration state.
       }
+
+      fixture status_valid { migration: "mig-abc123" }
+      fixture status_missing { migration: "" } -> error
     }
   }
 
