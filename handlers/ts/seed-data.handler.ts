@@ -256,7 +256,7 @@ const _handler: FunctionalConceptHandler = {
         applied_at: new Date().toISOString(),
       });
       return complete(sub, 'applied', { entryCount });
-    }, '_traverseResults');
+    }, '_traverseResults', { writes: ['seed-data'], completionVariants: ['applied', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;

@@ -157,7 +157,7 @@ const _handler: FunctionalConceptHandler = {
         return complete(sub, 'invalidated', { stepKey: entry.stepKey });
       }
       return complete(sub, 'skipped', {});
-    }, '_traverseResults');
+    }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
@@ -190,7 +190,7 @@ const _handler: FunctionalConceptHandler = {
         return complete(sub, 'invalidated', { stepKey });
       }
       return complete(sub, 'skipped', {});
-    }, '_traverseResults');
+    }, '_traverseResults', { writes: ['entries'], completionVariants: ['invalidated', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
@@ -214,7 +214,7 @@ const _handler: FunctionalConceptHandler = {
       let sub = createProgram();
       sub = put(sub, ENTRIES_RELATION, entry.stepKey as string, { ...entry, stale: true });
       return complete(sub, 'ok', {});
-    }, '_traverseResults');
+    }, '_traverseResults', { writes: ['entries'], completionVariants: ['ok'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;

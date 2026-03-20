@@ -563,28 +563,55 @@ export function compose<A, B>(
  *     sub = put(sub, 'entries', entry.key as string, { ...entry, stale: true });
  *     return complete(sub, 'ok', { key: entry.key });
  *   }, 'results');
+ *
+ * When the body accesses item properties that are undefined on the sentinel,
+ * pass declared effects so static analysis doesn't need to run the body:
+ *
+ *   p = traverse(p, 'allEntries', 'entry', (item) => { ... }, 'results', {
+ *     reads: ['entries'],
+ *     writes: ['entries'],
+ *     completionVariants: ['invalidated', 'skipped'],
+ *   });
  */
+export interface TraverseDeclaredEffects {
+  reads?: string[];
+  writes?: string[];
+  completionVariants?: string[];
+  performs?: string[];
+}
+
 export function traverse<A>(
   program: StorageProgram<unknown>,
   sourceBinding: string,
   itemBinding: string,
   body: (item: unknown, bindings: Bindings) => StorageProgram<A>,
   bindAs: string,
+  declaredEffects?: TraverseDeclaredEffects,
 ): StorageProgram<unknown> {
   if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
 
-  // Build a sample program to extract static effects for analysis.
-  // The body may throw on empty sentinel data — fall back to empty effects.
-  let sampleEffects: EffectSet;
-  try {
-    sampleEffects = body({}, {}).effects;
-  } catch {
-    sampleEffects = emptyEffects();
+  let bodyEffects: EffectSet;
+  if (declaredEffects) {
+    // Use structurally declared effects — no sentinel execution needed.
+    bodyEffects = {
+      reads: new Set(declaredEffects.reads || []),
+      writes: new Set(declaredEffects.writes || []),
+      completionVariants: new Set(declaredEffects.completionVariants || []),
+      performs: new Set(declaredEffects.performs || []),
+    };
+  } else {
+    // Fall back to running body with sentinel data to extract effects.
+    try {
+      bodyEffects = body({}, {}).effects;
+    } catch {
+      bodyEffects = emptyEffects();
+    }
   }
+
   return {
-    instructions: [...program.instructions, { tag: 'traverse', sourceBinding, itemBinding, body, bindAs }],
+    instructions: [...program.instructions, { tag: 'traverse', sourceBinding, itemBinding, body, bindAs, declaredEffects: declaredEffects || undefined }],
     terminated: false,
-    effects: mergeEffects(program.effects, sampleEffects),
+    effects: mergeEffects(program.effects, bodyEffects),
   };
 }
 
@@ -608,9 +635,12 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
       for (const r of extractReadSet(instr.second)) reads.add(r);
     }
     if (instr.tag === 'traverse') {
-      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
-      if (!sample) continue;
-      for (const r of extractReadSet(sample)) reads.add(r);
+      if (instr.declaredEffects?.reads) {
+        for (const r of instr.declaredEffects.reads) reads.add(r);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const r of extractReadSet(sample)) reads.add(r);
+      }
     }
   }
   return reads;
@@ -631,9 +661,12 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
       for (const w of extractWriteSet(instr.second)) writes.add(w);
     }
     if (instr.tag === 'traverse') {
-      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
-      if (!sample) continue;
-      for (const w of extractWriteSet(sample)) writes.add(w);
+      if (instr.declaredEffects?.writes) {
+        for (const w of instr.declaredEffects.writes) writes.add(w);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const w of extractWriteSet(sample)) writes.add(w);
+      }
     }
   }
   return writes;
@@ -655,9 +688,12 @@ export function extractCompletionVariants(program: StorageProgram<unknown>): Set
       for (const v of extractCompletionVariants(instr.second)) variants.add(v);
     }
     if (instr.tag === 'traverse') {
-      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
-      if (!sample) continue;
-      for (const v of extractCompletionVariants(sample)) variants.add(v);
+      if (instr.declaredEffects?.completionVariants) {
+        for (const v of instr.declaredEffects.completionVariants) variants.add(v);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const v of extractCompletionVariants(sample)) variants.add(v);
+      }
     }
   }
   return variants;
@@ -679,9 +715,12 @@ export function extractPerformSet(program: StorageProgram<unknown>): Set<string>
       for (const p of extractPerformSet(instr.second)) performs.add(p);
     }
     if (instr.tag === 'traverse') {
-      let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
-      if (!sample) continue;
-      for (const p of extractPerformSet(sample)) performs.add(p);
+      if (instr.declaredEffects?.performs) {
+        for (const p of instr.declaredEffects.performs) performs.add(p);
+      } else {
+        let sample: StorageProgram<unknown> | null = null; try { sample = instr.body({}, {}); } catch { /* body threw on sentinel */ }
+        if (sample) for (const p of extractPerformSet(sample)) performs.add(p);
+      }
     }
   }
   return performs;
@@ -737,7 +776,11 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
       if (instr.tag === 'traverse') {
         let bodyStr = '(empty)';
         try { bodyStr = serializeProgram(instr.body({}, {})); } catch { /* body threw on sentinel */ }
-        return { tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding, bindAs: instr.bindAs, body: bodyStr };
+        return {
+          tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding,
+          bindAs: instr.bindAs, body: bodyStr,
+          ...(instr.declaredEffects ? { declaredEffects: instr.declaredEffects } : {}),
+        };
       }
       return instr;
     }),

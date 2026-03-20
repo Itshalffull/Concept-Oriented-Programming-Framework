@@ -82,7 +82,7 @@ const _handler: FunctionalConceptHandler = {
             concepts: (typeof entity.conceptCount === 'number') ? entity.conceptCount : 0,
             syncs: (typeof entity.syncCount === 'number') ? entity.syncCount : 0,
           });
-        }, '_validateResults');
+        }, '_validateResults', { writes: ['suite-manager'], completionVariants: ['ok'] });
 
         return completeFrom(thenP, 'ok', (b) => {
           const results = (b._validateResults || []) as Array<Record<string, unknown>>;

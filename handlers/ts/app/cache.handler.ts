@@ -87,7 +87,7 @@ const _cacheHandler: FunctionalConceptHandler = {
         return complete(sub, 'deleted', {});
       }
       return complete(sub, 'skipped', {});
-    }, '_traverseResults');
+    }, '_traverseResults', { writes: ['cacheEntry'], completionVariants: ['deleted', 'skipped'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;

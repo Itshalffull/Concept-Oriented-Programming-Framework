@@ -62,7 +62,7 @@ const _handler: FunctionalConceptHandler = {
           sub = del(sub, 'transport', key);
           sub = del(sub, 'available', key);
           return complete(sub, 'ok', {});
-        }, '_deleteResults');
+        }, '_deleteResults', { writes: ['concepts', 'uri', 'transport', 'available'], completionVariants: ['ok'] });
         return complete(t, 'ok', {});
       },
       (elseP) => complete(elseP, 'ok', {}),

@@ -219,7 +219,7 @@ const _handler: FunctionalConceptHandler = {
         diffSummary: null,
       });
       return complete(sub, 'ok', {});
-    }, '_approveResults');
+    }, '_approveResults', { writes: ['snapshot-baselines', 'snapshot-comparisons'], completionVariants: ['ok'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const toApprove = (bindings.toApprove || []) as Array<Record<string, unknown>>;
@@ -377,7 +377,7 @@ const _handler: FunctionalConceptHandler = {
       let sub = createProgram();
       sub = del(sub, BASELINES, orphan.path as string);
       return complete(sub, 'ok', { path: orphan.path });
-    }, '_cleanResults');
+    }, '_cleanResults', { writes: ['snapshot-baselines'], completionVariants: ['ok'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const orphanedList = (bindings.orphanedList || []) as Array<Record<string, unknown>>;

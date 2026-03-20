@@ -104,7 +104,7 @@ const _handler: FunctionalConceptHandler = {
               let sub = createProgram();
               sub = put(sub, 'ref', key, { ...record, target: newHash });
               return complete(sub, 'updated', {});
-            }, '_updateResults');
+            }, '_updateResults', { writes: ['ref'], completionVariants: ['updated'] });
 
             // Write reflog entry
             const seq = ++idCounter;
@@ -171,7 +171,7 @@ const _handler: FunctionalConceptHandler = {
           });
 
           return complete(sub, 'deleted', {});
-        }, '_deleteResults');
+        }, '_deleteResults', { writes: ['ref', 'ref-log'], completionVariants: ['deleted'] });
 
         return complete(b2, 'ok', {});
       },

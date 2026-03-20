@@ -131,7 +131,7 @@ const _sessionHandler: FunctionalConceptHandler = {
       let sub = createProgram();
       sub = del(sub, 'session', sess.sid as string);
       return complete(sub, 'ok', {});
-    }, '_deleteResults');
+    }, '_deleteResults', { writes: ['session'], completionVariants: ['ok'] });
 
     // Clear the user's session list
     p = put(p, 'userSessions', userId, { userId, sessionIds: JSON.stringify([]) });

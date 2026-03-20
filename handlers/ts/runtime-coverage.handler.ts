@@ -372,7 +372,7 @@ const _handler: FunctionalConceptHandler = {
             lastExercised: now,
           });
           return complete(sub, 'updated', { entry: id });
-        }, '_updateResults');
+        }, '_updateResults', { writes: ['runtime-coverage'], completionVariants: ['updated'] });
 
         return completeFrom(thenP, 'ok', (bindings) => {
           const results = (bindings._updateResults || []) as Array<Record<string, unknown>>;

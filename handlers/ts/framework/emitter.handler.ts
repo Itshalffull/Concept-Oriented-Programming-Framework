@@ -256,7 +256,7 @@ const _handler: FunctionalConceptHandler = {
           return complete(r, 'written', { path: file.path, written: true, contentHash: hash });
         },
       );
-    }, '_batchResults');
+    }, '_batchResults', { reads: ['files'], writes: ['files', 'sourceMap'], completionVariants: ['checked', 'written'] });
 
     return completeFrom(p, 'ok', (bindings) => {
       const batchResults = (bindings._batchResults || []) as Array<Record<string, unknown>>;

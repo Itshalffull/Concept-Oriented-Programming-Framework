@@ -634,7 +634,10 @@ invalidateByKind(input: Record<string, unknown>) {
       return complete(sub, 'invalidated', { stepKey: entry.stepKey });
     }
     return complete(sub, 'skipped', {});
-  }, '_results');
+  }, '_results', {
+    writes: ['entries'],
+    completionVariants: ['invalidated', 'skipped'],
+  });
 
   return completeFrom(p, 'ok', (bindings) => {
     const results = (bindings._results || []) as Array<Record<string, unknown>>;
@@ -644,13 +647,16 @@ invalidateByKind(input: Record<string, unknown>) {
 }
 ```
 
-`traverse(p, sourceBinding, itemBinding, bodyFn, bindAs)`:
+`traverse(p, sourceBinding, itemBinding, bodyFn, bindAs, declaredEffects?)`:
 - **sourceBinding**: name of a bound array (from a prior `find`)
 - **itemBinding**: name to bind each item during iteration
 - **bodyFn**: `(item, bindings) => StorageProgram` — sub-program for each element
 - **bindAs**: name to bind the collected results array
+- **declaredEffects** (optional): `{ reads?, writes?, completionVariants?, performs? }` — structural effect declaration for static analysis
 
-The interpreter executes each sub-program sequentially, collects their outputs, and binds the results array. Static analysis extracts effects from a sample invocation of the body.
+The interpreter executes each sub-program sequentially, collects their outputs, and binds the results array.
+
+**Always pass `declaredEffects`** when the body accesses item properties (which is almost always). Without it, the DSL runs the body with empty sentinel data `({}, {})` to extract effects — which throws if the body does `item.key`, `entry.stepKey`, etc. Declared effects make static analysis (completion coverage, read/write sets, purity classification) work correctly without running the body.
 
 **Never use imperative overrides for collection iteration** — `traverse` is the standard functional solution.
 

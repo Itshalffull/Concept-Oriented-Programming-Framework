@@ -87,7 +87,7 @@ const _themeHandler: FunctionalConceptHandler = {
             return complete(sub, 'deactivated', {});
           }
           return complete(sub, 'skipped', {});
-        }, '_deactivateResults');
+        }, '_deactivateResults', { writes: ['theme'], completionVariants: ['deactivated', 'skipped'] });
 
         // Activate the target theme
         b2 = putFrom(b2, 'theme', theme, (bindings) => {
@@ -134,7 +134,7 @@ const _themeHandler: FunctionalConceptHandler = {
             return complete(sub, 'activated', { theme: t.id });
           }
           return complete(sub, 'skipped', {});
-        }, '_fallbackResults');
+        }, '_fallbackResults', { writes: ['theme'], completionVariants: ['activated', 'skipped'] });
 
         return completeFrom(b2, 'ok', (bindings) => {
           const fallbackId = bindings._fallbackId as string | null;

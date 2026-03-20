@@ -90,7 +90,7 @@ const _handler: FunctionalConceptHandler = {
           let sub = createProgram();
           sub = put(sub, 'canvas-connector-entity', entityId, updated);
           return complete(sub, 'ok', {});
-        }, '_updateResults');
+        }, '_updateResults', { writes: ['canvas-connector-entity'], completionVariants: ['ok'] });
 
         return complete(elseP, 'ok', { connector_id: connectorId, kind });
       },

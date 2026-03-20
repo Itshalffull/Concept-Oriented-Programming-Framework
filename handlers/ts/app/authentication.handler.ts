@@ -142,7 +142,7 @@ const _authenticationHandler: FunctionalConceptHandler = {
           let sub = createProgram();
           sub = del(sub, 'token', tokenKey);
           return complete(sub, 'deleted', {});
-        }, '_deleteResults');
+        }, '_deleteResults', { writes: ['token'], completionVariants: ['deleted'] });
 
         // Update account with new credentials
         b2 = putFrom(b2, 'account', user, (bindings) => {

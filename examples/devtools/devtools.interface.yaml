@@ -7363,7 +7363,8 @@ project-instructions:
     Free monad DSL for building inspectable storage operation descriptions.
     Key concepts:
     - **Instructions**: `get`, `find`, `put`, `merge`, `del`, `branch`, `pure`,
-      `complete`, `perform` (transport effects), `getLens`/`putLens`/`modifyLens`
+      `complete`, `perform` (transport effects), `getLens`/`putLens`/`modifyLens`,
+      `traverse` (iterate over find results with declared effects)
     - **Structural Effect Tracking**: `EffectSet` tracks reads, writes,
       completion variants, and transport effects accumulated during construction.
       Purity (`pure | read-only | read-write`) is a first-class build-time property.
@@ -7372,6 +7373,17 @@ project-instructions:
     - **Analysis Providers** (`specs/monadic/providers/`): Pluggable analyses —
       commutativity, parallelism (Haxl/Stitch), dead branch detection, lens
       extraction, variant extraction, transport effect verification.
+    - **Traverse with Declared Effects**: When a traverse body accesses item
+      properties, pass declared effects so static analysis works without running
+      the body with sentinel data:
+      ```
+      p = traverse(p, 'items', '_item', (item) => { ... }, '_results', {
+        writes: ['myRelation'],
+        completionVariants: ['ok', 'skipped'],
+      });
+      ```
+      Without declared effects, the body is called with `({}, {})` to extract
+      effects — which throws if the body accesses item properties.
     - **Completion Coverage** (`specs/monadic/completion-coverage.concept`):
       Verifies every completion variant has a matching sync handler.
 
