@@ -30,6 +30,9 @@ concept WebhookEndpoint [W] {
       -> exists(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture register_deploy_hook { name: "deploy-webhook", url: "https://hooks.example.com/deploy", headers: "{\"X-Secret\":\"s3cret\"}" }
+      fixture register_slack_hook { name: "slack-notify", url: "https://hooks.slack.com/services/T00/B00/xxx", headers: "{}" }
     }
 
     action resolve(name: String) {
@@ -40,6 +43,9 @@ concept WebhookEndpoint [W] {
       -> notFound(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_deploy { name: "deploy-webhook" }
+      fixture resolve_unknown { name: "nonexistent" } -> notFound
     }
 
     action list() {
@@ -47,6 +53,8 @@ concept WebhookEndpoint [W] {
         Return all registered endpoints as a serialized JSON array
         with name and url.
       }
+
+      fixture valid {}
     }
   }
 

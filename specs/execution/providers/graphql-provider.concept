@@ -60,12 +60,18 @@ concept GraphqlProvider [Q] {
         The request failed at the network level before reaching
         the GraphQL server.
       }
+
+      fixture query_viewer { endpoint: "github-api", query: "{ viewer { login } }", variables: "{}", operationType: "query" }
+      fixture mutation_create { endpoint: "github-api", query: "mutation { createIssue(input: {}) { id } }", variables: "{}", operationType: "mutation" }
+      fixture execute_unknown_endpoint { endpoint: "nonexistent", query: "{ test }", variables: "{}", operationType: "query" } -> notFound
     }
 
     action list() {
       -> ok(endpoints: String) {
         Return all configured endpoints as a serialized JSON array.
       }
+
+      fixture valid {}
     }
   }
 

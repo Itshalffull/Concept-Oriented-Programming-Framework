@@ -27,6 +27,8 @@ concept WebSocketProvider [W] {
         Return provider metadata for PluginRegistry registration.
         Name is "websocket-provider", kind is "protocol".
       }
+
+      fixture valid {}
     }
 
     action configure(name: String, url: String, protocols: String) {
@@ -38,6 +40,9 @@ concept WebSocketProvider [W] {
       -> exists(name: String) {
         A connection with this name is already configured.
       }
+
+      fixture configure_events { name: "events", url: "wss://events.example.com", protocols: "[]" }
+      fixture configure_with_protocol { name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }
     }
 
     action send(connection: String, message: String) {
@@ -53,6 +58,9 @@ concept WebSocketProvider [W] {
         The message could not be sent due to a framing or
         serialization error.
       }
+
+      fixture send_json_message { connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }
+      fixture send_to_unknown { connection: "nonexistent", message: "hello" } -> notConnected
     }
 
     action receive(connection: String) {
@@ -66,6 +74,9 @@ concept WebSocketProvider [W] {
       -> closed() {
         The remote end closed the connection gracefully.
       }
+
+      fixture receive_from_events { connection: "events" }
+      fixture receive_from_unknown { connection: "nonexistent" } -> notConnected
     }
 
     action close(connection: String) {
@@ -75,6 +86,9 @@ concept WebSocketProvider [W] {
       -> notFound(connection: String) {
         No connection is configured with this name.
       }
+
+      fixture close_events { connection: "events" }
+      fixture close_unknown { connection: "nonexistent" } -> notFound
     }
 
     action list() {
@@ -82,6 +96,8 @@ concept WebSocketProvider [W] {
         Return all configured connections as a serialized JSON
         array with name, url, and status.
       }
+
+      fixture valid {}
     }
   }
 
