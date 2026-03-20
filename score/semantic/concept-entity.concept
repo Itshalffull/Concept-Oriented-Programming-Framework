@@ -38,6 +38,9 @@ concept ConceptEntity [E] {
       -> alreadyRegistered(existing: E) {
         A concept entity with this name is already registered.
       }
+
+      fixture register_article { name: "Article", source: "specs/article.concept", ast: "{}" }
+      fixture register_empty_name { name: "", source: "specs/empty.concept", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -47,6 +50,9 @@ concept ConceptEntity [E] {
       -> notfound() {
         No concept with this name exists.
       }
+
+      fixture get_article { name: "Article" }
+      fixture get_nonexistent { name: "Nonexistent" } -> error
     }
 
     action findByCapability(capability: String) {
@@ -54,6 +60,9 @@ concept ConceptEntity [E] {
         Return all concepts that declare the given capability.
         Results as serialized JSON array.
       }
+
+      fixture find_persistent_storage { capability: "persistent-storage" }
+      fixture find_unknown_capability { capability: "quantum-compute" } -> error
     }
 
     action findBySuite(suite: String) {
@@ -61,6 +70,9 @@ concept ConceptEntity [E] {
         Return all concepts belonging to the given suite.
         Results as serialized JSON array.
       }
+
+      fixture find_governance_suite { suite: "governance" }
+      fixture find_empty_suite { suite: "" } -> error
     }
 
     action generatedArtifacts(entity: E) {
@@ -68,6 +80,9 @@ concept ConceptEntity [E] {
         Return all files generated from this concept via
         Provenance lookup. Results as serialized JSON array.
       }
+
+      fixture artifacts_for_article { entity: "concept-entity-1" }
+      fixture artifacts_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
     action participatingSyncs(entity: E) {
@@ -76,6 +91,9 @@ concept ConceptEntity [E] {
         actions in when, where, or then clauses.
         Results as serialized JSON array.
       }
+
+      fixture syncs_for_article { entity: "concept-entity-1" }
+      fixture syncs_nonexistent { entity: "nonexistent-entity" } -> error
     }
 
     action checkCompatibility(a: E, b: E) {
@@ -87,6 +105,9 @@ concept ConceptEntity [E] {
         The concepts cannot compose due to conflicting
         requirements or type parameter mismatches.
       }
+
+      fixture compatible_concepts { a: "concept-entity-1", b: "concept-entity-2" }
+      fixture incompatible_missing { a: "nonexistent-a", b: "nonexistent-b" } -> error
     }
   }
 

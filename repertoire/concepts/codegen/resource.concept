@@ -57,6 +57,9 @@ concept Resource [R] {
       -> ok(resources: list { locator: String, kind: String, digest: String }) {
         List all tracked resources, optionally filtered by kind.
       }
+
+      fixture list_all {}
+      fixture list_by_kind { kind: "concept-spec" }
     }
 
     action remove(locator: String) {

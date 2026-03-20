@@ -110,6 +110,9 @@ concept Runtime [I] {
       -> notfound(instance: I) {
         No instance exists with this identifier.
       }
+
+      fixture update_endpoint { instance: "rt-abc123", endpoint: "https://user-service.vercel.app" }
+      fixture update_endpoint_missing { instance: "", endpoint: "https://app.vercel.app" } -> error
     }
 
     action getEndpoint(instance: I) {
