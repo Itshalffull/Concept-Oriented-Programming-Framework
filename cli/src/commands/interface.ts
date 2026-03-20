@@ -600,7 +600,9 @@ async function interfaceGenerate(
             const result = await provider.generate(
               {
                 projection: JSON.stringify(proj),
+                allProjections: JSON.stringify(effectProjections),
                 config: JSON.stringify(targetConfig || {}),
+                manifestYaml: JSON.stringify(effectManifestYaml),
                 providerName,
                 target: targetKey,
               },
