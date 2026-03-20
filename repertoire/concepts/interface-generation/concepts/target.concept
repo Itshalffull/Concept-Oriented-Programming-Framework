@@ -37,6 +37,11 @@ concept Target [T] {
       -> targetError(targetType: String, reason: String) {
         Provider-specific generation failure.
       }
+
+      fixture generate_rest { projection: "score-api-projection", targetType: "rest", config: "{}" }
+      fixture generate_graphql { projection: "score-api-projection", targetType: "graphql", config: "{}" }
+      fixture generate_unsupported { projection: "score-api-projection", targetType: "unknown-target", config: "{}" } -> error
+      fixture generate_empty_projection { projection: "", targetType: "rest", config: "{}" } -> error
     }
 
     action diff(output: T) {
@@ -47,6 +52,9 @@ concept Target [T] {
       -> noPrevious(output: T) {
         First generation run for this concept and target.
       }
+
+      fixture diff_existing { output: "output-rest-score-001" }
+      fixture diff_not_found { output: "output-nonexistent" } -> error
     }
   }
 

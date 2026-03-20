@@ -97,6 +97,9 @@ concept Conformance [C] {
         languages. conformance values: "full", "partial",
         "failing", "untested".
       }
+
+      fixture matrix_all {}
+      fixture matrix_filtered { concepts: ["password", "auth"] }
     }
 
     action traceability(concept: String) {
@@ -108,6 +111,9 @@ concept Conformance [C] {
         Return full traceability: which spec requirements
         are tested by which test vectors in which languages.
       }
+
+      fixture traceability_password { concept: "password" }
+      fixture traceability_missing { concept: "nonexistent" }
     }
   }
 

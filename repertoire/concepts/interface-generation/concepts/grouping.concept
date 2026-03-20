@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Grouping [G] {
 
@@ -35,6 +36,11 @@ concept Grouping [G] {
       -> emptyInput() {
         No items were provided to group.
       }
+
+      fixture per_concept_strategy { items: ["Order", "Product", "User"], config: "per-concept" }
+      fixture by_crud_strategy { items: ["createOrder", "getUser", "deleteProduct"], config: "by-crud" }
+      fixture invalid_strategy { items: ["A"], config: "nonexistent-strategy" } -> error
+      fixture empty_items { items: [], config: "per-concept" } -> error
     }
 
     action classify(actionName: String) {

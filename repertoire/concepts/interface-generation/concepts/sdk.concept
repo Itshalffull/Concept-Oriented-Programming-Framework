@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Sdk [S] {
 
@@ -39,6 +40,10 @@ concept Sdk [S] {
       -> languageError(language: String, reason: String) {
         Provider-specific generation failure.
       }
+
+      fixture typescript_sdk { projection: "user-projection", language: "typescript", config: "{\"packageName\":\"@acme/user-sdk\",\"version\":\"1.0.0\"}" }
+      fixture python_sdk { projection: "order-projection", language: "python", config: "{}" }
+      fixture unsupported_language { projection: "item-projection", language: "cobol", config: "{}" } -> error
     }
 
     action publish(package: S, registry: String) {
@@ -51,6 +56,9 @@ concept Sdk [S] {
       -> registryUnavailable(registry: String) {
         Cannot reach the package registry.
       }
+
+      fixture publish_to_npm { package: "sdk-typescript-12345", registry: "npm" }
+      fixture unknown_registry { package: "sdk-go-12345", registry: "unknown-registry" } -> error
     }
   }
 

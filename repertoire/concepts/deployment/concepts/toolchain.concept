@@ -97,6 +97,12 @@ concept Toolchain [T] {
         This language's toolchain doesn't support the
         requested target platform.
       }
+
+      fixture resolve_swift_compiler { language: "swift", platform: "linux-arm64" }
+      fixture resolve_ts_unit_runner { language: "typescript", platform: "linux-x86_64", category: "unit-runner" }
+      fixture resolve_ts_jest { language: "typescript", platform: "linux-x86_64", category: "unit-runner", toolName: "jest" }
+      fixture resolve_rust { language: "rust", platform: "linux-x86_64", versionConstraint: "1.77.0" }
+      fixture resolve_unsupported_lang { language: "cobol", platform: "linux-x86_64" } -> error
     }
 
     action validate(tool: T) {
@@ -109,6 +115,9 @@ concept Toolchain [T] {
         Tool moved, uninstalled, or version changed since
         last resolution. Re-resolve required.
       }
+
+      fixture validate_existing { tool: "tc-abc123" }
+      fixture validate_missing { tool: "" } -> error
     }
 
     action list(language: option String, category: option String) {
@@ -116,6 +125,10 @@ concept Toolchain [T] {
         List all resolved toolchains, optionally filtered by
         language and/or category. Used by `clef toolchain list`.
       }
+
+      fixture list_all {}
+      fixture list_by_language { language: "typescript" }
+      fixture list_by_category { category: "unit-runner" }
     }
 
     action capabilities(tool: T) {
