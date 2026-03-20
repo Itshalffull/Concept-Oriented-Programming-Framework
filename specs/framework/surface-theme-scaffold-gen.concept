@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SurfaceThemeScaffoldGen [X] {
@@ -35,6 +36,9 @@ concept SurfaceThemeScaffoldGen [X] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_theme { name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: 16, scale: 1.25, secondaryColor: "180", borderRadius: "md", mode: "both", extends: none }
+      fixture light_only { name: "minimal", primaryColor: "200", fontFamily: "system-ui", baseSize: 14, scale: 1.2, secondaryColor: none, borderRadius: "sm", mode: "light", extends: none }
     }
 
     action preview(name: String, primaryColor: String, fontFamily: String,
@@ -54,6 +58,8 @@ concept SurfaceThemeScaffoldGen [X] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: 16, scale: 1.25, secondaryColor: "180", borderRadius: "md", mode: "both", extends: none }
     }
 
     action register() {
@@ -64,6 +70,8 @@ concept SurfaceThemeScaffoldGen [X] {
         outputKind: "SurfaceTheme"
         capabilities: ["palette", "typography", "spacing", "motion", "elevation", "radius", "extends", "wcag"]
       }
+
+      fixture valid {}
     }
   }
 

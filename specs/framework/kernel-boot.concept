@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept KernelBoot [K] {
 
@@ -37,6 +38,10 @@ concept KernelBoot [K] {
         One or more sync files failed to compile. The kernel is still
         usable but sync-driven routing will be incomplete.
       }
+
+      fixture valid_boot { projectRoot: "./", manifestPath: "deploy.yaml" }
+      fixture custom_root { projectRoot: "/app/clef-base", manifestPath: "examples/devtools/devtools.interface.yaml" }
+      fixture empty_root { projectRoot: "", manifestPath: "" } -> noHandlers
     }
 
     action status(kernel: K) {
@@ -46,6 +51,9 @@ concept KernelBoot [K] {
       -> notfound(kernel: K) {
         No kernel instance exists with this identifier.
       }
+
+      fixture valid_status { kernel: "kernel-20260301-abc123" }
+      fixture nonexistent_status { kernel: "kernel-nonexistent" } -> notfound
     }
 
     action shutdown(kernel: K) {
@@ -55,6 +63,9 @@ concept KernelBoot [K] {
       -> notfound(kernel: K) {
         No kernel instance exists with this identifier.
       }
+
+      fixture valid_shutdown { kernel: "kernel-20260301-abc123" }
+      fixture nonexistent_shutdown { kernel: "kernel-nonexistent" } -> notfound
     }
   }
 

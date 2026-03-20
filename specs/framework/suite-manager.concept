@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SuiteManager [S] {
@@ -27,6 +28,9 @@ concept SuiteManager [S] {
       -> alreadyExists(name: String) {
         A suite with this name already exists.
       }
+
+      fixture valid_init { name: "payment-suite" }
+      fixture empty_name { name: "" } -> alreadyExists
     }
 
     action validate(path: String) {
@@ -40,6 +44,9 @@ concept SuiteManager [S] {
       -> error(message: String) {
         Suite validation failed.
       }
+
+      fixture valid_validate { path: "./repertoire/payment-suite/" }
+      fixture empty_path { path: "" } -> error
     }
 
     action test(path: String) {
@@ -54,6 +61,9 @@ concept SuiteManager [S] {
       -> error(message: String) {
         Test execution failed.
       }
+
+      fixture valid_test { path: "./repertoire/payment-suite/" }
+      fixture empty_test_path { path: "" } -> error
     }
 
     action list() {
@@ -64,6 +74,8 @@ concept SuiteManager [S] {
       -> ok(suites: list String) {
         Active suites listed.
       }
+
+      fixture valid_list {}
     }
 
     action checkOverrides(path: String) {
@@ -77,6 +89,9 @@ concept SuiteManager [S] {
       -> invalidOverride(override: String, reason: String) {
         An override references a nonexistent sync.
       }
+
+      fixture valid_overrides { path: "./repertoire/payment-suite/" }
+      fixture nonexistent_suite { path: "./repertoire/nonexistent-suite/" } -> invalidOverride
     }
   }
 

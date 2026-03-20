@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeployOrchestrator [D] {
 
@@ -41,6 +42,13 @@ concept DeployOrchestrator [D] {
       -> deployFailed(appName: String, errors: list String) {
         Runtime provisioning or deployment failed.
       }
+
+      fixture production_deploy { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }
+      fixture staging_deploy { manifestPath: "./clef-api/deploy/vercel.deploy.yaml", environment: "staging" }
+      fixture missing_manifest { manifestPath: "/nonexistent/deploy.yaml", environment: "production" } -> manifestNotFound
+      fixture invalid_manifest { manifestPath: "./broken-app/deploy/invalid.yaml", environment: "production" } -> planFailed
+      fixture bad_validation { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "invalid-env" } -> validationFailed
+      fixture failed_deploy { manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "broken-runtime" } -> deployFailed
     }
 
     action deployAll(projectRoot: String, environment: String) {
@@ -51,6 +59,9 @@ concept DeployOrchestrator [D] {
       -> noAppsFound(projectRoot: String) {
         No clef-* directories with vercel.deploy.yaml found.
       }
+
+      fixture deploy_all_production { projectRoot: "./", environment: "production" }
+      fixture no_apps_found { projectRoot: "/empty/directory", environment: "production" } -> noAppsFound
     }
 
     action status(run: D) {
@@ -60,6 +71,9 @@ concept DeployOrchestrator [D] {
       -> notfound(run: D) {
         Run does not exist.
       }
+
+      fixture check_status { run: "run-1710000000-abc123" }
+      fixture unknown_run { run: "run-nonexistent" } -> notfound
     }
   }
 

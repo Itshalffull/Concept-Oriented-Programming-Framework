@@ -1,3 +1,4 @@
+# @fixtures-added
 concept StorageProvider [S] {
 
   purpose {
@@ -30,6 +31,10 @@ concept StorageProvider [S] {
         The storage backend could not be created, e.g. quota exceeded,
         invalid configuration, or provider API error.
       }
+
+      fixture valid_provision { store: "store-001", storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }
+      fixture missing_name { store: "store-002", storeName: "", storageType: "vercel-kv", conceptName: "Session", config: "{}" } -> provisionFailed
+      fixture missing_type { store: "store-003", storeName: "session-kv", storageType: "", conceptName: "Session", config: "{}" } -> provisionFailed
     }
 
     action configure(store: S, settings: String) {
@@ -40,6 +45,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_configure { store: "session-kv", settings: "{\"ttl\": 3600}" }
+      fixture not_found_configure { store: "nonexistent-store", settings: "{}" } -> notfound
     }
 
     action getCredentials(store: S) {
@@ -49,6 +57,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_get_credentials { store: "session-kv" }
+      fixture not_found_credentials { store: "nonexistent-store" } -> notfound
     }
 
     action destroy(store: S) {
@@ -58,6 +69,9 @@ concept StorageProvider [S] {
       -> notfound(store: S) {
         No provisioned store exists with this identifier.
       }
+
+      fixture valid_destroy { store: "session-kv" }
+      fixture not_found_destroy { store: "nonexistent-store" } -> notfound
     }
   }
 

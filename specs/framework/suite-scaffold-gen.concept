@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SuiteScaffoldGen [S] {
@@ -24,6 +25,9 @@ concept SuiteScaffoldGen [S] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User", "Session", "Role"] }
+      fixture minimal_generate { name: "empty-suite", description: "A minimal suite", concepts: [] }
     }
 
     action preview(name: String, description: String, concepts: list String) {
@@ -39,6 +43,8 @@ concept SuiteScaffoldGen [S] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "auth-suite", description: "Authentication suite", concepts: ["User", "Session"] }
     }
 
     action register() {
@@ -49,6 +55,8 @@ concept SuiteScaffoldGen [S] {
         outputKind: "SuiteManifest"
         capabilities: ["suite-yaml", "directory-structure"]
       }
+
+      fixture valid {}
     }
   }
 

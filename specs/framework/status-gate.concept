@@ -42,6 +42,10 @@ concept StatusGate [G] {
         The provider failed to accept the status report. The gate entry is still
         created locally with status "error" so it can be retried.
       }
+
+      fixture valid_report { target: "abc123def456", context: "clef/verify", status: "passing", details: "All 5 invariants proved", provider: "exit-code", url: "" }
+      fixture github_report { target: "abc123def456", context: "clef/verify", status: "passing", details: "All checks green", provider: "github", url: "https://score.example.com/run/42" }
+      fixture missing_target { target: "", context: "clef/verify", status: "passing", details: "No target", provider: "exit-code", url: "" } -> provider_error
     }
 
     action update(gate: G, status: String, details: String) {
@@ -55,6 +59,9 @@ concept StatusGate [G] {
       -> already_completed(gate: G) {
         The gate has already been marked complete and cannot be updated.
       }
+
+      fixture valid_update { gate: "gate-1710000000-abc123", status: "passing", details: "All checks passed" }
+      fixture not_found_update { gate: "gate-nonexistent-000000", status: "failing", details: "Missing" } -> not_found
     }
 
     action complete(gate: G, final_status: String, details: String) {
@@ -69,6 +76,9 @@ concept StatusGate [G] {
       -> already_completed(gate: G) {
         The gate was already completed previously.
       }
+
+      fixture valid_complete { gate: "gate-1710000000-abc123", final_status: "passing", details: "All green" }
+      fixture not_found_complete { gate: "gate-nonexistent-000000", final_status: "passing", details: "Done" } -> not_found
     }
 
     action configure(provider: String, url: String) {
@@ -77,6 +87,9 @@ concept StatusGate [G] {
         gate reports. Persisted in concept state so it survives across
         CLI invocations.
       }
+
+      fixture valid_configure { provider: "github", url: "https://api.github.com" }
+      fixture exit_code_configure { provider: "exit-code", url: "" }
     }
 
     action get_status(gate: G) {
@@ -86,6 +99,9 @@ concept StatusGate [G] {
       -> not_found(gate: G) {
         No gate exists with this identifier.
       }
+
+      fixture valid_get_status { gate: "gate-1710000000-abc123" }
+      fixture not_found_status { gate: "gate-nonexistent-000000" } -> not_found
     }
 
     action list(target: String) {
@@ -93,6 +109,9 @@ concept StatusGate [G] {
         Return all gate entries for a given target (e.g. all checks
         for a specific commit SHA), serialized as a JSON array.
       }
+
+      fixture valid_list { target: "abc123def456" }
+      fixture empty_target_list { target: "" }
     }
   }
 

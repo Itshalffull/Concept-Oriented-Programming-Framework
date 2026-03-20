@@ -26,6 +26,10 @@ concept InterfaceScaffoldGen [I] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { name: "commerce-api", targets: ["rest", "graphql"], sdks: ["typescript", "python"] }
+      fixture minimal_generate { name: "my-api", targets: ["rest"], sdks: ["typescript"] }
+      fixture empty_name { name: "", targets: [], sdks: [] } -> error
     }
 
     action preview(name: String, targets: list String, sdks: list String) {
@@ -41,6 +45,9 @@ concept InterfaceScaffoldGen [I] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "billing-api", targets: ["rest"], sdks: ["typescript"] }
+      fixture empty_preview { name: "", targets: [], sdks: [] } -> error
     }
 
     action register() {
@@ -51,6 +58,8 @@ concept InterfaceScaffoldGen [I] {
         outputKind: "InterfaceManifest"
         capabilities: ["interface-yaml", "target-config", "sdk-config"]
       }
+
+      fixture valid_register {}
     }
   }
 

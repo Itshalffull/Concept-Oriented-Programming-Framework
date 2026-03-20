@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept SurfaceComponentScaffoldGen [W] {
@@ -34,6 +35,9 @@ concept SurfaceComponentScaffoldGen [W] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_component { name: "Accordion", parts: ["root", "item", "trigger", "content"], states: ["closed", "open"], events: ["toggle"], role: "region", requires: none, affordance: none, props: [], compose: [] }
+      fixture minimal_component { name: "Badge", parts: ["root"], states: ["idle"], events: [], role: "status", requires: none, affordance: none, props: [], compose: [] }
     }
 
     action preview(name: String, parts: list String, states: list String,
@@ -54,6 +58,8 @@ concept SurfaceComponentScaffoldGen [W] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { name: "Accordion", parts: ["root", "item", "trigger", "content"], states: ["closed", "open"], events: ["toggle"], role: "region", requires: none, affordance: none, props: [], compose: [] }
     }
 
     action register() {
@@ -64,6 +70,8 @@ concept SurfaceComponentScaffoldGen [W] {
         outputKind: "SurfaceComponent"
         capabilities: ["widget", "anatomy", "machine", "slots", "accessibility", "affordance", "props", "compose"]
       }
+
+      fixture valid {}
     }
   }
 

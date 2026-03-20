@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept McpServer [S] {
 
@@ -38,6 +39,10 @@ concept McpServer [S] {
         The manifest was not found, has no MCP target, or the
         server failed to bind to the transport.
       }
+
+      fixture valid_start { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "stdio" }
+      fixture sse_start { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "sse" }
+      fixture invalid_transport { manifestPath: "examples/devtools/devtools.interface.yaml", transport: "websocket" } -> error
     }
 
     action registerTool(name: String, concept: String, action: String, description: String, schema: String) {
@@ -49,6 +54,9 @@ concept McpServer [S] {
       -> duplicate(name: String) {
         A tool with this name is already registered.
       }
+
+      fixture valid_register_tool { name: "user_create", concept: "User", action: "create", description: "Create a new user account", schema: "{\"type\":\"object\",\"properties\":{\"email\":{\"type\":\"string\"}},\"required\":[\"email\"]}" }
+      fixture duplicate_tool { name: "user_create", concept: "User", action: "create", description: "duplicate entry", schema: "{}" } -> duplicate
     }
 
     action handleCall(toolName: String, arguments: String) {
@@ -65,6 +73,9 @@ concept McpServer [S] {
       -> error(message: String) {
         The concept handler returned an error variant or threw.
       }
+
+      fixture valid_call { toolName: "user_create", arguments: "{\"email\":\"alice@example.com\"}" }
+      fixture unknown_tool { toolName: "nonexistent_tool", arguments: "{}" } -> notfound
     }
 
     action stop() {
@@ -74,6 +85,8 @@ concept McpServer [S] {
       -> error(message: String) {
         The server was not running or failed to shut down cleanly.
       }
+
+      fixture valid_stop {}
     }
 
     action listTools() {
@@ -81,6 +94,8 @@ concept McpServer [S] {
         Return all registered tools as a JSON array with name,
         concept, action, and description for each.
       }
+
+      fixture valid_list_tools {}
     }
   }
 
