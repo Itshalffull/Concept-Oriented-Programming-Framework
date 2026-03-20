@@ -160,6 +160,9 @@ concept DeploymentEntity [D] {
         Deployment references missing or incompatible entities.
         Result as serialized JSON array of { kind, entity, message }.
       }
+
+      fixture validate_existing { deployment: "deploy-001" }
+      fixture validate_missing { deployment: "deploy-missing" }
     }
   }
 

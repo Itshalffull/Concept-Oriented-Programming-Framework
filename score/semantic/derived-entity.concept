@@ -68,6 +68,8 @@ concept DerivedEntity [D] {
         Return all derived concepts that claim the given sync.
         Results as serialized JSON array.
       }
+      fixture find_by_sync { syncName: "trash-on-delete" }
+      fixture find_by_sync_empty { syncName: "" } -> error
     }
 
     action compositionTree(entity: D) {
@@ -78,6 +80,8 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
+      fixture tree_valid { entity: "derived-entity-1" }
+      fixture tree_missing { entity: "nonexistent-id" } -> error
     }
 
     action traceRollup(entity: D, flowId: String) {
@@ -89,6 +93,8 @@ concept DerivedEntity [D] {
       -> notfound() {
         Entity not found.
       }
+      fixture rollup_valid { entity: "derived-entity-1", flowId: "flow-abc-123" }
+      fixture rollup_missing_entity { entity: "nonexistent-id", flowId: "flow-abc-123" } -> error
     }
   }
 
