@@ -23,6 +23,10 @@ concept MediaAsset [M] {
       -> error(message: String) {
         Creation failed due to an unsupported source type or duplicate asset identity.
       }
+
+      fixture create_image { asset: "img-001", source: "local-fs", file: "photo.jpg" }
+      fixture create_video { asset: "vid-001", source: "s3", file: "recording.mp4" }
+      fixture create_duplicate { asset: "img-001", source: "local-fs", file: "photo.jpg" } -> error
     }
 
     action extractMetadata(asset: M) {
@@ -33,6 +37,9 @@ concept MediaAsset [M] {
       -> notfound(message: String) {
         No asset exists with this identifier.
       }
+
+      fixture extract_existing { asset: "img-001" }
+      fixture extract_missing { asset: "nonexistent" } -> notfound
     }
 
     action generateThumbnail(asset: M) {
@@ -43,6 +50,9 @@ concept MediaAsset [M] {
       -> notfound(message: String) {
         No asset exists with this identifier.
       }
+
+      fixture thumb_existing { asset: "img-001" }
+      fixture thumb_missing { asset: "nonexistent" } -> notfound
     }
 
     action getMedia(asset: M) {
@@ -53,6 +63,9 @@ concept MediaAsset [M] {
       -> notfound(message: String) {
         No asset exists with this identifier.
       }
+
+      fixture get_existing { asset: "img-001" }
+      fixture get_missing { asset: "nonexistent" } -> notfound
     }
   }
 

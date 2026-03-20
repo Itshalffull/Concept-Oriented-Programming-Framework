@@ -42,6 +42,10 @@ concept SpecificationSchema [SS] {
       -> invalid(message: String) {
         Invalid category or malformed template.
       }
+
+      fixture valid_define { name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }
+      fixture bad_category { name: "test-schema", category: "unknown_category", pattern_type: "absence", template_text: "G(p)", formal_language: "ltl", parameters: "[]" } -> invalid
+      fixture missing_name { name: "", category: "dwyer_pattern", pattern_type: "absence", template_text: "G(p)", formal_language: "ltl", parameters: "[]" } -> invalid
     }
 
     action instantiate(schema: SS, parameter_values: Bytes, target_symbol: String) {
@@ -51,6 +55,10 @@ concept SpecificationSchema [SS] {
       -> invalid(message: String) {
         Parameter mismatch or type error.
       }
+
+      fixture valid_instantiate { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }
+      fixture missing_param { schema_id: "ss-abc123", param_values: "{}" } -> invalid
+      fixture bad_json { schema_id: "ss-abc123", param_values: "not-json" } -> invalid
     }
 
     action validate(schema: SS, parameter_values: Bytes) {
@@ -60,18 +68,27 @@ concept SpecificationSchema [SS] {
       -> invalid(message: String) {
         Type mismatch or missing required parameter.
       }
+
+      fixture valid_validate { schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }
+      fixture bad_param_values { schema_id: "ss-abc123", param_values: "not-json" } -> invalid
     }
 
     action list_by_category(category: String) {
       -> ok(schemas: list SS) {
         All schemas in category.
       }
+
+      fixture valid_list { category: "smart_contract" }
+      fixture empty_category { category: "nonexistent_category" }
     }
 
     action search(query: String) {
       -> ok(schemas: list SS) {
         Text search over name, template_text, parameter descriptions.
       }
+
+      fixture valid_search { query: "reentrancy" }
+      fixture empty_query { query: "" } -> invalid
     }
   }
 

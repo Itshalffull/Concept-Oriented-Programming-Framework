@@ -25,6 +25,10 @@ concept DiagramExport [X] {
         Renders to format. If embed_data, embeds full state for round-trip.
       }
       -> error(message: String) { Provider not found or render failed. }
+
+      fixture export_svg { canvas_id: "canvas-1", format: "svg", options: { width: 1920, height: 1080, embed_data: true } }
+      fixture export_json { canvas_id: "canvas-2", format: "json", options: {} }
+      fixture export_unknown_format { canvas_id: "canvas-1", format: "xyz", options: {} } -> error
     }
 
     action importDiagram(data: Bytes, format: String, target_canvas: option ID) {
@@ -32,11 +36,18 @@ concept DiagramExport [X] {
         Parses input, creates items/connectors on target canvas (or new).
       }
       -> error(message: String) { Format not recognized or data corrupt. }
+
+      fixture import_json { data: "{\"nodes\":[]}", format: "json", target_canvas: "canvas-5" }
+      fixture import_unsupported { data: "binary-blob", format: "xyz", target_canvas: "canvas-5" } -> error
     }
 
     action detectFormat(data: Bytes) {
       -> ok(format: String, confidence: Float) { Identifies format. }
       -> unknown(message: String) { Cannot determine. }
+
+      fixture detect_json { data: "{\"nodes\":[]}" }
+      fixture detect_svg { data: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>" }
+      fixture detect_empty { } -> unknown
     }
   }
 
