@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EnvironmentEntity [E] {
 
@@ -37,6 +38,9 @@ concept EnvironmentEntity [E] {
       -> updated(existing: E) {
         Updated an existing config entry.
       }
+      fixture register_config { name: "API_PORT", environment: "production", kind: "config", value: "3000", source: "env-file" }
+      fixture register_secret { name: "DATABASE_URL", environment: "staging", kind: "secret", value: "***", source: "vault" }
+      fixture register_empty_name { name: "", environment: "production", kind: "config", value: "x", source: "env-file" } -> error
     }
 
     action get(name: String, environment: String) {
@@ -46,6 +50,8 @@ concept EnvironmentEntity [E] {
       -> notfound() {
         No config entry with this name in this environment.
       }
+      fixture get_config { name: "API_PORT", environment: "production" }
+      fixture get_missing { name: "NONEXISTENT_VAR", environment: "production" } -> error
     }
 
     action findByEnvironment(environment: String) {

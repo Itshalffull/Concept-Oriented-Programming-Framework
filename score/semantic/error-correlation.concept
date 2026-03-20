@@ -65,6 +65,9 @@ concept ErrorCorrelation [E] {
         Return all errors of a given kind.
         Results as serialized JSON array.
       }
+      fixture find_action_errors { errorKind: "action-error", since: "" }
+      fixture find_transport_recent { errorKind: "transport-error", since: "2026-02-01T00:00:00Z" }
+      fixture find_empty_kind { errorKind: "", since: "" } -> error
     }
 
     action errorHotspots(since: String, topN: Int) {
@@ -73,6 +76,8 @@ concept ErrorCorrelation [E] {
         serialized JSON array of { symbol, count, lastSeen,
         sampleMessage }.
       }
+      fixture hotspots_top5 { since: "", topN: 5 }
+      fixture hotspots_recent { since: "2026-03-01T00:00:00Z", topN: 10 }
     }
 
     action rootCause(error: E) {
@@ -92,6 +97,8 @@ concept ErrorCorrelation [E] {
         Could not determine root cause — partial chain returned
         as serialized JSON array.
       }
+      fixture root_cause_valid { error: "error-correlation-1" }
+      fixture root_cause_missing { error: "nonexistent-id" } -> error
     }
 
     action get(error: E) {
@@ -102,6 +109,8 @@ concept ErrorCorrelation [E] {
       -> notfound() {
         Error does not exist.
       }
+      fixture get_valid { error: "error-correlation-1" }
+      fixture get_missing { error: "nonexistent-id" } -> error
     }
   }
 
