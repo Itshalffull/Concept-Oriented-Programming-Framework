@@ -15,7 +15,7 @@ concept DerivedScaffoldGen [D] {
   }
 
   actions {
-    action generate(name: String, typeParam: String, purpose: String,
+    action generate(name: String, typeParams: list String, purpose: String,
                     composes: list ComposedConcept, syncs: list SyncRef,
                     surfaceActions: list SurfaceAction,
                     surfaceQueries: list SurfaceQuery,
@@ -47,7 +47,7 @@ concept DerivedScaffoldGen [D] {
       fixture empty_name { name: "", typeParams: ["T"], purpose: "Should fail", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] } -> error
     }
 
-    action preview(name: String, typeParam: String, purpose: String,
+    action preview(name: String, typeParams: list String, purpose: String,
                     composes: list ComposedConcept, syncs: list SyncRef,
                     surfaceActions: list SurfaceAction,
                     surfaceQueries: list SurfaceQuery,
