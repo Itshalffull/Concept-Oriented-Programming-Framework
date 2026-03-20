@@ -1,3 +1,4 @@
+# @fixtures-added
 concept RenderProgram [R] {
 
   purpose {

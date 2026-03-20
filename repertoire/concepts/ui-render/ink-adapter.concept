@@ -1,3 +1,5 @@
+# @fixtures-added
+# @fixtures-added
 @version(2)
 concept InkAdapter [A] {
 
@@ -24,6 +26,12 @@ concept InkAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Ink.
       }
+
+      fixture with_event_and_class { adapter: "ink-1", props: "{ \"onclick\": \"handleClick\", \"class\": \"primary-btn\" }" }
+      fixture with_layout { adapter: "ink-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"center\\\"}\" }" }
+      fixture with_theme_tokens { adapter: "ink-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-bg\\\":\\\"#000\\\"}}\" }" }
+      fixture empty_props { adapter: "ink-1", props: "" } -> error
+      fixture invalid_json { adapter: "ink-1", props: "not-json{" } -> error
     }
   }
 

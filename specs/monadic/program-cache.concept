@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ProgramCache [C] {
 
@@ -23,6 +24,15 @@ concept ProgramCache [C] {
         A cached result exists for this program and state combination.
       }
       -> miss() { No cached result exists for this program and state combination. }
+
+      fixture lookup_existing {
+        programHash: "sha256_abc123",
+        stateHash: "sha256_def456"
+      }
+      fixture lookup_empty_hash {
+        programHash: "",
+        stateHash: "sha256_def456"
+      } -> error
     }
 
     action store(programHash: String, stateHash: String, result: String) {

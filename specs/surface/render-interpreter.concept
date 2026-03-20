@@ -1,3 +1,4 @@
+# @fixtures-added
 concept RenderInterpreter [I] {
 
   purpose {

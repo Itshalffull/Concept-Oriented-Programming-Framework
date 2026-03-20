@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept WatchKitAdapter [A] {
 
@@ -25,6 +26,12 @@ concept WatchKitAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to watchOS.
       }
+
+      fixture button_tap { adapter: "wk-1", props: "{ \"onclick\": \"tapHandler\", \"class\": \"watch-btn\" }" }
+      fixture with_style { adapter: "wk-2", props: "{ \"style\": { \"fontSize\": 14 } }" }
+      fixture with_theme { adapter: "wk-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-accent\\\":\\\"#FF6600\\\"}}\" }" }
+      fixture empty_props { adapter: "wk-1", props: "" } -> error
+      fixture bad_json { adapter: "wk-1", props: "<<<invalid>>>" } -> error
     }
   }
 

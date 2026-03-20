@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept GitHubApiEndpoint [G] {
 
@@ -31,6 +32,24 @@ concept GitHubApiEndpoint [G] {
       -> exists(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture github_primary {
+        name: "github-api"
+        token: "ghp_abc123def456"
+        repository: "acme/webapp"
+      }
+
+      fixture github_ci {
+        name: "ci-status"
+        token: "ghp_ci_token_789"
+        repository: "acme/infra"
+      }
+
+      fixture missing_name {
+        name: ""
+        token: "ghp_test"
+        repository: "owner/repo"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -41,6 +60,14 @@ concept GitHubApiEndpoint [G] {
       -> notFound(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "github-api"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -48,6 +75,8 @@ concept GitHubApiEndpoint [G] {
         Return all registered endpoints as a serialized JSON array
         with name, baseUrl, and repository (tokens omitted).
       }
+
+      fixture valid {}
     }
   }
 

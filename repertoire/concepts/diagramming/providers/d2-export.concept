@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept D2ExportProvider [C] {
 

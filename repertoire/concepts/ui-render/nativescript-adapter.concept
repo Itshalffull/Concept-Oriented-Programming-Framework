@@ -1,3 +1,5 @@
+# @fixtures-added
+# @fixtures-added
 @version(2)
 concept NativeScriptAdapter [A] {
 
@@ -24,6 +26,12 @@ concept NativeScriptAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to NativeScript.
       }
+
+      fixture tap_and_class { adapter: "ns-1", props: "{ \"onclick\": \"onTap\", \"class\": \"nav-btn\" }" }
+      fixture grid_layout { adapter: "ns-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"grid\\\",\\\"columns\\\":\\\"*,*\\\"}\" }" }
+      fixture aria_label { adapter: "ns-3", props: "{ \"aria-label\": \"Submit\" }" }
+      fixture empty_props { adapter: "ns-1", props: "" } -> error
+      fixture malformed_json { adapter: "ns-1", props: "{broken" } -> error
     }
   }
 

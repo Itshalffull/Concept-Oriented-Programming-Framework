@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept TransportAdapterScaffoldGen [T] {
@@ -26,6 +27,19 @@ concept TransportAdapterScaffoldGen [T] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture http_adapter {
+        name: "ApiTransport",
+        protocol: "http"
+      }
+      fixture websocket_adapter {
+        name: "RealtimeTransport",
+        protocol: "websocket"
+      }
+      fixture empty_name {
+        name: "",
+        protocol: "http"
+      } -> error
     }
 
     action preview(name: String, protocol: String) {
@@ -41,6 +55,15 @@ concept TransportAdapterScaffoldGen [T] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture preview_http {
+        name: "ApiTransport",
+        protocol: "http"
+      }
+      fixture preview_empty_name {
+        name: "",
+        protocol: "http"
+      } -> error
     }
 
     action register() {
@@ -51,6 +74,8 @@ concept TransportAdapterScaffoldGen [T] {
         outputKind: "TransportAdapter"
         capabilities: ["http", "websocket", "worker", "in-process"]
       }
+
+      fixture valid {}
     }
   }
 

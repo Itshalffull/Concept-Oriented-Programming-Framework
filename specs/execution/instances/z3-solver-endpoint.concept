@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Z3SolverEndpoint [Z] {
 

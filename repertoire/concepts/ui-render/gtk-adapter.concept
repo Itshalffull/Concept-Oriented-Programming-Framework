@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept GTKAdapter [A] {
 
@@ -25,6 +26,12 @@ concept GTKAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to GTK.
       }
+
+      fixture clicked_signal { adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" }
+      fixture box_layout { adapter: "gtk-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"stack\\\",\\\"direction\\\":\\\"row\\\",\\\"gap\\\":\\\"8\\\"}\" }" }
+      fixture theme_colors { adapter: "gtk-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-bg\\\":\\\"#2d2d2d\\\"}}\" }" }
+      fixture empty_props { adapter: "gtk-1", props: "" } -> error
+      fixture invalid_json { adapter: "gtk-1", props: "{{nope" } -> error
     }
   }
 

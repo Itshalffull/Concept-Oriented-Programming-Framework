@@ -73,11 +73,11 @@ concept StakeWeight [SW] {
 
   example "configure-then-getWeight": {
 
-    after configure(minimumStake: 10.0, cooldownPeriod: 24.0) -> configured(vault: sw)
+    after configure(token: "GOV", cooldownDays: 7.0) -> configured(config: sw)
 
-        then stake(vault: sw, participant: p, amount: 100.0, lockDurationHours: 720.0) -> staked(participant: p, unlockAt: _)
+        then stake(config: sw, staker: p, amount: 100.0) -> staked(stake: _, lockedUntil: _)
 
-        and  getWeight(vault: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
+        and  getWeight(config: sw, participant: p) -> weight(participant: p, stakedAmount: 100.0)
 
   }
 

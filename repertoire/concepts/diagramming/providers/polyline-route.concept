@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept PolylineRouteProvider [C] {
 
@@ -17,6 +18,8 @@ concept PolylineRouteProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "polyline-route", category: "routing"
       }
+
+      fixture valid {}
     }
 
     action route(canvas: String, source: String, target: String, obstacles: list String) {
@@ -27,6 +30,10 @@ concept PolylineRouteProvider [C] {
       -> error(message: String) {
         Routing failed or source/target not found.
       }
+
+      fixture simple_route { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: [] }
+      fixture with_obstacles { canvas: "canvas-1", source: "node-a", target: "node-b", obstacles: ["node-c", "node-d"] }
+      fixture missing_canvas { canvas: "", source: "node-a", target: "node-b", obstacles: [] } -> error
     }
   }
 

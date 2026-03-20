@@ -1,3 +1,4 @@
+# @fixtures-added
 concept TypeScriptGen [S] {
 
   purpose {
@@ -23,6 +24,13 @@ concept TypeScriptGen [S] {
       -> error(message: String) {
         If the manifest contains types not mappable to TypeScript.
       }
+
+      fixture valid_manifest {
+        manifest: "{\"name\":\"Ping\",\"uri\":\"urn:clef/Ping\",\"typeParams\":[],\"relations\":[],\"actions\":[{\"name\":\"ping\",\"params\":[],\"variants\":[{\"tag\":\"ok\",\"fields\":[],\"prose\":\"Pong.\"}]}],\"invariants\":[],\"graphqlSchema\":\"\",\"jsonSchemas\":{\"invocations\":{},\"completions\":{}},\"capabilities\":[],\"purpose\":\"A test.\"}"
+      }
+      fixture missing_name {
+        manifest: "{\"name\":\"\"}"
+      } -> error
     }
 
     action register() {
@@ -33,6 +41,8 @@ concept TypeScriptGen [S] {
         outputKind: "TypeScriptSource"
         capabilities: ["types", "handler", "adapter", "conformance-tests"]
       }
+
+      fixture valid {}
     }
   }
 
