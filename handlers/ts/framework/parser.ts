@@ -108,7 +108,8 @@ function tokenize(source: string): Token[] {
   }
 
   function skipLineComment() {
-    if (i + 1 < source.length && source[i] === '/' && source[i + 1] === '/') {
+    // Support both // and # line comments
+    if ((i + 1 < source.length && source[i] === '/' && source[i + 1] === '/') || source[i] === '#') {
       while (i < source.length && source[i] !== '\n') {
         advance();
       }
@@ -848,7 +849,14 @@ class Parser {
     while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
       this.skipSeps();
       if (this.peek().type === 'RBRACE') break;
-      const key = this.expectIdent().value;
+      // Accept both unquoted identifiers and quoted strings as keys
+      const keyTok = this.peek();
+      let key: string;
+      if (keyTok.type === 'STRING_LIT') {
+        key = this.advance().value;
+      } else {
+        key = this.expectIdent().value;
+      }
       this.expect('COLON');
       obj[key] = this.parseFixtureValue();
       // optional comma
@@ -861,7 +869,7 @@ class Parser {
   private parseFixtureValue(): unknown {
     const tok = this.peek();
     // String literal
-    if (tok.type === 'STRING') {
+    if (tok.type === 'STRING_LIT') {
       this.advance();
       return tok.value;
     }

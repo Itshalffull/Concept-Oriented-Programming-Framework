@@ -51,41 +51,111 @@ function toKebab(name: string): string {
     .toLowerCase();
 }
 
-// Recursively find all .handler.ts files and build a lookup by kebab name
-let _handlerIndex: Map<string, string> | undefined;
-function getHandlerIndex(): Map<string, string> {
-  if (_handlerIndex) return _handlerIndex;
-  _handlerIndex = new Map();
-  function walk(dir: string) {
-    if (!existsSync(dir)) return;
-    for (const entry of readdirSync(dir)) {
-      const full = join(dir, entry);
-      const stat = statSync(full);
-      if (stat.isDirectory()) {
-        walk(full);
-      } else if (entry.endsWith('.handler.ts')) {
-        const name = entry.replace('.handler.ts', '');
-        const relPath = relative(ROOT, full).replace('.handler.ts', '.handler.js');
-        _handlerIndex!.set(name, relPath);
-      }
+// Recursively find all .handler.ts files
+function findHandlerFiles(dir: string): string[] {
+  const results: string[] = [];
+  if (!existsSync(dir)) return results;
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    const stat = statSync(full);
+    if (stat.isDirectory()) {
+      results.push(...findHandlerFiles(full));
+    } else if (entry.endsWith('.handler.ts')) {
+      results.push(full);
     }
   }
-  walk(join(ROOT, 'handlers', 'ts'));
-  return _handlerIndex;
+  return results;
+}
+
+// Build concept-name → handler-path registry by calling register() on each handler.
+// Falls back to kebab-case file name matching for handlers without register().
+let _conceptToHandler: Map<string, string> | undefined;
+async function getConceptToHandlerMap(): Promise<Map<string, string>> {
+  if (_conceptToHandler) return _conceptToHandler;
+  _conceptToHandler = new Map();
+
+  const handlerFiles = findHandlerFiles(join(ROOT, 'handlers', 'ts'));
+  const kebabIndex = new Map<string, string>(); // fallback index
+
+  for (const fullPath of handlerFiles) {
+    const relPath = relative(ROOT, fullPath);
+    const name = basename(fullPath, '.handler.ts');
+    kebabIndex.set(name, relPath);
+
+    // Try calling register() to get the declared concept name
+    try {
+      const mod = await import(fullPath);
+      // Find the exported handler object (convention: *Handler or default)
+      const handler = Object.values(mod).find(
+        (v: any) => v && typeof v === 'object' && typeof v.register === 'function'
+      ) as any;
+
+      if (handler?.register) {
+        // register() may return a StorageProgram (functional) or need storage (imperative)
+        let result: any;
+        try {
+          result = handler.register({});
+          // If it returned a promise (autoInterpret with no storage), it's a StorageProgram
+          if (result instanceof Promise) {
+            result = await result.catch(() => null);
+          }
+        } catch {
+          // Imperative handler needs storage — try with in-memory storage
+          try {
+            const { createInMemoryStorage } = await import('../runtime/adapters/storage.js');
+            result = await handler.register({}, createInMemoryStorage());
+          } catch { result = null; }
+        }
+
+        let conceptName: string | undefined;
+        if (result && typeof result === 'object') {
+          if ('variant' in result && result.variant === 'ok' && result.name) {
+            conceptName = result.name as string;
+          } else if ('instructions' in result && result.effects) {
+            // StorageProgram — extract name from the complete instruction's value
+            for (const instr of (result as any).instructions) {
+              if (instr.tag === 'pure' && instr.value?.name) {
+                conceptName = instr.value.name as string;
+                break;
+              }
+            }
+          }
+        }
+
+        if (conceptName && typeof conceptName === 'string') {
+          _conceptToHandler.set(conceptName, relPath);
+        }
+      }
+    } catch {
+      // Handler failed to import or register — will fall back to kebab match
+    }
+  }
+
+  // Store kebab index for fallback
+  (_conceptToHandler as any)._kebabIndex = kebabIndex;
+  return _conceptToHandler;
 }
 
 // Find matching handler file for a concept
-function findHandlerPath(conceptName: string): string {
-  const kebab = toKebab(conceptName);
-  const index = getHandlerIndex();
-  const found = index.get(kebab);
-  if (found) return found;
+async function findHandlerPath(conceptName: string): Promise<string> {
+  const registry = await getConceptToHandlerMap();
 
-  // Fuzzy match: strip all hyphens and compare
+  // Primary: exact concept name from register()
+  const registered = registry.get(conceptName);
+  if (registered) return registered.replace('.handler.ts', '.handler.js');
+
+  // Fallback: kebab-case file name match
+  const kebab = toKebab(conceptName);
+  const kebabIndex = (registry as any)._kebabIndex as Map<string, string>;
+
+  const found = kebabIndex.get(kebab);
+  if (found) return found.replace('.handler.ts', '.handler.js');
+
+  // Fuzzy: strip hyphens
   const stripped = kebab.replace(/-/g, '');
-  for (const [name, path] of index) {
+  for (const [name, path] of kebabIndex) {
     if (name.replace(/-/g, '') === stripped) {
-      return path;
+      return path.replace('.handler.ts', '.handler.js');
     }
   }
 
@@ -154,13 +224,18 @@ async function main() {
               type: f.type?.name || f.type?.kind || 'String',
             })),
           })),
+          fixtures: (a.fixtures || []).map((f: any) => ({
+            name: f.name,
+            input: f.input,
+            expectedVariant: f.expectedVariant || 'ok',
+          })),
         })),
         invariants: ast.invariants || [],
       };
 
       // Build test plan
       const plan = buildTestPlan(conceptRef, conceptData);
-      const handlerPath = findHandlerPath(ast.name);
+      const handlerPath = await findHandlerPath(ast.name);
       plan.handlerPath = handlerPath;
 
       // Skip concepts without a handler implementation
