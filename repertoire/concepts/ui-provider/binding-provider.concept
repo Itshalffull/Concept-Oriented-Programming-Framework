@@ -67,7 +67,7 @@ concept BindingProvider [P, C] {
         Routes to appropriate backend based on binding mode.
       }
       -> error(message: String) { Invocation failed. }
-      fixture invoke_action { provider: "bp-1", action: "create", input: "{"title":"Hello"}" }
+      fixture invoke_action { provider: "bp-1", action: "create", input: "test-input" }
       fixture invoke_missing { provider: "nonexistent", action: "create", input: "{}" } -> error
     }
 

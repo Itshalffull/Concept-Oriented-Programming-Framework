@@ -245,11 +245,29 @@ async function main() {
         continue;
       }
 
-      // Detect handler style from annotation
+      // Parse @clef-handler annotation for style, concept, and export
+      // Format: // @clef-handler style=functional [concept=Name] [export=handlerVarName]
       const handlerSource = readFileSync(join(ROOT, handlerTsPath), 'utf-8');
-      const styleMatch = handlerSource.match(/^\/\/\s*@clef-handler\s+style=(\w+)/);
-      if (styleMatch && (styleMatch[1] === 'functional' || styleMatch[1] === 'imperative')) {
-        plan.handlerStyle = styleMatch[1];
+      const annotationLine = handlerSource.match(/^\/\/\s*@clef-handler\s+(.+)/m);
+      if (annotationLine) {
+        const attrs = annotationLine[1];
+        const styleAttr = attrs.match(/style=(\w+)/);
+        if (styleAttr && (styleAttr[1] === 'functional' || styleAttr[1] === 'imperative')) {
+          plan.handlerStyle = styleAttr[1];
+        }
+        const exportAttr = attrs.match(/export=(\w+)/);
+        if (exportAttr) {
+          plan.handlerExportName = exportAttr[1];
+        }
+      }
+
+      // Fallback: extract the actual export name from the handler source
+      if (!plan.handlerExportName) {
+        const exportMatch = handlerSource.match(/^export\s+const\s+(\w+Handler)\s*[=:]/m)
+          || handlerSource.match(/^export\s*\{\s*(\w+Handler)\s*\}/m);
+        if (exportMatch) {
+          plan.handlerExportName = exportMatch[1];
+        }
       }
 
       // Render TypeScript tests

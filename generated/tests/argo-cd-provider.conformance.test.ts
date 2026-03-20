@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { argoCDProviderHandler } from '../../handlers/ts/app/argocd-provider.handler.js';
+import { argocdProviderHandler } from '../../handlers/ts/app/argocd-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('ArgoCDProvider functional handler', () => {
 
   describe('emit', () => {
     it('builds a valid StorageProgram', () => {
-      const program = argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
+      const program = argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
+      const program = argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
+      const program = argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
+      const program = argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
+      const program = argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       try {
-        const result = await interpret(argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+        const result = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,23 +81,23 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('fixture "emit_prod" -> ok', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const result = await interpret(argocdProviderHandler.emit({ plan: "dp-001", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "emit_staging" -> ok', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.emit({ plan: "dp-002", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
+      const result = await interpret(argocdProviderHandler.emit({ plan: "dp-002", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "emit_empty_plan" -> error', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.emit({ plan: "", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
+      const result = await interpret(argocdProviderHandler.emit({ plan: "", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -105,7 +105,7 @@ describe('ArgoCDProvider functional handler', () => {
 
   describe('reconciliationStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" });
+      const program = argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -113,21 +113,21 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" });
+      const program = argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" });
+      const program = argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" });
+      const program = argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -140,16 +140,16 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" });
+      const program = argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof argoCDProviderHandler.reconciliationStatus !== 'function') return;
+      if (typeof argocdProviderHandler.reconciliationStatus !== 'function') return;
       try {
-        const result = await interpret(argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
+        const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -160,16 +160,16 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('fixture "reconcile_app" -> ok', async () => {
-      if (typeof argoCDProviderHandler.reconciliationStatus !== 'function') return;
+      if (typeof argocdProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
+      const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: "app-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "reconcile_nonexistent" -> error', async () => {
-      if (typeof argoCDProviderHandler.reconciliationStatus !== 'function') return;
+      if (typeof argocdProviderHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.reconciliationStatus({ application: "" }), storage);
+      const result = await interpret(argocdProviderHandler.reconciliationStatus({ application: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -177,7 +177,7 @@ describe('ArgoCDProvider functional handler', () => {
 
   describe('syncWave', () => {
     it('builds a valid StorageProgram', () => {
-      const program = argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
+      const program = argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +185,21 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
+      const program = argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
+      const program = argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
+      const program = argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,16 +212,16 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
+      const program = argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof argoCDProviderHandler.syncWave !== 'function') return;
+      if (typeof argocdProviderHandler.syncWave !== 'function') return;
       try {
-        const result = await interpret(argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
+        const result = await interpret(argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -232,16 +232,16 @@ describe('ArgoCDProvider functional handler', () => {
     });
 
     it('fixture "syncwave_app" -> ok', async () => {
-      if (typeof argoCDProviderHandler.syncWave !== 'function') return;
+      if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
+      const result = await interpret(argocdProviderHandler.syncWave({ application: "app-prod-001", wave: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "syncwave_nonexistent" -> error', async () => {
-      if (typeof argoCDProviderHandler.syncWave !== 'function') return;
+      if (typeof argocdProviderHandler.syncWave !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.syncWave({ application: "", wave: "0" }), storage);
+      const result = await interpret(argocdProviderHandler.syncWave({ application: "", wave: "0" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -249,11 +249,11 @@ describe('ArgoCDProvider functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof argoCDProviderHandler.register !== 'function') return;
+      if (typeof argocdProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = argoCDProviderHandler.register({}, storage);
+        const r = argocdProviderHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -268,11 +268,11 @@ describe('ArgoCDProvider functional handler', () => {
   describe('invariant examples', () => {
     it("emit-then-reconciliationStatus", async () => {
       const storage = createInMemoryStorage();
-      const emitResult0 = await interpret(argoCDProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
+      const emitResult0 = await interpret(argocdProviderHandler.emit({ plan: {"type":"literal","value":"dp-001"}, repo: {"type":"literal","value":"git@github.com:org/deploy.git"}, path: {"type":"literal","value":"envs/prod"} }), storage);
       expect(emitResult0.variant).toBe("ok");
       const application = emitResult0.output["application"];
       const files = emitResult0.output["files"];
-      const thenResult0 = await interpret(argoCDProviderHandler.reconciliationStatus({ application: {"type":"variable","name":"a"} }), storage);
+      const thenResult0 = await interpret(argocdProviderHandler.reconciliationStatus({ application: {"type":"variable","name":"a"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -293,10 +293,10 @@ describe('ArgoCDProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = argoCDProviderHandler[step.action];
+              const actionFn = argocdProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(argoCDProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(argocdProviderHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -322,10 +322,10 @@ describe('ArgoCDProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = argoCDProviderHandler[step.action];
+              const actionFn = argocdProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(argoCDProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(argocdProviderHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned-project
@@ -342,22 +342,22 @@ describe('ArgoCDProvider functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('emit handles empty input: ', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(argoCDProviderHandler.emit({  }), storage);
+      const result = await interpret(argocdProviderHandler.emit({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('emit ensures on ok: ', async () => {
-      if (typeof argoCDProviderHandler.emit !== 'function') return;
+      if (typeof argocdProviderHandler.emit !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ plan: fc.string({ minLength: 1, maxLength: 50 }), repo: fc.string({ minLength: 1, maxLength: 50 }), path: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = argoCDProviderHandler.emit(input as Record<string, unknown>);
+            const program = argocdProviderHandler.emit(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;

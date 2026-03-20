@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { jWTHandler } from '../../handlers/ts/app/jwt.handler.js';
+import { jwtHandler } from '../../handlers/ts/app/jwt.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('JWT functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = jWTHandler.generate({ user: "user-alice" });
+      const program = jwtHandler.generate({ user: "user-alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('JWT functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = jWTHandler.generate({ user: "user-alice" });
+      const program = jwtHandler.generate({ user: "user-alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = jWTHandler.generate({ user: "user-alice" });
+      const program = jwtHandler.generate({ user: "user-alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = jWTHandler.generate({ user: "user-alice" });
+      const program = jwtHandler.generate({ user: "user-alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('JWT functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = jWTHandler.generate({ user: "user-alice" });
+      const program = jwtHandler.generate({ user: "user-alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof jWTHandler.generate !== 'function') return;
+      if (typeof jwtHandler.generate !== 'function') return;
       try {
-        const result = await interpret(jWTHandler.generate({ user: "user-alice" }), storage);
+        const result = await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,16 +81,16 @@ describe('JWT functional handler', () => {
     });
 
     it('fixture "generate_ok" -> ok', async () => {
-      if (typeof jWTHandler.generate !== 'function') return;
+      if (typeof jwtHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.generate({ user: "user-alice" }), storage);
+      const result = await interpret(jwtHandler.generate({ user: "user-alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_another" -> ok', async () => {
-      if (typeof jWTHandler.generate !== 'function') return;
+      if (typeof jwtHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.generate({ user: "user-bob" }), storage);
+      const result = await interpret(jwtHandler.generate({ user: "user-bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -98,7 +98,7 @@ describe('JWT functional handler', () => {
 
   describe('verify', () => {
     it('builds a valid StorageProgram', () => {
-      const program = jWTHandler.verify({ token: "valid.token.placeholder" });
+      const program = jwtHandler.verify({ token: "valid.token.placeholder" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -106,21 +106,21 @@ describe('JWT functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = jWTHandler.verify({ token: "valid.token.placeholder" });
+      const program = jwtHandler.verify({ token: "valid.token.placeholder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = jWTHandler.verify({ token: "valid.token.placeholder" });
+      const program = jwtHandler.verify({ token: "valid.token.placeholder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = jWTHandler.verify({ token: "valid.token.placeholder" });
+      const program = jwtHandler.verify({ token: "valid.token.placeholder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -133,16 +133,16 @@ describe('JWT functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = jWTHandler.verify({ token: "valid.token.placeholder" });
+      const program = jwtHandler.verify({ token: "valid.token.placeholder" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       try {
-        const result = await interpret(jWTHandler.verify({ token: "valid.token.placeholder" }), storage);
+        const result = await interpret(jwtHandler.verify({ token: "valid.token.placeholder" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -153,23 +153,23 @@ describe('JWT functional handler', () => {
     });
 
     it('fixture "verify_ok" -> ok', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.verify({ token: "valid.token.placeholder" }), storage);
+      const result = await interpret(jwtHandler.verify({ token: "valid.token.placeholder" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "verify_invalid" -> error', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.verify({ token: "not-a-valid-jwt" }), storage);
+      const result = await interpret(jwtHandler.verify({ token: "not-a-valid-jwt" }), storage);
       expect(result.variant).toBe('error');
     });
 
     it('fixture "verify_empty" -> error', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.verify({ token: "" }), storage);
+      const result = await interpret(jwtHandler.verify({ token: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -177,11 +177,11 @@ describe('JWT functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof jWTHandler.register !== 'function') return;
+      if (typeof jwtHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = jWTHandler.register({}, storage);
+        const r = jwtHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -196,16 +196,16 @@ describe('JWT functional handler', () => {
   describe('invariant examples', () => {
     it("generate then verify round-trip", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(jWTHandler.generate({ user: {"type":"variable","name":"x"} }), storage);
+      const generateResult0 = await interpret(jwtHandler.generate({ user: {"type":"variable","name":"x"} }), storage);
       expect(generateResult0.variant).toBe("ok");
       const token = generateResult0.output["token"];
-      const thenResult0 = await interpret(jWTHandler.verify({ token: {"type":"variable","name":"t"} }), storage);
+      const thenResult0 = await interpret(jwtHandler.verify({ token: {"type":"variable","name":"t"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("invalid token rejected", async () => {
       const storage = createInMemoryStorage();
-      const verifyResult0 = await interpret(jWTHandler.verify({ token: {"type":"literal","value":"invalid.token.here"} }), storage);
+      const verifyResult0 = await interpret(jwtHandler.verify({ token: {"type":"literal","value":"invalid.token.here"} }), storage);
       expect(verifyResult0.variant).toBe("error");
       const message = verifyResult0.output["message"];
     });
@@ -226,10 +226,10 @@ describe('JWT functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = jWTHandler[step.action];
+              const actionFn = jwtHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(jWTHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(jwtHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -245,14 +245,14 @@ describe('JWT functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('generate ensures on ok: ', async () => {
-      if (typeof jWTHandler.generate !== 'function') return;
+      if (typeof jwtHandler.generate !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ user: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = jWTHandler.generate(input as Record<string, unknown>);
+            const program = jwtHandler.generate(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;
@@ -265,22 +265,22 @@ describe('JWT functional handler', () => {
     });
 
     it('verify handles empty input: ', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(jWTHandler.verify({  }), storage);
+      const result = await interpret(jwtHandler.verify({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('verify ensures on ok: ', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = jWTHandler.verify(input as Record<string, unknown>);
+            const program = jwtHandler.verify(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;
@@ -293,14 +293,14 @@ describe('JWT functional handler', () => {
     });
 
     it('verify ensures on error: ', async () => {
-      if (typeof jWTHandler.verify !== 'function') return;
+      if (typeof jwtHandler.verify !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ token: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = jWTHandler.verify(input as Record<string, unknown>);
+            const program = jwtHandler.verify(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "error") {
               seen = true;

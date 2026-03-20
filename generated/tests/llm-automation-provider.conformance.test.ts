@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { lLMAutomationProviderHandler } from '../../handlers/ts/llm-automation-provider.handler.js';
+import { llmAutomationProviderHandler } from '../../handlers/ts/llm-automation-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('LLMAutomationProvider functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lLMAutomationProviderHandler.register({  });
+      const program = llmAutomationProviderHandler.register({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lLMAutomationProviderHandler.register({  });
+      const program = llmAutomationProviderHandler.register({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lLMAutomationProviderHandler.register({  });
+      const program = llmAutomationProviderHandler.register({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lLMAutomationProviderHandler.register({  });
+      const program = llmAutomationProviderHandler.register({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lLMAutomationProviderHandler.register({  });
+      const program = llmAutomationProviderHandler.register({  });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof lLMAutomationProviderHandler.register !== 'function') return;
+      if (typeof llmAutomationProviderHandler.register !== 'function') return;
       try {
-        const result = await interpret(lLMAutomationProviderHandler.register({  }), storage);
+        const result = await interpret(llmAutomationProviderHandler.register({  }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,9 +81,9 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('fixture "valid" -> ok', async () => {
-      if (typeof lLMAutomationProviderHandler.register !== 'function') return;
+      if (typeof llmAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.register({  }), storage);
+      const result = await interpret(llmAutomationProviderHandler.register({  }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -91,7 +91,7 @@ describe('LLMAutomationProvider functional handler', () => {
 
   describe('execute', () => {
     it('builds a valid StorageProgram', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
+      const program = llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -99,21 +99,21 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
+      const program = llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
+      const program = llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
+      const program = llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -126,16 +126,16 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
+      const program = llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       try {
-        const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
+        const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -146,37 +146,37 @@ describe('LLMAutomationProvider functional handler', () => {
     });
 
     it('fixture "summarize_with_gpt4" -> ok', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
+      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_payload" -> error', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "", model_config: "{\"model\":\"gpt-4\"}" }), storage);
+      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "", model_config: "{\"model\":\"gpt-4\"}" }), storage);
       expect(result.variant).toBe('error');
     });
 
     it('fixture "missing_config" -> error', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "" }), storage);
+      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
     it('fixture "invalid_config_json" -> error', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "not-json" }), storage);
+      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "not-json" }), storage);
       expect(result.variant).toBe('error');
     });
 
     it('fixture "config_missing_model" -> error', async () => {
-      if (typeof lLMAutomationProviderHandler.execute !== 'function') return;
+      if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(lLMAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" }), storage);
+      const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"classify\"}", model_config: "{\"temperature\":0.5}" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -184,11 +184,11 @@ describe('LLMAutomationProvider functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof lLMAutomationProviderHandler.register !== 'function') return;
+      if (typeof llmAutomationProviderHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = lLMAutomationProviderHandler.register({}, storage);
+        const r = llmAutomationProviderHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -203,10 +203,10 @@ describe('LLMAutomationProvider functional handler', () => {
   describe('invariant examples', () => {
     it("register-then-execute", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await interpret(lLMAutomationProviderHandler.register({  }), storage);
+      const registerResult0 = await interpret(llmAutomationProviderHandler.register({  }), storage);
       expect(registerResult0.variant).toBe("ok");
       const provider_name = registerResult0.output["provider_name"];
-      const thenResult0 = await interpret(lLMAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"action\":\"summarize\"}"}, model_config: {"type":"literal","value":"{\"model\":\"gpt-4\"}"} }), storage);
+      const thenResult0 = await interpret(llmAutomationProviderHandler.execute({ action_payload: {"type":"literal","value":"{\"action\":\"summarize\"}"}, model_config: {"type":"literal","value":"{\"model\":\"gpt-4\"}"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -226,10 +226,10 @@ describe('LLMAutomationProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = lLMAutomationProviderHandler[step.action];
+              const actionFn = llmAutomationProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(lLMAutomationProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(llmAutomationProviderHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -254,10 +254,10 @@ describe('LLMAutomationProvider functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = lLMAutomationProviderHandler[step.action];
+              const actionFn = llmAutomationProviderHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(lLMAutomationProviderHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(llmAutomationProviderHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned-model_config

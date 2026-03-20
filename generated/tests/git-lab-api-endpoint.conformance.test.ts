@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { gitLabApiEndpointHandler } from '../../handlers/ts/execution/instances/gitlab-api-endpoint.handler.js';
+import { gitlabApiEndpointHandler } from '../../handlers/ts/execution/instances/gitlab-api-endpoint.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
 describe('GitLabApiEndpoint imperative handler', () => {
@@ -17,9 +17,9 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   describe('register', () => {
     it('executes without crashing', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       try {
-        const result = await gitLabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
+        const result = await gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -30,23 +30,23 @@ describe('GitLabApiEndpoint imperative handler', () => {
     });
 
     it('fixture "gitlab_default" -> ok', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
+      const result = await gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "gitlab_selfhosted" -> ok', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.register({ name: "gitlab-internal", token: "glpat-internal-token", projectId: "99", baseUrl: "https://git.internal.corp/api/v4" }, storage);
+      const result = await gitlabApiEndpointHandler.register({ name: "gitlab-internal", token: "glpat-internal-token", projectId: "99", baseUrl: "https://git.internal.corp/api/v4" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.register({ name: "", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
+      const result = await gitlabApiEndpointHandler.register({ name: "", token: "glpat-test", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage);
       expect(result.variant).toBe('error');
     });
 
@@ -54,9 +54,9 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
-      if (typeof gitLabApiEndpointHandler.resolve !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await gitLabApiEndpointHandler.resolve({ name: "gitlab-api" }, storage);
+        const result = await gitlabApiEndpointHandler.resolve({ name: "gitlab-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -67,16 +67,16 @@ describe('GitLabApiEndpoint imperative handler', () => {
     });
 
     it('fixture "resolve_existing" -> ok', async () => {
-      if (typeof gitLabApiEndpointHandler.resolve !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.resolve({ name: "gitlab-api" }, storage);
+      const result = await gitlabApiEndpointHandler.resolve({ name: "gitlab-api" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
-      if (typeof gitLabApiEndpointHandler.resolve !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      const result = await gitlabApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
       expect(result.variant).toBe('error');
     });
 
@@ -84,9 +84,9 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   describe('list', () => {
     it('executes without crashing', async () => {
-      if (typeof gitLabApiEndpointHandler.list !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.list !== 'function') return;
       try {
-        const result = await gitLabApiEndpointHandler.list({  }, storage);
+        const result = await gitlabApiEndpointHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -97,9 +97,9 @@ describe('GitLabApiEndpoint imperative handler', () => {
     });
 
     it('fixture "valid" -> ok', async () => {
-      if (typeof gitLabApiEndpointHandler.list !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.list({  }, storage);
+      const result = await gitlabApiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -107,11 +107,11 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = gitLabApiEndpointHandler.register({}, storage);
+        const r = gitlabApiEndpointHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -125,10 +125,10 @@ describe('GitLabApiEndpoint imperative handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await gitLabApiEndpointHandler.register({ name: {"type":"literal","value":"gitlab-api"}, token: {"type":"literal","value":"glpat-test"}, projectId: {"type":"literal","value":"12345"}, baseUrl: {"type":"literal","value":"https://gitlab.com/api/v4"} }, storage);
+      const registerResult0 = await gitlabApiEndpointHandler.register({ name: {"type":"literal","value":"gitlab-api"}, token: {"type":"literal","value":"glpat-test"}, projectId: {"type":"literal","value":"12345"}, baseUrl: {"type":"literal","value":"https://gitlab.com/api/v4"} }, storage);
       expect(registerResult0.variant).toBe("ok");
       const endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await gitLabApiEndpointHandler.resolve({ name: {"type":"literal","value":"gitlab-api"} }, storage);
+      const thenResult0 = await gitlabApiEndpointHandler.resolve({ name: {"type":"literal","value":"gitlab-api"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -149,10 +149,10 @@ describe('GitLabApiEndpoint imperative handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = gitLabApiEndpointHandler[step.action];
+              const actionFn = gitlabApiEndpointHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const result = await actionFn.call(gitLabApiEndpointHandler, step.input as Record<string, unknown>, storage);
+                  const result = await actionFn.call(gitlabApiEndpointHandler, step.input as Record<string, unknown>, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
               }
@@ -177,10 +177,10 @@ describe('GitLabApiEndpoint imperative handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = gitLabApiEndpointHandler[step.action];
+              const actionFn = gitlabApiEndpointHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const result = await actionFn.call(gitLabApiEndpointHandler, step.input as Record<string, unknown>, storage);
+                  const result = await actionFn.call(gitlabApiEndpointHandler, step.input as Record<string, unknown>, storage);
                   expect(result.variant).toBeDefined();
                   // Never: endpoint without project ID
                 } catch { /* handler may throw on random inputs */ }
@@ -196,22 +196,22 @@ describe('GitLabApiEndpoint imperative handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('register handles empty input: ', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitLabApiEndpointHandler.register({  }, storage);
+      const result = await gitlabApiEndpointHandler.register({  }, storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('register ensures on ok: ', async () => {
-      if (typeof gitLabApiEndpointHandler.register !== 'function') return;
+      if (typeof gitlabApiEndpointHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), projectId: fc.string({ minLength: 1, maxLength: 50 }), baseUrl: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await gitLabApiEndpointHandler.register(input as Record<string, unknown>, storage);
+            const result = await gitlabApiEndpointHandler.register(input as Record<string, unknown>, storage);
             if (result.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();

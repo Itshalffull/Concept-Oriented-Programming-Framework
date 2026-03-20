@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { gTKAdapterHandler } from '../../handlers/ts/app/gtk-adapter.handler.js';
+import { gtkAdapterHandler } from '../../handlers/ts/app/gtk-adapter.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('GTKAdapter functional handler', () => {
 
   describe('normalize', () => {
     it('builds a valid StorageProgram', () => {
-      const program = gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
+      const program = gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('GTKAdapter functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
+      const program = gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
+      const program = gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
+      const program = gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('GTKAdapter functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
+      const program = gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       try {
-        const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" }), storage);
+        const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,37 +81,37 @@ describe('GTKAdapter functional handler', () => {
     });
 
     it('fixture "clicked_signal" -> ok', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{ \"onclick\": \"on_clicked\", \"class\": \"flat\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "box_layout" -> ok', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"stack\\\",\\\"direction\\\":\\\"row\\\",\\\"gap\\\":\\\"8\\\"}\" }" }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-2", props: "{ \"layout\": \"{\\\"kind\\\":\\\"stack\\\",\\\"direction\\\":\\\"row\\\",\\\"gap\\\":\\\"8\\\"}\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "theme_colors" -> ok', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-bg\\\":\\\"#2d2d2d\\\"}}\" }" }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-3", props: "{ \"theme\": \"{\\\"tokens\\\":{\\\"color-bg\\\":\\\"#2d2d2d\\\"}}\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_props" -> error', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "" }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
     it('fixture "invalid_json" -> error', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({ adapter: "gtk-1", props: "{{nope" }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({ adapter: "gtk-1", props: "{{nope" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -119,11 +119,11 @@ describe('GTKAdapter functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof gTKAdapterHandler.register !== 'function') return;
+      if (typeof gtkAdapterHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = gTKAdapterHandler.register({}, storage);
+        const r = gtkAdapterHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -138,11 +138,11 @@ describe('GTKAdapter functional handler', () => {
   describe('invariant examples', () => {
     it("normalize then normalize", async () => {
       const storage = createInMemoryStorage();
-      const normalizeResult0 = await interpret(gTKAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
+      const normalizeResult0 = await interpret(gtkAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":"{ \"onclick\": \"handler_1\", \"class\": \"btn\" }"} }), storage);
       expect(normalizeResult0.variant).toBe("ok");
       const adapter = normalizeResult0.output["adapter"];
       const normalized = normalizeResult0.output["normalized"];
-      const thenResult0 = await interpret(gTKAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);
+      const thenResult0 = await interpret(gtkAdapterHandler.normalize({ adapter: {"type":"variable","name":"a"}, props: {"type":"literal","value":""} }), storage);
       expect(thenResult0.variant).toBe("error");
     });
 
@@ -150,22 +150,22 @@ describe('GTKAdapter functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('normalize handles empty input: ', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(gTKAdapterHandler.normalize({  }), storage);
+      const result = await interpret(gtkAdapterHandler.normalize({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('normalize ensures on ok: ', async () => {
-      if (typeof gTKAdapterHandler.normalize !== 'function') return;
+      if (typeof gtkAdapterHandler.normalize !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ adapter: fc.string(), props: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = gTKAdapterHandler.normalize(input as Record<string, unknown>);
+            const program = gtkAdapterHandler.normalize(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;

@@ -68,7 +68,7 @@ concept ViewportProvider [P] {
       -> invalid(message: String) {
         Breakpoint values must be ascending positive integers.
       }
-      fixture set_breakpoints_custom { provider: "vp-1", breakpoints: "{"sm":480,"md":768,"lg":1024}" }
+      fixture set_breakpoints_custom { provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }
       fixture set_breakpoints_invalid { provider: "vp-1", breakpoints: "not json" } -> error
     }
   }

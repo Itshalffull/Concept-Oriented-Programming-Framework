@@ -127,6 +127,7 @@ export interface TestPlan {
   conceptRef: string;
   handlerPath: string;
   handlerStyle: 'functional' | 'imperative';
+  handlerExportName?: string;
   actions: TestPlanAction[];
   examples: TestPlanExample[];
   properties: TestPlanForall[];

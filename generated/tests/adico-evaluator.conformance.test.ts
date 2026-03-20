@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { aDICOEvaluatorHandler } from '../../handlers/ts/app/governance/adico-evaluator.handler.js';
+import { adicoEvaluatorHandler } from '../../handlers/ts/app/governance/adico-evaluator.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('ADICOEvaluator functional handler', () => {
 
   describe('parse', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
+      const program = adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
+      const program = adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
+      const program = adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
+      const program = adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
+      const program = adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       try {
-        const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
+        const result = await interpret(adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,16 +81,16 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('fixture "parse_valid_adico" -> ok', async () => {
-      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
+      const result = await interpret(adicoEvaluatorHandler.parse({ ruleText: "A(admin) D(must) I(review) C(when submitted) O(escalate)" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "parse_invalid_text" -> parse_error', async () => {
-      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aDICOEvaluatorHandler.parse({ ruleText: "this is not valid ADICO" }), storage);
+      const result = await interpret(adicoEvaluatorHandler.parse({ ruleText: "this is not valid ADICO" }), storage);
       expect(result.variant).toBe('parse_error');
     });
 
@@ -98,7 +98,7 @@ describe('ADICOEvaluator functional handler', () => {
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
+      const program = adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -106,21 +106,21 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
+      const program = adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
+      const program = adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
+      const program = adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -133,16 +133,16 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
+      const program = adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
+      if (typeof adicoEvaluatorHandler.evaluate !== 'function') return;
       try {
-        const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
+        const result = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -153,16 +153,16 @@ describe('ADICOEvaluator functional handler', () => {
     });
 
     it('fixture "evaluate_admin_must_review" -> ok', async () => {
-      if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
+      if (typeof adicoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
+      const result = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"admin\",\"role\":\"admin\",\"action\":\"review\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "evaluate_mismatch_actor" -> not_applicable', async () => {
-      if (typeof aDICOEvaluatorHandler.evaluate !== 'function') return;
+      if (typeof adicoEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aDICOEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"guest\",\"role\":\"guest\",\"action\":\"delete\"}" }), storage);
+      const result = await interpret(adicoEvaluatorHandler.evaluate({ rule: "adico-001", context: "{\"actor\":\"guest\",\"role\":\"guest\",\"action\":\"delete\"}" }), storage);
       expect(result.variant).toBe('not_applicable');
     });
 
@@ -170,11 +170,11 @@ describe('ADICOEvaluator functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof aDICOEvaluatorHandler.register !== 'function') return;
+      if (typeof adicoEvaluatorHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = aDICOEvaluatorHandler.register({}, storage);
+        const r = adicoEvaluatorHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -189,10 +189,10 @@ describe('ADICOEvaluator functional handler', () => {
   describe('invariant examples', () => {
     it("parse-then-evaluate", async () => {
       const storage = createInMemoryStorage();
-      const parseResult0 = await interpret(aDICOEvaluatorHandler.parse({ ruleText: {"type":"variable","name":"_"} }), storage);
+      const parseResult0 = await interpret(adicoEvaluatorHandler.parse({ ruleText: {"type":"variable","name":"_"} }), storage);
       expect(parseResult0.variant).toBe("parsed");
       const rule = parseResult0.output["rule"];
-      const thenResult0 = await interpret(aDICOEvaluatorHandler.evaluate({ rule: {"type":"variable","name":"ae"}, context: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(adicoEvaluatorHandler.evaluate({ rule: {"type":"variable","name":"ae"}, context: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("permitted");
     });
 
@@ -212,10 +212,10 @@ describe('ADICOEvaluator functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = aDICOEvaluatorHandler[step.action];
+              const actionFn = adicoEvaluatorHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(aDICOEvaluatorHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(adicoEvaluatorHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -240,10 +240,10 @@ describe('ADICOEvaluator functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = aDICOEvaluatorHandler[step.action];
+              const actionFn = adicoEvaluatorHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(aDICOEvaluatorHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(adicoEvaluatorHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned-parsedAttributes
@@ -260,22 +260,22 @@ describe('ADICOEvaluator functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('parse handles empty input: ', async () => {
-      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(aDICOEvaluatorHandler.parse({  }), storage);
+      const result = await interpret(adicoEvaluatorHandler.parse({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('parse ensures on parsed: ', async () => {
-      if (typeof aDICOEvaluatorHandler.parse !== 'function') return;
+      if (typeof adicoEvaluatorHandler.parse !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ ruleText: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = aDICOEvaluatorHandler.parse(input as Record<string, unknown>);
+            const program = adicoEvaluatorHandler.parse(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "parsed") {
               seen = true;

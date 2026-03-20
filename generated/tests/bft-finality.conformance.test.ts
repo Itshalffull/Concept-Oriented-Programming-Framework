@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { bFTFinalityHandler } from '../../handlers/ts/app/governance/bft-finality.handler.js';
+import { bftFinalityHandler } from '../../handlers/ts/app/governance/bft-finality.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('BFTFinality functional handler', () => {
 
   describe('configureCommittee', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
+      const program = bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
+      const program = bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
+      const program = bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
+      const program = bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
+      const program = bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       try {
-        const result = await interpret(bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
+        const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,23 +81,23 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('fixture "configure_pbft" -> ok', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
+      const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_hotstuff" -> ok', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.configureCommittee({ validators: "[\"node-a\",\"node-b\",\"node-c\",\"node-d\"]", faultTolerance: "2/3", protocol: "HotStuff" }), storage);
+      const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[\"node-a\",\"node-b\",\"node-c\",\"node-d\"]", faultTolerance: "2/3", protocol: "HotStuff" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "configure_empty_validators" -> error', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.configureCommittee({ validators: "[]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
+      const result = await interpret(bftFinalityHandler.configureCommittee({ validators: "[]", faultTolerance: "2/3", protocol: "PBFT" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -105,7 +105,7 @@ describe('BFTFinality functional handler', () => {
 
   describe('proposeFinality', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
+      const program = bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -113,21 +113,21 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
+      const program = bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
+      const program = bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
+      const program = bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -140,16 +140,16 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
+      const program = bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof bFTFinalityHandler.proposeFinality !== 'function') return;
+      if (typeof bftFinalityHandler.proposeFinality !== 'function') return;
       try {
-        const result = await interpret(bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
+        const result = await interpret(bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -160,16 +160,16 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('fixture "propose_round" -> ok', async () => {
-      if (typeof bFTFinalityHandler.proposeFinality !== 'function') return;
+      if (typeof bftFinalityHandler.proposeFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
+      const result = await interpret(bftFinalityHandler.proposeFinality({ committee: "bft-001", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "propose_unknown_committee" -> error', async () => {
-      if (typeof bFTFinalityHandler.proposeFinality !== 'function') return;
+      if (typeof bftFinalityHandler.proposeFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.proposeFinality({ committee: "bft-nonexistent", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
+      const result = await interpret(bftFinalityHandler.proposeFinality({ committee: "bft-nonexistent", operationRef: "gov-prop-55", proposer: "val-1" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -177,7 +177,7 @@ describe('BFTFinality functional handler', () => {
 
   describe('vote', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
+      const program = bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +185,21 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
+      const program = bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
+      const program = bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
+      const program = bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,16 +212,16 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
+      const program = bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof bFTFinalityHandler.vote !== 'function') return;
+      if (typeof bftFinalityHandler.vote !== 'function') return;
       try {
-        const result = await interpret(bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" }), storage);
+        const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -232,23 +232,23 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('fixture "vote_approve" -> ok', async () => {
-      if (typeof bFTFinalityHandler.vote !== 'function') return;
+      if (typeof bftFinalityHandler.vote !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" }), storage);
+      const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-1", approve: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "vote_reject" -> ok', async () => {
-      if (typeof bFTFinalityHandler.vote !== 'function') return;
+      if (typeof bftFinalityHandler.vote !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-2", approve: "false" }), storage);
+      const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "val-2", approve: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "vote_not_member" -> error', async () => {
-      if (typeof bFTFinalityHandler.vote !== 'function') return;
+      if (typeof bftFinalityHandler.vote !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "unknown-val", approve: "true" }), storage);
+      const result = await interpret(bftFinalityHandler.vote({ committee: "bft-001", roundNumber: "1", validator: "unknown-val", approve: "true" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -256,7 +256,7 @@ describe('BFTFinality functional handler', () => {
 
   describe('checkConsensus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
+      const program = bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -264,21 +264,21 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
+      const program = bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
+      const program = bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
+      const program = bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -291,16 +291,16 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
+      const program = bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof bFTFinalityHandler.checkConsensus !== 'function') return;
+      if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       try {
-        const result = await interpret(bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" }), storage);
+        const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -311,23 +311,23 @@ describe('BFTFinality functional handler', () => {
     });
 
     it('fixture "check_consensus_reached" -> ok', async () => {
-      if (typeof bFTFinalityHandler.checkConsensus !== 'function') return;
+      if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" }), storage);
+      const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_consensus_insufficient" -> ok', async () => {
-      if (typeof bFTFinalityHandler.checkConsensus !== 'function') return;
+      if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "2" }), storage);
+      const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "2" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_consensus_unknown_round" -> error', async () => {
-      if (typeof bFTFinalityHandler.checkConsensus !== 'function') return;
+      if (typeof bftFinalityHandler.checkConsensus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "9999" }), storage);
+      const result = await interpret(bftFinalityHandler.checkConsensus({ committee: "bft-001", roundNumber: "9999" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -335,11 +335,11 @@ describe('BFTFinality functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof bFTFinalityHandler.register !== 'function') return;
+      if (typeof bftFinalityHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = bFTFinalityHandler.register({}, storage);
+        const r = bftFinalityHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -354,10 +354,10 @@ describe('BFTFinality functional handler', () => {
   describe('invariant examples', () => {
     it("configureCommittee-then-proposeFinality", async () => {
       const storage = createInMemoryStorage();
-      const configureCommitteeResult0 = await interpret(bFTFinalityHandler.configureCommittee({ validators: {"type":"variable","name":"_"}, faultTolerance: {"type":"literal","value":0.333}, protocol: {"type":"literal","value":"PBFT"} }), storage);
+      const configureCommitteeResult0 = await interpret(bftFinalityHandler.configureCommittee({ validators: {"type":"variable","name":"_"}, faultTolerance: {"type":"literal","value":0.333}, protocol: {"type":"literal","value":"PBFT"} }), storage);
       expect(configureCommitteeResult0.variant).toBe("configured");
       const committee = configureCommitteeResult0.output["committee"];
-      const thenResult0 = await interpret(bFTFinalityHandler.proposeFinality({ committee: {"type":"variable","name":"bf"}, operationRef: {"type":"variable","name":"_"}, proposer: {"type":"variable","name":"_"} }), storage);
+      const thenResult0 = await interpret(bftFinalityHandler.proposeFinality({ committee: {"type":"variable","name":"bf"}, operationRef: {"type":"variable","name":"_"}, proposer: {"type":"variable","name":"_"} }), storage);
       expect(thenResult0.variant).toBe("proposed");
     });
 
@@ -379,10 +379,10 @@ describe('BFTFinality functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = bFTFinalityHandler[step.action];
+              const actionFn = bftFinalityHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(bFTFinalityHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(bftFinalityHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -409,10 +409,10 @@ describe('BFTFinality functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = bFTFinalityHandler[step.action];
+              const actionFn = bftFinalityHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(bFTFinalityHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(bftFinalityHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned-faultTolerance
@@ -429,22 +429,22 @@ describe('BFTFinality functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('configureCommittee handles empty input: ', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(bFTFinalityHandler.configureCommittee({  }), storage);
+      const result = await interpret(bftFinalityHandler.configureCommittee({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('configureCommittee ensures on configured: ', async () => {
-      if (typeof bFTFinalityHandler.configureCommittee !== 'function') return;
+      if (typeof bftFinalityHandler.configureCommittee !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ validators: fc.string({ minLength: 1, maxLength: 50 }), faultTolerance: fc.string({ minLength: 1, maxLength: 50 }), protocol: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = bFTFinalityHandler.configureCommittee(input as Record<string, unknown>);
+            const program = bftFinalityHandler.configureCommittee(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "configured") {
               seen = true;

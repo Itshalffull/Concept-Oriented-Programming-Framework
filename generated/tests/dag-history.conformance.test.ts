@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { dAGHistoryHandler } from '../../handlers/ts/dag-history.handler.js';
+import { dagHistoryHandler } from '../../handlers/ts/dag-history.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('append', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
+      const program = dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
+      const program = dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
+      const program = dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
+      const program = dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
+      const program = dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+        const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,23 +81,23 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "append_root" -> ok', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
+      const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "append_with_parent" -> ok', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage);
+      const result = await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_content_ref" -> error', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage);
+      const result = await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -105,7 +105,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('ancestors', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -113,21 +113,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -140,16 +140,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" });
+      const program = dagHistoryHandler.ancestors({ nodeId: "dag-history-2" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.ancestors !== 'function') return;
+      if (typeof dagHistoryHandler.ancestors !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
+        const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -160,16 +160,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "ancestors_existing" -> ok', async () => {
-      if (typeof dAGHistoryHandler.ancestors !== 'function') return;
+      if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
+      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ancestors_missing" -> error', async () => {
-      if (typeof dAGHistoryHandler.ancestors !== 'function') return;
+      if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.ancestors({ nodeId: "dag-history-nonexistent" }), storage);
+      const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-nonexistent" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -177,7 +177,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('commonAncestor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -185,21 +185,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -212,16 +212,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
+      const program = dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.commonAncestor !== 'function') return;
+      if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
+        const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -232,16 +232,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "find_common" -> ok', async () => {
-      if (typeof dAGHistoryHandler.commonAncestor !== 'function') return;
+      if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_node" -> error', async () => {
-      if (typeof dAGHistoryHandler.commonAncestor !== 'function') return;
+      if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-nonexistent", b: "dag-history-1" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -249,7 +249,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('descendants', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -257,21 +257,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -284,16 +284,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.descendants({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.descendants({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.descendants !== 'function') return;
+      if (typeof dagHistoryHandler.descendants !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
+        const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -304,16 +304,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "descendants_existing" -> ok', async () => {
-      if (typeof dAGHistoryHandler.descendants !== 'function') return;
+      if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "descendants_missing" -> error', async () => {
-      if (typeof dAGHistoryHandler.descendants !== 'function') return;
+      if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.descendants({ nodeId: "dag-history-nonexistent" }), storage);
+      const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-nonexistent" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -321,7 +321,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('between', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -329,21 +329,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -356,16 +356,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
+      const program = dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.between !== 'function') return;
+      if (typeof dagHistoryHandler.between !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
+        const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -376,16 +376,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "path_between" -> ok', async () => {
-      if (typeof dAGHistoryHandler.between !== 'function') return;
+      if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
+      const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "between_missing" -> error', async () => {
-      if (typeof dAGHistoryHandler.between !== 'function') return;
+      if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.between({ from: "dag-history-nonexistent", to: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.between({ from: "dag-history-nonexistent", to: "dag-history-1" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -393,7 +393,7 @@ describe('DAGHistory functional handler', () => {
 
   describe('getNode', () => {
     it('builds a valid StorageProgram', () => {
-      const program = dAGHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -401,21 +401,21 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = dAGHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = dAGHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = dAGHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -428,16 +428,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = dAGHistoryHandler.getNode({ nodeId: "dag-history-1" });
+      const program = dagHistoryHandler.getNode({ nodeId: "dag-history-1" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof dAGHistoryHandler.getNode !== 'function') return;
+      if (typeof dagHistoryHandler.getNode !== 'function') return;
       try {
-        const result = await interpret(dAGHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
+        const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -448,16 +448,16 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('fixture "get_existing" -> ok', async () => {
-      if (typeof dAGHistoryHandler.getNode !== 'function') return;
+      if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
+      const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "get_missing" -> error', async () => {
-      if (typeof dAGHistoryHandler.getNode !== 'function') return;
+      if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.getNode({ nodeId: "dag-history-nonexistent" }), storage);
+      const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-nonexistent" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -465,11 +465,11 @@ describe('DAGHistory functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof dAGHistoryHandler.register !== 'function') return;
+      if (typeof dagHistoryHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = dAGHistoryHandler.register({}, storage);
+        const r = dagHistoryHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -484,19 +484,19 @@ describe('DAGHistory functional handler', () => {
   describe('invariant examples', () => {
     it("append then getNode", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dAGHistoryHandler.append({ parents: {"type":"literal","value":"[]"}, contentRef: {"type":"literal","value":"abc123"}, metadata: {"type":"literal","value":""} }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[]"}, contentRef: {"type":"literal","value":"abc123"}, metadata: {"type":"literal","value":""} }), storage);
       expect(appendResult0.variant).toBe("ok");
       const nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dAGHistoryHandler.getNode({ nodeId: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(dagHistoryHandler.getNode({ nodeId: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("append then ancestors", async () => {
       const storage = createInMemoryStorage();
-      const appendResult0 = await interpret(dAGHistoryHandler.append({ parents: {"type":"literal","value":"[p1]"}, contentRef: {"type":"literal","value":"def456"}, metadata: {"type":"literal","value":""} }), storage);
+      const appendResult0 = await interpret(dagHistoryHandler.append({ parents: {"type":"literal","value":"[p1]"}, contentRef: {"type":"literal","value":"def456"}, metadata: {"type":"literal","value":""} }), storage);
       expect(appendResult0.variant).toBe("ok");
       const nodeId = appendResult0.output["nodeId"];
-      const thenResult0 = await interpret(dAGHistoryHandler.ancestors({ nodeId: {"type":"variable","name":"n"} }), storage);
+      const thenResult0 = await interpret(dagHistoryHandler.ancestors({ nodeId: {"type":"variable","name":"n"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -520,10 +520,10 @@ describe('DAGHistory functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = dAGHistoryHandler[step.action];
+              const actionFn = dagHistoryHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(dAGHistoryHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(dagHistoryHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -552,10 +552,10 @@ describe('DAGHistory functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = dAGHistoryHandler[step.action];
+              const actionFn = dagHistoryHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(dAGHistoryHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(dagHistoryHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned entry in nodes
@@ -572,22 +572,22 @@ describe('DAGHistory functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('append handles empty input: ', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(dAGHistoryHandler.append({  }), storage);
+      const result = await interpret(dagHistoryHandler.append({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('append ensures on ok: ', async () => {
-      if (typeof dAGHistoryHandler.append !== 'function') return;
+      if (typeof dagHistoryHandler.append !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ parents: fc.string(), contentRef: fc.string({ minLength: 1, maxLength: 50 }), metadata: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dAGHistoryHandler.append(input as Record<string, unknown>);
+            const program = dagHistoryHandler.append(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;
@@ -600,14 +600,14 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('ancestors ensures on ok: ', async () => {
-      if (typeof dAGHistoryHandler.ancestors !== 'function') return;
+      if (typeof dagHistoryHandler.ancestors !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ nodeId: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dAGHistoryHandler.ancestors(input as Record<string, unknown>);
+            const program = dagHistoryHandler.ancestors(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;
@@ -620,14 +620,14 @@ describe('DAGHistory functional handler', () => {
     });
 
     it('commonAncestor ensures on ok: ', async () => {
-      if (typeof dAGHistoryHandler.commonAncestor !== 'function') return;
+      if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ a: fc.string(), b: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = dAGHistoryHandler.commonAncestor(input as Record<string, unknown>);
+            const program = dagHistoryHandler.commonAncestor(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;

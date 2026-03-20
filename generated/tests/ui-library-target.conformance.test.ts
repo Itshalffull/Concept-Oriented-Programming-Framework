@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { uILibraryTargetHandler } from '../../handlers/ts/app/ui-library-target.handler.js';
+import { uiLibraryTargetHandler } from '../../handlers/ts/app/ui-library-target.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
@@ -26,7 +26,7 @@ describe('UILibraryTarget functional handler', () => {
 
   describe('generate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
+      const program = uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -34,21 +34,21 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
+      const program = uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
+      const program = uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
+      const program = uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -61,16 +61,16 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
+      const program = uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       try {
-        const result = await interpret(uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }), storage);
+        const result = await interpret(uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -81,23 +81,23 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('fixture "generate_default" -> ok', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }), storage);
+      const result = await interpret(uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_with_options" -> ok', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }), storage);
+      const result = await interpret(uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "generate_empty_config" -> error', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.generate({ config: "" }), storage);
+      const result = await interpret(uiLibraryTargetHandler.generate({ config: "" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -105,7 +105,7 @@ describe('UILibraryTarget functional handler', () => {
 
   describe('validate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = uILibraryTargetHandler.validate({ document: "ui-library-001" });
+      const program = uiLibraryTargetHandler.validate({ document: "ui-library-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -113,21 +113,21 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = uILibraryTargetHandler.validate({ document: "ui-library-001" });
+      const program = uiLibraryTargetHandler.validate({ document: "ui-library-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = uILibraryTargetHandler.validate({ document: "ui-library-001" });
+      const program = uiLibraryTargetHandler.validate({ document: "ui-library-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = uILibraryTargetHandler.validate({ document: "ui-library-001" });
+      const program = uiLibraryTargetHandler.validate({ document: "ui-library-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -140,16 +140,16 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = uILibraryTargetHandler.validate({ document: "ui-library-001" });
+      const program = uiLibraryTargetHandler.validate({ document: "ui-library-001" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('executes without crashing', async () => {
-      if (typeof uILibraryTargetHandler.validate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.validate !== 'function') return;
       try {
-        const result = await interpret(uILibraryTargetHandler.validate({ document: "ui-library-001" }), storage);
+        const result = await interpret(uiLibraryTargetHandler.validate({ document: "ui-library-001" }), storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -160,16 +160,16 @@ describe('UILibraryTarget functional handler', () => {
     });
 
     it('fixture "validate_valid" -> ok', async () => {
-      if (typeof uILibraryTargetHandler.validate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.validate({ document: "ui-library-001" }), storage);
+      const result = await interpret(uiLibraryTargetHandler.validate({ document: "ui-library-001" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "validate_not_found" -> error', async () => {
-      if (typeof uILibraryTargetHandler.validate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.validate({ document: "ui-library-nonexistent" }), storage);
+      const result = await interpret(uiLibraryTargetHandler.validate({ document: "ui-library-nonexistent" }), storage);
       expect(result.variant).toBe('error');
     });
 
@@ -177,11 +177,11 @@ describe('UILibraryTarget functional handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof uILibraryTargetHandler.register !== 'function') return;
+      if (typeof uiLibraryTargetHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = uILibraryTargetHandler.register({}, storage);
+        const r = uiLibraryTargetHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -196,11 +196,11 @@ describe('UILibraryTarget functional handler', () => {
   describe('invariant examples', () => {
     it("generate-then-validate", async () => {
       const storage = createInMemoryStorage();
-      const generateResult0 = await interpret(uILibraryTargetHandler.generate({ config: {"type":"literal","value":"{\"outputPath\":\"docs/reference/ui-library.md\"}"} }), storage);
+      const generateResult0 = await interpret(uiLibraryTargetHandler.generate({ config: {"type":"literal","value":"{\"outputPath\":\"docs/reference/ui-library.md\"}"} }), storage);
       expect(generateResult0.variant).toBe("ok");
       const document = generateResult0.output["document"];
       const files = generateResult0.output["files"];
-      const thenResult0 = await interpret(uILibraryTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
+      const thenResult0 = await interpret(uiLibraryTargetHandler.validate({ document: {"type":"variable","name":"d"} }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -220,10 +220,10 @@ describe('UILibraryTarget functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = uILibraryTargetHandler[step.action];
+              const actionFn = uiLibraryTargetHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(uILibraryTargetHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(uiLibraryTargetHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
@@ -248,10 +248,10 @@ describe('UILibraryTarget functional handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = uILibraryTargetHandler[step.action];
+              const actionFn = uiLibraryTargetHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const program = actionFn.call(uILibraryTargetHandler, step.input as Record<string, unknown>);
+                  const program = actionFn.call(uiLibraryTargetHandler, step.input as Record<string, unknown>);
                   const result = await interpret(program, storage);
                   expect(result.variant).toBeDefined();
                   // Never: orphaned-includeAccessibility
@@ -268,22 +268,22 @@ describe('UILibraryTarget functional handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('generate handles empty input: ', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(uILibraryTargetHandler.generate({  }), storage);
+      const result = await interpret(uiLibraryTargetHandler.generate({  }), storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('generate ensures on ok: ', async () => {
-      if (typeof uILibraryTargetHandler.generate !== 'function') return;
+      if (typeof uiLibraryTargetHandler.generate !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ config: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const program = uILibraryTargetHandler.generate(input as Record<string, unknown>);
+            const program = uiLibraryTargetHandler.generate(input as Record<string, unknown>);
             const result = await interpret(program, storage);
             if (result.variant === "ok") {
               seen = true;

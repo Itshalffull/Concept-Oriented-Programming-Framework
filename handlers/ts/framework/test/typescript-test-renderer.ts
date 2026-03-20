@@ -504,7 +504,7 @@ function renderContractTests(
  * Render a TestPlan into a complete TypeScript conformance test file.
  */
 export function renderTypeScriptTests(plan: TestPlan): string {
-  const handlerVar = toCamel(plan.conceptName) + 'Handler';
+  const handlerVar = plan.handlerExportName || (toCamel(plan.conceptName) + 'Handler');
   const style = plan.handlerStyle || 'functional';
   const lines: string[] = [];
 

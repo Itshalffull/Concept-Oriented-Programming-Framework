@@ -5,7 +5,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { gitHubApiEndpointHandler } from '../../handlers/ts/execution/instances/github-api-endpoint.handler.js';
+import { githubApiEndpointHandler } from '../../handlers/ts/execution/instances/github-api-endpoint.handler.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
 describe('GitHubApiEndpoint imperative handler', () => {
@@ -17,9 +17,9 @@ describe('GitHubApiEndpoint imperative handler', () => {
 
   describe('register', () => {
     it('executes without crashing', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       try {
-        const result = await gitHubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
+        const result = await githubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -30,23 +30,23 @@ describe('GitHubApiEndpoint imperative handler', () => {
     });
 
     it('fixture "github_primary" -> ok', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
+      const result = await githubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "github_ci" -> ok', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }, storage);
+      const result = await githubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "missing_name" -> error', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.register({ name: "", token: "ghp_test", repository: "owner/repo" }, storage);
+      const result = await githubApiEndpointHandler.register({ name: "", token: "ghp_test", repository: "owner/repo" }, storage);
       expect(result.variant).toBe('error');
     });
 
@@ -54,9 +54,9 @@ describe('GitHubApiEndpoint imperative handler', () => {
 
   describe('resolve', () => {
     it('executes without crashing', async () => {
-      if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
+      if (typeof githubApiEndpointHandler.resolve !== 'function') return;
       try {
-        const result = await gitHubApiEndpointHandler.resolve({ name: "github-api" }, storage);
+        const result = await githubApiEndpointHandler.resolve({ name: "github-api" }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -67,16 +67,16 @@ describe('GitHubApiEndpoint imperative handler', () => {
     });
 
     it('fixture "resolve_existing" -> ok', async () => {
-      if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
+      if (typeof githubApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.resolve({ name: "github-api" }, storage);
+      const result = await githubApiEndpointHandler.resolve({ name: "github-api" }, storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing" -> error', async () => {
-      if (typeof gitHubApiEndpointHandler.resolve !== 'function') return;
+      if (typeof githubApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
+      const result = await githubApiEndpointHandler.resolve({ name: "nonexistent" }, storage);
       expect(result.variant).toBe('error');
     });
 
@@ -84,9 +84,9 @@ describe('GitHubApiEndpoint imperative handler', () => {
 
   describe('list', () => {
     it('executes without crashing', async () => {
-      if (typeof gitHubApiEndpointHandler.list !== 'function') return;
+      if (typeof githubApiEndpointHandler.list !== 'function') return;
       try {
-        const result = await gitHubApiEndpointHandler.list({  }, storage);
+        const result = await githubApiEndpointHandler.list({  }, storage);
         expect(result).toBeDefined();
         expect(result.variant).toBeDefined();
         expect(typeof result.variant).toBe('string');
@@ -97,9 +97,9 @@ describe('GitHubApiEndpoint imperative handler', () => {
     });
 
     it('fixture "valid" -> ok', async () => {
-      if (typeof gitHubApiEndpointHandler.list !== 'function') return;
+      if (typeof githubApiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.list({  }, storage);
+      const result = await githubApiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -107,11 +107,11 @@ describe('GitHubApiEndpoint imperative handler', () => {
 
   describe('register()', () => {
     it('declares concept name', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
       let result: any;
       try {
-        const r = gitHubApiEndpointHandler.register({}, storage);
+        const r = githubApiEndpointHandler.register({}, storage);
         result = r instanceof Promise ? await r : r;
         // If StorageProgram, interpret it
         if (result?.instructions && !result.variant) {
@@ -125,10 +125,10 @@ describe('GitHubApiEndpoint imperative handler', () => {
   describe('invariant examples', () => {
     it("resolve after register", async () => {
       const storage = createInMemoryStorage();
-      const registerResult0 = await gitHubApiEndpointHandler.register({ name: {"type":"literal","value":"github-api"}, token: {"type":"literal","value":"ghp-test"}, repository: {"type":"literal","value":"owner/repo"} }, storage);
+      const registerResult0 = await githubApiEndpointHandler.register({ name: {"type":"literal","value":"github-api"}, token: {"type":"literal","value":"ghp-test"}, repository: {"type":"literal","value":"owner/repo"} }, storage);
       expect(registerResult0.variant).toBe("ok");
       const endpoint = registerResult0.output["endpoint"];
-      const thenResult0 = await gitHubApiEndpointHandler.resolve({ name: {"type":"literal","value":"github-api"} }, storage);
+      const thenResult0 = await githubApiEndpointHandler.resolve({ name: {"type":"literal","value":"github-api"} }, storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -149,10 +149,10 @@ describe('GitHubApiEndpoint imperative handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = gitHubApiEndpointHandler[step.action];
+              const actionFn = githubApiEndpointHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const result = await actionFn.call(gitHubApiEndpointHandler, step.input as Record<string, unknown>, storage);
+                  const result = await actionFn.call(githubApiEndpointHandler, step.input as Record<string, unknown>, storage);
                   expect(result.variant).toBeDefined();
                 } catch { /* handler may throw on random inputs */ }
               }
@@ -177,10 +177,10 @@ describe('GitHubApiEndpoint imperative handler', () => {
           async (actionSequence) => {
             const storage = createInMemoryStorage();
             for (const step of actionSequence) {
-              const actionFn = gitHubApiEndpointHandler[step.action];
+              const actionFn = githubApiEndpointHandler[step.action];
               if (typeof actionFn === 'function') {
                 try {
-                  const result = await actionFn.call(gitHubApiEndpointHandler, step.input as Record<string, unknown>, storage);
+                  const result = await actionFn.call(githubApiEndpointHandler, step.input as Record<string, unknown>, storage);
                   expect(result.variant).toBeDefined();
                   // Never: endpoint without repository
                 } catch { /* handler may throw on random inputs */ }
@@ -196,22 +196,22 @@ describe('GitHubApiEndpoint imperative handler', () => {
 
   describe('action contracts (PBT)', () => {
     it('register handles empty input: ', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await gitHubApiEndpointHandler.register({  }, storage);
+      const result = await githubApiEndpointHandler.register({  }, storage);
       expect(result).toBeDefined();
       expect(result.variant).toBeDefined();
     });
 
     it('register ensures on ok: ', async () => {
-      if (typeof gitHubApiEndpointHandler.register !== 'function') return;
+      if (typeof githubApiEndpointHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
           fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), token: fc.string({ minLength: 1, maxLength: 50 }), repository: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
-            const result = await gitHubApiEndpointHandler.register(input as Record<string, unknown>, storage);
+            const result = await githubApiEndpointHandler.register(input as Record<string, unknown>, storage);
             if (result.variant === "ok") {
               seen = true;
               expect(result.output).toBeDefined();
