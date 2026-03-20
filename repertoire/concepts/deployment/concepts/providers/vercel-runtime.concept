@@ -32,6 +32,10 @@ concept VercelRuntime [V] {
       -> domainConflict(domain: String, existingProject: String) {
         Domain already assigned to another project.
       }
+
+      fixture provision_nextjs { concept: "UserService", teamId: "team_abc123", framework: "nextjs" }
+      fixture provision_remix { concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }
+      fixture provision_empty_concept { concept: "", teamId: "team_1", framework: "nextjs" } -> error
     }
 
     action deploy(project: V, sourceDirectory: String) {
@@ -41,18 +45,28 @@ concept VercelRuntime [V] {
       -> buildFailed(project: V, errors: list String) {
         Vercel build step failed.
       }
+
+      fixture deploy_dist { project: "prj_userservice", sourceDirectory: "./dist" }
+      fixture deploy_src { project: "prj_api", sourceDirectory: "./src" }
+      fixture deploy_missing_project { project: "", sourceDirectory: "./dist" } -> error
     }
 
     action setTrafficWeight(project: V, weight: Int) {
       -> ok(project: V) {
         Traffic split between current and previous deployments.
       }
+
+      fixture traffic_50 { project: "prj_userservice", weight: 50 }
+      fixture traffic_negative { project: "prj_userservice", weight: -1 } -> error
     }
 
     action rollback(project: V, targetDeploymentId: String) {
       -> ok(project: V, restoredDeploymentId: String) {
         Production alias pointed to previous deployment.
       }
+
+      fixture rollback_valid { project: "prj_userservice", targetDeploymentId: "dpl_abc123" }
+      fixture rollback_missing_deployment { project: "prj_userservice", targetDeploymentId: "" } -> error
     }
 
     action configureEnv(project: V, envVars: String) {

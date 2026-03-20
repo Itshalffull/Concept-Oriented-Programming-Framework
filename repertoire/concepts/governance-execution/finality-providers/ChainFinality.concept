@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept ChainFinality [CF] {
@@ -25,13 +26,17 @@ concept ChainFinality [CF] {
   }
 
   actions {
-    action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int) {
+    action track(operationRef: String, txHash: String, chainId: String, requiredConfirmations: Int, submittedBlock: Int) {
       -> tracking(entry: CF) {
         A transaction is registered for finality tracking.
       }
+
+      fixture track_eth_tx { operationRef: "gov-prop-101", txHash: "0xabc123def456", chainId: "ethereum-mainnet", requiredConfirmations: 12, submittedBlock: 19500000 }
+      fixture track_polygon { operationRef: "gov-prop-202", txHash: "0x789fed321", chainId: "polygon", requiredConfirmations: 64, submittedBlock: 55000000 }
+      fixture track_missing_ref { operationRef: "", txHash: "0xabc", chainId: "ethereum", requiredConfirmations: 12, submittedBlock: 100 } -> error
     }
 
-    action checkFinality(entry: CF) {
+    action checkFinality(entry: CF, currentBlock: Int) {
       -> pending(entry: CF, currentConfirmations: Int, required: Int) {
         Transaction is included but has not reached required confirmations.
       }

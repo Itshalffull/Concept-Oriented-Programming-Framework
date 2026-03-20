@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept RestTarget [R] {
 
@@ -54,6 +55,11 @@ concept RestTarget [R] {
         and path. Manual annotation required in the interface
         manifest.
       }
+
+      fixture with_default_config { projection: "user-projection", config: "{}" }
+      fixture with_custom_base_path { projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }
+      fixture empty_projection { projection: "", config: "{}" } -> error
+      fixture ambiguous_actions { projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }
     }
 
     action validate(route: R) {
@@ -65,6 +71,9 @@ concept RestTarget [R] {
       -> pathConflict(route: R, conflicting: String, reason: String) {
         Two actions map to the same HTTP method and path.
       }
+
+      fixture valid_route { route: "rest-user-12345" }
+      fixture missing_route { route: "" } -> error
     }
 
     action listRoutes(concept: String) {
@@ -72,6 +81,9 @@ concept RestTarget [R] {
         Return all generated routes for a concept with their
         HTTP methods, including hierarchical routes if present.
       }
+
+      fixture list_user_routes { concept: "User" }
+      fixture empty_concept { concept: "" } -> error
     }
   }
 

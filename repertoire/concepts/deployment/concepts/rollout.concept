@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Rollout [R] {
 
@@ -38,6 +39,10 @@ concept Rollout [R] {
       -> invalidStrategy(message: String) {
         Unknown strategy or malformed step configuration.
       }
+
+      fixture canary_rollout { plan: "dp-042", strategy: "canary", steps: ["step1", "step2"] }
+      fixture blue_green_rollout { plan: "dp-100", strategy: "blue-green", steps: ["swap"] }
+      fixture invalid_strategy { plan: "dp-001", strategy: "rainbow", steps: ["step1"] } -> invalidStrategy
     }
 
     action advance(rollout: R) {
@@ -51,12 +56,18 @@ concept Rollout [R] {
         Rollout paused due to analysis results. Waiting for
         manual intervention or auto-resume timer.
       }
+
+      fixture advance_active { rollout: "ro-active-001" }
+      fixture advance_missing { rollout: "ro-nonexistent" } -> paused
     }
 
     action pause(rollout: R, reason: String) {
       -> ok(rollout: R) {
         Freeze at current traffic weight.
       }
+
+      fixture pause_active { rollout: "ro-active-001", reason: "High error rate detected" }
+      fixture pause_missing { rollout: "ro-nonexistent", reason: "Manual pause" }
     }
 
     action resume(rollout: R) {
