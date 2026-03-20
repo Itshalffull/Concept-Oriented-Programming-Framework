@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ContentHash [C] {
 
@@ -29,6 +30,9 @@ concept ContentHash [C] {
         Identical content already in store. Returns existing digest.
         Idempotent — not an error.
       }
+
+      fixture store_content { content: "Hello, world!" }
+      fixture store_empty { content: "" } -> error
     }
 
     action retrieve(hash: String) {
@@ -38,6 +42,9 @@ concept ContentHash [C] {
       -> notFound(message: String) {
         No object with that digest exists in the store.
       }
+
+      fixture retrieve_existing { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }
+      fixture retrieve_empty_hash { hash: "" } -> error
     }
 
     action verify(hash: String, content: Bytes) {
@@ -50,6 +57,9 @@ concept ContentHash [C] {
       -> notFound(message: String) {
         Hash not in store.
       }
+
+      fixture verify_matching { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3", content: "Hello, world!" }
+      fixture verify_empty_hash { hash: "", content: "anything" } -> error
     }
 
     action delete(hash: String) {
@@ -62,6 +72,9 @@ concept ContentHash [C] {
       -> referenced(message: String) {
         Object is referenced by other records and cannot be deleted.
       }
+
+      fixture delete_existing { hash: "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3" }
+      fixture delete_empty_hash { hash: "" } -> error
     }
   }
 

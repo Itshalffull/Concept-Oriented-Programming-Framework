@@ -32,6 +32,10 @@ concept SemanticEmbedding [B] {
       -> modelUnavailable(model: String) {
         The requested embedding model is not available.
       }
+
+      fixture compute_codebert { unit: "def-123", model: "codeBERT" }
+      fixture compute_unixcoder { unit: "def-456", model: "unixcoder" }
+      fixture compute_unknown_model { unit: "def-789", model: "unknown-model" } -> modelUnavailable
     }
 
     action searchSimilar(queryVector: String, topK: Int, language: String, kind: String) {
@@ -40,6 +44,9 @@ concept SemanticEmbedding [B] {
         optionally filtered by language and kind. Results as
         serialized JSON array of { unit, score }.
       }
+
+      fixture search_similar_top5 { queryVector: "[0.1, 0.2, 0.3]", topK: 5, language: "typescript", kind: "function" }
+      fixture search_similar_all { queryVector: "[0.5, -0.3, 0.8]", topK: 0, language: "", kind: "" }
     }
 
     action searchNaturalLanguage(query: String, topK: Int) {
@@ -48,6 +55,9 @@ concept SemanticEmbedding [B] {
         Embeds the query and finds nearest definition units.
         Results as serialized JSON array of { unit, score }.
       }
+
+      fixture nl_search_auth { query: "authentication middleware", topK: 3 }
+      fixture nl_search_broad { query: "data validation", topK: 10 }
     }
 
     action get(embedding: B) {
@@ -57,6 +67,9 @@ concept SemanticEmbedding [B] {
       -> notfound() {
         Embedding does not exist.
       }
+
+      fixture get_existing { embedding: "semantic-embedding-1" }
+      fixture get_unknown { embedding: "semantic-embedding-nonexistent" } -> notfound
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Contract [C] {
 
@@ -23,51 +24,73 @@ concept Contract [C] {
 
   actions {
 
-    action define(name: String, source_concept: String, target_concept: String, assumptions: list String, guarantees: list String) {
-      -> ok(contract: C) {
+    action define(name: String, source_concept: String, target_concept: String, assumptions: String, guarantees: String) {
+      -> ok(id: String, name: String, source_concept: String, target_concept: String, compatibility_status: String) {
         Creates contract. Validates all property refs exist in FormalProperty.
-        compatibility_status starts as "unchecked".
+        compatibility_status starts as "unchecked". assumptions and guarantees
+        are JSON-encoded arrays.
       }
       -> invalid(message: String) {
         Property refs not found or concepts invalid.
       }
+
+      fixture valid_define { name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }
+      fixture missing_name { name: "", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[]", guarantees: "[]" } -> invalid
     }
 
-    action verify(contract: C) {
-      -> ok(contract: C, compatible: Bool) {
+    action verify(id: String) {
+      -> ok(id: String, compatibility_status: String) {
         Checks source guarantees satisfy target assumptions.
         Updates compatibility_status to "compatible" or "incompatible".
       }
-      -> incompatible(contract: C, violations: list String) {
-        Specific assumptions not satisfied.
+      -> notfound(id: String) {
+        Contract does not exist.
       }
+
+      fixture valid_verify { id: "ct-001" }
+      fixture verify_missing { id: "nonexistent" } -> notfound
     }
 
-    action compose(contracts: list C) {
-      -> ok(composed: C, transitive_guarantees: list String) {
-        Composes chain via assumption discharge.
+    action compose(contract_ids: String) {
+      -> ok(id: String, name: String, source_concept: String, target_concept: String) {
+        Composes chain via assumption discharge. contract_ids is a JSON array.
         A's guarantees discharge B's assumptions; B's guarantees
         discharge C's assumptions. Returns transitive guarantee set.
       }
-      -> incompatible(message: String) {
-        Chain has incompatible link.
+      -> invalid(message: String) {
+        Fewer than two contracts or malformed input.
       }
+      -> notfound(message: String) {
+        One or more contracts not found.
+      }
+
+      fixture valid_compose { contract_ids: "[\"ct-001\",\"ct-002\"]" }
+      fixture compose_single { contract_ids: "[\"ct-001\"]" } -> invalid
     }
 
-    action discharge(contract: C, assumption_ref: String, evidence_ref: String) {
-      -> ok(contract: C, remaining: list String) {
+    action discharge(id: String, assumption_ref: String) {
+      -> ok(id: String, discharged_assumption: String, remaining_count: Int) {
         Marks assumption as discharged. Updates compatibility
         if all assumptions discharged.
       }
-      -> notfound(message: String) {
-        Contract or assumption not found.
+      -> notfound(id: String) {
+        Contract not found.
       }
+      -> invalid(message: String) {
+        Assumption not found in contract.
+      }
+
+      fixture valid_discharge { id: "ct-001", assumption_ref: "user-exists-before-password" }
+      fixture discharge_missing { id: "nonexistent", assumption_ref: "some-assumption" } -> notfound
     }
 
     action list(source_concept: option String, target_concept: option String) {
-      -> ok(contracts: list C) {
+      -> ok(count: Int, items: String) {
         Filtered listing.
       }
+
+      fixture list_all { }
+      fixture list_by_source { source_concept: "clef/concept/User" }
     }
   }
 

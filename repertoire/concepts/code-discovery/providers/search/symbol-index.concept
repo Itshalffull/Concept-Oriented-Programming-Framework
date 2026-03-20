@@ -27,6 +27,8 @@ concept SymbolIndexProvider [I] {
       -> loadError(message: String) {
         Failed to initialize the symbol index.
       }
+
+      fixture valid { }
     }
   }
 

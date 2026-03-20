@@ -61,6 +61,9 @@ concept Theme [H] {
         aliases resolved to final values.
       }
       -> notfound(message: String) { Does not exist. }
+
+      fixture resolve_dark { theme: "H-1" }
+      fixture resolve_unknown { theme: "H-nonexistent" } -> notfound
     }
   }
 

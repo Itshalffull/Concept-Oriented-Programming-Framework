@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept RetentionPolicy [R] {
 
@@ -36,6 +37,9 @@ concept RetentionPolicy [R] {
       -> alreadyExists(message: String) {
         A policy already exists for this record type.
       }
+
+      fixture set_audit_retention { recordType: "audit", period: 7, unit: "years", dispositionAction: "archive" }
+      fixture empty_record_type { recordType: "", period: 30, unit: "days", dispositionAction: "delete" } -> error
     }
 
     action applyHold(name: String, scope: String, reason: String, issuer: String) {
