@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DerivedEntity [D] {
 
@@ -37,6 +38,9 @@ concept DerivedEntity [D] {
       -> alreadyRegistered(existing: D) {
         A derived entity with this name is already registered.
       }
+      fixture register_trash { name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }
+      fixture register_minimal { name: "Inbox", source: "specs/inbox.derived", ast: "{}" }
+      fixture register_empty_name { name: "", source: "specs/empty.derived", ast: "{}" } -> error
     }
 
     action get(name: String) {
@@ -46,6 +50,8 @@ concept DerivedEntity [D] {
       -> notfound() {
         No derived concept with this name exists.
       }
+      fixture get_trash { name: "Trash" }
+      fixture get_missing { name: "NonexistentDerived" } -> error
     }
 
     action findByComposedConcept(concept: String) {
@@ -53,6 +59,8 @@ concept DerivedEntity [D] {
         Return all derived concepts that compose the given concept.
         Results as serialized JSON array.
       }
+      fixture find_by_article { concept: "Article" }
+      fixture find_by_empty { concept: "" } -> error
     }
 
     action findBySync(syncName: String) {

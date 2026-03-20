@@ -44,6 +44,9 @@ concept RustBuilder [R] {
       -> featureConflict(conflicting: list String) {
         Incompatible feature flags.
       }
+
+      fixture build_crate { source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: { mode: "release" } }
+      fixture build_missing_source { source: "", toolchainPath: "", platform: "linux-x86_64", config: { mode: "debug" } } -> error
     }
 
     action test(build: R, toolchainPath: String, invocation: option { command: String, args: list String, outputFormat: String, configFile: option String, env: option String }, testType: option String) {
@@ -57,6 +60,9 @@ concept RustBuilder [R] {
       -> testFailure(passed: Int, failed: Int, failures: list { test: String, message: String }, testType: String) {
         Some tests failed.
       }
+
+      fixture test_crate { build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }
+      fixture test_missing_build { build: "nonexistent", toolchainPath: "/usr/local/bin/rustc", testType: "unit" } -> error
     }
 
     action package(build: R, format: String) {
@@ -70,6 +76,9 @@ concept RustBuilder [R] {
       -> formatUnsupported(format: String) {
         Requested format not available.
       }
+
+      fixture package_binary { build: "rsb-001", format: "binary" }
+      fixture package_unsupported { build: "rsb-001", format: "invalid-format" } -> error
     }
 
     action register() {
@@ -79,6 +88,8 @@ concept RustBuilder [R] {
         language: "rust"
         capabilities: ["crate", "binary", "wasm-pack", "docker"]
       }
+
+      fixture valid {}
     }
   }
 

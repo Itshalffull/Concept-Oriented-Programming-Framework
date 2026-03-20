@@ -67,6 +67,9 @@ concept DeploymentEntity [D] {
         transport, and storage config. Result as serialized JSON
         array of { name, type, transport, storage, concepts: [] }.
       }
+
+      fixture list_runtimes { deployment: "deploy-001" }
+      fixture list_runtimes_missing { deployment: "deploy-missing" }
     }
 
     action findConceptRuntime(deployment: D, concept: String) {
@@ -77,6 +80,9 @@ concept DeploymentEntity [D] {
       -> notAssigned(concept: String) {
         Concept is not assigned to any runtime in this deployment.
       }
+
+      fixture find_user_runtime { deployment: "deploy-001", concept: "User" }
+      fixture find_unassigned { deployment: "deploy-001", concept: "UnknownConcept" } -> error
     }
 
     action findSyncEngine(deployment: D, sync: String) {
@@ -86,6 +92,9 @@ concept DeploymentEntity [D] {
       -> notAssigned(sync: String) {
         Sync is not assigned to any engine in this deployment.
       }
+
+      fixture find_article_sync { deployment: "deploy-001", sync: "ArticlePublishSync" }
+      fixture find_unassigned_sync { deployment: "deploy-001", sync: "NonexistentSync" } -> error
     }
 
     action topology(deployment: D) {
@@ -95,6 +104,9 @@ concept DeploymentEntity [D] {
         storage backends. Result as serialized JSON { nodes:
         [{ id, kind, label }], edges: [{ from, to, transport }] }.
       }
+
+      fixture topology_existing { deployment: "deploy-001" }
+      fixture topology_missing { deployment: "deploy-missing" }
     }
 
     action transportRoutes(deployment: D, fromConcept: String, toConcept: String) {
@@ -110,6 +122,9 @@ concept DeploymentEntity [D] {
       -> noRoute() {
         No transport route exists between these concepts.
       }
+
+      fixture route_cross_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Notification" }
+      fixture route_same_runtime { deployment: "deploy-001", fromConcept: "User", toConcept: "Session" } -> error
     }
 
     action storageTopology(deployment: D) {
@@ -117,6 +132,9 @@ concept DeploymentEntity [D] {
         Return all concept-to-storage bindings. Result as serialized
         JSON array of { concept, runtime, storageBackend, config }.
       }
+
+      fixture storage_topology { deployment: "deploy-001" }
+      fixture storage_topology_missing { deployment: "deploy-missing" }
     }
 
     action environmentDiff(deploymentA: D, deploymentB: D) {
@@ -127,6 +145,9 @@ concept DeploymentEntity [D] {
       -> same() {
         The deployments are identical.
       }
+
+      fixture diff_prod_staging { deploymentA: "deploy-prod", deploymentB: "deploy-staging" }
+      fixture diff_same { deploymentA: "deploy-prod", deploymentB: "deploy-prod" }
     }
 
     action validateAgainstSpecs(deployment: D) {
