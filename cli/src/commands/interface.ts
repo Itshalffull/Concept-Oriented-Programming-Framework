@@ -86,6 +86,11 @@ async function loadProviders(): Promise<ProviderRegistry> {
   } catch { /* provider not available */ }
 
   try {
+    const { claudeAgentsTargetHandler } = await import(`${providerDir}/claude-agents-target.handler.ts`);
+    providers.ClaudeAgentsTarget = claudeAgentsTargetHandler;
+  } catch { /* provider not available */ }
+
+  try {
     const { tsSdkTargetHandler } = await import(`${providerDir}/ts-sdk-target.handler.ts`);
     providers.TsSdkTarget = tsSdkTargetHandler;
   } catch { /* provider not available */ }
@@ -594,7 +599,15 @@ async function interfaceGenerate(
         }
       } else {
         // Target providers (skills, CLI, MCP) receive one projection at a time
+        // Apply include/exclude filtering if specified in target config
+        const tConfig = targetConfig as Record<string, unknown> | undefined;
+        const includeSet = tConfig?.include ? new Set(tConfig.include as string[]) : null;
+        const excludeSet = tConfig?.exclude ? new Set(tConfig.exclude as string[]) : null;
+
         for (const proj of effectProjections) {
+          const conceptName = (proj as Record<string, unknown>).conceptName as string;
+          if (includeSet && !includeSet.has(conceptName)) continue;
+          if (excludeSet && excludeSet.has(conceptName)) continue;
           try {
             const providerStorage = createInMemoryStorage();
             const result = await provider.generate(
@@ -975,7 +988,7 @@ async function interfaceValidate(
     errors.push('No targets configured. Add at least one target (rest, graphql, grpc, cli, mcp).');
   }
 
-  const validTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp', 'claude-skills'];
+  const validTargets = ['rest', 'graphql', 'grpc', 'cli', 'mcp', 'claude-skills', 'claude-agents'];
   for (const t of Object.keys(targets)) {
     if (!validTargets.includes(t)) {
       errors.push(`Unknown target: ${t}. Valid targets: ${validTargets.join(', ')}`);

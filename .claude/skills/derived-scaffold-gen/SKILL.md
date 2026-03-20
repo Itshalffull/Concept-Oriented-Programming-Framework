@@ -40,7 +40,7 @@ const result = await derivedScaffoldGenHandler.register({}, storage);
 
 Dry-run the generation using Emitter content-addressing to classify each output file as new, changed, or unchanged. No files are written.
 
-**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **composes** (composedconcept[]), `$4` **syncs** (syncref[]), `$5` **surfaceActions** (surfaceaction[]), `$6` **surfaceQueries** (surfacequery[]), `$7` **principle** (string[])
+**Arguments:** `$0` **name** (string), `$1` **typeParams** (string[]), `$2` **purpose** (string), `$3` **composes** (composedconcept[]), `$4` **syncs** (syncref[]), `$5` **surfaceActions** (surfaceaction[]), `$6` **surfaceQueries** (surfacequery[]), `$7` **principle** (string[])
 
 ### Step 3: Generate Derived Concept
 
@@ -56,7 +56,7 @@ Generate a well formed . derived file with purpose block ,
  Inline : query name ( params ) -> Concept action ( args ) 
  Block : query name ( params ) { reads : Concept action ( arg : binding ) }
 
-**Arguments:** `$0` **name** (string), `$1` **typeParam** (string), `$2` **purpose** (string), `$3` **composes** (composedconcept[]), `$4` **syncs** (syncref[]), `$5` **surfaceActions** (surfaceaction[]), `$6` **surfaceQueries** (surfacequery[]), `$7` **principle** (string[])
+**Arguments:** `$0` **name** (string), `$1` **typeParams** (string[]), `$2` **purpose** (string), `$3` **composes** (composedconcept[]), `$4` **syncs** (syncref[]), `$5` **surfaceActions** (surfaceaction[]), `$6` **surfaceQueries** (surfacequery[]), `$7` **principle** (string[])
 
 **Checklist:**
 - [ ] Derived concept name is PascalCase?

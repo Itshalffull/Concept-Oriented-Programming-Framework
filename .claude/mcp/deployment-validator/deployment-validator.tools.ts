@@ -28,24 +28,10 @@ export const deploymentValidatorTools = [
       "properties": {
         "manifest": {
           "type": "string"
-        },
-        "concepts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "syncs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         }
       },
       "required": [
-        "manifest",
-        "concepts",
-        "syncs"
+        "manifest"
       ]
     }
   }

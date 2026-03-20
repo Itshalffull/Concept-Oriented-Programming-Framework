@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-20T18:50:19.333Z",
+  "generatedAt": "2026-03-20T22:48:13.346Z",
   "files": [
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -154,7 +154,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/deployment-validator/SKILL.md",
       "relativePath": "claude-skills/deployment-validator/SKILL.md",
-      "hash": "81aa3cf1cadf07b4714e31172e9b80aaef294c335b5afd2554736c81e36b4e58",
+      "hash": "f2cdda96796cf3e7b5c55cd7cfa64b87c8abb593f5beefc9ece63aa4b38bcc68",
       "target": "claude-skills"
     },
     {
@@ -568,7 +568,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills/derived-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/derived-scaffold-gen/SKILL.md",
-      "hash": "87e9a2b552f65a6f7d9dee9dd2a43f5c9064506d7bd786c4eb6f50b3cc32258b",
+      "hash": "07d62dacf346e244d1ab91c51f60677a473acbf1955906d31503ff4cf490d137",
       "target": "claude-skills"
     },
     {
@@ -1672,7 +1672,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/deployment-validator/deployment-validator.command.ts",
       "relativePath": "cli/deployment-validator/deployment-validator.command.ts",
-      "hash": "8c7fd598d3a30873247877251df6700a8224c0d337cbe1702b074852898afb6a",
+      "hash": "10a1051aefabd0144c292e480f4945fe99b7fd13fa773be48c18ad8c02787300",
       "target": "cli"
     },
     {
@@ -1876,7 +1876,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/cli/src/derived-scaffold-gen/derived-scaffold-gen.command.ts",
       "relativePath": "cli/derived-scaffold-gen/derived-scaffold-gen.command.ts",
-      "hash": "d9f5a3e2b15ccc6a8a8b73340cbc507b70b914b394dc03e41ef105a473d56303",
+      "hash": "0b6bafe9fde94a8220a55ff23a8dfd00e1ad1fbf89dc54496e675c4a33563639",
       "target": "cli"
     },
     {
@@ -2500,7 +2500,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/deployment-validator/deployment-validator.tools.ts",
       "relativePath": "mcp/deployment-validator/deployment-validator.tools.ts",
-      "hash": "f8295ba516223417fbd91cbf81bc2e858e389d19d9eb69549769e600d3aaeab1",
+      "hash": "7df3e71aa090bf8ef890801e334980770d4d2f6c5328588de1a6cf5f7a751201",
       "target": "mcp"
     },
     {
@@ -2812,7 +2812,7 @@
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp/derived-scaffold-gen/derived-scaffold-gen.tools.ts",
       "relativePath": "mcp/derived-scaffold-gen/derived-scaffold-gen.tools.ts",
-      "hash": "62521f634d16231a807cafcf902016e70aa65c0acf65d68dc174e2d2261dd7f5",
+      "hash": "49a13143e47bac2db7e7d9a2fd89273c538afa734963576b0a95b694bf42289d",
       "target": "mcp"
     },
     {
@@ -3854,15 +3854,33 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
+      "relativePath": "claude-agents/concept-scaffold-gen.md",
+      "hash": "7c6fdd7eaab38875f938524b4e5440ffb045f4b3355298addb1c77a0dd620ca2",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/sync-scaffold-gen.md",
+      "relativePath": "claude-agents/sync-scaffold-gen.md",
+      "hash": "95fb507096976005d9db937089b55cb946a64494046b00b326d2a028168162c1",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
+      "relativePath": "claude-agents/handler-scaffold-gen.md",
+      "hash": "2591827bc73f14a58b8d5336a83a817bc15117059f06073d5e38037765e4e2f6",
+      "target": "claude-agents"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "a5b0c8fc529545c426dec3882b39c98d5a8df76f78ae3f21ef120d629d3617a9",
+      "hash": "31f848c39789d44d7a3f93404b78e02c68dcd2941d0086e9d10bf3af8d80fe28",
       "target": "openapi"
     },
     {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "01303f1f84748c5faf5f83a3f46758c893056005347f84305b376062cc5c06c5",
+      "hash": "0f24ea40dc80dd634d97d5e03e58c9228679be5fedfe4293b4ff10ac19f74ad6",
       "target": "asyncapi"
     },
     {
@@ -3902,6 +3920,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents/claude-agents.ts",
+      "relativePath": "claude-agents/claude-agents.ts",
+      "hash": "6739063e33a1ad86ffb8840f3b3893e04c348d0bce8dd8b68b697b68e7c81665",
+      "target": "claude-agents"
+    },
+    {
       "path": "/home/user/Concept-Oriented-Programming-Framework/generated/specs/openapi.ts",
       "relativePath": "openapi/openapi.ts",
       "hash": "04a09bafdb0925226b18e50c41f931c8a89e3856cec6010b838ddd073cf1a81c",
@@ -3924,6 +3948,7 @@
     "claude-skills": "/home/user/Concept-Oriented-Programming-Framework/.claude/skills",
     "cli": "/home/user/Concept-Oriented-Programming-Framework/cli/src",
     "mcp": "/home/user/Concept-Oriented-Programming-Framework/.claude/mcp",
+    "claude-agents": "/home/user/Concept-Oriented-Programming-Framework/.claude/agents",
     "openapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
     "asyncapi": "/home/user/Concept-Oriented-Programming-Framework/generated/specs",
     "project-instructions": "/home/user/Concept-Oriented-Programming-Framework",
