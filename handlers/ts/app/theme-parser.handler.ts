@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ThemeParser Concept Implementation [H]
 // Parses expressive theme definitions into a normalized AST with derived tokens.

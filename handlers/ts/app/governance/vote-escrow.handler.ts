@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // VoteEscrow Weight Source Provider
 // ve-token model: weight = lockedAmount x (timeRemaining / maxLockPeriod).

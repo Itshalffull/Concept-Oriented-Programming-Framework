@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // GcpSmProvider Concept Implementation
 // Manage secret resolution from Google Cloud Secret Manager. Owns project

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // FluxProvider Concept Implementation
 // Flux GitOps provider. Generates Flux Kustomization CRDs, manages

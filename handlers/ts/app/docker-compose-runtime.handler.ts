@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DockerComposeRuntime Concept Implementation
 // Manage Docker Compose service deployments for local and development

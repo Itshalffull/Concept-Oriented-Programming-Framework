@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Manifest Concept Implementation
 // Declarative project configuration file describing identity, dependency

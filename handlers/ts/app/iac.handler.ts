@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // IaC Concept Implementation (Deploy Kit)
 // Coordinate infrastructure-as-code generation and application across IaC providers.

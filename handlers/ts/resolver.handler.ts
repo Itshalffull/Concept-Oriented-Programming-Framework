@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Resolver Concept Implementation
 // PubGrub-based conflict-driven dependency solver. Accepts input constraints

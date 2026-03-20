@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Session Concept Implementation
 // Manage authenticated session lifecycle: creation, validation, refresh, and device tracking.

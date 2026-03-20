@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // FinalityGate Concept Handler
 // Coordination concept wrapping external finality signals — @gate concept.

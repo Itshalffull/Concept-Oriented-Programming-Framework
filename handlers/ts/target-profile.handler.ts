@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // TargetProfile Concept Implementation
 // Declare the technology dimensions for a project: languages, frameworks, deploy targets,

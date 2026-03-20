@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, put, pure,

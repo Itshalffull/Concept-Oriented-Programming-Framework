@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ScoreVoting Counting Method Provider
 // Voters score each candidate within a range; aggregates by weighted mean or median.

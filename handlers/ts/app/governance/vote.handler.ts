@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Vote Concept Handler
 // Session-based voting with weighted ballot collection and tallying.

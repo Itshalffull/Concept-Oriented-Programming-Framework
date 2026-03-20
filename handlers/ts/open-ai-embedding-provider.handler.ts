@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // OpenAIEmbeddingProvider Handler — Functional Style
 //

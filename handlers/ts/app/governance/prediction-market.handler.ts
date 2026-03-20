@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // PredictionMarket Concept Handler
 // AMM-based futarchy prediction markets — @gate concept.

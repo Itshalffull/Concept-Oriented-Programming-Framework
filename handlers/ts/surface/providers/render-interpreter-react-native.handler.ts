@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterReactNative — self-registering provider for "react-native" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ProofOfPersonhood Sybil Resistance Provider
 // Verification lifecycle with status tracking, expiry, and revocation.

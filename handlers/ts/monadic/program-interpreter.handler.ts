@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';
 
 export const programInterpreterHandler: ConceptHandler = {

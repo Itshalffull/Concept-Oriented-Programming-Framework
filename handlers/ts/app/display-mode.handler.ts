@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // DisplayMode Concept Implementation (v2)
 // Named rendering configuration for entities of a given Schema.

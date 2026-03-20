@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ModuleSelection Concept Implementation
 // Interactive module selection session: start from a template and/or target profile,

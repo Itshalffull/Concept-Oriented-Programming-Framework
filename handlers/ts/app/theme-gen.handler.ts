@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ThemeGen Concept Implementation [G]
 // Generates target output from a normalized expressive theme AST.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // WatchKitAdapter Handler — Transforms framework-neutral props into legacy WatchKit bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

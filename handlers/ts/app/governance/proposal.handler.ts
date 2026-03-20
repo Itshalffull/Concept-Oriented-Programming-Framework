@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Proposal Concept Handler
 // Formal request for collective decision with Draft->Active->Passed/Failed lifecycle.

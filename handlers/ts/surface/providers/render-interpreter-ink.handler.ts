@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterInk — self-registering provider for "ink" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

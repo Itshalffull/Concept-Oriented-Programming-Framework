@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Navigator Concept Implementation [N]
 // Client-side navigation with route registration, history stack, guards, and programmatic navigation.

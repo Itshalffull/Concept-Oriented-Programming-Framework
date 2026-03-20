@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Elevation Concept Implementation [W]
 // Shadow-based elevation levels for depth hierarchy in UI surfaces.

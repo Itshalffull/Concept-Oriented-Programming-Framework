@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // LocalRuntime Concept Implementation
 // Manage local process deployments for development. Owns child process

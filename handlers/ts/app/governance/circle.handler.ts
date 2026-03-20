@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Circle Concept Handler
 // Nested governance groups with holacratic jurisdiction management.

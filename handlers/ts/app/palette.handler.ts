@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Palette Concept Implementation [C]
 // Color palette generation with role assignment and WCAG contrast checking.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterWear — self-registering provider for "wear" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // WidgetResolver Concept Implementation
 // Scores and selects the best widget for a given interface element based on context and overrides.

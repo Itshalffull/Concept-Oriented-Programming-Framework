@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // StatusGate Concept Handler — Functional Style
 // Reports verification status to external gates (CI checks, webhooks, etc.).
 // Uses perform("http", "POST", ...) for all provider HTTP calls, routing

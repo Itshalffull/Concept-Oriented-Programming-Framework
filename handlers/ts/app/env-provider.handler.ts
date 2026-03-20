@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // EnvProvider Concept Implementation
 // Manage secret resolution from process environment variables. Owns the

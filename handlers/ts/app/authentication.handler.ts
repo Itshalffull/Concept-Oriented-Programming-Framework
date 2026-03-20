@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Authentication Concept Implementation
 // Verify user identity via pluggable providers, token-based session auth, and credential reset flows.

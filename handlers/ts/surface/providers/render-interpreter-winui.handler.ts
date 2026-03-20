@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterWinui — self-registering provider for "winui" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // RenderInterpreterSvelte — self-registering provider
 // ============================================================

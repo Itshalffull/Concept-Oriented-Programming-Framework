@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterGtk — self-registering provider for "gtk" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

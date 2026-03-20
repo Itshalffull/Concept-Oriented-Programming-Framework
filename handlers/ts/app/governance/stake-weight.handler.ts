@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // StakeWeight Source Provider
 // Tracks staked amounts with cooldown periods; sums active stakes for governance weight.

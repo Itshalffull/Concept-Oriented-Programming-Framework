@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ContentNode Concept Implementation
 // Per spec §2.1: There is one entity — ContentNode. There are no entity types

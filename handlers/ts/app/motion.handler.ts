@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Motion Concept Implementation [O]
 // Animation durations, easings, and transition definitions with reduced-motion awareness.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // QuadraticVoting Counting Method Provider
 // Credit-based voting: cost = votes squared, voters allocate from a fixed credit budget.

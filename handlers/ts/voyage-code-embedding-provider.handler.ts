@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // VoyageCodeEmbeddingProvider Handler — Functional Style
 //

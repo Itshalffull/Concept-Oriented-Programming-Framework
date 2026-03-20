@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Token Concept Implementation
 // Replace typed placeholders in text using chain-traversal patterns.

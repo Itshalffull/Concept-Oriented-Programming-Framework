@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Host Concept Implementation [W]
 // Mounts concepts into UI views with lifecycle management, zone placement, and resource tracking.

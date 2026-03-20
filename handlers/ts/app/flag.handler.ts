@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Flag Concept Implementation
 // Generalized user-entity toggle interactions (bookmarks, likes, follows, spam reports) with counts.

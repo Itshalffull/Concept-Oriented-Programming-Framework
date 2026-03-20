@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // ThemeEntity Concept Implementation (Functional)
 //

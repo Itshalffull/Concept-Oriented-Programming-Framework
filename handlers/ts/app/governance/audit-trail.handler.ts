@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AuditTrail Concept Handler
 // Append-only governance audit log with integrity verification.

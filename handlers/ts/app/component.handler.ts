@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Component Concept Implementation
 // Discoverable, configurable UI units with conditional placement rules for composing page layouts.

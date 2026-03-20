@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // EloRating Reputation Provider
 // Standard Elo: E = 1/(1+10^((Rl-Rw)/400)), rating update with K-factor.

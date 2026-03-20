@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Theme Concept Implementation [H]
 // Named themes with inheritance, activation priority, and token resolution.

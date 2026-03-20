@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ArgoCDProvider Concept Implementation
 // ArgoCD GitOps provider. Generates ArgoCD Application CRDs, manages

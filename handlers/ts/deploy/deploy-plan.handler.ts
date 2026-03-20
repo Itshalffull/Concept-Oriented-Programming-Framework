@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DeployPlan Concept Implementation
 // Compute, validate, and execute deployment plans. Constructs a dependency

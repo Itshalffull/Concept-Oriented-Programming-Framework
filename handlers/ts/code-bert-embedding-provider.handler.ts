@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // CodeBERTEmbeddingProvider Handler — Functional Style
 //

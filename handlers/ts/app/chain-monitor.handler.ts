@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ChainMonitor Concept Implementation
 // Monitor blockchain state for finality, reorgs, and confirmation tracking.

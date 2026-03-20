@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // BondingCurve Concept Handler
 // Continuous token pricing with configurable curve types.

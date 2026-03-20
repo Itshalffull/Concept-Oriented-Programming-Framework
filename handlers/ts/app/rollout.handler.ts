@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Rollout Concept Implementation (Deploy Kit)
 // Manage progressive delivery of concept deployments (canary, blue-green, rolling).

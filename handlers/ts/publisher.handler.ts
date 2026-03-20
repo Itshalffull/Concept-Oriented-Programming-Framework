@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Publisher Concept Implementation (Package Distribution Suite)
 // Package and upload modules to a registry. Manages the full publication

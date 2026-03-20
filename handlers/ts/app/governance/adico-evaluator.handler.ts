@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AdicoEvaluator Policy Provider
 // Parse ADICO grammar (Attributes, Deontic, aIm, Conditions, Or-else) and evaluate deontic rules.

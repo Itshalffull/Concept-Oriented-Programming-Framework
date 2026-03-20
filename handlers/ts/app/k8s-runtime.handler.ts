@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // K8sRuntime Concept Implementation
 // Manage Kubernetes deployments. Owns Deployment, Service, ConfigMap, and

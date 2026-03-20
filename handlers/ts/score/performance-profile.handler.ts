@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // PerformanceProfile Concept Implementation (Functional)
 //

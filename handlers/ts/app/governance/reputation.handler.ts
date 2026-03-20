@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // Reputation Concept Handler
 // Coordination concept routing to pluggable reputation algorithm providers.

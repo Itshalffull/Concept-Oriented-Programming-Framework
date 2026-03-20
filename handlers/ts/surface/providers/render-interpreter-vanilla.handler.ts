@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterVanilla — self-registering provider for "vanilla" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

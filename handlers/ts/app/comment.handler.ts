@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

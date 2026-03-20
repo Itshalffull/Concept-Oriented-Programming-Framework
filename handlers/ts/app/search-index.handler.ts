@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SearchIndex Concept Implementation
 // Build and maintain full-text and faceted search indexes with a pluggable processor pipeline.

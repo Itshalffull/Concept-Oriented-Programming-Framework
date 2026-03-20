@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Dispute Concept Handler
 // Formal dispute resolution — @gate concept.

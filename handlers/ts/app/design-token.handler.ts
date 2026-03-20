@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DesignToken Concept Implementation [T]
 // Hierarchical design tokens with alias chains, tier classification, and multi-format export.

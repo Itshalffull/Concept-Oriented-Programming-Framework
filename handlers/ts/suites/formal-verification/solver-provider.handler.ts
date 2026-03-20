@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // SolverProvider Handler — Formal Verification Suite (suite re-export)
 // The canonical FunctionalConceptHandler lives in kits/formal-verification/.
 // See Architecture doc Section 18.5

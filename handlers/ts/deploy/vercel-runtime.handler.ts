@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // VercelRuntime Concept Implementation — Functional Style
 // Vercel provider for the Runtime coordination concept. Manages project
 // provisioning, deployment, traffic splitting, and teardown.

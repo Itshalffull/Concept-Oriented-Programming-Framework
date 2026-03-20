@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterNextjs — self-registering provider for "nextjs" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

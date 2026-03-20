@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ArgoCDProvider Concept Implementation
 // Generate ArgoCD Application CRDs from Clef deploy plans. Owns Application

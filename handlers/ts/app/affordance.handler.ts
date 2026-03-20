@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Affordance Concept Implementation
 // Maps interactor types to concrete widgets based on specificity and contextual conditions.

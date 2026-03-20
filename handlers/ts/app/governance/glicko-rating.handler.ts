@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // GlickoRating Reputation Provider
 // Glicko-2: rating + deviation + volatility for more accurate skill estimation than Elo.

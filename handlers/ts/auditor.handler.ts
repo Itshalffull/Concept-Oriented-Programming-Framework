@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Auditor Concept Implementation (Package Distribution Suite)
 // Vulnerability scanning and policy enforcement for package dependencies.

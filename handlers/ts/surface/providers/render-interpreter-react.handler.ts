@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // RenderInterpreterReact — self-registering provider
 // ============================================================

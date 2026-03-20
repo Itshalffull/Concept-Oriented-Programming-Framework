@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SwiftBuilder Concept Implementation
 // Swift provider for the Builder coordination concept. Manages

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AnalysisReport Concept Implementation
 // Generates structured reports from graph analysis results.

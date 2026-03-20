@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Notification Concept Implementation
 // Deliver user-facing alerts across multiple channels with subscription management,

@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // Canvas Concept Implementation
 import type { ConceptHandler, ConceptStorage } from '../../../runtime/types.ts';

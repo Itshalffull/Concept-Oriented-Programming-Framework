@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // Contract Concept Implementation — Formal Verification Suite
 // Define, verify, compose, and discharge assume-guarantee contracts
 // between concepts, enabling modular compositional verification.

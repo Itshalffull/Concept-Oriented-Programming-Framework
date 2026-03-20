@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ProjectInit Concept Implementation
 // Orchestrate project scaffolding: create the init record, write clef.yaml and interface/deploy

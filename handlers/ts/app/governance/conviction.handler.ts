@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Conviction Concept Handler
 // Continuous staking with exponential charge.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // CondorcetSchulze Counting Method Provider
 // Pairwise comparison matrix with Schulze (Floyd-Warshall widest path) resolution.

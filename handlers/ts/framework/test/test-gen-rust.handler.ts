@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // TestGenRust Provider — Functional Style
 //

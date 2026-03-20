@@ -74,6 +74,7 @@ function buildFunctionalHandlerImpl(input: Record<string, unknown>): string {
   const relation = (input.relation as string) || toCamel(conceptName) + 's';
 
   const lines: string[] = [
+    '// @clef-handler style=functional',
     '// ============================================================',
     `// ${conceptName} Concept Implementation (Functional)`,
     '//',
@@ -139,6 +140,7 @@ function buildImperativeHandlerImpl(input: Record<string, unknown>): string {
   const relation = (input.relation as string) || toCamel(conceptName) + 's';
 
   const lines: string[] = [
+    '// @clef-handler style=imperative',
     '// ============================================================',
     `// ${conceptName} Concept Implementation (Imperative)`,
     '//',

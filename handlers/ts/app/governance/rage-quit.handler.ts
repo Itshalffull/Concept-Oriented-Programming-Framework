@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // RageQuit Concept Handler
 // Proportional exit for minority dissent (MolochDAO pattern).

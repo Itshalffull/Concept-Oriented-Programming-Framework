@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Migration Concept Implementation
 // Schema migration via expand-migrate-contract pattern. Plans, executes,

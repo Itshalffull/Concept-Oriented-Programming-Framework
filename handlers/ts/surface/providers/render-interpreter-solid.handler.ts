@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterSolid — self-registering provider for "solid" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // BordaCount Counting Method Provider
 // Positional scoring: each ranking position awards points via Standard, Modified, or Dowdall schemes.

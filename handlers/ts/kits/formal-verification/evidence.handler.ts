@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // Evidence Concept Implementation — Formal Verification Suite
 // Record, validate, retrieve, compare, and minimize verification evidence
 // (proof certificates, counterexamples, model traces, coverage reports, solver logs).

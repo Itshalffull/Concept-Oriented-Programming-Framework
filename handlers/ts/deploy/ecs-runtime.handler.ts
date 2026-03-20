@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // EcsRuntime Concept Implementation
 // AWS ECS Fargate provider for the Runtime coordination concept. Manages

@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // InteractorEntity Concept Implementation (Functional)
 //

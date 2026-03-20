@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // RuntimeFlow Concept Implementation (Functional)
 //

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SimpleAccumulator Reputation Provider
 // Add/subtract reputation with optional per-period decay and configurable cap.

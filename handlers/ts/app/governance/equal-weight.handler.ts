@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // EqualWeight Source Provider
 // Returns a fixed weight per participant regardless of holdings or reputation.

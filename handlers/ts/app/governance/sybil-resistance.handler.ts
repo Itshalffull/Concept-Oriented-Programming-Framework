@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SybilResistance Concept Handler
 // Coordination concept ensuring each participant has at most one identity.

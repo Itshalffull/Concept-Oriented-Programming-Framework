@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // QuadraticWeight Source Provider
 // Applies square-root scaling to a base balance for diminishing-returns governance weight.

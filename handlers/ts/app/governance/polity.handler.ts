@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Polity Concept Handler
 // Establish and manage governance domains with foundational rules.

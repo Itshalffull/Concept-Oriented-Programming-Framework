@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AttestationSybil Sybil Resistance Provider
 // Credential-based sybil check: verifies candidate holds a valid attestation matching schema/attester/expiry.

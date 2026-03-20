@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AwsSmProvider Concept Implementation
 // Manage secret resolution from AWS Secrets Manager. Owns IAM session state,

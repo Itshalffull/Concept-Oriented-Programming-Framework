@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // TokenBalance Weight Source Provider
 // Tracks token balances per participant at snapshot points for weighted governance.

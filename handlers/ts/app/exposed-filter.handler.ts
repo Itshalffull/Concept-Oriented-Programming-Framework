@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ExposedFilter Concept Implementation
 // Expose interactive filter and sort controls to end users,

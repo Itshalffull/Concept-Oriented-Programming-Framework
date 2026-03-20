@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // CloudflareRuntime Concept Implementation
 // Manage Cloudflare Workers deployments. Owns worker scripts, routes,

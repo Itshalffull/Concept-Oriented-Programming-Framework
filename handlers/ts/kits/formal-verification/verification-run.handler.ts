@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // VerificationRun Concept Implementation — Formal Verification Suite
 // Manage the lifecycle of verification runs: start, complete, timeout,
 // cancel, track progress, and compare results across runs.

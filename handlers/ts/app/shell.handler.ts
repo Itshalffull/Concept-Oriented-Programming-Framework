@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Shell Concept Implementation [S]
 // Application shell with named zones, role assignment, and overlay stack management.

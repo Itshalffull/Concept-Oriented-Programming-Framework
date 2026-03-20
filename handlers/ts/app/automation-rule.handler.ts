@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AutomationRule Concept Implementation
 // User-configurable event-condition-action rules that fire automatically when conditions are met.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterSwiftui — self-registering provider for "swiftui" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // GcfRuntime Concept Implementation
 // Google Cloud Functions provider for the Runtime coordination concept. Manages

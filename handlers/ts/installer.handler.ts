@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // Installer Concept Implementation (Package Distribution Suite)
 // Staged transactional installation of resolved packages. Each installation

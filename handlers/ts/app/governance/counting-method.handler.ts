@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // CountingMethod Concept Handler
 // Coordination concept routing vote aggregation to pluggable counting providers.

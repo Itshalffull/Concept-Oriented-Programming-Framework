@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ExpressionLanguage Concept Implementation
 // Parse and evaluate expressions in pluggable language grammars with typed

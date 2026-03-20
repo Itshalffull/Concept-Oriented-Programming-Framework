@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Health Concept Implementation
 // Health verification for concepts, syncs, suites, and invariants.

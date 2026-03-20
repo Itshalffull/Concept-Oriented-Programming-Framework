@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DockerComposeIacProvider Concept Implementation
 // Docker Compose IaC provider. Generates Compose files from deploy plans,

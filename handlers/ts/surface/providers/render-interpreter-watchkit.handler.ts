@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterWatchkit — self-registering provider for "watchkit" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

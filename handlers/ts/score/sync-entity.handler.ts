@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // SyncEntity Concept Implementation (Functional)
 //

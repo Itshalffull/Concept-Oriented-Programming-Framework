@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // ContentStore Concept Implementation (Package Distribution Suite)
 // Content-addressed blob storage for package artifacts. Deduplicates

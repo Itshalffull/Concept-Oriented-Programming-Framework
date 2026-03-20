@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Membership Concept Handler
 // Manage members joining, leaving, and participating in a governed polity.

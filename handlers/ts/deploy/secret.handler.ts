@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Secret Concept Implementation
 // Coordination concept for secret management. Resolves secrets through

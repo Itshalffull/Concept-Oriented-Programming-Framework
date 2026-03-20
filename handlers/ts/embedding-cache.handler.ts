@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // EmbeddingCache Handler — Functional Style
 //

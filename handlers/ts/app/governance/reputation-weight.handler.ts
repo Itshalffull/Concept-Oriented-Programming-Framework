@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ReputationWeight Source Provider
 // Applies scaling functions (linear, log, sigmoid) to raw reputation scores for weighted governance.

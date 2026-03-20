@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Health Concept Implementation (Deploy Suite)
 // Verify deployment health at concept, sync, and suite levels.

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // ============================================================
 // FileCatalog Concept Implementation
 //

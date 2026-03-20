@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterNativescript — self-registering provider for "nativescript" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

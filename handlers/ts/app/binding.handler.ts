@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Binding Concept Implementation [B, C]
 // Surface core binding between concepts and UI surfaces with mode-aware synchronization.

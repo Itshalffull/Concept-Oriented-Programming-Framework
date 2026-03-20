@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SyncedContent Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // SolverProvider Concept Implementation — Formal Verification Suite
 // Register, dispatch to, health-check, and manage external solver backends
 // (SMT solvers, model checkers, proof assistants) as pluggable providers.

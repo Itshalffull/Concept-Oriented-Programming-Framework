@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Control Concept Implementation
 // Bind interactive elements (buttons, sliders, toggles) to data values and actions,

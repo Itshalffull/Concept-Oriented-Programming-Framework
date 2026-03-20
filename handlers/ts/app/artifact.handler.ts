@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Artifact Concept Implementation (Deploy Suite)
 // Manage immutable, content-addressed build artifacts for concept deployments.

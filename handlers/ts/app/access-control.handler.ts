@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AccessControl Concept Implementation
 // Evaluate three-valued access decisions (allowed/forbidden/neutral) with cacheable results.

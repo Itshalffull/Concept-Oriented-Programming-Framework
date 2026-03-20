@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterAppkit — self-registering provider for "appkit" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

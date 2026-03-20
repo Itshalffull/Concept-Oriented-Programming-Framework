@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Graph Concept Implementation
 // Entity network visualization with force-directed layouts, filtering,

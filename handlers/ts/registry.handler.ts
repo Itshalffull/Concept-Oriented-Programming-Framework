@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Registry Concept Implementation
 // Index of available module metadata with versioned artifacts, dependency edges,

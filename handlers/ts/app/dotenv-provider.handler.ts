@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DotenvProvider Concept Implementation
 // Manage secret resolution from .env files. Owns the file path, parsed

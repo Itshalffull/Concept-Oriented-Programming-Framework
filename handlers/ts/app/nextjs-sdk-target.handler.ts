@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // NextjsSdkTarget Concept Implementation
 // Interface target concept for generating Next.js SDK client code from projections.

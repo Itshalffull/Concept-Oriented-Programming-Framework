@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // ActionEntity Concept Implementation (Functional)
 //

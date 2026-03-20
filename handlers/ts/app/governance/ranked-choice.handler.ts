@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // RankedChoice (IRV) Counting Method Provider
 // Instant Runoff Voting: iteratively eliminates the lowest candidate and redistributes ballots.

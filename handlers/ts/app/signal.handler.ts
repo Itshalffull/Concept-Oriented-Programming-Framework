@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Signal Concept Implementation [G]
 // Reactive signals with state, computed, and effect kinds for fine-grained reactivity.

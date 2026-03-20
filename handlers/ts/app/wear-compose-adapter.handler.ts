@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // WearComposeAdapter Handler — Transforms framework-neutral props into Wear OS Compose bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

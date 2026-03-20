@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // FormalProperty Concept Implementation — Formal Verification Suite
 // Define, prove, refute, and track formal properties (invariants, pre/postconditions,
 // temporal/safety/liveness properties) across multiple formal languages and solvers.

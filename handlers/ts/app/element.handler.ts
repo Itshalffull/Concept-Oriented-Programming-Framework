@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Element Concept Implementation [E]
 // UI elements with kind classification, nesting, constraints, interactors, and widget assignment.

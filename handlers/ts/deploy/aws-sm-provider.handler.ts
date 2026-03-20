@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AwsSmProvider Concept Implementation
 // AWS Secrets Manager provider for the Secret coordination concept. Fetches

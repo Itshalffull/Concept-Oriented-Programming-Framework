@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Majority Counting Method Provider
 // Simple weighted majority: tallies votes per choice, winner must exceed threshold.

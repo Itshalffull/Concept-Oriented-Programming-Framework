@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // TestGen Concept Implementation — Functional Style
 //

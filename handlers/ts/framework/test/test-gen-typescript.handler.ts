@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // TestGenTypeScript Provider — Functional Style
 //

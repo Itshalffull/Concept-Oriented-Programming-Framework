@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterCompose — self-registering provider for "compose" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

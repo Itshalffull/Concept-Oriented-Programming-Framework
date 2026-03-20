@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ============================================================
 // TypeScriptGen Concept Implementation
@@ -605,3 +606,22 @@ const _handler: FunctionalConceptHandler = {
 };
 
 export const typescriptGenHandler = autoInterpret(_handler);
+
+/**
+ * Detect handler style from the @clef-handler annotation in a handler file.
+ * Reads the first 10 lines and looks for `// @clef-handler style=functional|imperative`.
+ * Returns 'functional' if not found (default).
+ *
+ * This is a utility for callers of the generator — the generator itself accepts
+ * testStyle as an input parameter and doesn't read files.
+ */
+export function detectHandlerStyle(fileContent: string): 'functional' | 'imperative' {
+  const lines = fileContent.split('\n').slice(0, 10);
+  for (const line of lines) {
+    const match = line.match(/@clef-handler\s+style\s*=\s*(functional|imperative)/);
+    if (match) {
+      return match[1] as 'functional' | 'imperative';
+    }
+  }
+  return 'functional';
+}

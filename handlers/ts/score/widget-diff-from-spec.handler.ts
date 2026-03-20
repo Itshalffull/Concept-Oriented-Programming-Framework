@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // WidgetImplementationEntity diffFromSpec — Functional (Monadic) Implementation
 //
 // Compares a generated widget implementation against its widget spec to find

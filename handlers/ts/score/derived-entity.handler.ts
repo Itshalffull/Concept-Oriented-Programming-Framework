@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // DerivedEntity Concept Implementation (Functional)
 //

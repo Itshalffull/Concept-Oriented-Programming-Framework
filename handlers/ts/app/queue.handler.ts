@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Queue Concept Implementation
 // Defer task processing via a managed queue with claim-process-release lifecycle

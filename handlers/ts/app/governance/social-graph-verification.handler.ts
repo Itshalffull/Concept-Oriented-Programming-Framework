@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SocialGraphVerification Sybil Resistance Provider
 // Vouch-based identity: participants vouch for each other, trust score from vouch network.

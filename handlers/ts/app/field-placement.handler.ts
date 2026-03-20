@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // FieldPlacement Concept Implementation
 // One field's display configuration in one rendering context.

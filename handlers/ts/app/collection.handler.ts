@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Collection Concept Implementation
 // Organize content into queryable sets: concrete (manually curated) or virtual (computed from a query).

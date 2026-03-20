@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // DesignTokenProvider Concept Implementation [P]
 // Provider lifecycle for design token resolution with plugin-registry integration.

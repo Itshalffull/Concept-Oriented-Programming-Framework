@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Web3 Content Concept Implementation
 import { createHash } from 'crypto';

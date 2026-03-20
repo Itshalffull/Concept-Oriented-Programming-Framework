@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // InkAdapter Handler — Transforms framework-neutral props into Ink (terminal React) bindings
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // StorageProvider Concept Implementation
 // Abstract storage provisioning coordinator. Discovers provider-specific

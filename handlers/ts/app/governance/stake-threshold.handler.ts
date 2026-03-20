@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // @migrated dsl-constructs 2026-03-18
 // StakeThreshold Sybil Resistance Provider
 // Requires participants to stake a minimum amount; supports balance tracking and slashing.

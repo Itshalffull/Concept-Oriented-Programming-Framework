@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // RenderInterpreterVue — self-registering provider for "vue" target
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';

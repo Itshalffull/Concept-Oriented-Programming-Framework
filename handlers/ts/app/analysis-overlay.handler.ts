@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AnalysisOverlay Concept Implementation
 // Maps graph analysis results to visual attributes for canvas overlays.

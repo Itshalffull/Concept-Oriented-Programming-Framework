@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // WidgetStateEntity Concept Implementation (Functional)
 //

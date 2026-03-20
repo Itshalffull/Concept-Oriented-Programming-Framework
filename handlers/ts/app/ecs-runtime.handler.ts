@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // EcsRuntime Concept Implementation
 // Manage AWS ECS Fargate service deployments. Owns service configurations,

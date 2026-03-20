@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // IaC Concept Implementation
 // Coordination concept for infrastructure-as-code. Generates provider-specific

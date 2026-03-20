@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Deliberation Concept Handler
 // Async threaded discussion with signals and summaries.

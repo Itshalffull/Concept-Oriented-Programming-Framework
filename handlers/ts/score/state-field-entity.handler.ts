@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // StateField Concept Implementation (Functional)
 //

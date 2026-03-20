@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // AgenticDelegate Concept Handler
 // Register and constrain AI agents participating in governance.

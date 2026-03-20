@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // ConsentProcess Counting Method Provider
 // Sociocratic consent: Present -> Clarify -> React -> Object -> Integrate -> Consent state machine.

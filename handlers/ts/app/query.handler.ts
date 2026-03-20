@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // Query Concept Implementation
 // Execute structured retrieval over content with filtering, sorting, grouping, and aggregation.

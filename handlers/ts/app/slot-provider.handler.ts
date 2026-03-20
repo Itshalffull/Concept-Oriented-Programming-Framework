@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // SlotProvider Concept Implementation [P]
 // Provider lifecycle for component composition slots with centralized registry.

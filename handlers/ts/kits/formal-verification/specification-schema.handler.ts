@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // SpecificationSchema Concept Implementation — Formal Verification Suite
 // Define, instantiate, validate, search, and manage reusable specification
 // templates (Dwyer patterns, smart contract patterns, distributed system

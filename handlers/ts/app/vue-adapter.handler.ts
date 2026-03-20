@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // VueAdapter Handler — Transforms framework-neutral props into Vue 3 bindings.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';

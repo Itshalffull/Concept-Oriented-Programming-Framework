@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // CloudRunRuntime Concept Implementation
 // Google Cloud Run provider for the Runtime coordination concept. Manages

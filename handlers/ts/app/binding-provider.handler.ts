@@ -1,3 +1,4 @@
+// @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
 // BindingProvider Concept Implementation [P, C]
 // Provider lifecycle for concept-to-UI data binding with connection state management.

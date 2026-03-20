@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // KernelBoot Concept Handler
 // Bootstraps a Clef kernel by discovering concept handlers,
 // compiling routing syncs, and exposing the kernel for action dispatch.

@@ -1,3 +1,4 @@
+// @clef-handler style=imperative
 // ============================================================
 // VariantEntity Concept Implementation (Functional)
 //
