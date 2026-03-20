@@ -60,6 +60,8 @@ concept EntityReflector [P] {
       -> ok(providers: String) {
         Return all providers with last_run and reflected_count as JSON.
       }
+
+      fixture valid_status { }
     }
   }
 

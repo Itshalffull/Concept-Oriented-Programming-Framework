@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SeedData [S] {
 
@@ -34,6 +35,9 @@ concept SeedData [S] {
       -> error(message: String) {
         The base_path does not exist or is not readable.
       }
+
+      fixture valid_discover { base_path: "/project/seeds" }
+      fixture discover_empty_path { base_path: "" } -> error
     }
 
     action register(source_path: String, concept_uri: String,
@@ -45,6 +49,10 @@ concept SeedData [S] {
       -> duplicate(message: String) {
         A seed with this source_path is already registered.
       }
+
+      fixture valid_register { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] }
+      fixture register_interactor { source_path: "/project/seeds/interactor.seeds.yaml", concept_uri: "urn:clef/Interactor", action_name: "define", entries: ["{\"name\":\"spatial-canvas\"}"] }
+      fixture register_duplicate { source_path: "/project/seeds/schema.seeds.yaml", concept_uri: "urn:clef/Schema", action_name: "defineSchema", entries: ["{\"schema\":\"Shape\"}"] } -> error
     }
 
     action apply(seed: S) {
