@@ -178,7 +178,7 @@ concept ScoreApi [Q] {
         Concept not found. Use listConcepts to see available concepts.
       }
       fixture get_flag { name: "Flag" }
-      fixture get_missing { name: "" } -> error
+      fixture get_missing_2 { name: "" } -> error
     }
 
     action getAction(concept: String, action: String) {
@@ -200,7 +200,7 @@ concept ScoreApi [Q] {
         (eager, eventual, local), trigger patterns, effect actions,
         and source file.
       }
-      fixture valid {}
+      fixture valid_2 {}
     }
 
     action getSync(name: String) {
@@ -267,7 +267,7 @@ concept ScoreApi [Q] {
         List all registered handlers with their concept, language,
         source file, number of implemented actions, and line count.
       }
-      fixture valid {}
+      fixture valid_3 {}
     }
 
     action implementationGaps() {
@@ -279,7 +279,7 @@ concept ScoreApi [Q] {
       -> allImplemented() {
         Every declared action has a handler implementation.
       }
-      fixture valid {}
+      fixture valid_4 {}
     }
 
     action resolveStackTrace(stackTrace: String) {
@@ -364,7 +364,7 @@ concept ScoreApi [Q] {
       -> ok(suites: list { name: String, version: String, conceptCount: Int, syncCount: Int, file: String }) {
         List all registered suites.
       }
-      fixture valid {}
+      fixture valid_5 {}
     }
 
     action getSuite(name: String) {
@@ -384,7 +384,7 @@ concept ScoreApi [Q] {
       -> ok(interfaces: list { name: String, targets: list String, conceptCount: Int, endpointCount: Int, file: String }) {
         List all registered interface manifests.
       }
-      fixture valid {}
+      fixture valid_6 {}
     }
 
     action getEndpoints(interface: String, target: String) {
@@ -461,7 +461,7 @@ concept ScoreApi [Q] {
         No data flow path exists between the given symbols.
       }
       fixture flow_path { from: "User/create", to: "Email/send" }
-      fixture flow_empty { from: "", to: "" } -> error
+      fixture flow_empty_2 { from: "", to: "" } -> error
     }
 
     // ─── Discovery Queries (Discovery Layer) ────────────────
@@ -503,7 +503,7 @@ concept ScoreApi [Q] {
         Get the current status of the Score index. Returns
         counts of indexed entities and the last indexing time.
       }
-      fixture valid {}
+      fixture valid_7 {}
     }
 
     action reindex() {
@@ -517,7 +517,7 @@ concept ScoreApi [Q] {
       -> inProgress(startedAt: DateTime) {
         A reindex is already in progress.
       }
-      fixture valid {}
+      fixture valid_8 {}
     }
   }
 

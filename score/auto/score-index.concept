@@ -214,7 +214,7 @@ concept ScoreIndex [X] {
       -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastUpdated: DateTime) {
         Return current index statistics.
       }
-      fixture valid {}
+      fixture valid_2 {}
     }
   }
 
