@@ -93,6 +93,8 @@ concept TypeScriptBuilder [N] {
         language: "typescript"
         capabilities: ["npm", "bundle", "docker"]
       }
+
+      fixture register_valid {}
     }
   }
 

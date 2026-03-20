@@ -63,12 +63,18 @@ concept GenerationPlan [R] {
       -> ok(steps: list { stepKey: String, status: String, duration: Int, cached: Bool, filesProduced: Int }) {
         Return current execution status for all steps in a run.
       }
+
+      fixture status_existing { run: "run-abc123" }
+      fixture status_missing { run: "run-nonexistent" }
     }
 
     action summary(run: R) {
       -> ok(total: Int, executed: Int, cached: Int, failed: Int, totalDuration: Int, filesProduced: Int) {
         Return summary statistics for a completed run.
       }
+
+      fixture summary_existing { run: "run-abc123" }
+      fixture summary_missing { run: "run-nonexistent" }
     }
 
     action history(limit: option Int) {

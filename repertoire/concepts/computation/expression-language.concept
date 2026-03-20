@@ -18,16 +18,25 @@ concept ExpressionLanguage [E] {
     action registerLanguage(name: String, grammar: String) {
       -> ok() { Grammar added to the set of available parsing languages. }
       -> exists() { Language with this name already registered. }
+
+      fixture register_math { name: "math", grammar: "arithmetic" }
+      fixture missing_name { name: "", grammar: "arithmetic" } -> error
     }
 
     action registerFunction(name: String, implementation: String) {
       -> ok() { Function available for use in expressions. }
       -> exists() { Function with this name already registered. }
+
+      fixture register_abs { name: "abs", implementation: "Math.abs" }
+      fixture missing_impl { name: "", implementation: "" } -> error
     }
 
     action registerOperator(name: String, implementation: String) {
       -> ok() { Operator available for use in expressions. }
       -> exists() { Operator with this name already registered. }
+
+      fixture register_plus { name: "plus", implementation: "a + b" }
+      fixture missing_op_name { name: "", implementation: "a + b" } -> error
     }
 
     action parse(expression: E, text: String, language: String) {
