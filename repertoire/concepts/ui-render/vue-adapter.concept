@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept VueAdapter [A] {
 
@@ -24,6 +25,26 @@ concept VueAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Vue.
       }
+
+      fixture button_with_click {
+        adapter: "vue-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn primary\" }"
+      }
+
+      fixture with_ref_and_style {
+        adapter: "vue-form"
+        props: "{ \"ref\": \"inputRef\", \"style\": { \"color\": \"red\" }, \"data-id\": \"42\" }"
+      }
+
+      fixture empty_props {
+        adapter: "vue-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "vue-main"
+        props: "{ not valid json }"
+      } -> error
     }
   }
 

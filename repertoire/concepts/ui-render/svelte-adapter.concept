@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SvelteAdapter [A] {
 
@@ -24,6 +25,26 @@ concept SvelteAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Svelte.
       }
+
+      fixture button_with_click {
+        adapter: "svelte-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn primary\" }"
+      }
+
+      fixture with_binding_and_aria {
+        adapter: "svelte-form"
+        props: "{ \"$value\": \"inputValue\", \"aria-required\": \"true\", \"data-field\": \"email\" }"
+      }
+
+      fixture empty_props {
+        adapter: "svelte-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "svelte-main"
+        props: "{ broken json"
+      } -> error
     }
   }
 

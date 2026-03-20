@@ -18,6 +18,8 @@ concept ErdNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "erd", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -33,6 +35,8 @@ concept ErdNotationProvider [C] {
       }) {
         Returns ERD notation definition.
       }
+
+      fixture valid {}
     }
   }
 

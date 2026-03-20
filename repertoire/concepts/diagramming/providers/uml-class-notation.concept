@@ -18,6 +18,8 @@ concept UmlClassNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "uml-class", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -33,6 +35,8 @@ concept UmlClassNotationProvider [C] {
       }) {
         Returns UML class diagram notation definition.
       }
+
+      fixture valid {}
     }
   }
 

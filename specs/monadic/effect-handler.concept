@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EffectHandler [E] {
 
@@ -26,6 +27,15 @@ concept EffectHandler [E] {
         A handler for this protocol:operation pair is already
         registered. Returns the existing handler ID.
       }
+
+      fixture register_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture register_empty_protocol {
+        protocol: "",
+        operation: "GET"
+      } -> error
     }
 
     action resolve(protocol: String, operation: String) {
@@ -37,6 +47,15 @@ concept EffectHandler [E] {
         No handler is registered for this protocol:operation pair.
         The perform instruction cannot be executed.
       }
+
+      fixture resolve_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture resolve_unknown {
+        protocol: "grpc",
+        operation: "invoke"
+      } -> error
     }
 
     action listByProtocol(protocol: String) {
@@ -44,6 +63,13 @@ concept EffectHandler [E] {
         Return all registered handlers for the given protocol as
         a serialized JSON array of handler objects.
       }
+
+      fixture list_http {
+        protocol: "http"
+      }
+      fixture list_empty {
+        protocol: ""
+      } -> error
     }
 
     action deregister(protocol: String, operation: String) {
@@ -54,6 +80,15 @@ concept EffectHandler [E] {
       -> notfound(message: String) {
         No handler is registered for this protocol:operation pair.
       }
+
+      fixture deregister_http_get {
+        protocol: "http",
+        operation: "GET"
+      }
+      fixture deregister_empty {
+        protocol: "",
+        operation: ""
+      } -> error
     }
   }
 

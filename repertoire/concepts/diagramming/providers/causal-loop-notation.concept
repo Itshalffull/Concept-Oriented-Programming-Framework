@@ -18,6 +18,8 @@ concept CausalLoopNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "causal-loop", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -33,6 +35,8 @@ concept CausalLoopNotationProvider [C] {
       }) {
         Returns causal loop notation with polarity edge types.
       }
+
+      fixture valid {}
     }
   }
 

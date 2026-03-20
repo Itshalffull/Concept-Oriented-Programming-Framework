@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept FrameworkAdapter [R] {
 
@@ -30,11 +31,37 @@ concept FrameworkAdapter [R] {
         Sets status to "active".
       }
       -> duplicate(message: String) { Already registered. }
+
+      fixture register_react {
+        renderer: "react-19"
+        framework: "react"
+        version: "19"
+        normalizer: "reactNormalizer"
+        mountFn: "reactMount"
+      }
+
+      fixture register_empty_framework {
+        renderer: "bad"
+        framework: ""
+        version: "1"
+        normalizer: "noop"
+        mountFn: "noop"
+      } -> error
     }
 
     action normalize(renderer: R, props: String) {
       -> ok(normalized: String) { Transform to framework-specific bindings. }
       -> notfound(message: String) { Not registered. }
+
+      fixture normalize_react_props {
+        renderer: "react-19"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\", \"__framework\": \"react\" }"
+      }
+
+      fixture normalize_empty_props {
+        renderer: "react-19"
+        props: ""
+      } -> error
     }
 
     action mount(renderer: R, machine: String, target: String) {

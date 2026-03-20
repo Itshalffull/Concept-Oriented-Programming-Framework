@@ -46,6 +46,11 @@ concept GraphAnalysis [A] {
       -> analysis_failed(message: String) {
         The provider encountered an error during analysis.
       }
+
+      fixture pagerank_analysis { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: none }
+      fixture degree_with_config { graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }
+      fixture unknown_algo { graph: "{\"nodes\":[\"a\"],\"edges\":[]}", algorithm: "nonexistent", config: none } -> unknown_algorithm
+      fixture bad_graph_json { graph: "not json", algorithm: "pagerank", config: none } -> analysis_failed
     }
 
     action register(algorithm: String, category: String, provider: String) {
@@ -56,6 +61,9 @@ concept GraphAnalysis [A] {
       -> already_registered(message: String) {
         A provider is already registered for this algorithm.
       }
+
+      fixture register_provider { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }
+      fixture register_community { algorithm: "spectral", category: "community", provider: "SpectralProvider" }
     }
 
     action getResult(result: A) {
@@ -65,6 +73,9 @@ concept GraphAnalysis [A] {
       -> notfound() {
         No result exists with the given identifier.
       }
+
+      fixture existing_result { result: "result-001" }
+      fixture missing_result { result: "result-nonexistent" } -> notfound
     }
 
     action listResults(graph: String) {
@@ -72,6 +83,8 @@ concept GraphAnalysis [A] {
         Returns all stored analysis results for the given graph,
         as a JSON array of result summaries.
       }
+
+      fixture for_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }
     }
 
     action listAlgorithms(category: option String) {
@@ -79,12 +92,17 @@ concept GraphAnalysis [A] {
         Returns all registered algorithms, optionally filtered by
         category. JSON array of { algorithm, category, provider }.
       }
+
+      fixture all_algorithms { category: none }
+      fixture centrality_only { category: "centrality" }
     }
 
     action clearResults(graph: String) {
       -> ok(count: Int) {
         Removes all stored analysis results for the given graph.
       }
+
+      fixture clear_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }
     }
   }
 

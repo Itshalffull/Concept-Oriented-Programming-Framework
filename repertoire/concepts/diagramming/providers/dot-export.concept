@@ -16,6 +16,8 @@ concept DotExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "dot", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +28,10 @@ concept DotExportProvider [C] {
         edges with style/label. mime_type: "text/vnd.graphviz".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_export { canvas_id: "canvas-1" }
+      fixture with_engine { canvas_id: "canvas-2", options: { engine: "neato" } }
+      fixture empty_canvas { canvas_id: "" } -> error
     }
 
     action importData(data: String, target_canvas: option String) {
@@ -33,6 +39,10 @@ concept DotExportProvider [C] {
         Parses DOT syntax and creates items/connectors.
       }
       -> error(message: String) { Parse failed. }
+
+      fixture simple_graph { data: "digraph G { A -> B; }", target_canvas: "imported-canvas" }
+      fixture with_labels { data: "digraph G { A [label=\"Start\"]; B [label=\"End\"]; A -> B; }" }
+      fixture empty_data { data: "" } -> error
     }
   }
 

@@ -32,6 +32,27 @@ concept VoyageEndpoint [V] {
       -> exists(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture voyage_document {
+        name: "code-search"
+        apiKey: "vk-prod-abc123"
+        model: "voyage-code-3"
+        inputType: "document"
+      }
+
+      fixture voyage_query {
+        name: "code-query"
+        apiKey: "vk-dev-xyz789"
+        model: "voyage-code-3"
+        inputType: "query"
+      }
+
+      fixture missing_name {
+        name: ""
+        apiKey: "vk-test"
+        model: "voyage-code-3"
+        inputType: "document"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -42,6 +63,14 @@ concept VoyageEndpoint [V] {
       -> notFound(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "code-search"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
 
     action list() {
@@ -49,6 +78,8 @@ concept VoyageEndpoint [V] {
         Return all registered endpoints as a serialized JSON array
         with name, model, and inputType (API keys omitted).
       }
+
+      fixture valid {}
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept VariantExtractionProvider [V] {
 
@@ -27,6 +28,16 @@ concept VariantExtractionProvider [V] {
         The program string could not be parsed into a valid
         instruction tree or contains no recognizable terminals.
       }
+
+      fixture single_pure_terminal {
+        program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"terminated\":true,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[\"ok\"]}}"
+      }
+      fixture branched_variants {
+        program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":true,\"thenBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}]},\"elseBranch\":{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"error\"}}]}}],\"terminated\":false,\"effects\":{\"completionVariants\":[\"ok\",\"error\"]}}"
+      }
+      fixture invalid_json {
+        program: "not valid json{{{"
+      } -> error
     }
   }
 

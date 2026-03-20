@@ -16,6 +16,8 @@ concept PngExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "png", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -27,6 +29,10 @@ concept PngExportProvider [C] {
         mime_type: "image/png".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_options { canvas_id: "canvas-1", options: none }
+      fixture custom_size { canvas_id: "canvas-1", options: { width: 1920, height: 1080, background: "#ffffff", embed_data: true } }
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
   }
 

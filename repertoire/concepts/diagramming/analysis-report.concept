@@ -39,6 +39,12 @@ concept AnalysisReport [R] {
       -> invalid_result(message: String) {
         The analysis result reference is invalid or has been cleared.
       }
+
+      fixture table_report { result: "{\"nodes\":[{\"id\":\"n1\",\"score\":0.85}],\"scores\":{\"n2\":0.42}}", format: "table", title: "Centrality Scores" }
+      fixture summary_report { result: "{\"nodes\":[{\"id\":\"a\",\"score\":0.9},{\"id\":\"b\",\"score\":0.3}]}", format: "summary", title: "Overview" }
+      fixture dashboard_report { result: "{\"nodes\":[{\"id\":\"x\",\"score\":0.5}],\"communities\":{\"x\":0}}", format: "dashboard", title: none }
+      fixture bad_format { result: "{\"nodes\":[]}", format: "sparkline", title: none } -> unsupported_format
+      fixture bad_result { result: "not json", format: "table", title: none } -> invalid_result
     }
 
     action compare(results: String, format: String) {
@@ -50,6 +56,9 @@ concept AnalysisReport [R] {
       -> insufficient_results(message: String) {
         Fewer than two valid results were provided for comparison.
       }
+
+      fixture two_results { results: "[\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.9}]}\",\"{\\\"nodes\\\":[{\\\"id\\\":\\\"a\\\",\\\"score\\\":0.7}]}\"]", format: "table" }
+      fixture single_result { results: "[\"{\\\"nodes\\\":[]}\"]", format: "table" } -> insufficient_results
     }
 
     action getReport(report: R) {
@@ -59,6 +68,9 @@ concept AnalysisReport [R] {
       -> notfound() {
         No report exists with the given identifier.
       }
+
+      fixture existing_report { report: "report-001" }
+      fixture missing_report { report: "report-nonexistent" } -> notfound
     }
 
     action listReports(result: option String) {
@@ -66,6 +78,9 @@ concept AnalysisReport [R] {
         Returns all stored reports, optionally filtered by the
         source analysis result.
       }
+
+      fixture all_reports { result: none }
+      fixture filtered { result: "result-abc" }
     }
 
     action exportReport(report: R, outputFormat: String) {
@@ -79,6 +94,11 @@ concept AnalysisReport [R] {
       -> unsupported_output(message: String) {
         The requested output format is not supported.
       }
+
+      fixture csv_export { report: "report-001", outputFormat: "csv" }
+      fixture markdown_export { report: "report-001", outputFormat: "markdown" }
+      fixture unsupported { report: "report-001", outputFormat: "pdf" } -> unsupported_output
+      fixture missing_report { report: "report-nonexistent", outputFormat: "json" } -> notfound
     }
   }
 

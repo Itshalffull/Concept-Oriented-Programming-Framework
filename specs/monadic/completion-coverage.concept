@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CompletionCoverage [C] {
 
@@ -39,6 +40,28 @@ concept CompletionCoverage [C] {
       -> error(message: String) {
         Input data could not be parsed as valid JSON arrays.
       }
+
+      fixture full_coverage {
+        concept: "User",
+        action: "register",
+        declaredVariants: "[\"ok\",\"error\"]",
+        extractedVariants: "[\"ok\",\"error\"]",
+        syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"},{\"sync\":\"RegistrationError\",\"variant\":\"error\"}]"
+      }
+      fixture missing_sync {
+        concept: "User",
+        action: "register",
+        declaredVariants: "[\"ok\",\"error\"]",
+        extractedVariants: "[\"ok\"]",
+        syncPatterns: "[{\"sync\":\"RegisterUser\",\"variant\":\"ok\"}]"
+      }
+      fixture invalid_json_input {
+        concept: "User",
+        action: "register",
+        declaredVariants: "not json",
+        extractedVariants: "not json",
+        syncPatterns: "not json"
+      } -> error
     }
 
     action report(concept: String) {
@@ -46,6 +69,13 @@ concept CompletionCoverage [C] {
         Return all coverage reports for the given concept,
         serialized as a JSON array of report objects.
       }
+
+      fixture report_user {
+        concept: "User"
+      }
+      fixture report_empty {
+        concept: ""
+      } -> error
     }
 
     action listUncovered() {
@@ -53,6 +83,8 @@ concept CompletionCoverage [C] {
         Return all concept/action pairs across the entire system
         that have at least one uncovered variant.
       }
+
+      fixture valid {}
     }
   }
 

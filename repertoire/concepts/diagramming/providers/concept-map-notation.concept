@@ -17,6 +17,8 @@ concept ConceptMapNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "concept-map", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -32,6 +34,8 @@ concept ConceptMapNotationProvider [C] {
       }) {
         Returns concept map notation. Edge type requires_label: true.
       }
+
+      fixture valid {}
     }
   }
 

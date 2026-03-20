@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept AppKitAdapter [A] {
 
@@ -24,6 +25,26 @@ concept AppKitAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to AppKit.
       }
+
+      fixture button_with_click {
+        adapter: "appkit-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"btn\" }"
+      }
+
+      fixture with_widget_mapping {
+        adapter: "appkit-form"
+        props: "{ \"__widget\": \"button\", \"aria-label\": \"Submit\" }"
+      }
+
+      fixture empty_props {
+        adapter: "appkit-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "appkit-main"
+        props: "not json"
+      } -> error
     }
   }
 

@@ -15,6 +15,8 @@ concept PdfExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "pdf", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -25,6 +27,10 @@ concept PdfExportProvider [C] {
         mime_type: "application/pdf".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_canvas { canvas_id: "canvas-1" }
+      fixture with_options { canvas_id: "canvas-2", options: { width: 1200, height: 800, background: "white" } }
+      fixture missing_canvas { canvas_id: "" } -> error
     }
   }
 

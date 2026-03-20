@@ -41,6 +41,9 @@ concept DeadPartProvider [D] {
       -> notfound() {
         No analysis result exists with this identifier.
       }
+
+      fixture existing_analysis { analysis: "dpa-1" }
+      fixture unknown_analysis { analysis: "nonexistent" } -> notfound
     }
   }
 

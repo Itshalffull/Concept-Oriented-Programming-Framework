@@ -40,6 +40,9 @@ concept BpmnXmlExportProvider [C] {
         from sequence flows.
       }
       -> error(message: String) { Parse failed or invalid BPMN. }
+
+      fixture valid_bpmn { data: "<bpmn:definitions><bpmn:process id=\"p1\"><bpmn:task id=\"t1\" name=\"Do Work\"/></bpmn:process></bpmn:definitions>", target_canvas: "imported-canvas" }
+      fixture invalid_xml { data: "not valid bpmn xml", target_canvas: none } -> error
     }
   }
 

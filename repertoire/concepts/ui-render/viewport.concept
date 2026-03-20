@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Viewport [V] {
 
@@ -21,11 +22,33 @@ concept Viewport [V] {
       -> ok(viewport: V, breakpoint: String, orientation: String) {
         Report dimensions, return active breakpoint and orientation.
       }
+
+      fixture desktop_landscape {
+        viewport: "main"
+        width: 1440
+        height: 900
+      }
+
+      fixture mobile_portrait {
+        viewport: "main"
+        width: 375
+        height: 812
+      }
     }
 
     action setBreakpoints(viewport: V, breakpoints: String) {
       -> ok(viewport: V) { Override defaults. }
       -> invalid(message: String) { Values must be ascending positive integers. }
+
+      fixture custom_breakpoints {
+        viewport: "main"
+        breakpoints: "{ \"small\": { \"min\": 0, \"max\": 599 }, \"large\": { \"min\": 600, \"max\": 9999 } }"
+      }
+
+      fixture invalid_breakpoints {
+        viewport: "main"
+        breakpoints: "not valid json"
+      } -> error
     }
 
     action getBreakpoint(viewport: V) {
@@ -33,6 +56,14 @@ concept Viewport [V] {
         Return current breakpoint and dimensions.
       }
       -> notfound(message: String) { Viewport not initialized. }
+
+      fixture get_existing {
+        viewport: "main-viewport"
+      }
+
+      fixture get_missing {
+        viewport: "nonexistent"
+      } -> error
     }
   }
 

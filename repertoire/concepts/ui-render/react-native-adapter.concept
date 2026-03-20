@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ReactNativeAdapter [A] {
 
@@ -25,6 +26,26 @@ concept ReactNativeAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to React Native.
       }
+
+      fixture pressable_button {
+        adapter: "rn-main"
+        props: "{ \"onclick\": \"handlePress\", \"class\": \"btn\" }"
+      }
+
+      fixture with_layout_and_a11y {
+        adapter: "rn-list"
+        props: "{ \"aria-label\": \"Item list\", \"layout\": { \"kind\": \"stack\", \"direction\": \"column\", \"gap\": \"8\" } }"
+      }
+
+      fixture empty_props {
+        adapter: "rn-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "rn-main"
+        props: "not valid"
+      } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ComposeAdapter [A] {
 
@@ -24,6 +25,26 @@ concept ComposeAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Jetpack Compose.
       }
+
+      fixture button_with_click {
+        adapter: "compose-main"
+        props: "{ \"onclick\": \"handleClick\", \"class\": \"filled-button\" }"
+      }
+
+      fixture with_drag_and_layout {
+        adapter: "compose-canvas"
+        props: "{ \"ondrag\": \"handleDrag\", \"layout\": { \"kind\": \"overlay\" } }"
+      }
+
+      fixture empty_props {
+        adapter: "compose-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "compose-main"
+        props: "{ invalid }"
+      } -> error
     }
   }
 

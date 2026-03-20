@@ -33,6 +33,10 @@ concept DiagramNotation [N] {
     action create(name: String, description: option String) {
       -> ok(notation: N) { Creates empty notation. }
       -> error(message: String) { Name exists. }
+
+      fixture flowchart { name: "Flowchart", description: "Standard flowchart notation" }
+      fixture erd { name: "ERD", description: none }
+      fixture empty_name { name: "", description: none } -> error
     }
 
     action addNodeType(notation: N, type_key: String, label: String,
@@ -41,6 +45,10 @@ concept DiagramNotation [N] {
                        schema_id: option ID) {
       -> ok(notation: N, type_key: String) { Adds node type. }
       -> duplicate(message: String) { type_key exists. }
+
+      fixture decision_node { notation: "notation-1", type_key: "decision", label: "Decision", shape: "diamond", default_fill: "#F3E5F5", default_stroke: none, icon: none, schema_id: none }
+      fixture task_node { notation: "notation-1", type_key: "task", label: "Task", shape: "rectangle", default_fill: "#E3F2FD", default_stroke: "#90CAF9", icon: none, schema_id: none }
+      fixture duplicate_key { notation: "notation-1", type_key: "decision", label: "Decision", shape: "diamond", default_fill: none, default_stroke: none, icon: none, schema_id: none } -> duplicate
     }
 
     action addEdgeType(notation: N, type_key: String, label: String,
@@ -48,6 +56,10 @@ concept DiagramNotation [N] {
                        default_color: option String, requires_label: Bool) {
       -> ok(notation: N, type_key: String) { Adds edge type. }
       -> duplicate(message: String) { type_key exists. }
+
+      fixture flow_edge { notation: "notation-1", type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: none, requires_label: false }
+      fixture dependency_edge { notation: "notation-1", type_key: "dependency", label: "Depends On", line_style: "dashed", arrow_type: "forward", default_color: "#FF5722", requires_label: true }
+      fixture duplicate_edge { notation: "notation-1", type_key: "flow", label: "Flow", line_style: "solid", arrow_type: "forward", default_color: none, requires_label: false } -> duplicate
     }
 
     action addConnectionRule(notation: N, source_type: String,

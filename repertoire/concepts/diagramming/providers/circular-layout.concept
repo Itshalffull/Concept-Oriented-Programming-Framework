@@ -18,6 +18,8 @@ concept CircularLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "circular", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -31,6 +33,10 @@ concept CircularLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture four_items { canvas: "canvas-1", items: ["a", "b", "c", "d"], config: none }
+      fixture two_items { canvas: "canvas-1", items: ["a", "b"], config: none }
+      fixture missing_canvas { canvas: "", items: ["a"], config: none } -> error
     }
   }
 

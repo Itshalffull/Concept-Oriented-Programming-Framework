@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept NextjsAdapter [A] {
 
@@ -30,6 +31,26 @@ concept NextjsAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Next.js React.
       }
+
+      fixture interactive_button {
+        adapter: "nextjs-app"
+        props: "{ \"onclick\": \"handleSubmit\", \"class\": \"btn\" }"
+      }
+
+      fixture static_content {
+        adapter: "nextjs-page"
+        props: "{ \"class\": \"heading\", \"aria-level\": \"1\", \"data-section\": \"hero\" }"
+      }
+
+      fixture empty_props {
+        adapter: "nextjs-app"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "nextjs-app"
+        props: "<<invalid>>"
+      } -> error
     }
   }
 

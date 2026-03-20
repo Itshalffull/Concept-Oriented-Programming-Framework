@@ -18,6 +18,8 @@ concept ForceDirectedLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "force-directed", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -31,6 +33,10 @@ concept ForceDirectedLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture three_items { canvas: "canvas-1", items: ["node-a", "node-b", "node-c"], config: { iterations: 100 } }
+      fixture single_item { canvas: "canvas-1", items: ["node-a"], config: none }
+      fixture missing_canvas { canvas: "", items: ["node-a"], config: none } -> error
     }
   }
 

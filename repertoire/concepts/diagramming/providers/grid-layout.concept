@@ -17,6 +17,8 @@ concept GridLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "grid", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -29,6 +31,10 @@ concept GridLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture four_items { canvas: "canvas-1", items: ["a", "b", "c", "d"], config: { columns: 2 } }
+      fixture single_item { canvas: "canvas-1", items: ["a"], config: none }
+      fixture missing_canvas { canvas: "", items: ["a", "b"], config: none } -> error
     }
   }
 

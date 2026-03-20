@@ -18,6 +18,8 @@ concept BpmnNotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "bpmn", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -33,6 +35,8 @@ concept BpmnNotationProvider [C] {
       }) {
         Returns BPMN notation definition.
       }
+
+      fixture valid {}
     }
   }
 

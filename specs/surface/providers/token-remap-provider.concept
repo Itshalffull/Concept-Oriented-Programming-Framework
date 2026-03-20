@@ -23,6 +23,8 @@ concept TokenRemapProvider [V] {
         kind: "token-remap"
         capabilities: ["token-path-rewrite", "theme-switching"]
       }
+
+      fixture valid {}
     }
 
     action apply(program: String, spec: String) {
@@ -36,6 +38,10 @@ concept TokenRemapProvider [V] {
       -> error(message: String) {
         The program or spec JSON could not be parsed.
       }
+
+      fixture remap_token_path { program: "{\"instructions\":[{\"tag\":\"token\",\"path\":\"palette.primary\"}]}", spec: "{\"mappings\":{\"palette.primary\":\"palette.dark\"}}" }
+      fixture empty_mappings { program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", spec: "{\"mappings\":{}}" }
+      fixture invalid_program_json { program: "<<<not-json>>>", spec: "{}" } -> error
     }
   }
 

@@ -29,6 +29,9 @@ concept RenderTransform [X] {
       -> duplicate(kind: String) {
         This kind is already registered.
       }
+
+      fixture token_remap_kind { kind: "token-remap" }
+      fixture empty_kind { kind: "" } -> error
     }
 
     action register(name: String, kind: String, spec: String) {
@@ -41,6 +44,9 @@ concept RenderTransform [X] {
         A transform with this name is already registered.
         Returns the existing transform.
       }
+
+      fixture dark_theme_transform { name: "dark-theme", kind: "token-remap", spec: "{\"mappings\":{\"palette.primary\":\"palette.primary-dark\"}}" }
+      fixture invalid_spec { name: "bad-transform", kind: "custom", spec: "not-json" } -> error
     }
 
     action apply(program: String, kind: String, spec: String) {
@@ -53,6 +59,9 @@ concept RenderTransform [X] {
       -> error(message: String) {
         The program could not be parsed or the kind is unknown.
       }
+
+      fixture apply_token_remap { program: "{\"instructions\":[]}", kind: "token-remap", spec: "{\"mappings\":{}}" }
+      fixture invalid_program { program: "not-json", kind: "token-remap", spec: "{}" } -> error
     }
 
     action compose(transforms: String) {
@@ -66,6 +75,9 @@ concept RenderTransform [X] {
         One or more named transforms do not exist, or the
         transforms are incompatible for composition.
       }
+
+      fixture compose_two { transforms: "[{\"name\":\"t1\",\"kind\":\"token-remap\",\"spec\":\"{}\"},{\"name\":\"t2\",\"kind\":\"a11y-adapt\",\"spec\":\"{}\"}]" }
+      fixture compose_empty { transforms: "[]" } -> error
     }
 
     action list() {
@@ -73,6 +85,8 @@ concept RenderTransform [X] {
         Return all registered transforms as a serialized JSON
         array of { name, kind } objects.
       }
+
+      fixture valid {}
     }
 
     action get(name: String) {
@@ -82,6 +96,9 @@ concept RenderTransform [X] {
       -> notfound(message: String) {
         No transform is registered with the given name.
       }
+
+      fixture existing_transform { name: "dark-theme" }
+      fixture unknown_transform { name: "nonexistent" } -> notfound
     }
   }
 

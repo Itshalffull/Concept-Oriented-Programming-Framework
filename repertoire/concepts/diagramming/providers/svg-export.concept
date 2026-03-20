@@ -29,6 +29,10 @@ concept SvgExportProvider [C] {
         If embed_data, includes JSON comment. mime_type: "image/svg+xml".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_canvas { canvas_id: "canvas-1" }
+      fixture with_options { canvas_id: "canvas-2", options: { width: 1024, height: 768, background: "#f0f0f0", embed_data: true } }
+      fixture missing_canvas { canvas_id: "" } -> error
     }
   }
 

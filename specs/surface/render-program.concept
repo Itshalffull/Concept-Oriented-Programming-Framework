@@ -29,6 +29,9 @@ concept RenderProgram [R] {
       -> exists() {
         A render program with this identifier already exists.
       }
+
+      fixture new_program { program: "card-widget" }
+      fixture duplicate_program { program: "card-widget" } -> exists
     }
 
     action element(program: R, part: String, role: String) {
@@ -44,6 +47,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_root_element { program: "card-widget", part: "root", role: "container" }
+      fixture element_unknown_program { program: "nonexistent", part: "root", role: "container" } -> notfound
     }
 
     action text(program: R, part: String, content: String) {
@@ -58,6 +64,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_text { program: "card-widget", part: "root", content: "Hello World" }
+      fixture text_unknown_program { program: "nonexistent", part: "root", content: "text" } -> notfound
     }
 
     action prop(program: R, name: String, propType: String, defaultValue: String) {
@@ -72,6 +81,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_label_prop { program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }
+      fixture prop_unknown_program { program: "nonexistent", name: "label", propType: "string", defaultValue: "" } -> notfound
     }
 
     action bind(program: R, part: String, attr: String, expr: String) {
@@ -86,6 +98,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture bind_data_value { program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }
+      fixture bind_unknown_program { program: "nonexistent", part: "root", attr: "text", expr: "x" } -> notfound
     }
 
     action stateDef(program: R, name: String, initial: Bool) {
@@ -100,6 +115,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture define_idle_state { program: "card-widget", name: "idle", initial: true }
+      fixture stateDef_unknown_program { program: "nonexistent", name: "idle", initial: true } -> notfound
     }
 
     action transition(program: R, fromState: String, event: String, toState: String) {
@@ -114,6 +132,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_click_transition { program: "card-widget", fromState: "idle", event: "click", toState: "active" }
+      fixture transition_unknown_program { program: "nonexistent", fromState: "idle", event: "click", toState: "active" } -> notfound
     }
 
     action aria(program: R, part: String, attr: String, value: String) {
@@ -129,6 +150,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_aria_label { program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }
+      fixture aria_unknown_program { program: "nonexistent", part: "root", attr: "aria-label", value: "x" } -> notfound
     }
 
     action keyboard(program: R, key: String, event: String) {
@@ -143,6 +167,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture map_enter_key { program: "card-widget", key: "Enter", event: "activate" }
+      fixture keyboard_unknown_program { program: "nonexistent", key: "Escape", event: "close" } -> notfound
     }
 
     action focus(program: R, strategy: String, initialPart: String) {
@@ -157,6 +184,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture set_focus_trap { program: "card-widget", strategy: "trap", initialPart: "root" }
+      fixture focus_unknown_program { program: "nonexistent", strategy: "trap", initialPart: "root" } -> notfound
     }
 
     action compose(program: R, widget: String, slot: String) {
@@ -171,6 +201,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture compose_badge { program: "card-widget", widget: "Badge", slot: "header" }
+      fixture compose_unknown_program { program: "nonexistent", widget: "Badge", slot: "header" } -> notfound
     }
 
     action token(program: R, path: String, fallback: String) {
@@ -185,6 +218,9 @@ concept RenderProgram [R] {
         The program has been terminated with pure and cannot
         accept further instructions.
       }
+
+      fixture add_primary_token { program: "card-widget", path: "palette.primary", fallback: "#000" }
+      fixture token_unknown_program { program: "nonexistent", path: "palette.primary", fallback: "#000" } -> notfound
     }
 
     action pure(program: R, output: String) {
@@ -198,6 +234,9 @@ concept RenderProgram [R] {
       -> sealed() {
         The program was already terminated by a previous pure call.
       }
+
+      fixture seal_program { program: "card-widget", output: "CardWidget" }
+      fixture pure_unknown_program { program: "nonexistent", output: "done" } -> notfound
     }
   }
 

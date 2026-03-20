@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept StorageProgram [P] {
 
@@ -21,6 +22,13 @@ concept StorageProgram [P] {
     action create(program: P) {
       -> ok() { Initialize an empty program ready to receive instructions. }
       -> exists() { A program with this identifier has already been created. }
+
+      fixture create_new {
+        program: "prog-1"
+      }
+      fixture create_duplicate {
+        program: "prog-1"
+      } -> error
     }
 
     action get(program: P, relation: String, key: String, bindAs: String) {
@@ -31,6 +39,19 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture get_user {
+        program: "prog-1",
+        relation: "users",
+        key: "u1",
+        bindAs: "user"
+      }
+      fixture get_missing_program {
+        program: "nonexistent",
+        relation: "users",
+        key: "u1",
+        bindAs: "user"
+      } -> error
     }
 
     action find(program: P, relation: String, criteria: String, bindAs: String) {
@@ -40,6 +61,19 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture find_by_criteria {
+        program: "prog-1",
+        relation: "users",
+        criteria: "{\"role\":\"admin\"}",
+        bindAs: "admins"
+      }
+      fixture find_missing_program {
+        program: "nonexistent",
+        relation: "users",
+        criteria: "{}",
+        bindAs: "result"
+      } -> error
     }
 
     action put(program: P, relation: String, key: String, value: String) {
@@ -49,6 +83,19 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture put_record {
+        program: "prog-1",
+        relation: "users",
+        key: "u1",
+        value: "{\"name\":\"Alice\"}"
+      }
+      fixture put_missing_program {
+        program: "nonexistent",
+        relation: "users",
+        key: "u1",
+        value: "{}"
+      } -> error
     }
 
     action del(program: P, relation: String, key: String) {
@@ -58,6 +105,17 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture del_record {
+        program: "prog-1",
+        relation: "users",
+        key: "u1"
+      }
+      fixture del_missing_program {
+        program: "nonexistent",
+        relation: "users",
+        key: "u1"
+      } -> error
     }
 
     action branch(program: P, condition: String, thenBranch: P, elseBranch: P) {
@@ -68,6 +126,19 @@ concept StorageProgram [P] {
       }
       -> notfound() { The program or one of the branch programs does not exist. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture branch_conditional {
+        program: "prog-1",
+        condition: "user != null",
+        thenBranch: "prog-then",
+        elseBranch: "prog-else"
+      }
+      fixture branch_missing_program {
+        program: "nonexistent",
+        condition: "true",
+        thenBranch: "prog-then",
+        elseBranch: "prog-else"
+      } -> error
     }
 
     action pure(program: P, variant: String, output: String) {
@@ -78,6 +149,17 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture pure_ok {
+        program: "prog-1",
+        variant: "ok",
+        output: "{\"message\":\"done\"}"
+      }
+      fixture pure_missing_program {
+        program: "nonexistent",
+        variant: "ok",
+        output: "{}"
+      } -> error
     }
 
     action compose(first: P, second: P, bindAs: String) {
@@ -86,6 +168,17 @@ concept StorageProgram [P] {
         terminal value to bindAs, then continues with second.
       }
       -> notfound() { One or both of the source programs do not exist. }
+
+      fixture compose_programs {
+        first: "prog-a",
+        second: "prog-b",
+        bindAs: "result"
+      }
+      fixture compose_missing {
+        first: "nonexistent",
+        second: "prog-b",
+        bindAs: "result"
+      } -> error
     }
 
     action getLens(program: P, lens: String, bindAs: String) {
@@ -96,6 +189,17 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture get_lens_read {
+        program: "prog-1",
+        lens: "users.u1.email",
+        bindAs: "email"
+      }
+      fixture get_lens_missing {
+        program: "nonexistent",
+        lens: "users.u1.email",
+        bindAs: "email"
+      } -> error
     }
 
     action putLens(program: P, lens: String, value: String) {
@@ -105,6 +209,17 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture put_lens_write {
+        program: "prog-1",
+        lens: "users.u1.email",
+        value: "alice@example.com"
+      }
+      fixture put_lens_missing {
+        program: "nonexistent",
+        lens: "users.u1.email",
+        value: "alice@example.com"
+      } -> error
     }
 
     action modifyLens(program: P, lens: String, fn: String) {
@@ -115,6 +230,17 @@ concept StorageProgram [P] {
       }
       -> notfound() { No program exists with this identifier. }
       -> sealed() { The program has already been terminated with pure. }
+
+      fixture modify_lens {
+        program: "prog-1",
+        lens: "users.u1.name",
+        fn: "toUpperCase"
+      }
+      fixture modify_lens_missing {
+        program: "nonexistent",
+        lens: "users.u1.name",
+        fn: "toUpperCase"
+      } -> error
     }
   }
 

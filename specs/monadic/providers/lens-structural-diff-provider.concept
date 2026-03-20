@@ -1,3 +1,5 @@
+# @fixtures-added
+# @fixtures-added
 @version(1)
 concept LensStructuralDiffProvider [D] {
 
@@ -30,6 +32,23 @@ concept LensStructuralDiffProvider [D] {
         One or both schema strings could not be parsed as valid
         state field declarations.
       }
+
+      fixture renamed_field {
+        oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"emailAddress\",\"type\":\"String\"}]"
+      }
+      fixture identical_schemas {
+        oldSchema: "[{\"name\":\"email\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]"
+      }
+      fixture added_field {
+        oldSchema: "[{\"name\":\"name\",\"type\":\"String\"}]",
+        newSchema: "[{\"name\":\"name\",\"type\":\"String\"},{\"name\":\"age\",\"type\":\"Int\"}]"
+      }
+      fixture invalid_schema {
+        oldSchema: "not json",
+        newSchema: "[{\"name\":\"email\",\"type\":\"String\"}]"
+      } -> error
     }
   }
 

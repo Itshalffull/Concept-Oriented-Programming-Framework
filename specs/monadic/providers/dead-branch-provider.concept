@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept DeadBranchProvider [D] {
 
@@ -23,6 +24,19 @@ concept DeadBranchProvider [D] {
         and reachable branch counts.
       }
       -> error(message: String) { The program or constraints could not be parsed for analysis. }
+
+      fixture false_condition {
+        program: "{\"instructions\":[{\"tag\":\"branch\",\"condition\":false,\"thenBranch\":{\"instructions\":[]},\"elseBranch\":{\"instructions\":[]}}]}",
+        constraints: "{}"
+      }
+      fixture no_branches {
+        program: "{\"instructions\":[{\"tag\":\"get\",\"relation\":\"users\",\"key\":\"u1\",\"bindAs\":\"user\"}]}",
+        constraints: "{}"
+      }
+      fixture empty_program {
+        program: "",
+        constraints: "{}"
+      } -> error
     }
   }
 

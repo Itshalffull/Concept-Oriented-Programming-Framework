@@ -18,6 +18,8 @@ concept HierarchicalLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "hierarchical", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -31,6 +33,10 @@ concept HierarchicalLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or provider not available.
       }
+
+      fixture three_nodes { canvas: "c1", items: ["root", "child1", "child2"], config: { direction: "top-down" } }
+      fixture single_node { canvas: "c1", items: ["root"], config: {} }
+      fixture no_canvas { canvas: "", items: ["a", "b"] } -> error
     }
   }
 

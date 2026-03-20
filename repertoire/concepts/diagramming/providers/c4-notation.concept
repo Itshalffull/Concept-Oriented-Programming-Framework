@@ -18,6 +18,8 @@ concept C4NotationProvider [C] {
       -> ok(name: String, category: String) {
         name: "c4-model", category: "diagram_notation"
       }
+
+      fixture valid {}
     }
 
     action getDefinition() {
@@ -33,6 +35,8 @@ concept C4NotationProvider [C] {
       }) {
         Returns C4 model notation definition.
       }
+
+      fixture valid {}
     }
   }
 

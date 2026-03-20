@@ -16,6 +16,8 @@ concept MermaidExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "mermaid", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +28,10 @@ concept MermaidExportProvider [C] {
         as arrow syntax. Direction defaults to TD. mime_type: "text/plain".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_direction { canvas_id: "canvas-1", options: none }
+      fixture left_to_right { canvas_id: "canvas-1", options: { direction: "LR" } }
+      fixture empty_canvas_id { canvas_id: "", options: none } -> error
     }
 
     action importData(data: String, target_canvas: option String) {
@@ -33,6 +39,9 @@ concept MermaidExportProvider [C] {
         Parses Mermaid syntax and creates items/connectors.
       }
       -> error(message: String) { Parse failed. }
+
+      fixture valid_mermaid { data: "graph TD\n  A[Start] --> B[End]", target_canvas: "imported" }
+      fixture empty_data { data: "", target_canvas: none } -> error
     }
   }
 

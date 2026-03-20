@@ -19,6 +19,8 @@ concept ConstraintLayoutProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "constraint", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String, config: option {
@@ -32,6 +34,10 @@ concept ConstraintLayoutProvider [C] {
       -> error(message: String) {
         Layout computation failed or constraints are contradictory.
       }
+
+      fixture with_config { canvas: "canvas-1", items: ["a", "b", "c"], config: { iterations: 50, spacing_x: 120.0, spacing_y: 100.0 } }
+      fixture minimal { canvas: "canvas-1", items: ["a"], config: none }
+      fixture empty_items { canvas: "canvas-1", items: [], config: none } -> error
     }
   }
 

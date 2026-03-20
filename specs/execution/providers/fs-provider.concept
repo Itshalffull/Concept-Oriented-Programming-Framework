@@ -28,6 +28,8 @@ concept FsProvider [F] {
         Return provider metadata for PluginRegistry registration.
         Name is "fs-provider", kind is "runtime".
       }
+
+      fixture valid {}
     }
 
     action read(path: String) {
@@ -42,6 +44,9 @@ concept FsProvider [F] {
         The file could not be read due to a permission error or
         other I/O failure.
       }
+
+      fixture read_existing_file { path: "/tmp/test.txt" }
+      fixture read_missing_file { path: "/tmp/nonexistent-file" } -> notFound
     }
 
     action write(path: String, content: String) {
@@ -54,12 +59,18 @@ concept FsProvider [F] {
         The file could not be written due to a permission error,
         disk space, or other I/O failure.
       }
+
+      fixture write_file { path: "/tmp/output.txt", content: "hello world" }
+      fixture write_readonly_path { path: "/readonly/forbidden.txt", content: "data" } -> error
     }
 
     action exists(path: String) {
       -> ok(exists: Bool) {
         Check whether a file exists at the given path.
       }
+
+      fixture check_existing { path: "/tmp/test.txt" }
+      fixture check_missing { path: "/tmp/nonexistent" }
     }
 
     action delete(path: String) {

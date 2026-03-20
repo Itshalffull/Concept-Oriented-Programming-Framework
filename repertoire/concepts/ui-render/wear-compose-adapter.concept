@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept WearComposeAdapter [A] {
 
@@ -25,6 +26,26 @@ concept WearComposeAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to Wear Compose.
       }
+
+      fixture button_with_click {
+        adapter: "wear-main"
+        props: "{ \"onclick\": \"handleTap\", \"class\": \"chip\" }"
+      }
+
+      fixture with_scroll_and_aria {
+        adapter: "wear-list"
+        props: "{ \"onscroll\": \"handleRotary\", \"aria-label\": \"Items\" }"
+      }
+
+      fixture empty_props {
+        adapter: "wear-main"
+        props: ""
+      } -> error
+
+      fixture invalid_json {
+        adapter: "wear-main"
+        props: "bad json"
+      } -> error
     }
   }
 

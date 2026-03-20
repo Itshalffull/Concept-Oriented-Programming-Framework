@@ -30,6 +30,30 @@ concept AlloySolverEndpoint [A] {
       -> exists(name: String) {
         An endpoint with this name is already registered.
       }
+
+      fixture alloy_default {
+        name: "alloy-local"
+        jarPath: "/opt/alloy/alloy.jar"
+        scope: 5
+        timeout: 60000
+        options: ""
+      }
+
+      fixture alloy_custom {
+        name: "alloy-ci"
+        jarPath: "/usr/share/alloy/alloy6.jar"
+        scope: 10
+        timeout: 120000
+        options: "-Xmx4g"
+      }
+
+      fixture missing_name {
+        name: ""
+        jarPath: "/opt/alloy/alloy.jar"
+        scope: 5
+        timeout: 60000
+        options: ""
+      } -> error
     }
 
     action check(name: String, model: String, predicate: String) {
@@ -48,6 +72,18 @@ concept AlloySolverEndpoint [A] {
         The Alloy JAR could not be executed or returned
         an unexpected error.
       }
+
+      fixture check_simple_model {
+        name: "alloy-local"
+        model: "sig Node { edges: set Node }"
+        predicate: "run { some Node } for 5"
+      }
+
+      fixture check_missing_endpoint {
+        name: "nonexistent"
+        model: "sig A {}"
+        predicate: "run {}"
+      } -> error
     }
 
     action resolve(name: String) {
@@ -57,6 +93,14 @@ concept AlloySolverEndpoint [A] {
       -> notFound(name: String) {
         No endpoint is registered with this name.
       }
+
+      fixture resolve_existing {
+        name: "alloy-local"
+      }
+
+      fixture resolve_missing {
+        name: "nonexistent"
+      } -> error
     }
   }
 

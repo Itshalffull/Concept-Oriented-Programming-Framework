@@ -26,6 +26,10 @@ concept TransformExtractionProvider [E] {
       -> error(message: String) {
         The program string could not be parsed.
       }
+
+      fixture with_transforms { program: "{\"instructions\":[],\"appliedTransforms\":[\"dark-theme\",\"high-contrast\"]}" }
+      fixture no_transforms { program: "{\"instructions\":[]}" }
+      fixture invalid_json { program: "<<<not-json>>>" } -> error
     }
   }
 

@@ -18,6 +18,8 @@ concept OrthogonalRouteProvider [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "orthogonal-route", category: "routing"
       }
+
+      fixture valid {}
     }
 
     action route(canvas: String, source: String, target: String, obstacles: list String) {
@@ -28,6 +30,10 @@ concept OrthogonalRouteProvider [C] {
       -> error(message: String) {
         Routing failed or source/target not found.
       }
+
+      fixture simple_route { canvas: "c1", source: "node-a", target: "node-b", obstacles: [] }
+      fixture with_obstacles { canvas: "c1", source: "node-a", target: "node-c", obstacles: ["node-b"] }
+      fixture missing_source { canvas: "c1", source: "", target: "node-b", obstacles: [] } -> error
     }
   }
 

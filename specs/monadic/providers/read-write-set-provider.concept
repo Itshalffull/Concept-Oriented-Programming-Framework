@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ReadWriteSetProvider [R] {
 
@@ -24,6 +25,19 @@ concept ReadWriteSetProvider [R] {
         any write is read-write.
       }
       -> error(message: String) { The program string could not be parsed into a valid instruction tree. }
+
+      fixture read_write_program {
+        program: "get(users, u1); put(users, u1, data)"
+      }
+      fixture read_only_program {
+        program: "get(users, u1)"
+      }
+      fixture pure_program {
+        program: "{\"instructions\":[{\"tag\":\"pure\",\"value\":{\"variant\":\"ok\"}}],\"effects\":{\"reads\":[],\"writes\":[]}}"
+      }
+      fixture empty_program {
+        program: ""
+      } -> error
     }
   }
 

@@ -16,6 +16,8 @@ concept DrawioXmlExportProvider [C] {
       -> ok(name: String, category: String) {
         name: "drawio-xml", category: "diagram_export"
       }
+
+      fixture valid {}
     }
 
     action export(canvas_id: String, options: option {
@@ -26,6 +28,10 @@ concept DrawioXmlExportProvider [C] {
         edges as mxCell with source/target. mime_type: "application/xml".
       }
       -> error(message: String) { Export failed. }
+
+      fixture default_export { canvas_id: "canvas-1" }
+      fixture with_compress { canvas_id: "canvas-2", options: { compress: true } }
+      fixture empty_canvas { canvas_id: "" } -> error
     }
 
     action importData(data: String, target_canvas: option String) {
@@ -33,6 +39,9 @@ concept DrawioXmlExportProvider [C] {
         Parses mxGraphModel XML and creates items/connectors.
       }
       -> error(message: String) { Parse failed or invalid draw.io format. }
+
+      fixture simple_xml { data: "<mxfile><diagram><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/></root></mxGraphModel></diagram></mxfile>", target_canvas: "imported" }
+      fixture empty_data { data: "" } -> error
     }
   }
 
