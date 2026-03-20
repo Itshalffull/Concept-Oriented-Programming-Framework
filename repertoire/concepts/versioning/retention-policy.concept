@@ -100,6 +100,9 @@ concept RetentionPolicy [R] {
       -> ok(entries: list { record: String, policy: String, disposedAt: String, disposedBy: String }) {
         Returns disposition log, filtered to specific record if provided.
       }
+
+      fixture audit_all { record: null }
+      fixture audit_specific { record: "audit:2023-invoice-001" }
     }
   }
 
