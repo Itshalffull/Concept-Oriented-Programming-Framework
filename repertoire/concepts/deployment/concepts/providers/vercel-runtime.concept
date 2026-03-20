@@ -77,12 +77,18 @@ concept VercelRuntime [V] {
       -> configFailed(project: V, reason: String) {
         Could not set one or more environment variables on the project.
       }
+
+      fixture env_vars_valid { project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }
+      fixture env_vars_empty_project { project: "", envVars: "[]" } -> error
     }
 
     action destroy(project: V) {
       -> ok(project: V) {
         Project and all deployments deleted.
       }
+
+      fixture destroy_valid { project: "prj_userservice" }
+      fixture destroy_missing { project: "" } -> error
     }
   }
 

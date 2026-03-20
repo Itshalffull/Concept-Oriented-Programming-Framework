@@ -74,6 +74,9 @@ concept Rollout [R] {
       -> ok(rollout: R, currentWeight: Int) {
         Continue from pause.
       }
+
+      fixture resume_paused { rollout: "ro-paused-001" }
+      fixture resume_missing { rollout: "ro-nonexistent" }
     }
 
     action abort(rollout: R) {
@@ -84,12 +87,18 @@ concept Rollout [R] {
       -> alreadyComplete(rollout: R) {
         Rollout already finished.
       }
+
+      fixture abort_active { rollout: "ro-active-001" }
+      fixture abort_completed { rollout: "ro-completed-001" } -> alreadyComplete
     }
 
     action status(rollout: R) {
       -> ok(rollout: R, step: Int, weight: Int, status: String, elapsed: Int) {
         Current state of the rollout.
       }
+
+      fixture status_existing { rollout: "ro-active-001" }
+      fixture status_unknown { rollout: "ro-nonexistent" }
     }
   }
 

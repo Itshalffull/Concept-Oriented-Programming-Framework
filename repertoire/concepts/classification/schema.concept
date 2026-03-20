@@ -1,4 +1,5 @@
 @version(1)
+# @fixtures-added
 concept Schema [S] {
   purpose { Define named field sets that can be applied as type mixins to content entities, serving as a coordination hub for runtime concept definitions. }
   state {
@@ -11,30 +12,51 @@ concept Schema [S] {
     action defineSchema(schema: S, fields: String) {
       -> ok() { Create a new schema with the given fields. }
       -> exists(message: String) { Schema already exists. }
+
+      fixture create_article { schema: "article", fields: "title,body,author" }
+      fixture missing_fields { schema: "empty", fields: "" } -> error
     }
     action addField(schema: S, field: String) {
       -> ok() { Add a field to an existing schema. }
       -> notfound(message: String) { Schema does not exist. }
+
+      fixture add_tags_field { schema: "article", field: "tags" }
+      fixture add_to_missing { schema: "nonexistent", field: "tags" } -> error
     }
     action extendSchema(schema: S, parent: S) {
       -> ok() { Set a schema to extend another schema, inheriting its fields. }
       -> notfound(message: String) { Schema or parent schema does not exist. }
+
+      fixture extend_blog_from_article { schema: "blog-post", parent: "article" }
+      fixture extend_missing_parent { schema: "blog-post", parent: "nonexistent" } -> error
     }
-    action applyTo(entity: String, schema: S) {
+    action applyTo(entity_id: String, schema: S) {
       -> ok() { Apply the schema to an entity as a type mixin. }
       -> notfound(message: String) { Schema does not exist. }
+
+      fixture apply_article_to_page { entity_id: "page-1", schema: "article" }
+      fixture apply_missing_schema { entity_id: "page-1", schema: "nonexistent" } -> error
     }
-    action removeFrom(entity: String, schema: S) {
+    action removeFrom(entity_id: String, schema: S) {
       -> ok() { Remove the schema from an entity. }
       -> notfound(message: String) { Schema or association does not exist. }
+
+      fixture remove_article_from_page { entity_id: "page-1", schema: "article" }
+      fixture remove_unapplied { entity_id: "page-99", schema: "article" } -> error
     }
     action getAssociations(schema: S) {
       -> ok(associations: String) { Return all entities associated with the schema. }
       -> notfound(message: String) { Schema does not exist. }
+
+      fixture get_article_entities { schema: "article" }
+      fixture get_missing_entities { schema: "nonexistent" } -> error
     }
     action export(schema: S) {
       -> ok(data: String) { Export the schema definition as serialized data. }
       -> notfound(message: String) { Schema does not exist. }
+
+      fixture export_article { schema: "article" }
+      fixture export_missing { schema: "nonexistent" } -> error
     }
   }
   example "defineSchema-then-applyTo": {

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Branch [B] {
 
@@ -29,6 +30,9 @@ concept Branch [B] {
       -> unknownNode(message: String) {
         fromNode not found in DAGHistory.
       }
+
+      fixture create_feature { name: "feature/auth", fromNode: "dag-history-1" }
+      fixture empty_branch_name { name: "", fromNode: "dag-history-1" } -> error
     }
 
     action advance(branch: B, newNode: String) {
@@ -44,6 +48,9 @@ concept Branch [B] {
       -> unknownNode(message: String) {
         newNode not found in DAGHistory.
       }
+
+      fixture advance_head { branch: "branch-1", newNode: "dag-history-2" }
+      fixture advance_empty_node { branch: "branch-1", newNode: "" } -> error
     }
 
     action delete(branch: B) {
@@ -56,6 +63,9 @@ concept Branch [B] {
       -> protected(message: String) {
         Protected branch cannot be deleted.
       }
+
+      fixture delete_existing { branch: "branch-1" }
+      fixture delete_missing { branch: "branch-nonexistent" } -> error
     }
 
     action protect(branch: B) {

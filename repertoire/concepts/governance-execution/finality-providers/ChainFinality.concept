@@ -48,6 +48,10 @@ concept ChainFinality [CF] {
         The block containing the transaction was reorganized out of
         the canonical chain.
       }
+
+      fixture check_finalized { entry: "chain-001", currentBlock: 19500020 }
+      fixture check_pending { entry: "chain-001", currentBlock: 19500005 }
+      fixture check_not_found { entry: "chain-nonexistent", currentBlock: 19500020 } -> error
     }
   }
 

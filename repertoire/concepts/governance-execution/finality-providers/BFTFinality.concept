@@ -33,11 +33,15 @@ concept BFTFinality [BF] {
   }
 
   actions {
-    action configureCommittee(validators: set String, faultTolerance: Float, protocol: String) {
+    action configureCommittee(validators: String, faultTolerance: String, protocol: String) {
       -> configured(committee: BF) {
         A BFT committee is established. FaultTolerance is the fraction
         of validators that can be Byzantine (typically 1/3).
       }
+
+      fixture configure_pbft { validators: "[\"val-1\",\"val-2\",\"val-3\"]", faultTolerance: "2/3", protocol: "PBFT" }
+      fixture configure_hotstuff { validators: "[\"node-a\",\"node-b\",\"node-c\",\"node-d\"]", faultTolerance: "2/3", protocol: "HotStuff" }
+      fixture configure_empty_validators { validators: "[]", faultTolerance: "2/3", protocol: "PBFT" } -> error
     }
 
     action proposeFinality(committee: BF, operationRef: String, proposer: String) {
