@@ -19,6 +19,8 @@ concept GridLayout [C] {
         Returns provider metadata for PluginRegistry registration.
         name: "grid", category: "layout"
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: list String) {
@@ -29,6 +31,9 @@ concept GridLayout [C] {
       -> error(message: String) {
         Layout computation failed.
       }
+
+      fixture valid_apply { canvas: "c1", items: ["a", "b", "c", "d"] }
+      fixture missing_canvas { canvas: "", items: ["a"] } -> error
     }
   }
 

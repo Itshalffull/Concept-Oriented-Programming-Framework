@@ -22,6 +22,10 @@ concept FileManagement [F] {
       -> error(message: String) {
         Upload failed due to storage error or duplicate file identity.
       }
+
+      fixture upload_pdf { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" }
+      fixture upload_image { file: "logo.png", data: "iVBORw0KGgo=", mimeType: "image/png" }
+      fixture upload_duplicate { file: "report.pdf", data: "JVBERi0xLjQ=", mimeType: "application/pdf" } -> error
     }
 
     action addUsage(file: F, entity: String) {
@@ -31,6 +35,9 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture add_usage_ok { file: "report.pdf", entity: "article-1" }
+      fixture add_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
     action removeUsage(file: F, entity: String) {
@@ -41,12 +48,17 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture remove_usage_ok { file: "report.pdf", entity: "article-1" }
+      fixture remove_usage_missing { file: "ghost.txt", entity: "article-1" } -> notfound
     }
 
     action garbageCollect() {
       -> ok(removed: Int) {
         All files with zero usage references have been deleted from storage.
       }
+
+      fixture valid {}
     }
 
     action getFile(file: F) {
@@ -56,6 +68,9 @@ concept FileManagement [F] {
       -> notfound(message: String) {
         The target file does not exist in storage.
       }
+
+      fixture get_existing { file: "report.pdf" }
+      fixture get_missing { file: "ghost.txt" } -> notfound
     }
   }
 

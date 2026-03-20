@@ -52,6 +52,10 @@ concept Interactor [I] {
         use concept, suite, and tags properties for matching.
       }
       -> duplicate(message: String) { Name already defined. }
+
+      fixture valid_define { name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }
+      fixture entity_define { name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }
+      fixture bad_category { name: "test-type", category: "invalid-category", properties: "{}" } -> duplicate
     }
 
     action classify(interactor: I, fieldType: String,
@@ -69,18 +73,28 @@ concept Interactor [I] {
       -> ambiguous(interactor: I, candidates: String) {
         Multiple types match equally. Returns ranked list.
       }
+
+      fixture field_classify { fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" }
+      fixture entity_classify { fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" }
+      fixture no_match { fieldType: "UnknownType", constraints: "{}", intent: "" } -> ambiguous
     }
 
     action get(interactor: I) {
       -> ok(interactor: I, name: String, category: String,
            properties: String) { Retrieve full definition. }
       -> notfound(message: String) { Type not defined. }
+
+      fixture valid_get { }
+      fixture missing_get { interactor: "nonexistent-interactor" } -> notfound
     }
 
     action list(category: option String) {
       -> ok(interactors: String) {
         List types, optionally filtered by category.
       }
+
+      fixture list_all { }
+      fixture list_by_category { category: "selection" }
     }
   }
 

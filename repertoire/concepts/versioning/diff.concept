@@ -30,6 +30,9 @@ concept Diff [C] {
       -> duplicate(message: String) {
         A provider with that name already exists.
       }
+
+      fixture register_myers { name: "myers", contentTypes: ["text/plain"] }
+      fixture empty_name { name: "", contentTypes: ["text/plain"] } -> error
     }
 
     action diff(contentA: C, contentB: C, algorithm: option String) {
@@ -44,6 +47,10 @@ concept Diff [C] {
       -> noProvider(message: String) {
         No registered provider handles this content type.
       }
+
+      fixture diff_two_files { contentA: "line1\nline2", contentB: "line1\nline3", algorithm: "myers" }
+      fixture identical_content { contentA: "same", contentB: "same", algorithm: "myers" }
+      fixture unknown_algorithm { contentA: "a", contentB: "b", algorithm: "nonexistent" } -> error
     }
 
     action patch(content: C, editScript: Bytes) {
@@ -53,6 +60,9 @@ concept Diff [C] {
       -> incompatible(message: String) {
         Edit script does not apply cleanly to this content.
       }
+
+      fixture apply_patch { content: "line1\nline2", editScript: "[{\"type\":\"equal\",\"line\":0,\"content\":\"line1\"},{\"type\":\"insert\",\"line\":1,\"content\":\"line3\"}]" }
+      fixture invalid_script { content: "hello", editScript: "not-valid-json" } -> error
     }
   }
 

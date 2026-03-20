@@ -30,6 +30,11 @@ concept TerminalAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to terminal.
       }
+
+      fixture normalize_ansi_classes { adapter: "terminal-1", props: "{ \"class\": \"bold green\", \"onclick\": \"handleEnter\" }" }
+      fixture normalize_data_attrs { adapter: "terminal-1", props: "{ \"aria-label\": \"Menu\", \"data-section\": \"nav\" }" }
+      fixture normalize_empty_props { adapter: "terminal-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "terminal-1", props: "{invalid" } -> error
     }
   }
 

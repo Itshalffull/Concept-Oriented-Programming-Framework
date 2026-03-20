@@ -27,6 +27,11 @@ concept BrowserAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to browser.
       }
+
+      fixture normalize_navigation { adapter: "browser-1", props: "{ \"class\": \"bold red\", \"onclick\": \"handleClick\" }" }
+      fixture normalize_aria { adapter: "browser-1", props: "{ \"aria-label\": \"Close\", \"data-id\": \"42\" }" }
+      fixture normalize_empty_props { adapter: "browser-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "browser-1", props: "not-json" } -> error
     }
   }
 

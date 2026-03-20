@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Patch [P] {
 
@@ -29,6 +30,9 @@ concept Patch [P] {
       -> invalidEffect(message: String) {
         Effect bytes are not a valid edit script.
       }
+
+      fixture create_patch { base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }
+      fixture invalid_effect { base: "sha256:aaa111", target: "sha256:bbb222", effect: "not-json" } -> error
     }
 
     action apply(patchId: P, content: Bytes) {

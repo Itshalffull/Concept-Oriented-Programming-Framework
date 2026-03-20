@@ -25,6 +25,9 @@ concept PlatformBindingCatalog [B] {
     action register(binding: B, platform: String, destinationPattern: String,
                     bindingKind: String, payload: String) {
       -> ok(binding: B) { Store or update a platform binding declaration. }
+
+      fixture register_browser_nav { binding: "nav-browser-1", platform: "browser", destinationPattern: "/articles/*", bindingKind: "navigation", payload: "{ \"pushState\": true }" }
+      fixture register_mobile_gesture { binding: "gesture-mobile-1", platform: "mobile", destinationPattern: "*", bindingKind: "gesture", payload: "{ \"swipeBack\": true }" }
     }
 
     action resolve(platform: String, destination: String, bindingKind: String) {
@@ -32,6 +35,9 @@ concept PlatformBindingCatalog [B] {
         Resolve the most specific binding for a platform, destination, and binding kind.
       }
       -> notfound(message: String) { No matching binding exists. }
+
+      fixture resolve_exact { platform: "browser", destination: "/articles/42", bindingKind: "navigation" }
+      fixture resolve_missing { platform: "watch", destination: "/settings", bindingKind: "navigation" } -> notfound
     }
 
     action list(platform: option String) {
@@ -41,6 +47,9 @@ concept PlatformBindingCatalog [B] {
       }) {
         Return all bindings, optionally filtered by platform.
       }
+
+      fixture list_all { }
+      fixture list_by_platform { platform: "browser" }
     }
   }
 

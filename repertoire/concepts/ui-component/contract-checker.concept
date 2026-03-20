@@ -42,6 +42,10 @@ concept ContractChecker [C] {
         (no affordance declares this concept for this widget).
       }
       -> notfound(message: String) { Widget or concept not registered. }
+
+      fixture valid_check { widget: "approval-detail", concept: "Approval" }
+      fixture with_version { widget: "approval-detail", concept: "Approval", contractVersion: 2 }
+      fixture unknown_widget { widget: "nonexistent-widget", concept: "Approval" } -> notfound
     }
 
     action checkAll(checker: C, concept: String) {
@@ -51,6 +55,9 @@ concept ContractChecker [C] {
         with contract status per widget.
       }
       -> notfound(message: String) { Concept not registered. }
+
+      fixture valid_checkAll { concept: "Approval" }
+      fixture unknown_concept { concept: "" } -> notfound
     }
 
     action checkSuite(checker: C, suite: String) {
@@ -60,6 +67,9 @@ concept ContractChecker [C] {
         resolve cleanly against their target concepts.
       }
       -> notfound(message: String) { Suite not registered. }
+
+      fixture valid_checkSuite { suite: "governance" }
+      fixture unknown_suite { suite: "" } -> notfound
     }
 
     action suggest(checker: C, widget: String, concept: String) {
@@ -70,6 +80,9 @@ concept ContractChecker [C] {
       }
       -> resolved(message: String) { All slots already resolved, no suggestions needed. }
       -> notfound(message: String) { Widget or concept not registered. }
+
+      fixture valid_suggest { widget: "approval-detail", concept: "Approval" }
+      fixture unknown_widget_suggest { widget: "nonexistent-widget", concept: "Approval" } -> notfound
     }
   }
 
