@@ -76,6 +76,9 @@ concept RetentionPolicy [R] {
       -> held(holdNames: list String) {
         Record matches one or more active legal holds.
       }
+
+      fixture check_record { record: "audit:2023-invoice-001" }
+      fixture check_empty_record { record: "" } -> error
     }
 
     action dispose(record: String, disposedBy: String) {
@@ -88,6 +91,9 @@ concept RetentionPolicy [R] {
       -> held(holdNames: list String) {
         Active holds prevent disposition.
       }
+
+      fixture dispose_record { record: "audit:2020-old-doc", disposedBy: "system" }
+      fixture dispose_empty_record { record: "", disposedBy: "system" } -> error
     }
 
     action auditLog(record: option String) {
