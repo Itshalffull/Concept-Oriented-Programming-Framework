@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept LocalProcess [L] {
 
@@ -29,6 +30,8 @@ concept LocalProcess [L] {
         Register with PluginRegistry and return the list of
         currently supported runtime names as a JSON array.
       }
+
+      fixture valid {}
     }
 
     action registerRuntime(runtime: String, providerName: String) {
@@ -40,6 +43,9 @@ concept LocalProcess [L] {
         A provider is already registered for this runtime.
         Returns the runtime name for diagnostics.
       }
+
+      fixture register_wasm { runtime: "wasm", providerName: "WasmProvider" }
+      fixture register_duplicate { runtime: "wasm", providerName: "AnotherWasmProvider" } -> duplicate
     }
 
     action dispatch(runtime: String, operation: String, moduleRef: String, input: String, config: String) {
@@ -57,6 +63,10 @@ concept LocalProcess [L] {
         failed. Creates a process record with status "failed" and
         the error message from the provider.
       }
+
+      fixture wasm_inference { runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" }
+      fixture missing_runtime { runtime: "cuda", operation: "compute", moduleRef: "model.bin", input: "{}", config: "{}" } -> runtimeNotFound
+      fixture failed_execution { runtime: "wasm", operation: "execute", moduleRef: "broken-module.wasm", input: "{}", config: "{}" } -> error
     }
 
     action listRuntimes() {
@@ -64,6 +74,8 @@ concept LocalProcess [L] {
         Return all registered runtime names as a serialized
         JSON array.
       }
+
+      fixture valid {}
     }
   }
 

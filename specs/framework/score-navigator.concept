@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreNavigator [N] {
 
@@ -24,6 +25,10 @@ concept ScoreNavigator [N] {
       -> notfound(kind: String, name: String) {
         No Score entity of the given kind exists with that name.
       }
+
+      fixture valid_show { kind: "concept", name: "User" }
+      fixture missing_kind { kind: "", name: "User" } -> notfound
+      fixture missing_name { kind: "concept", name: "" } -> notfound
     }
 
     action traverse(relation: String, target: String) {
@@ -36,6 +41,10 @@ concept ScoreNavigator [N] {
         The current cursor item has no relationship of that type
         to the named target, or no cursor is set.
       }
+
+      fixture valid_traverse { relation: "actions", target: "register" }
+      fixture missing_relation { relation: "", target: "register" } -> notfound
+      fixture missing_target { relation: "actions", target: "" } -> notfound
     }
 
     action back() {
@@ -46,6 +55,9 @@ concept ScoreNavigator [N] {
       -> empty() {
         The history stack is empty — there is nowhere to go back to.
       }
+
+      fixture valid_back {}
+      fixture empty_history {} -> empty
     }
 
     action list(kind: String) {
@@ -56,6 +68,10 @@ concept ScoreNavigator [N] {
       -> error(message: String) {
         The kind is not recognized by the Score index.
       }
+
+      fixture valid_list { kind: "concept" }
+      fixture invalid_kind { kind: "nonexistent" } -> error
+      fixture empty_kind { kind: "" } -> error
     }
   }
 

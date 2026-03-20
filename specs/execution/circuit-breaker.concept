@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept CircuitBreaker [B] {
 
@@ -37,6 +38,9 @@ concept CircuitBreaker [B] {
       -> exists(endpoint: String) {
         A circuit breaker is already configured for this endpoint.
       }
+
+      fixture api_breaker { endpoint: "payments-api", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000 }
+      fixture missing_endpoint { endpoint: "", failureThreshold: 5, successThreshold: 2, resetTimeoutMs: 30000 } -> exists
     }
 
     action check(endpoint: String) {
@@ -56,6 +60,9 @@ concept CircuitBreaker [B] {
       -> notFound(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
+
+      fixture healthy_endpoint { endpoint: "payments-api" }
+      fixture unconfigured_endpoint { endpoint: "unknown-service" } -> notFound
     }
 
     action recordSuccess(endpoint: String) {
@@ -68,6 +75,9 @@ concept CircuitBreaker [B] {
       -> notFound(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
+
+      fixture success_recorded { endpoint: "payments-api" }
+      fixture success_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
     action recordFailure(endpoint: String) {
@@ -85,6 +95,9 @@ concept CircuitBreaker [B] {
       -> notFound(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
+
+      fixture failure_recorded { endpoint: "payments-api" }
+      fixture failure_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
     action reset(endpoint: String) {
@@ -95,6 +108,9 @@ concept CircuitBreaker [B] {
       -> notFound(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
+
+      fixture reset_breaker { endpoint: "payments-api" }
+      fixture reset_no_breaker { endpoint: "unknown-service" } -> notFound
     }
 
     action get(endpoint: String) {
@@ -105,6 +121,9 @@ concept CircuitBreaker [B] {
       -> notFound(endpoint: String) {
         No circuit breaker is configured for this endpoint.
       }
+
+      fixture get_status { endpoint: "payments-api" }
+      fixture get_no_breaker { endpoint: "unknown-service" } -> notFound
     }
   }
 

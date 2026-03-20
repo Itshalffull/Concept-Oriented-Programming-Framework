@@ -1,3 +1,4 @@
+# @fixtures-added
 concept JWT [U] {
 
   purpose {
@@ -13,6 +14,9 @@ concept JWT [U] {
       -> ok(token: String) {
         Create a JWT containing the user reference. Store and return it.
       }
+
+      fixture generate_ok { user: "user-alice" }
+      fixture generate_another { user: "user-bob" }
     }
 
     action verify(token: String) {
@@ -22,6 +26,10 @@ concept JWT [U] {
       -> error(message: String) {
         If the token is invalid or expired, return error.
       }
+
+      fixture verify_ok { token: "valid.token.placeholder" }
+      fixture verify_invalid { token: "not-a-valid-jwt" } -> error
+      fixture verify_empty { token: "" } -> error
     }
   }
 

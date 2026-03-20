@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreBridge [B] {
 
@@ -32,6 +33,10 @@ concept ScoreBridge [B] {
         The endpoint responded but rejected the provided
         authentication token.
       }
+
+      fixture valid_connect { endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }
+      fixture empty_endpoint { endpoint: "", protocol: "http", authToken: "tok_live_abc123" } -> unreachable
+      fixture bad_auth { endpoint: "https://api.example.com/score", protocol: "http", authToken: "invalid_token" } -> auth_failed
     }
 
     action query(bridge: B, graphql: String) {
@@ -50,6 +55,9 @@ concept ScoreBridge [B] {
         The connection was lost during the query. The bridge
         status is updated to reflect the disconnection.
       }
+
+      fixture valid_query { bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" }
+      fixture missing_bridge { bridge: "bridge-nonexistent", graphql: "{ concepts { conceptName } }" } -> notfound
     }
 
     action show(bridge: B, kind: String, name: String) {
@@ -67,6 +75,9 @@ concept ScoreBridge [B] {
       -> remote_error(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
+
+      fixture valid_show { bridge: "bridge-api-example-com", kind: "concept", name: "User" }
+      fixture show_no_bridge { bridge: "bridge-nonexistent", kind: "concept", name: "User" } -> notfound
     }
 
     action traverse(bridge: B, relation: String, target: String) {
@@ -84,6 +95,9 @@ concept ScoreBridge [B] {
       -> remote_error(bridge: B, message: String) {
         The remote Score endpoint returned an error.
       }
+
+      fixture valid_traverse { bridge: "bridge-api-example-com", relation: "actions", target: "register" }
+      fixture traverse_no_bridge { bridge: "bridge-nonexistent", relation: "actions", target: "register" } -> notfound
     }
 
     action disconnect(bridge: B) {
@@ -94,6 +108,9 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
+
+      fixture valid_disconnect { bridge: "bridge-api-example-com" }
+      fixture disconnect_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
 
     action status(bridge: B) {
@@ -105,6 +122,9 @@ concept ScoreBridge [B] {
       -> notfound(bridge: B) {
         No active connection exists with this identifier.
       }
+
+      fixture valid_status { bridge: "bridge-api-example-com" }
+      fixture status_no_bridge { bridge: "bridge-nonexistent" } -> notfound
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept HandlerScaffoldGen [H] {
@@ -29,6 +30,10 @@ concept HandlerScaffoldGen [H] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { conceptName: "Order", actions: [{"name": "create", "params": [{"name": "title", "type": "String"}], "variants": [{"name": "ok", "params": [{"name": "item", "type": "String"}]}, {"name": "error", "params": [{"name": "message", "type": "String"}]}]}], style: "functional" }
+      fixture imperative_generate { conceptName: "Invoice", actions: [], style: "imperative" }
+      fixture empty_name { conceptName: "", actions: [], style: "functional" } -> error
     }
 
     action preview(conceptName: String, actions: list ActionDef) {
@@ -44,6 +49,9 @@ concept HandlerScaffoldGen [H] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { conceptName: "Payment", actions: [{"name": "charge", "params": [{"name": "amount", "type": "Int"}], "variants": [{"name": "ok", "params": [{"name": "receipt", "type": "String"}]}]}] }
+      fixture empty_preview { conceptName: "", actions: [] } -> error
     }
 
     action register() {

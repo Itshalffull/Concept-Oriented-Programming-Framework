@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept RateLimiter [R] {
 
@@ -32,6 +33,9 @@ concept RateLimiter [R] {
       -> exists(endpoint: String) {
         A rate limiter is already configured for this endpoint.
       }
+
+      fixture api_limiter { endpoint: "openai-api", maxTokens: 100, refillRate: 10, refillIntervalMs: 1000 }
+      fixture duplicate_limiter { endpoint: "openai-api", maxTokens: 50, refillRate: 5, refillIntervalMs: 2000 } -> exists
     }
 
     action acquire(endpoint: String, tokens: Int) {
@@ -48,6 +52,10 @@ concept RateLimiter [R] {
       -> notFound(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture acquire_tokens { endpoint: "openai-api", tokens: 5 }
+      fixture acquire_exhausted { endpoint: "openai-api", tokens: 999 } -> limited
+      fixture acquire_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
 
     action release(endpoint: String, tokens: Int) {
@@ -59,6 +67,9 @@ concept RateLimiter [R] {
       -> notFound(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture release_tokens { endpoint: "openai-api", tokens: 3 }
+      fixture release_no_limiter { endpoint: "unknown-service", tokens: 1 } -> notFound
     }
 
     action get(endpoint: String) {
@@ -69,6 +80,9 @@ concept RateLimiter [R] {
       -> notFound(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture get_status { endpoint: "openai-api" }
+      fixture get_no_limiter { endpoint: "unknown-service" } -> notFound
     }
 
     action reset(endpoint: String) {
@@ -79,6 +93,9 @@ concept RateLimiter [R] {
       -> notFound(endpoint: String) {
         No rate limiter is configured for this endpoint.
       }
+
+      fixture reset_limiter { endpoint: "openai-api" }
+      fixture reset_no_limiter { endpoint: "unknown-service" } -> notFound
     }
   }
 

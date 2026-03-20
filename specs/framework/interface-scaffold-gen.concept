@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept InterfaceScaffoldGen [I] {

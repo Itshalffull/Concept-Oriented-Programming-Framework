@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Article [A] {
 
   purpose {
@@ -22,6 +23,9 @@ concept Article [A] {
         Add article to set. Store all fields. Generate slug from title.
         Set createdAt and updatedAt timestamps. Return article reference.
       }
+
+      fixture create_ok { article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }
+      fixture create_minimal { article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }
     }
 
     action update(article: A, title: String, description: String, body: String) {
@@ -31,6 +35,9 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture update_ok { article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." }
+      fixture update_notfound { article: "nonexistent-art", title: "Ghost Article", description: "Does not exist", body: "No body." } -> notfound
     }
 
     action delete(article: A) {
@@ -40,6 +47,9 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture delete_ok { article: "art-001" }
+      fixture delete_notfound { article: "nonexistent-art" } -> notfound
     }
 
     action get(article: A) {
@@ -49,12 +59,17 @@ concept Article [A] {
       -> notfound(message: String) {
         If article does not exist.
       }
+
+      fixture get_ok { article: "art-001" }
+      fixture get_notfound { article: "nonexistent-art" } -> notfound
     }
 
     action list() {
       -> ok(articles: String) {
         Return all articles as a JSON-encoded list.
       }
+
+      fixture list_ok {}
     }
   }
 

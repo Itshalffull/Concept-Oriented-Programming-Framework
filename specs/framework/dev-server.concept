@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 @version(2)
@@ -33,6 +34,10 @@ concept DevServer [D] {
       -> portInUse(port: Int) {
         The specified port is already in use.
       }
+
+      fixture valid_start { port: 3000, watchDirs: ["./specs", "./syncs"] }
+      fixture custom_port { port: 8080, watchDirs: ["./handlers"] }
+      fixture port_conflict { port: 3000, watchDirs: ["./specs"] } -> portInUse
     }
 
     action stop(session: D) {
@@ -43,6 +48,9 @@ concept DevServer [D] {
       -> ok(session: D) {
         Server stopped cleanly.
       }
+
+      fixture valid_stop { session: "dev-server-1" }
+      fixture nonexistent_stop { session: "dev-server-999" }
     }
 
     action status(session: D) {
@@ -55,6 +63,9 @@ concept DevServer [D] {
       -> stopped() {
         Server is not running.
       }
+
+      fixture running_status { session: "dev-server-1" }
+      fixture stopped_status { session: "dev-server-999" } -> stopped
     }
   }
 

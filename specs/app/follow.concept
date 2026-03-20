@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Follow [U] {
 
   purpose {
@@ -15,6 +16,9 @@ concept Follow [U] {
         Add target to user's following set.
         Return user and target references.
       }
+
+      fixture follow_ok { user: "user-alice", target: "user-bob" }
+      fixture follow_another { user: "user-carol", target: "user-dave" }
     }
 
     action unfollow(user: U, target: String) {
@@ -22,12 +26,18 @@ concept Follow [U] {
         Remove target from user's following set.
         Return user and target references.
       }
+
+      fixture unfollow_ok { user: "user-alice", target: "user-bob" }
+      fixture unfollow_not_following { user: "user-carol", target: "user-unknown" }
     }
 
     action isFollowing(user: U, target: String) {
       -> ok(following: Bool) {
         Return whether the user follows the target.
       }
+
+      fixture is_following_ok { user: "user-alice", target: "user-bob" }
+      fixture is_following_unknown_user { user: "user-unknown", target: "user-bob" }
     }
   }
 

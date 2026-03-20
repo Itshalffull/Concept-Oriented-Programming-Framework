@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Profile [U] {
 
   purpose {
@@ -16,6 +17,8 @@ concept Profile [U] {
       -> ok(user: U, bio: String, image: String) {
         Store bio and image for the user. Return updated fields.
       }
+
+      fixture complete_profile { user: "alice", bio: "Software engineer from Seattle", image: "https://cdn.example.com/alice.jpg" }
     }
 
     action get(user: U) {
@@ -25,6 +28,9 @@ concept Profile [U] {
       -> notfound(message: String) {
         If no profile exists for the user.
       }
+
+      fixture existing_profile { user: "alice" }
+      fixture missing_profile { user: "unknown_user_xyz" } -> notfound
     }
   }
 

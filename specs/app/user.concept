@@ -1,3 +1,4 @@
+# @fixtures-added
 concept User [U] {
 
   purpose {
@@ -19,6 +20,10 @@ concept User [U] {
       -> error(message: String) {
         If name or email is not unique, return error.
       }
+
+      fixture new_user { user: "u-001", name: "Alice Chen", email: "alice@example.com" }
+      fixture duplicate_name { user: "u-002", name: "Alice Chen", email: "other@example.com" } -> error
+      fixture duplicate_email { user: "u-003", name: "Bob Smith", email: "alice@example.com" } -> error
     }
   }
 

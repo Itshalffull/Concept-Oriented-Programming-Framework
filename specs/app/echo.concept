@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Echo [M] {
 
   purpose {
@@ -14,6 +15,9 @@ concept Echo [M] {
       -> ok(id: M, echo: String) {
         Store the message. Return the text as-is.
       }
+
+      fixture send_ok { id: "msg-001", text: "Hello, world!" }
+      fixture send_greeting { id: "msg-002", text: "Good morning, how are you?" }
     }
   }
 

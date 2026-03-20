@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScoreQuery [Q] {
 
@@ -23,6 +24,10 @@ concept ScoreQuery [Q] {
         The GraphQL query is malformed or references unknown fields
         in the Score schema.
       }
+
+      fixture valid_query { graphql: "{ concepts { conceptName } }" }
+      fixture malformed_query { graphql: "invalid {{{}}} not graphql" } -> error
+      fixture empty_query { graphql: "" } -> error
     }
   }
 

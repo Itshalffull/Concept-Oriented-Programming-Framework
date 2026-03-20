@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SchemaGen [S] {
 
   purpose {
@@ -26,6 +27,9 @@ concept SchemaGen [S] {
       -> error(message: String) {
         If the AST contains unresolvable types or inconsistencies.
       }
+
+      fixture valid_ast { spec: "s1", ast: { name: "Invoice", typeParams: ["T"], purpose: "Manage invoices.", state: [], actions: [{ name: "create", params: [], variants: [{ name: "ok", params: [], description: "Created." }] }], invariants: [], capabilities: [] } }
+      fixture empty_name { spec: "s2", ast: { name: "" } } -> error
     }
 
     action register() {
@@ -36,6 +40,8 @@ concept SchemaGen [S] {
         outputKind: "ConceptManifest"
         capabilities: ["graphql", "json-schema", "invariants"]
       }
+
+      fixture valid {}
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 concept ActionLog [R] {
 
   purpose {
@@ -16,6 +17,9 @@ concept ActionLog [R] {
       -> ok(id: R) {
         Append the record to the log and return its unique ID.
       }
+
+      fixture completion_record { record: { flow: "flow-42", concept: "UserAuth", action: "login", type: "completion", variant: "ok" } }
+      fixture invocation_record { record: { flow: "flow-99", concept: "Payment", action: "charge", type: "invocation", variant: "pending" } }
     }
 
     action addEdge(from: R, to: R, sync: String) {
@@ -23,12 +27,18 @@ concept ActionLog [R] {
         Record a provenance edge from one action record to
         another, tagged with the sync that caused it.
       }
+
+      fixture link_records { from: "rec-001", to: "rec-002", sync: "UserToProfile" }
+      fixture link_with_different_sync { from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" }
     }
 
     action query(flow: String) {
       -> ok(records: list ActionRecord) {
         Return all action records belonging to the given flow.
       }
+
+      fixture existing_flow { flow: "flow-42" }
+      fixture empty_flow { flow: "nonexistent-flow" }
     }
   }
 

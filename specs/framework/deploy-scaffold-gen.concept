@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept DeployScaffoldGen [D] {
@@ -25,6 +26,10 @@ concept DeployScaffoldGen [D] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { appName: "inventory-service", runtimes: [{"name": "api", "type": "node", "transport": "http", "storage": "sqlite"}], concepts: [{"name": "Product", "runtime": "api"}] }
+      fixture minimal_generate { appName: "my-app", runtimes: [], concepts: [] }
+      fixture empty_app_name { appName: "", runtimes: [], concepts: [] } -> error
     }
 
     action preview(appName: String, runtimes: list Runtime, concepts: list ConceptAssignment) {
@@ -40,6 +45,9 @@ concept DeployScaffoldGen [D] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { appName: "billing-service", runtimes: [{"name": "worker", "type": "node", "transport": "http", "storage": "memory"}], concepts: [] }
+      fixture empty_preview { appName: "", runtimes: [], concepts: [] } -> error
     }
 
     action register() {
@@ -50,6 +58,8 @@ concept DeployScaffoldGen [D] {
         outputKind: "DeployManifest"
         capabilities: ["deploy-yaml", "runtime-config", "infrastructure"]
       }
+
+      fixture valid_register {}
     }
   }
 

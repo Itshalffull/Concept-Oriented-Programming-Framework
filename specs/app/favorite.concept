@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Favorite [U] {
 
   purpose {
@@ -15,6 +16,9 @@ concept Favorite [U] {
         Add article to user's favorites set.
         Return user and article references.
       }
+
+      fixture favorite_ok { user: "user-alice", article: "art-101" }
+      fixture favorite_another { user: "user-bob", article: "art-202" }
     }
 
     action unfavorite(user: U, article: String) {
@@ -22,18 +26,27 @@ concept Favorite [U] {
         Remove article from user's favorites set.
         Return user and article references.
       }
+
+      fixture unfavorite_ok { user: "user-alice", article: "art-101" }
+      fixture unfavorite_not_in_set { user: "user-carol", article: "art-999" }
     }
 
     action isFavorited(user: U, article: String) {
       -> ok(favorited: Bool) {
         Return whether the article is in the user's favorites.
       }
+
+      fixture is_favorited_ok { user: "user-alice", article: "art-101" }
+      fixture is_favorited_unknown_user { user: "user-unknown", article: "art-101" }
     }
 
     action count(article: String) {
       -> ok(count: Int) {
         Return the number of users who favorited this article.
       }
+
+      fixture count_ok { article: "art-101" }
+      fixture count_no_favorites { article: "art-unfavorited" }
     }
   }
 
