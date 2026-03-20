@@ -133,6 +133,8 @@ concept KindSystem [K] {
         Return the full topology graph. Used by
         `clef generate --plan` for dependency visualization.
       }
+
+      fixture valid {}
     }
   }
 

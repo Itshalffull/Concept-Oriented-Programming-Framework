@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Emitter [F] {
 
@@ -39,6 +40,10 @@ concept Emitter [F] {
       -> error(message: String, path: String) {
         Write failed (permissions, disk full, invalid path).
       }
+
+      fixture write_new { path: "generated/ts/password.ts", content: "export const hash = (pw: string) => pw;", formatHint: "typescript" }
+      fixture write_with_sources { path: "generated/ts/auth.ts", content: "export const auth = {};", sources: [{ sourcePath: "./specs/auth.concept", conceptName: "Auth" }] }
+      fixture write_empty_path { path: "", content: "export const x = 1;" } -> error
     }
 
     action writeBatch(files: list { path: String, content: String, formatHint: option String, sources: option list { sourcePath: String, sourceRange: option String, conceptName: option String, actionName: option String } }) {
@@ -50,6 +55,9 @@ concept Emitter [F] {
       -> error(message: String, failedPath: String) {
         Batch write failed. No files were written.
       }
+
+      fixture batch_two_files { files: [{ path: "generated/ts/a.ts", content: "export const a = 1;" }, { path: "generated/ts/b.ts", content: "export const b = 2;" }] }
+      fixture batch_empty { files: [] }
     }
 
     action format(path: String) {

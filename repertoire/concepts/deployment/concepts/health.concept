@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Health [H] {
 
@@ -36,6 +37,10 @@ concept Health [H] {
       -> degraded(concept: String, latencyMs: Int, threshold: Int) {
         Concept responds but latency exceeds threshold.
       }
+
+      fixture check_user { concept: "User", runtime: "server" }
+      fixture check_payment { concept: "Payment", runtime: "worker" }
+      fixture check_empty_concept { concept: "", runtime: "server" } -> error
     }
 
     action checkSync(sync: String, concepts: list String) {
@@ -49,6 +54,9 @@ concept Health [H] {
       -> timeout(sync: String, timeoutMs: Int) {
         Sync path did not complete within timeout.
       }
+
+      fixture check_auth_sync { sync: "auth-session-sync", concepts: ["User", "Session"] }
+      fixture check_sync_empty { sync: "", concepts: [] } -> error
     }
 
     action checkSuite(suite: String, environment: String) {
@@ -61,6 +69,10 @@ concept Health [H] {
       -> failed(check: H, healthy: list String, failed: list String) {
         Suite non-functional. Critical components unreachable.
       }
+
+      fixture check_auth_suite { suite: "auth-suite", environment: "staging" }
+      fixture check_suite_prod { suite: "payments", environment: "production" }
+      fixture check_suite_empty { suite: "", environment: "staging" } -> error
     }
 
     action checkInvariant(concept: String, invariant: String) {
@@ -71,6 +83,9 @@ concept Health [H] {
       -> violated(concept: String, invariant: String, expected: String, actual: String) {
         Invariant test failed. Deployment may be corrupted.
       }
+
+      fixture check_invariant { concept: "User", invariant: "valid-email" }
+      fixture check_invariant_empty { concept: "", invariant: "valid-email" } -> error
     }
   }
 
