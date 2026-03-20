@@ -1,3 +1,4 @@
+# @fixtures-added
 @category("devtools")
 @visibility("public")
 concept RegistryScaffoldGen [R] {
@@ -27,6 +28,10 @@ concept RegistryScaffoldGen [R] {
       -> error(message: String) {
         Generation failed.
       }
+
+      fixture valid_generate { deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }
+      fixture missing_manifest { deployManifest: "", outputPath: "generated/registry.ts", language: "typescript" } -> error
+      fixture unsupported_language { deployManifest: "deploy.yaml", outputPath: "generated/registry.rs", language: "rust" } -> error
     }
 
     action preview(deployManifest: String, outputPath: String, language: String) {
@@ -39,6 +44,9 @@ concept RegistryScaffoldGen [R] {
       -> error(message: String) {
         Preview computation failed.
       }
+
+      fixture valid_preview { deployManifest: "deploys/staging.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }
+      fixture empty_manifest_preview { deployManifest: "", outputPath: "generated/registry.ts", language: "typescript" } -> error
     }
 
     action register() {
@@ -49,6 +57,8 @@ concept RegistryScaffoldGen [R] {
         outputKind: "KernelRegistry"
         capabilities: ["registry-ts", "boot-code", "import-map"]
       }
+
+      fixture valid_register {}
     }
   }
 

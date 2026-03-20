@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SyncCompiler [Y] {
 
   purpose {
@@ -19,6 +20,10 @@ concept SyncCompiler [Y] {
         If the sync AST references invalid field names or
         has inconsistent variable bindings, return an error.
       }
+
+      fixture valid_sync { sync: "sync-001", ast: { name: "OnUserCreate", annotations: ["eager"], when: [{ concept: "urn:clef/User", action: "create", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/Notification", action: "send", fields: [] }] } }
+      fixture missing_name { sync: "sync-002", ast: { name: "" } } -> error
+      fixture empty_then { sync: "sync-003", ast: { name: "BadSync", annotations: [], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [] } } -> error
     }
   }
 

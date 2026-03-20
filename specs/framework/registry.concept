@@ -1,3 +1,4 @@
+# @fixtures-added
 concept Registry [C] {
 
   purpose {
@@ -20,6 +21,10 @@ concept Registry [C] {
       -> error(message: String) {
         If the URI is already registered, return an error.
       }
+
+      fixture valid_register { uri: "urn:clef/User", transport: {"type": "http", "host": "localhost", "port": 3000} }
+      fixture another_concept { uri: "urn:clef/Order", transport: {"type": "in-process"} }
+      fixture duplicate_register { uri: "urn:clef/User", transport: {"type": "http"} } -> error
     }
 
     action deregister(uri: String) {

@@ -1,3 +1,4 @@
+# @fixtures-added
 concept SyncEngine [F] {
 
   purpose {
@@ -21,6 +22,9 @@ concept SyncEngine [F] {
         Register a compiled synchronization for evaluation.
         Index it by concept/action pairs in its when clause.
       }
+
+      fixture valid_register { sync: { name: "OnUserCreate", annotations: ["eager"], when: [{ concept: "urn:clef/User", action: "create", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/Notification", action: "send", fields: [] }] } }
+      fixture missing_name { sync: { name: "" } } -> error
     }
 
     action onCompletion(completion: ActionCompletion) {
@@ -32,6 +36,8 @@ concept SyncEngine [F] {
           [eventual] — queue if target unavailable, retry later
           [local]    — execute on same runtime only
       }
+
+      fixture valid_completion { completion: { id: "c-001", concept: "urn:clef/User", action: "create", input: {}, variant: "ok", output: {}, flow: "flow-001", timestamp: "2025-01-15T10:30:00Z" } }
     }
 
     action evaluateWhere(bindings: Bindings, queries: list QueryPlan) {
@@ -43,6 +49,9 @@ concept SyncEngine [F] {
         If a referenced concept is unavailable or a query
         fails, return an error description.
       }
+
+      fixture valid_evaluate { bindings: {}, queries: [] }
+      fixture missing_bindings { bindings: none, queries: [] } -> error
     }
 
     action queueSync(sync: CompiledSync, bindings: Bindings, flow: String) {
@@ -51,6 +60,8 @@ concept SyncEngine [F] {
         target concept becomes available. Store bindings and
         flow context.
       }
+
+      fixture valid_queue { sync: { name: "EventualSync", annotations: ["eventual"], when: [{ concept: "urn:clef/A", action: "act", inputFields: [], outputFields: [] }], where: [], then: [{ concept: "urn:clef/B", action: "do", fields: [] }] }, bindings: {}, flow: "flow-001" }
     }
 
     action onAvailabilityChange(conceptUri: String, available: Bool) {
@@ -59,6 +70,9 @@ concept SyncEngine [F] {
         syncs that reference it. Return produced invocations
         for dispatch.
       }
+
+      fixture concept_online { conceptUri: "urn:clef/Notification", available: true }
+      fixture concept_offline { conceptUri: "urn:clef/Notification", available: false }
     }
 
     action drainConflicts() {
@@ -67,6 +81,8 @@ concept SyncEngine [F] {
         eventual sync replay, for downstream handling via
         conflict resolution syncs.
       }
+
+      fixture valid_drain {}
     }
   }
 

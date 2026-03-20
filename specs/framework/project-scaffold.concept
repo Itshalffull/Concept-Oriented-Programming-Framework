@@ -27,6 +27,10 @@ concept ProjectScaffold [P] {
       -> alreadyExists(name: String) {
         A directory with this name already exists.
       }
+
+      fixture valid_scaffold { name: "inventory-app" }
+      fixture another_project { name: "billing-service" }
+      fixture duplicate_scaffold { name: "inventory-app" } -> alreadyExists
     }
   }
 
