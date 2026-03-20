@@ -72,9 +72,9 @@ concept Weight [W] {
 
   example "updateWeight-then-getWeight": {
 
-    after updateWeight(participant: p, source: _, value: v) -> updated(weight: _)
+    after updateWeight(participant: p, source: _, value: v) -> updated(weight: _, newTotal: _)
 
-        then getWeight(participant: p, atTime: _) -> weight(participant: p, value: v)
+        then getWeight(participant: p) -> weight(participant: p, total: _)
 
   }
 

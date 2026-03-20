@@ -88,22 +88,22 @@ concept VoteEscrow [VE] {
 
   example "configure-then-getWeight": {
 
-    after configure(maxLockDurationDays: 365.0) -> configured(config: _)
+    after configure(token: "GOV", maxLockYears: 4.0) -> configured(config: cfg)
 
-        then lock(participant: p, amount: 100.0, lockDurationDays: 365.0) -> locked(lock: ve, initialWeight: 100.0)
+        then lock(config: cfg, locker: p, amount: 100.0, lockYears: 4.0) -> locked(lock: ve, veTokens: _)
 
-        // Weight starts at 100.0 (full lock) and decays to 0 at expiry
+        // Weight starts proportional to lock duration and decays to 0 at expiry
 
-        and  getWeight(lock: ve) -> weight(participant: p, currentWeight: _, decayRate: _)
+        and  getWeight(config: cfg, participant: p) -> weight(participant: p, veTokens: _, decayedWeight: _)
 
   }
 
 
-  always "valid-participant" {
+  always "valid-locker" {
 
     forall ve in locks:
 
-      ve.participant != none
+      ve.locker != none
 
   }
 
@@ -117,9 +117,9 @@ concept VoteEscrow [VE] {
 
   action configure {
 
-    requires: maxLockDurationDays != ""
+    requires: token != ""
 
-    ensures configured: maxLockDurationDays != none
+    ensures configured: token != none
 
   }
 }
