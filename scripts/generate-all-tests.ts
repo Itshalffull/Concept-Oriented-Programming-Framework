@@ -42,41 +42,53 @@ function findConceptFiles(dir: string): string[] {
 }
 
 // Convert concept name to kebab-case for file naming
+// Handles consecutive uppercase (e.g., BFTFinality → bft-finality, ADICOEvaluator → adico-evaluator)
 function toKebab(name: string): string {
   return name
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
     .replace(/([a-z])([A-Z])/g, '$1-$2')
     .replace(/[\s_]+/g, '-')
     .toLowerCase();
 }
 
+// Recursively find all .handler.ts files and build a lookup by kebab name
+let _handlerIndex: Map<string, string> | undefined;
+function getHandlerIndex(): Map<string, string> {
+  if (_handlerIndex) return _handlerIndex;
+  _handlerIndex = new Map();
+  function walk(dir: string) {
+    if (!existsSync(dir)) return;
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const stat = statSync(full);
+      if (stat.isDirectory()) {
+        walk(full);
+      } else if (entry.endsWith('.handler.ts')) {
+        const name = entry.replace('.handler.ts', '');
+        const relPath = relative(ROOT, full).replace('.handler.ts', '.handler.js');
+        _handlerIndex!.set(name, relPath);
+      }
+    }
+  }
+  walk(join(ROOT, 'handlers', 'ts'));
+  return _handlerIndex;
+}
+
 // Find matching handler file for a concept
 function findHandlerPath(conceptName: string): string {
   const kebab = toKebab(conceptName);
-  // Search common handler locations
-  const candidates = [
-    `handlers/ts/${kebab}.handler.js`,
-    `handlers/ts/app/${kebab}.handler.js`,
-    `handlers/ts/framework/${kebab}.handler.js`,
-    `handlers/ts/monadic/${kebab}.handler.js`,
-    `handlers/ts/score/${kebab}.handler.js`,
-    `handlers/ts/surface/${kebab}.handler.js`,
-    `handlers/ts/deploy/${kebab}.handler.js`,
-    `handlers/ts/code-parse/${kebab}.handler.js`,
-    `handlers/ts/app/governance/${kebab}.handler.js`,
-    `handlers/ts/framework/providers/${kebab}.handler.js`,
-    `handlers/ts/framework/test/${kebab}.handler.js`,
-    `handlers/ts/framework/generation/${kebab}.handler.js`,
-    `handlers/ts/monadic/providers/${kebab}.handler.js`,
-    `handlers/ts/surface/providers/${kebab}.handler.js`,
-    `handlers/ts/repertoire/web3/${kebab}.handler.js`,
-  ];
+  const index = getHandlerIndex();
+  const found = index.get(kebab);
+  if (found) return found;
 
-  for (const candidate of candidates) {
-    const tsCandidate = candidate.replace('.handler.js', '.handler.ts');
-    if (existsSync(join(ROOT, tsCandidate))) {
-      return candidate;
+  // Fuzzy match: strip all hyphens and compare
+  const stripped = kebab.replace(/-/g, '');
+  for (const [name, path] of index) {
+    if (name.replace(/-/g, '') === stripped) {
+      return path;
     }
   }
+
   return `handlers/ts/${kebab}.handler.js`;
 }
 
@@ -148,7 +160,22 @@ async function main() {
 
       // Build test plan
       const plan = buildTestPlan(conceptRef, conceptData);
-      plan.handlerPath = findHandlerPath(ast.name);
+      const handlerPath = findHandlerPath(ast.name);
+      plan.handlerPath = handlerPath;
+
+      // Skip concepts without a handler implementation
+      const handlerTsPath = handlerPath.replace('.handler.js', '.handler.ts');
+      if (!existsSync(join(ROOT, handlerTsPath))) {
+        skipped++;
+        continue;
+      }
+
+      // Detect handler style from annotation
+      const handlerSource = readFileSync(join(ROOT, handlerTsPath), 'utf-8');
+      const styleMatch = handlerSource.match(/^\/\/\s*@clef-handler\s+style=(\w+)/);
+      if (styleMatch && (styleMatch[1] === 'functional' || styleMatch[1] === 'imperative')) {
+        plan.handlerStyle = styleMatch[1];
+      }
 
       // Render TypeScript tests
       const testCode = renderTypeScriptTests(plan);

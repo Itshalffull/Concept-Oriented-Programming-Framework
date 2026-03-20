@@ -4,11 +4,12 @@
 // Named themes with inheritance, activation priority, and token resolution.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
@@ -18,7 +19,7 @@ const _themeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'theme', {}, 'items');
     p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', { items: '' }) as StorageProgram<Result>;
   },
 
   create(input: Record<string, unknown>) {
@@ -43,7 +44,7 @@ const _themeHandler: FunctionalConceptHandler = {
         return complete(b2, 'ok', { theme: id });
       },
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   extend(input: Record<string, unknown>) {
@@ -65,17 +66,31 @@ const _themeHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: `Base theme "${base}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   activate(input: Record<string, unknown>) {
     const theme = input.theme as string;
     const priority = input.priority as number;
+
     let p = createProgram();
     p = spGet(p, 'theme', theme, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = putFrom(b, 'theme', theme, (bindings) => {
+        // Deactivate all other themes using traverse
+        let b2 = find(b, 'theme', {}, 'allThemes');
+        b2 = traverse(b2, 'allThemes', '_themeItem', (item) => {
+          const t = item as Record<string, unknown>;
+          let sub = createProgram();
+          if ((t.id as string) !== theme && t.active) {
+            sub = put(sub, 'theme', t.id as string, { ...t, active: false });
+            return complete(sub, 'deactivated', {});
+          }
+          return complete(sub, 'skipped', {});
+        }, '_deactivateResults');
+
+        // Activate the target theme
+        b2 = putFrom(b2, 'theme', theme, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           return { ...existing, active: true, priority: priority ?? Number(existing.priority ?? 0) };
         });
@@ -83,24 +98,52 @@ const _themeHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   deactivate(input: Record<string, unknown>) {
     const theme = input.theme as string;
+
     let p = createProgram();
     p = spGet(p, 'theme', theme, 'existing');
     p = branch(p, 'existing',
       (b) => {
+        // Deactivate the target theme
         let b2 = putFrom(b, 'theme', theme, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
           return { ...existing, active: false };
         });
-        return complete(b2, 'ok', { theme });
+
+        // Find all themes and use traverse to activate the first fallback
+        b2 = find(b2, 'theme', {}, 'allThemes');
+
+        // Determine which theme (if any) should become the fallback
+        b2 = mapBindings(b2, (bindings) => {
+          const allThemes = (bindings.allThemes as Array<Record<string, unknown>>) || [];
+          const fallback = allThemes.find((t: any) => (t.id as string) !== theme);
+          return fallback ? (fallback.id as string) : null;
+        }, '_fallbackId');
+
+        // Use traverse to activate the fallback theme (put with dynamic key)
+        b2 = traverse(b2, 'allThemes', '_tItem', (item, bindings) => {
+          const t = item as Record<string, unknown>;
+          const fallbackId = bindings._fallbackId as string | null;
+          let sub = createProgram();
+          if (fallbackId && (t.id as string) === fallbackId && !t.active) {
+            sub = put(sub, 'theme', t.id as string, { ...t, active: true });
+            return complete(sub, 'activated', { theme: t.id });
+          }
+          return complete(sub, 'skipped', {});
+        }, '_fallbackResults');
+
+        return completeFrom(b2, 'ok', (bindings) => {
+          const fallbackId = bindings._fallbackId as string | null;
+          return { theme: fallbackId || theme };
+        });
       },
       (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   resolve(input: Record<string, unknown>) {
@@ -118,59 +161,9 @@ const _themeHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };
 
-const _base = autoInterpret(_themeHandler);
-
-// activate() needs to deactivate other themes, use imperative style.
-async function _activate(input: Record<string, unknown>, storage: ConceptStorage) {
-  const theme = input.theme as string;
-  const priority = input.priority as number;
-  const existing = await storage.get('theme', theme);
-  if (!existing) {
-    return { variant: 'notfound', message: `Theme "${theme}" not found` };
-  }
-  // Deactivate all other themes
-  const allThemes = await storage.find('theme', {});
-  for (const t of allThemes) {
-    if ((t.id as string) !== theme && t.active) {
-      await storage.put('theme', t.id as string, { ...t, active: false });
-    }
-  }
-  await storage.put('theme', theme, { ...existing, active: true, priority: priority ?? Number(existing.priority ?? 0) });
-  return { variant: 'ok', theme };
-}
-
-// deactivate() needs fallback activation which requires dynamic iteration, use imperative style.
-async function _deactivate(input: Record<string, unknown>, storage: ConceptStorage) {
-  const theme = input.theme as string;
-  const existing = await storage.get('theme', theme);
-  if (!existing) {
-    return { variant: 'notfound', message: `Theme "${theme}" not found` };
-  }
-  await storage.put('theme', theme, { ...existing, active: false });
-
-  // Find another theme to activate as fallback (pick the first one that isn't us)
-  const allThemes = await storage.find('theme', {});
-  // Re-read the updated list and find first inactive theme that isn't the one we deactivated
-  const fallback = allThemes.find((t: any) => (t.id as string) !== theme);
-  if (fallback) {
-    const freshFallback = await storage.get('theme', fallback.id as string);
-    if (freshFallback && !freshFallback.active) {
-      await storage.put('theme', fallback.id as string, { ...freshFallback, active: true });
-      return { variant: 'ok', theme: fallback.id as string };
-    }
-  }
-  return { variant: 'ok', theme };
-}
-
-export const themeHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'activate') return _activate;
-    if (prop === 'deactivate') return _deactivate;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
-
+// All actions are now fully functional — no imperative overrides needed.
+export const themeHandler = autoInterpret(_themeHandler);

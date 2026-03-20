@@ -8,10 +8,9 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import type { ConceptStorage } from '../../../runtime/types.ts';
 import {
   createProgram, get, find, put, del, branch, complete, completeFrom,
-  mapBindings, type StorageProgram,
+  mapBindings, traverse, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { generateId } from '../../../runtime/types.js';
@@ -40,6 +39,11 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  /**
+   * Deregister all concept records matching the given URI.
+   * Uses traverse to iterate over matching records and delete
+   * all associated entries (concepts, uri, transport, available).
+   */
   deregister(input: Record<string, unknown>) {
     const uri = input.uri as string;
 
@@ -49,12 +53,17 @@ const _handler: FunctionalConceptHandler = {
     return branch(p,
       (bindings) => (bindings.matches as unknown[]).length > 0,
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          // Note: In the functional DSL, we cannot do conditional deletes
-          // based on runtime bindings with static keys. The deletes are
-          // handled by the branch confirming matches exist.
-          return {};
-        });
+        let t = traverse(thenP, 'matches', '_match', (item) => {
+          const match = item as Record<string, unknown>;
+          const key = (match._key as string) || (match.conceptId as string);
+          let sub = createProgram();
+          sub = del(sub, 'concepts', key);
+          sub = del(sub, 'uri', key);
+          sub = del(sub, 'transport', key);
+          sub = del(sub, 'available', key);
+          return complete(sub, 'ok', {});
+        }, '_deleteResults');
+        return complete(t, 'ok', {});
       },
       (elseP) => complete(elseP, 'ok', {}),
     ) as StorageProgram<Result>;
@@ -79,31 +88,5 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
-
-// deregister requires deleting records found via find() with dynamic keys.
-async function _deregister(input: Record<string, unknown>, storage: ConceptStorage) {
-  const uri = input.uri as string;
-
-  const matches = await storage.find('concepts', { uri });
-  if (!matches || matches.length === 0) {
-    return { variant: 'ok' };
-  }
-
-  for (const match of matches) {
-    const key = match._key as string || match.conceptId as string;
-    await storage.del('concepts', key);
-    await storage.del('uri', key);
-    await storage.del('transport', key);
-    await storage.del('available', key);
-  }
-
-  return { variant: 'ok' };
-}
-
-export const registryHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'deregister') return _deregister;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
+// All actions are now fully functional — no imperative overrides needed.
+export const registryHandler = autoInterpret(_handler);

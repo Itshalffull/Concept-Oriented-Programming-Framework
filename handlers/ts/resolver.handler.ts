@@ -5,9 +5,8 @@
 // and a resolution policy, then produces a fully resolved module graph with
 // exact versions, content hashes, and enabled features.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -112,7 +111,7 @@ function isUpdateAllowed(oldVersion: string, newVersion: string, allowedUpdates:
 }
 
 /**
- * Core resolution logic shared between functional and imperative actions.
+ * Core resolution logic shared between actions.
  */
 function performResolution(
   constraints: Constraint[],
@@ -234,17 +233,7 @@ function performResolution(
 }
 
 const _handler: FunctionalConceptHandler = {
-  // Placeholder — all actions are imperative below
-};
-
-const baseHandler = autoInterpret(_handler);
-
-// All actions need imperative style because resolve/update/explain all
-// need dynamic storage keys and cross-action state persistence.
-const handler: ConceptHandler = {
-  ...baseHandler,
-
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
+  resolve(input: Record<string, unknown>) {
     const constraints = input.constraints as Constraint[];
     const policy = input.policy as Policy;
     const lockedVersions = input.locked_versions as Array<{
@@ -253,128 +242,171 @@ const handler: ConceptHandler = {
       content_hash: string;
     }> | undefined;
 
+    let p = createProgram();
+
     if (!constraints || constraints.length === 0) {
-      return { variant: 'error', message: 'No constraints provided' };
+      return complete(p, 'error', { message: 'No constraints provided' }) as StorageProgram<Result>;
     }
 
     const resolutionId = `res-${nextId++}`;
 
-    const registryModules = await storage.find('registryModule', {});
-    const result = performResolution(constraints, policy, lockedVersions ?? null, registryModules);
+    p = find(p, 'registryModule', {}, 'registryModules');
 
-    if (result.variant !== 'ok') {
-      return { variant: result.variant, explanation: result.explanation };
-    }
+    p = mapBindings(p, (bindings) => {
+      const registryModules = bindings.registryModules as Record<string, unknown>[];
+      return performResolution(constraints, policy, lockedVersions ?? null, registryModules);
+    }, '_resolutionResult');
 
-    // Persist the resolution
-    await storage.put('resolution', resolutionId, {
-      id: resolutionId,
-      resolvedModules: result.resolvedModules,
-      inputConstraints: result.inputConstraints,
-      policy,
-    });
+    p = branch(p,
+      (bindings) => {
+        const result = bindings._resolutionResult as Record<string, unknown>;
+        return result.variant !== 'ok';
+      },
+      (b) => completeFrom(b, 'unsolvable', (bindings) => {
+        const result = bindings._resolutionResult as Record<string, unknown>;
+        return { explanation: result.explanation as string };
+      }),
+      (b) => {
+        // Persist the resolution
+        let b2 = putFrom(b, 'resolution', resolutionId, (bindings) => {
+          const result = bindings._resolutionResult as Record<string, unknown>;
+          return {
+            id: resolutionId,
+            resolvedModules: result.resolvedModules,
+            inputConstraints: result.inputConstraints,
+            policy,
+          };
+        });
 
-    return { variant: 'ok', resolution: resolutionId };
+        return complete(b2, 'ok', { resolution: resolutionId });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
 
-  async update(input: Record<string, unknown>, storage: ConceptStorage) {
+  update(input: Record<string, unknown>) {
     const resolutionId = input.resolution as string;
     const targets = input.targets as string[];
     const policy = input.policy as Policy;
 
-    const existing = await storage.get('resolution', resolutionId);
-    if (!existing) {
-      return { variant: 'unsolvable', explanation: `Resolution "${resolutionId}" not found` };
-    }
+    let p = createProgram();
+    p = get(p, 'resolution', resolutionId, 'existing');
 
-    const registryModules = await storage.find('registryModule', {});
-    const existingResolved = existing.resolvedModules as ResolvedModule[];
-    const existingConstraints = existing.inputConstraints as Constraint[];
-    const updatedModules: ResolvedModule[] = [];
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = find(b, 'registryModule', {}, 'registryModules');
 
-    for (const mod of existingResolved) {
-      if (targets.includes(mod.module_id)) {
-        const moduleConstraints = existingConstraints.filter(
-          (c) => c.module_id === mod.module_id,
-        );
-        const candidates = registryModules.filter(
-          (m) => ((m.moduleId === mod.module_id || m.name === mod.module_id) && !m.yanked),
-        );
+        b2 = mapBindings(b2, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const registryModules = bindings.registryModules as Record<string, unknown>[];
+          const existingResolved = existing.resolvedModules as ResolvedModule[];
+          const existingConstraints = existing.inputConstraints as Constraint[];
+          const updatedModules: ResolvedModule[] = [];
 
-        const satisfying: Array<{ version: string; content_hash: string }> = [];
-        for (const candidate of candidates) {
-          const version = candidate.version as string;
-          const allSatisfied = moduleConstraints.every((c) =>
-            satisfiesRange(version, c.version_range),
-          );
-          if (allSatisfied && isUpdateAllowed(mod.resolved_version, version, policy.allowed_updates)) {
-            satisfying.push({
-              version,
-              content_hash: (candidate.artifactHash || `sha256:${version}`) as string,
-            });
+          for (const mod of existingResolved) {
+            if (targets.includes(mod.module_id)) {
+              const moduleConstraints = existingConstraints.filter(
+                (c) => c.module_id === mod.module_id,
+              );
+              const candidates = registryModules.filter(
+                (m) => ((m.moduleId === mod.module_id || m.name === mod.module_id) && !m.yanked),
+              );
+
+              const satisfying: Array<{ version: string; content_hash: string }> = [];
+              for (const candidate of candidates) {
+                const version = candidate.version as string;
+                const allSatisfied = moduleConstraints.every((c) =>
+                  satisfiesRange(version, c.version_range),
+                );
+                if (allSatisfied && isUpdateAllowed(mod.resolved_version, version, policy.allowed_updates)) {
+                  satisfying.push({
+                    version,
+                    content_hash: (candidate.artifactHash || `sha256:${version}`) as string,
+                  });
+                }
+              }
+
+              if (satisfying.length > 0) {
+                satisfying.sort((a, b) => compareSemver(a.version, b.version));
+                const selected = policy.unification_strategy === 'minimal'
+                  ? satisfying[0]
+                  : satisfying[satisfying.length - 1];
+
+                updatedModules.push({
+                  module_id: mod.module_id,
+                  resolved_version: selected.version,
+                  content_hash: selected.content_hash,
+                  features_enabled: mod.features_enabled,
+                });
+              } else {
+                updatedModules.push(mod);
+              }
+            } else {
+              updatedModules.push(mod);
+            }
           }
-        }
 
-        if (satisfying.length > 0) {
-          satisfying.sort((a, b) => compareSemver(a.version, b.version));
-          const selected = policy.unification_strategy === 'minimal'
-            ? satisfying[0]
-            : satisfying[satisfying.length - 1];
+          return { updatedModules, existingConstraints };
+        }, '_updateResult');
 
-          updatedModules.push({
-            module_id: mod.module_id,
-            resolved_version: selected.version,
-            content_hash: selected.content_hash,
-            features_enabled: mod.features_enabled,
-          });
-        } else {
-          updatedModules.push(mod);
-        }
-      } else {
-        updatedModules.push(mod);
-      }
-    }
+        const newResolutionId = `res-${nextId++}`;
+        b2 = putFrom(b2, 'resolution', newResolutionId, (bindings) => {
+          const result = bindings._updateResult as Record<string, unknown>;
+          return {
+            id: newResolutionId,
+            resolvedModules: result.updatedModules,
+            inputConstraints: result.existingConstraints,
+            policy,
+          };
+        });
 
-    const newResolutionId = `res-${nextId++}`;
-    await storage.put('resolution', newResolutionId, {
-      id: newResolutionId,
-      resolvedModules: updatedModules,
-      inputConstraints: existingConstraints,
-      policy,
-    });
+        return complete(b2, 'ok', { resolution: newResolutionId });
+      },
+      (b) => complete(b, 'unsolvable', { explanation: `Resolution "${resolutionId}" not found` }),
+    );
 
-    return { variant: 'ok', resolution: newResolutionId };
+    return p as StorageProgram<Result>;
   },
 
-  async explain(input: Record<string, unknown>, storage: ConceptStorage) {
+  explain(input: Record<string, unknown>) {
     const resolutionId = input.resolution as string;
     const moduleId = input.module_id as string;
 
-    const resolution = await storage.get('resolution', resolutionId);
-    if (!resolution) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'resolution', resolutionId, 'resolution');
 
-    const resolvedModules = resolution.resolvedModules as ResolvedModule[];
-    const found = resolvedModules.find((m) => m.module_id === moduleId);
-    if (!found) {
-      return { variant: 'notfound' };
-    }
+    p = branch(p, 'resolution',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const resolution = bindings.resolution as Record<string, unknown>;
+          const resolvedModules = resolution.resolvedModules as ResolvedModule[];
+          const found = resolvedModules.find((m) => m.module_id === moduleId);
+          if (!found) {
+            return { variant: 'notfound' };
+          }
 
-    const constraints = resolution.inputConstraints as Constraint[];
-    const relevantConstraints = constraints.filter((c) => c.module_id === moduleId);
+          const constraints = resolution.inputConstraints as Constraint[];
+          const relevantConstraints = constraints.filter((c) => c.module_id === moduleId);
 
-    const path = relevantConstraints.map(
-      (c) => `${c.edge_type} dependency requires "${moduleId}" ${c.version_range} (env: ${c.environment})`,
+          const path = relevantConstraints.map(
+            (c) => `${c.edge_type} dependency requires "${moduleId}" ${c.version_range} (env: ${c.environment})`,
+          );
+          path.push(`resolved to ${found.resolved_version} (hash: ${found.content_hash})`);
+
+          if (found.features_enabled.length > 0) {
+            path.push(`features enabled: ${found.features_enabled.join(', ')}`);
+          }
+
+          return { path };
+        });
+      },
+      (b) => complete(b, 'notfound', {}),
     );
-    path.push(`resolved to ${found.resolved_version} (hash: ${found.content_hash})`);
 
-    if (found.features_enabled.length > 0) {
-      path.push(`features enabled: ${found.features_enabled.join(', ')}`);
-    }
-
-    return { variant: 'ok', path };
+    return p as StorageProgram<Result>;
   },
 };
 
-export const resolverHandler = handler as FunctionalConceptHandler & ConceptHandler;
+// All actions are now fully functional — no imperative overrides needed.
+export const resolverHandler = autoInterpret(_handler);

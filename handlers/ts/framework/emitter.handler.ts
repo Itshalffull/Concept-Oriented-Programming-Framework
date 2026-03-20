@@ -14,7 +14,7 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
-import { createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, type StorageProgram } from '../../../runtime/storage-program.ts';
+import { createProgram, get, find, put, branch, complete, completeFrom, mapBindings, traverse, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { createHash, randomUUID } from 'crypto';
 
@@ -122,81 +122,6 @@ const _handler: FunctionalConceptHandler = {
     const hash = sha256(content);
     const key = fileKey(path);
 
-    let p = createProgram();
-    p = get(p, FILES_RELATION, key, 'existing');
-    p = completeFrom(p, 'ok', (bindings) => {
-      const existing = bindings.existing as Record<string, unknown> | null;
-
-      if (existing && existing.hash === hash) {
-        return {
-          written: false,
-          path,
-          contentHash: hash,
-          file: existing.id as string,
-          hash,
-        };
-      }
-
-      const fileId = existing ? (existing.id as string) : randomUUID();
-      const sizeBytes = Buffer.byteLength(content, 'utf8');
-      const now = new Date().toISOString();
-
-      // Note: completeFrom computes output but cannot issue puts.
-      // We use a different approach below with branch + put.
-      return {
-        written: true,
-        path,
-        contentHash: hash,
-        file: fileId,
-        hash,
-        _fileId: fileId,
-        _sizeBytes: sizeBytes,
-        _now: now,
-        _isNew: !existing,
-      };
-    });
-
-    // Rewrite using branch to handle the write path
-    p = createProgram();
-    p = get(p, FILES_RELATION, key, 'existing');
-    p = branch(p, 'existing',
-      // then: existing record found
-      (tp) => {
-        return mapBindings(tp, (bindings) => {
-          const existing = bindings.existing as Record<string, unknown>;
-          if (existing.hash === hash) {
-            return {
-              _skip: true,
-              _fileId: existing.id as string,
-            };
-          }
-          return {
-            _skip: false,
-            _fileId: existing.id as string,
-          };
-        }, '_writeInfo');
-      },
-      // else: no existing record
-      (ep) => {
-        const fileId = randomUUID();
-        return mapBindings(ep, () => ({
-          _skip: false,
-          _fileId: fileId,
-        }), '_writeInfo');
-      },
-    );
-    p = completeFrom(p, 'ok', (bindings) => {
-      const writeInfo = bindings._writeInfo as { _skip: boolean; _fileId: string };
-      return {
-        written: !writeInfo._skip,
-        path,
-        contentHash: hash,
-        file: writeInfo._fileId,
-        hash,
-      };
-    });
-
-    // Simplified approach: use get + branch for conditional write
     let q = createProgram();
     q = get(q, FILES_RELATION, key, 'existing');
     q = branch(q, 'existing',
@@ -258,12 +183,90 @@ const _handler: FunctionalConceptHandler = {
   /**
    * Write multiple files atomically. If any file fails,
    * none are written. Returns per-file results.
+   *
+   * Uses traverse to iterate over the input files array,
+   * performing content-addressed deduplication per file.
    */
   writeBatch(input: Record<string, unknown>) {
-    // Placeholder — overridden by imperative implementation below
+    const files = input.files as Array<{
+      path: string;
+      content: string;
+      formatHint?: string;
+      sources?: SourceEntry[];
+      target?: string;
+      concept?: string;
+    }>;
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      let p = createProgram();
+      p = complete(p, 'ok', { results: [] });
+      return p;
+    }
+
+    // Bind the input files array into the program bindings so traverse can iterate it
     let p = createProgram();
-    p = complete(p, 'ok', { results: [] });
-    return p;
+    p = mapBindings(p, () => files, '_inputFiles');
+
+    p = traverse(p, '_inputFiles', '_file', (item) => {
+      const file = item as {
+        path: string;
+        content: string;
+        formatHint?: string;
+        sources?: SourceEntry[];
+        target?: string;
+        concept?: string;
+      };
+
+      const hash = sha256(file.content);
+      const key = fileKey(file.path);
+
+      let sub = createProgram();
+      sub = get(sub, FILES_RELATION, key, 'existing');
+
+      return branch(sub, 'existing',
+        // existing record found
+        (tp) => {
+          return completeFrom(tp, 'checked', (bindings) => {
+            const existing = bindings.existing as Record<string, unknown>;
+            if (existing.hash === hash) {
+              return { path: file.path, written: false, contentHash: hash };
+            }
+            return { path: file.path, written: true, contentHash: hash, _needsWrite: true, _fileId: existing.id as string };
+          });
+        },
+        // no existing record — write new
+        (ep) => {
+          const fileId = randomUUID();
+          const sizeBytes = Buffer.byteLength(file.content, 'utf8');
+          const now = new Date().toISOString();
+          let r = put(ep, FILES_RELATION, key, {
+            id: fileId,
+            path: file.path,
+            hash,
+            target: file.target || '',
+            concept: file.concept || '',
+            content: file.content,
+            sizeBytes,
+            generatedAt: now,
+            formatted: false,
+          });
+          if (file.sources && file.sources.length > 0) {
+            r = put(r, SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
+          }
+          return complete(r, 'written', { path: file.path, written: true, contentHash: hash });
+        },
+      );
+    }, '_batchResults');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const batchResults = (bindings._batchResults || []) as Array<Record<string, unknown>>;
+      const results = batchResults.map(r => ({
+        path: r.path as string,
+        written: r.written as boolean,
+        contentHash: r.contentHash as string,
+      }));
+      return { results };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   /**
@@ -517,68 +520,5 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-import type { ConceptStorage } from '../../../runtime/types.ts';
-
-const _base = autoInterpret(_handler);
-
-// writeBatch needs content-addressed deduplication which requires reading existing
-// records per-file (dynamic keys from input array). Override with imperative impl.
-async function _writeBatch(input: Record<string, unknown>, storage: ConceptStorage) {
-  const files = input.files as Array<{
-    path: string;
-    content: string;
-    formatHint?: string;
-    sources?: SourceEntry[];
-    target?: string;
-    concept?: string;
-  }>;
-
-  if (!files || !Array.isArray(files) || files.length === 0) {
-    return { variant: 'ok', results: [] };
-  }
-
-  const results: Array<{ path: string; written: boolean; contentHash: string }> = [];
-
-  for (const file of files) {
-    const hash = sha256(file.content);
-    const key = fileKey(file.path);
-
-    const existing = await storage.get(FILES_RELATION, key);
-
-    if (existing && existing.hash === hash) {
-      results.push({ path: file.path, written: false, contentHash: hash });
-      continue;
-    }
-
-    const fileId = existing ? (existing.id as string) : randomUUID();
-    const sizeBytes = Buffer.byteLength(file.content, 'utf8');
-    const now = new Date().toISOString();
-
-    await storage.put(FILES_RELATION, key, {
-      id: fileId,
-      path: file.path,
-      hash,
-      target: file.target || '',
-      concept: file.concept || '',
-      content: file.content,
-      sizeBytes,
-      generatedAt: now,
-      formatted: false,
-    });
-
-    if (file.sources && file.sources.length > 0) {
-      await storage.put(SOURCE_MAP_RELATION, key, { path: file.path, sources: file.sources });
-    }
-
-    results.push({ path: file.path, written: true, contentHash: hash });
-  }
-
-  return { variant: 'ok', results };
-}
-
-export const emitterHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'writeBatch') return _writeBatch;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
+// All actions are now fully functional — no imperative overrides needed.
+export const emitterHandler = autoInterpret(_handler);

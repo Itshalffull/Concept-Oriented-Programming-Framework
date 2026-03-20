@@ -8,11 +8,12 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete, completeFrom,
+  createProgram, get as spGet, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const VALID_PLATFORMS = ['browser', 'mobile', 'desktop', 'watch', 'terminal'];
 
@@ -102,7 +103,7 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
     let p = createProgram();
 
     if (!VALID_PLATFORMS.includes(platform)) {
-      return complete(p, 'duplicate', { message: `Unsupported platform "${platform}"` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+      return complete(p, 'duplicate', { message: `Unsupported platform "${platform}"` }) as StorageProgram<Result>;
     }
 
     p = spGet(p, 'platformAdapter', adapter, 'existing');
@@ -119,7 +120,7 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
       },
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   mapNavigation(input: Record<string, unknown>) {
@@ -134,13 +135,37 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
         if (!parsed) {
           return complete(b, 'unsupported', { message: 'Transition must be valid JSON' });
         }
-        // Platform from binding not accessible; return generic
-        return complete(b, 'ok', { adapter, platformAction: JSON.stringify({}) });
+        // Use mapBindings to access the stored platform from the record
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const result = mapNavigationForPlatform(record.platform as string, parsed);
+          if (!result) {
+            return { success: false, platform: record.platform as string };
+          }
+          return { success: true, platformAction: JSON.stringify(result) };
+        }, '_navResult');
+
+        b2 = branch(b2,
+          (bindings) => {
+            const result = bindings._navResult as Record<string, unknown>;
+            return !(result.success as boolean);
+          },
+          (t) => completeFrom(t, 'unsupported', (bindings) => {
+            const result = bindings._navResult as Record<string, unknown>;
+            return { message: `Platform "${result.platform}" does not support this navigation` };
+          }),
+          (e) => completeFrom(e, 'ok', (bindings) => {
+            const result = bindings._navResult as Record<string, unknown>;
+            return { adapter, platformAction: result.platformAction as string };
+          }),
+        );
+
+        return b2;
       },
       (b) => complete(b, 'unsupported', { message: `Adapter "${adapter}" not registered` }),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   mapZone(input: Record<string, unknown>) {
@@ -150,11 +175,37 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'platformAdapter', adapter, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', { adapter, platformConfig: JSON.stringify({}) }),
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const result = mapZoneForPlatform(record.platform as string, role);
+          if (!result) {
+            return { success: false, platform: record.platform as string };
+          }
+          return { success: true, platformConfig: JSON.stringify(result) };
+        }, '_zoneResult');
+
+        b2 = branch(b2,
+          (bindings) => {
+            const result = bindings._zoneResult as Record<string, unknown>;
+            return !(result.success as boolean);
+          },
+          (t) => completeFrom(t, 'unmapped', (bindings) => {
+            const result = bindings._zoneResult as Record<string, unknown>;
+            return { message: `Platform "${result.platform}" does not support role "${role}"` };
+          }),
+          (e) => completeFrom(e, 'ok', (bindings) => {
+            const result = bindings._zoneResult as Record<string, unknown>;
+            return { adapter, platformConfig: result.platformConfig as string };
+          }),
+        );
+
+        return b2;
+      },
       (b) => complete(b, 'unmapped', { message: `Adapter "${adapter}" not registered` }),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   handlePlatformEvent(input: Record<string, unknown>) {
@@ -169,58 +220,38 @@ const _platformAdapterHandler: FunctionalConceptHandler = {
         if (!parsed) {
           return complete(b, 'ignored', { message: 'Event must be valid JSON' });
         }
-        return complete(b, 'ok', { adapter, action: JSON.stringify({}) });
+        let b2 = mapBindings(b, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          const result = handleEventForPlatform(record.platform as string, parsed);
+          if (!result) {
+            return { success: false, platform: record.platform as string };
+          }
+          return { success: true, action: JSON.stringify(result) };
+        }, '_eventResult');
+
+        b2 = branch(b2,
+          (bindings) => {
+            const result = bindings._eventResult as Record<string, unknown>;
+            return !(result.success as boolean);
+          },
+          (t) => completeFrom(t, 'ignored', (bindings) => {
+            const result = bindings._eventResult as Record<string, unknown>;
+            return { message: `Platform "${result.platform}" does not handle this event` };
+          }),
+          (e) => completeFrom(e, 'ok', (bindings) => {
+            const result = bindings._eventResult as Record<string, unknown>;
+            return { adapter, action: result.action as string };
+          }),
+        );
+
+        return b2;
       },
       (b) => complete(b, 'ignored', { message: `Adapter "${adapter}" not registered` }),
     );
 
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 };
 
-const _base = autoInterpret(_platformAdapterHandler);
-
-// mapNavigation, mapZone, handlePlatformEvent need access to stored platform, use imperative style.
-async function _mapNavigation(input: Record<string, unknown>, storage: ConceptStorage) {
-  const adapter = input.adapter as string;
-  const transition = input.transition as string;
-  const record = await storage.get('platformAdapter', adapter);
-  if (!record) return { variant: 'unsupported', message: `Adapter "${adapter}" not registered` };
-  const parsed = parseJsonObject(transition, 'transition');
-  if (!parsed) return { variant: 'unsupported', message: 'Transition must be valid JSON' };
-  const result = mapNavigationForPlatform(record.platform as string, parsed);
-  if (!result) return { variant: 'unsupported', message: `Platform "${record.platform}" does not support this navigation` };
-  return { variant: 'ok', adapter, platformAction: JSON.stringify(result) };
-}
-
-async function _mapZone(input: Record<string, unknown>, storage: ConceptStorage) {
-  const adapter = input.adapter as string;
-  const role = String(input.role ?? '');
-  const record = await storage.get('platformAdapter', adapter);
-  if (!record) return { variant: 'unmapped', message: `Adapter "${adapter}" not registered` };
-  const result = mapZoneForPlatform(record.platform as string, role);
-  if (!result) return { variant: 'unmapped', message: `Platform "${record.platform}" does not support role "${role}"` };
-  return { variant: 'ok', adapter, platformConfig: JSON.stringify(result) };
-}
-
-async function _handlePlatformEvent(input: Record<string, unknown>, storage: ConceptStorage) {
-  const adapter = input.adapter as string;
-  const event = input.event as string;
-  const record = await storage.get('platformAdapter', adapter);
-  if (!record) return { variant: 'ignored', message: `Adapter "${adapter}" not registered` };
-  const parsed = parseJsonObject(event, 'event');
-  if (!parsed) return { variant: 'ignored', message: 'Event must be valid JSON' };
-  const result = handleEventForPlatform(record.platform as string, parsed);
-  if (!result) return { variant: 'ignored', message: `Platform "${record.platform}" does not handle this event` };
-  return { variant: 'ok', adapter, action: JSON.stringify(result) };
-}
-
-export const platformAdapterHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'mapNavigation') return _mapNavigation;
-    if (prop === 'mapZone') return _mapZone;
-    if (prop === 'handlePlatformEvent') return _handlePlatformEvent;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
-
+// All actions are now fully functional — no imperative overrides needed.
+export const platformAdapterHandler = autoInterpret(_platformAdapterHandler);

@@ -47,7 +47,8 @@ export type Instruction =
   | { tag: 'mapBindings'; fn: (bindings: Bindings) => unknown; bindAs: string }
   | { tag: 'pure'; value: unknown }
   | { tag: 'pureFrom'; fn: (bindings: Bindings) => unknown }
-  | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> };
+  | { tag: 'bind'; first: StorageProgram<unknown>; bindAs: string; second: StorageProgram<unknown> }
+  | { tag: 'traverse'; sourceBinding: string; itemBinding: string; body: (item: unknown, bindings: Bindings) => StorageProgram<unknown>; bindAs: string };
 
 /** Runtime bindings accumulated during interpretation. */
 export type Bindings = Record<string, unknown>;
@@ -545,6 +546,43 @@ export function compose<A, B>(
   };
 }
 
+/**
+ * Traverse a bound array (typically from a prior `find`), applying a
+ * program-producing function to each element. The sub-programs run
+ * sequentially, and the collected results are bound to `bindAs`.
+ *
+ * This is the monadic `traverse`/`mapM` pattern — the standard way
+ * to express "find N records, do something to each" purely.
+ *
+ * Example:
+ *   let p = createProgram();
+ *   p = find(p, 'entries', {}, 'allEntries');
+ *   p = traverse(p, 'allEntries', 'entry', (item, _bindings) => {
+ *     const entry = item as Record<string, unknown>;
+ *     let sub = createProgram();
+ *     sub = put(sub, 'entries', entry.key as string, { ...entry, stale: true });
+ *     return complete(sub, 'ok', { key: entry.key });
+ *   }, 'results');
+ */
+export function traverse<A>(
+  program: StorageProgram<unknown>,
+  sourceBinding: string,
+  itemBinding: string,
+  body: (item: unknown, bindings: Bindings) => StorageProgram<A>,
+  bindAs: string,
+): StorageProgram<unknown> {
+  if (program.terminated) throw new Error('Program is sealed — cannot append after pure()');
+
+  // Build a sample program to extract static effects for analysis.
+  // Use a sentinel to get the effect set from the body.
+  const sampleProgram = body({}, {});
+  return {
+    instructions: [...program.instructions, { tag: 'traverse', sourceBinding, itemBinding, body, bindAs }],
+    terminated: false,
+    effects: mergeEffects(program.effects, sampleProgram.effects),
+  };
+}
+
 // --- Analysis Helpers ---
 
 /** Extract the set of relations read by the program. */
@@ -564,6 +602,10 @@ export function extractReadSet(program: StorageProgram<unknown>): Set<string> {
       for (const r of extractReadSet(instr.first)) reads.add(r);
       for (const r of extractReadSet(instr.second)) reads.add(r);
     }
+    if (instr.tag === 'traverse') {
+      const sample = instr.body({}, {});
+      for (const r of extractReadSet(sample)) reads.add(r);
+    }
   }
   return reads;
 }
@@ -581,6 +623,10 @@ export function extractWriteSet(program: StorageProgram<unknown>): Set<string> {
     if (instr.tag === 'bind') {
       for (const w of extractWriteSet(instr.first)) writes.add(w);
       for (const w of extractWriteSet(instr.second)) writes.add(w);
+    }
+    if (instr.tag === 'traverse') {
+      const sample = instr.body({}, {});
+      for (const w of extractWriteSet(sample)) writes.add(w);
     }
   }
   return writes;
@@ -601,6 +647,10 @@ export function extractCompletionVariants(program: StorageProgram<unknown>): Set
       for (const v of extractCompletionVariants(instr.first)) variants.add(v);
       for (const v of extractCompletionVariants(instr.second)) variants.add(v);
     }
+    if (instr.tag === 'traverse') {
+      const sample = instr.body({}, {});
+      for (const v of extractCompletionVariants(sample)) variants.add(v);
+    }
   }
   return variants;
 }
@@ -619,6 +669,10 @@ export function extractPerformSet(program: StorageProgram<unknown>): Set<string>
     if (instr.tag === 'bind') {
       for (const p of extractPerformSet(instr.first)) performs.add(p);
       for (const p of extractPerformSet(instr.second)) performs.add(p);
+    }
+    if (instr.tag === 'traverse') {
+      const sample = instr.body({}, {});
+      for (const p of extractPerformSet(sample)) performs.add(p);
     }
   }
   return performs;
@@ -670,6 +724,10 @@ export function serializeProgram(program: StorageProgram<unknown>): string {
       }
       if (instr.tag === 'performFrom') {
         return { ...instr, payloadFn: instr.payloadFn.toString() };
+      }
+      if (instr.tag === 'traverse') {
+        const sample = instr.body({}, {});
+        return { tag: 'traverse', sourceBinding: instr.sourceBinding, itemBinding: instr.itemBinding, bindAs: instr.bindAs, body: serializeProgram(sample) };
       }
       return instr;
     }),

@@ -11,6 +11,7 @@ export default defineConfig({
     include: [
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
+      'generated/tests/**/*.test.ts',
       'generated/surface/**/*.test.ts',
       'generated/typescript/**/*.test.ts',
       'generated/deploy/**/*.test.ts',

@@ -9,9 +9,8 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -100,61 +99,69 @@ const _handler: FunctionalConceptHandler = {
     const p = createProgram();
     return complete(p, 'ok', { proof }) as StorageProgram<Result>;
   },
-};
 
-const baseHandler = autoInterpret(_handler);
-
-// sign and addTrustedSigner need imperative style for dynamic storage keys
-const handler: ConceptHandler = {
-  ...baseHandler,
-
-  async addTrustedSigner(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Add a trusted signer identity.
+   * Uses find to check for existing identity, branch to conditionally create.
+   */
+  addTrustedSigner(input: Record<string, unknown>) {
     const identity = input.identity as string;
 
-    const existing = await storage.find('signature-trusted', { identity });
-    if (existing.length > 0) {
-      return {
-        variant: 'alreadyTrusted',
-        message: `Identity "${identity}" is already in the trusted set`,
-      };
-    }
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'existing');
 
-    const id = nextId();
-    await storage.put('signature-trusted', id, { id, identity });
-    return { variant: 'ok' };
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      (thenP) => complete(thenP, 'alreadyTrusted', {
+        message: `Identity "${identity}" is already in the trusted set`,
+      }),
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, 'signature-trusted', id, { id, identity });
+        return complete(elseP, 'ok', {});
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async sign(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Sign content with a trusted identity.
+   * Uses find to verify the identity is trusted, then put to store the signature.
+   */
+  sign(input: Record<string, unknown>) {
     const contentHash = input.contentHash as string;
     const identity = input.identity as string;
 
-    const trusted = await storage.find('signature-trusted', { identity });
-    if (trusted.length === 0) {
-      return {
-        variant: 'unknownIdentity',
+    let p = createProgram();
+    p = find(p, 'signature-trusted', { identity }, 'trusted');
+
+    return branch(p,
+      (bindings) => (bindings.trusted as unknown[]).length === 0,
+      (thenP) => complete(thenP, 'unknownIdentity', {
         message: `Identity "${identity}" is not in the trusted signers set`,
-      };
-    }
+      }),
+      (elseP) => {
+        const certificate = generateCertificate(identity);
+        const timestamp = new Date().toISOString();
+        const signatureData = hmacSign(`${contentHash}:${identity}:${timestamp}`, identity);
+        const sigId = nextId();
 
-    const certificate = generateCertificate(identity);
-    const timestamp = new Date().toISOString();
-    const signatureData = hmacSign(`${contentHash}:${identity}:${timestamp}`, identity);
+        elseP = put(elseP, 'signature', sigId, {
+          contentHash,
+          signer: identity,
+          certificate,
+          timestamp,
+          signatureData,
+          valid: true,
+        });
 
-    const sigId = nextId();
-    await storage.put('signature', sigId, {
-      contentHash,
-      signer: identity,
-      certificate,
-      timestamp,
-      signatureData,
-      valid: true,
-    });
-
-    return { variant: 'ok', signatureId: sigId };
+        return complete(elseP, 'ok', { signatureId: sigId });
+      },
+    ) as StorageProgram<Result>;
   },
 };
 
-export const signatureHandler = handler as FunctionalConceptHandler & ConceptHandler;
+// All actions are now fully functional — no imperative overrides needed.
+export const signatureHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSignatureCounter(): void {

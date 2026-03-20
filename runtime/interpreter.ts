@@ -179,6 +179,21 @@ export async function interpret(
         result = { variant: secondResult.variant, ...secondResult.output };
         break;
       }
+      case 'traverse': {
+        const source = bindings[instr.sourceBinding];
+        const items = Array.isArray(source) ? source : [];
+        const collected: unknown[] = [];
+        for (const item of items) {
+          bindings[instr.itemBinding] = item;
+          const subProgram = instr.body(item, bindings);
+          const subResult = await interpret(subProgram, storage, eid, bindings);
+          steps.push(...subResult.trace.steps);
+          collected.push(subResult.output);
+        }
+        bindings[instr.bindAs] = collected;
+        steps.push({ index: i, instruction: 'traverse', result: { count: collected.length }, durationMs: Date.now() - stepStart });
+        break;
+      }
     }
   }
 
@@ -355,6 +370,21 @@ async function executeInstruction(
       const secondResult = await interpret(instr.second, storage, eid);
       steps.push(...secondResult.trace.steps);
       result = { variant: secondResult.variant, ...secondResult.output };
+      break;
+    }
+    case 'traverse': {
+      const source = bindings[instr.sourceBinding];
+      const items = Array.isArray(source) ? source : [];
+      const collected: unknown[] = [];
+      for (const item of items) {
+        bindings[instr.itemBinding] = item;
+        const subProgram = instr.body(item, bindings);
+        const subResult = await interpret(subProgram, storage, eid, bindings);
+        steps.push(...subResult.trace.steps);
+        collected.push(subResult.output);
+      }
+      bindings[instr.bindAs] = collected;
+      steps.push({ index, instruction: 'traverse', result: { count: collected.length }, durationMs: Date.now() - stepStart });
       break;
     }
   }

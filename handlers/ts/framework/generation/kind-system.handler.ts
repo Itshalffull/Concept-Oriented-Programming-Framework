@@ -16,7 +16,6 @@ import {
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../../runtime/types.ts';
 import { randomUUID } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
@@ -62,14 +61,20 @@ const _handler: FunctionalConceptHandler = {
 
   /**
    * Declare a transform edge between two kinds.
-   * Validates both kinds exist. Cycle detection is performed via
-   * the graph data at the caller level (sync or derived concept).
+   * Validates both kinds exist. Performs cycle detection via DFS
+   * over pre-fetched edges in a mapBindings computation.
    */
   connect(input: Record<string, unknown>) {
     const from = input.from as string;
     const to = input.to as string;
     const relation = input.relation as string;
     const transformName = input.transformName as string | undefined;
+
+    // Self-loop check
+    if (from === to) {
+      const p = createProgram();
+      return complete(p, 'invalid', { message: `Self-loop: '${from}' cannot connect to itself` }) as StorageProgram<Result>;
+    }
 
     let p = createProgram();
     p = get(p, KINDS_RELATION, from, 'fromKind');
@@ -78,6 +83,9 @@ const _handler: FunctionalConceptHandler = {
     // Also try finding by ID if not found by name
     p = find(p, KINDS_RELATION, { id: from }, 'fromById');
     p = find(p, KINDS_RELATION, { id: to }, 'toById');
+
+    // Pre-fetch all edges for cycle detection
+    p = find(p, EDGES_RELATION, {}, 'allEdges');
 
     p = branch(p,
       (bindings) => {
@@ -95,35 +103,63 @@ const _handler: FunctionalConceptHandler = {
           },
           (b2) => complete(b2, 'invalid', { message: `Kind '${to}' does not exist` }),
           (b2) => {
-            // Resolve names
+            // Resolve names and check for cycles in a single mapBindings
             let b3 = mapBindings(b2, (bindings) => {
               const fromKind = bindings.fromKind as Record<string, unknown> | null;
               const fromById = bindings.fromById as Array<Record<string, unknown>>;
               const toKind = bindings.toKind as Record<string, unknown> | null;
               const toById = bindings.toById as Array<Record<string, unknown>>;
+              const allEdges = bindings.allEdges as Array<Record<string, unknown>>;
 
               const fromName = fromKind ? (fromKind.name as string) : (fromById[0].name as string);
               const toName = toKind ? (toKind.name as string) : (toById[0].name as string);
-              return { fromName, toName };
-            }, 'names');
 
-            // Note: Cycle detection via DFS requires iterative storage queries,
-            // which cannot be expressed in the free monad DSL. Cycle detection
-            // is delegated to the caller (sync/derived concept) or a post-hoc
-            // validation pass via the graph action.
+              // Cycle detection: check if adding from->to would create a cycle
+              // A cycle exists if there's already a path from toName to fromName
+              const visited = new Set<string>();
+              const stack = [toName];
+              let hasCycle = false;
+              while (stack.length > 0) {
+                const current = stack.pop()!;
+                if (current === fromName) {
+                  hasCycle = true;
+                  break;
+                }
+                if (visited.has(current)) continue;
+                visited.add(current);
+                for (const edge of allEdges) {
+                  if ((edge.fromName as string) === current) {
+                    stack.push(edge.toName as string);
+                  }
+                }
+              }
 
-            // Store edge with unique key based on from:to names
-            b3 = putFrom(b3, EDGES_RELATION, edgeKey(from, to), (bindings) => {
-              const names = bindings.names as { fromName: string; toName: string };
-              return {
-                fromName: names.fromName,
-                toName: names.toName,
-                relation,
-                transformName: transformName || null,
-              };
-            });
+              return { fromName, toName, hasCycle };
+            }, '_connectInfo');
 
-            return complete(b3, 'ok', {});
+            return branch(b3,
+              (bindings) => {
+                const info = bindings._connectInfo as Record<string, unknown>;
+                return info.hasCycle as boolean;
+              },
+              (t) => completeFrom(t, 'invalid', (bindings) => {
+                const info = bindings._connectInfo as Record<string, unknown>;
+                return { message: `Adding edge ${info.fromName}->${info.toName} would create a cycle` };
+              }),
+              (e) => {
+                // Store edge
+                let e2 = putFrom(e, EDGES_RELATION, edgeKey(from, to), (bindings) => {
+                  const info = bindings._connectInfo as Record<string, unknown>;
+                  return {
+                    fromName: info.fromName as string,
+                    toName: info.toName as string,
+                    relation,
+                    transformName: transformName || null,
+                  };
+                });
+                return complete(e2, 'ok', {});
+              },
+            );
           },
         );
       },
@@ -134,9 +170,6 @@ const _handler: FunctionalConceptHandler = {
 
   /**
    * Compute shortest valid transform chain between two kinds.
-   * Note: BFS traversal requires iterative storage queries. In the
-   * functional DSL, we return the graph data and delegate path-finding
-   * to the caller or a sync-driven analysis pass.
    */
   route(input: Record<string, unknown>) {
     const from = input.from as string;
@@ -376,76 +409,5 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
-
-// connect() needs cycle detection via DFS which requires iterating edges dynamically.
-async function _connect(input: Record<string, unknown>, storage: ConceptStorage) {
-  const from = input.from as string;
-  const to = input.to as string;
-  const relation = input.relation as string;
-  const transformName = input.transformName as string | undefined;
-
-  // Self-loop check
-  if (from === to) {
-    return { variant: 'invalid', message: `Self-loop: '${from}' cannot connect to itself` };
-  }
-
-  // Resolve from/to kinds
-  const fromKind = await storage.get(KINDS_RELATION, from);
-  const toKind = await storage.get(KINDS_RELATION, to);
-
-  let fromRecord = fromKind;
-  let toRecord = toKind;
-
-  if (!fromRecord) {
-    const fromById = await storage.find(KINDS_RELATION, { id: from });
-    if (fromById.length > 0) fromRecord = fromById[0];
-  }
-  if (!toRecord) {
-    const toById = await storage.find(KINDS_RELATION, { id: to });
-    if (toById.length > 0) toRecord = toById[0];
-  }
-
-  if (!fromRecord) return { variant: 'invalid', message: `Kind '${from}' does not exist` };
-  if (!toRecord) return { variant: 'invalid', message: `Kind '${to}' does not exist` };
-
-  const fromName = fromRecord.name as string;
-  const toName = toRecord.name as string;
-
-  // Cycle detection: check if adding from->to would create a cycle
-  // A cycle exists if there's already a path from toName to fromName
-  const allEdges = await storage.find(EDGES_RELATION, {});
-
-  const visited = new Set<string>();
-  const stack = [toName];
-  while (stack.length > 0) {
-    const current = stack.pop()!;
-    if (current === fromName) {
-      return { variant: 'invalid', message: `Adding edge ${fromName}->${toName} would create a cycle` };
-    }
-    if (visited.has(current)) continue;
-    visited.add(current);
-    for (const edge of allEdges) {
-      if ((edge.fromName as string) === current) {
-        stack.push(edge.toName as string);
-      }
-    }
-  }
-
-  // Store edge
-  await storage.put(EDGES_RELATION, edgeKey(from, to), {
-    fromName,
-    toName,
-    relation,
-    transformName: transformName || null,
-  });
-
-  return { variant: 'ok' };
-}
-
-export const kindSystemHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'connect') return _connect;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
+// All actions are now fully functional — no imperative overrides needed.
+export const kindSystemHandler = autoInterpret(_handler);

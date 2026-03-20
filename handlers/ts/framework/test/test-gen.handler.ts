@@ -119,6 +119,7 @@ export interface TestPlan {
   conceptName: string;
   conceptRef: string;
   handlerPath: string;
+  handlerStyle: 'functional' | 'imperative';
   actions: TestPlanAction[];
   examples: TestPlanExample[];
   properties: TestPlanForall[];
@@ -293,6 +294,7 @@ function buildTestPlan(
     conceptName,
     conceptRef,
     handlerPath,
+    handlerStyle: 'functional' as const,
     actions: planActions,
     examples,
     properties,

@@ -11,7 +11,6 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings, putFrom,
   type StorageProgram,
@@ -235,149 +234,189 @@ const _handler: FunctionalConceptHandler = {
       (elseP) => complete(elseP, 'notfound', {}),
     ) as StorageProgram<Result>;
   },
-};
 
-const baseHandler = autoInterpret(_handler);
-
-// correlate needs imperative style because it requires dynamic storage keys
-// (the generated ID is used as the key, which can't be known at build time)
-const handler = {
-  ...baseHandler,
-
-  async correlate(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Correlate action log entries with static semantic entities.
+   * Pre-fetches all entity tables, then uses mapBindings for
+   * pure computation over the pre-fetched data, and putFrom
+   * to persist the correlated flow record.
+   */
+  correlate(input: Record<string, unknown>) {
     const flowId = input.flowId as string;
 
-    const logEntries = await storage.find('action-log', { flow: flowId });
-    if (!logEntries || logEntries.length === 0) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
 
-    const allConcepts = await storage.find('concept-entity', {});
-    const allActions = await storage.find('action-entity', {});
-    const allVariants = await storage.find('variant-entity', {});
-    const allSyncs = await storage.find('sync-entity', {});
-    const allFlowGraphs = await storage.find('flow-graph', {});
+    // Pre-fetch all required data
+    p = find(p, 'action-log', { flow: flowId }, 'logEntries');
+    p = find(p, 'concept-entity', {}, 'allConcepts');
+    p = find(p, 'action-entity', {}, 'allActions');
+    p = find(p, 'variant-entity', {}, 'allVariants');
+    p = find(p, 'sync-entity', {}, 'allSyncs');
+    p = find(p, 'flow-graph', {}, 'allFlowGraphs');
 
-    const id = nextId();
-    const now = new Date().toISOString();
-    const unresolved: Array<Record<string, unknown>> = [];
+    // Check if we have log entries
+    p = branch(p,
+      (bindings) => {
+        const logEntries = bindings.logEntries as Array<Record<string, unknown>>;
+        return !logEntries || logEntries.length === 0;
+      },
+      (b) => complete(b, 'notfound', {}),
+      (b) => {
+        const id = nextId();
+        const now = new Date().toISOString();
 
-    const steps: Array<Record<string, unknown>> = [];
-    let trigger = '';
-    let hasError = false;
+        // Compute the correlated flow record from pre-fetched data
+        let b2 = mapBindings(b, (bindings) => {
+          const logEntries = bindings.logEntries as Array<Record<string, unknown>>;
+          const allConcepts = bindings.allConcepts as Array<Record<string, unknown>>;
+          const allActions = bindings.allActions as Array<Record<string, unknown>>;
+          const allVariants = bindings.allVariants as Array<Record<string, unknown>>;
+          const allSyncs = bindings.allSyncs as Array<Record<string, unknown>>;
+          const allFlowGraphs = bindings.allFlowGraphs as Array<Record<string, unknown>>;
 
-    for (const entry of logEntries) {
-      const concept = entry.concept as string || '';
-      const action = entry.action as string || '';
-      const variantName = entry.variant as string || '';
+          const unresolved: Array<Record<string, unknown>> = [];
+          const steps: Array<Record<string, unknown>> = [];
+          let trigger = '';
+          let hasError = false;
 
-      let conceptEntityId = '';
-      let actionEntityId = '';
-      let variantEntityId = '';
-      let syncEntityId = '';
+          for (const entry of logEntries) {
+            const concept = entry.concept as string || '';
+            const action = entry.action as string || '';
+            const variantName = entry.variant as string || '';
 
-      if (concept) {
-        const conceptResults = allConcepts.filter(c => c.name === concept);
-        if (conceptResults.length > 0) {
-          conceptEntityId = conceptResults[0].id as string;
-        } else {
-          unresolved.push({ type: 'concept', name: concept });
-        }
-      }
+            let conceptEntityId = '';
+            let actionEntityId = '';
+            let variantEntityId = '';
+            let syncEntityId = '';
 
-      if (concept && action) {
-        const actionResults = allActions.filter(a => a.concept === concept && a.name === action);
-        if (actionResults.length > 0) {
-          actionEntityId = actionResults[0].id as string;
-        } else {
-          unresolved.push({ type: 'action', name: `${concept}/${action}` });
-        }
-      }
+            if (concept) {
+              const conceptResults = allConcepts.filter(c => c.name === concept);
+              if (conceptResults.length > 0) {
+                conceptEntityId = conceptResults[0].id as string;
+              } else {
+                unresolved.push({ type: 'concept', name: concept });
+              }
+            }
 
-      if (variantName && concept && action) {
-        const variantResults = allVariants.filter(
-          v => v.action === `${concept}/${action}` && v.tag === variantName,
-        );
-        if (variantResults.length > 0) {
-          variantEntityId = variantResults[0].id as string;
-        }
-      }
+            if (concept && action) {
+              const actionResults = allActions.filter(a => a.concept === concept && a.name === action);
+              if (actionResults.length > 0) {
+                actionEntityId = actionResults[0].id as string;
+              } else {
+                unresolved.push({ type: 'action', name: `${concept}/${action}` });
+              }
+            }
 
-      if (entry.sync) {
-        const syncResults = allSyncs.filter(s => s.name === entry.sync);
-        if (syncResults.length > 0) {
-          syncEntityId = syncResults[0].id as string;
-        }
-      }
+            if (variantName && concept && action) {
+              const variantResults = allVariants.filter(
+                v => v.action === `${concept}/${action}` && v.tag === variantName,
+              );
+              if (variantResults.length > 0) {
+                variantEntityId = variantResults[0].id as string;
+              }
+            }
 
-      if (steps.length === 0) {
-        trigger = `${concept}/${action}`;
-      }
+            if (entry.sync) {
+              const syncResults = allSyncs.filter(s => s.name === entry.sync);
+              if (syncResults.length > 0) {
+                syncEntityId = syncResults[0].id as string;
+              }
+            }
 
-      const status = entry.type === 'completion' && entry.variant === 'error' ? 'error' : 'ok';
-      if (status === 'error') hasError = true;
+            if (steps.length === 0) {
+              trigger = `${concept}/${action}`;
+            }
 
-      steps.push({
-        index: steps.length,
-        type: entry.type,
-        concept,
-        action,
-        variant: variantName,
-        conceptEntity: conceptEntityId,
-        actionEntity: actionEntityId,
-        variantEntity: variantEntityId,
-        syncEntity: syncEntityId,
-        timestamp: entry.timestamp || '',
-        status,
-      });
-    }
+            const status = entry.type === 'completion' && entry.variant === 'error' ? 'error' : 'ok';
+            if (status === 'error') hasError = true;
 
-    const flowStatus = hasError ? 'failed' : 'completed';
-    const startedAt = steps.length > 0 ? (steps[0].timestamp as string) || now : now;
-    const completedAt = steps.length > 0 ? (steps[steps.length - 1].timestamp as string) || now : now;
+            steps.push({
+              index: steps.length,
+              type: entry.type,
+              concept,
+              action,
+              variant: variantName,
+              conceptEntity: conceptEntityId,
+              actionEntity: actionEntityId,
+              variantEntity: variantEntityId,
+              syncEntity: syncEntityId,
+              timestamp: entry.timestamp || '',
+              status,
+            });
+          }
 
-    // Compute deviations by comparing against flow-graph entries
-    const deviations: Array<Record<string, unknown>> = [];
-    const matchingGraphs = allFlowGraphs.filter(g => g.trigger === trigger);
-    const hasStaticPath = matchingGraphs.length > 0;
-    if (hasStaticPath) {
-      const graph = matchingGraphs[0];
-      const rawSteps = graph.steps || graph.path;
-      const expectedSteps = JSON.parse(rawSteps as string || '[]') as Array<Record<string, unknown>>;
-      for (const expected of expectedSteps) {
-        const found = steps.some(s => s.concept === expected.concept && s.action === expected.action);
-        if (!found) {
-          deviations.push({ type: 'missing', expected: `${expected.concept}/${expected.action}` });
-        }
-      }
-    }
+          const flowStatus = hasError ? 'failed' : 'completed';
+          const startedAt = steps.length > 0 ? (steps[0].timestamp as string) || now : now;
+          const completedAt = steps.length > 0 ? (steps[steps.length - 1].timestamp as string) || now : now;
 
-    // Persist the flow record using the generated ID as the key
-    const record = {
-      id,
-      flowId,
-      trigger,
-      status: flowStatus,
-      steps: JSON.stringify(steps),
-      stepCount: steps.length,
-      startedAt,
-      completedAt,
-      hasStaticPath,
-      deviations: JSON.stringify(deviations),
-      deviationCount: deviations.length,
-    };
+          // Compute deviations by comparing against flow-graph entries
+          const deviations: Array<Record<string, unknown>> = [];
+          const matchingGraphs = allFlowGraphs.filter(g => g.trigger === trigger);
+          const hasStaticPath = matchingGraphs.length > 0;
+          if (hasStaticPath) {
+            const graph = matchingGraphs[0];
+            const rawSteps = graph.steps || graph.path;
+            const expectedSteps = JSON.parse(rawSteps as string || '[]') as Array<Record<string, unknown>>;
+            for (const expected of expectedSteps) {
+              const found = steps.some(s => s.concept === expected.concept && s.action === expected.action);
+              if (!found) {
+                deviations.push({ type: 'missing', expected: `${expected.concept}/${expected.action}` });
+              }
+            }
+          }
 
-    await storage.put('runtime-flow', id, record);
+          return {
+            id,
+            flowId,
+            trigger,
+            status: flowStatus,
+            steps: JSON.stringify(steps),
+            stepCount: steps.length,
+            startedAt,
+            completedAt,
+            hasStaticPath,
+            deviations: JSON.stringify(deviations),
+            deviationCount: deviations.length,
+            unresolved,
+          };
+        }, '_flowData');
 
-    if (unresolved.length > 0) {
-      return { variant: 'partial', flow: id, unresolved: JSON.stringify(unresolved) };
-    }
+        // Persist the flow record
+        b2 = putFrom(b2, 'runtime-flow', id, (bindings) => {
+          const data = bindings._flowData as Record<string, unknown>;
+          return {
+            id: data.id,
+            flowId: data.flowId,
+            trigger: data.trigger,
+            status: data.status,
+            steps: data.steps,
+            stepCount: data.stepCount,
+            startedAt: data.startedAt,
+            completedAt: data.completedAt,
+            hasStaticPath: data.hasStaticPath,
+            deviations: data.deviations,
+            deviationCount: data.deviationCount,
+          };
+        });
 
-    return { variant: 'ok', flow: id };
+        // Return appropriate variant based on unresolved entities
+        return completeFrom(b2, '', (bindings) => {
+          const data = bindings._flowData as Record<string, unknown>;
+          const unresolved = data.unresolved as Array<Record<string, unknown>>;
+          if (unresolved.length > 0) {
+            return { variant: 'partial', flow: id, unresolved: JSON.stringify(unresolved) };
+          }
+          return { variant: 'ok', flow: id };
+        });
+      },
+    );
+
+    return p as StorageProgram<Result>;
   },
-} as any;
+};
 
-export const runtimeFlowHandler = handler;
+// All actions are now fully functional — no imperative overrides needed.
+export const runtimeFlowHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRuntimeFlowCounter(): void {

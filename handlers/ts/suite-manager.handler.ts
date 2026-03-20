@@ -9,10 +9,9 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, find, get, put, complete, completeFrom,
-  branch, mapBindings, type StorageProgram,
+  branch, mapBindings, traverse, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -55,6 +54,11 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  /**
+   * Validate a suite at the given path.
+   * Uses find + traverse to update existing records with dynamic storage keys,
+   * or creates a new entry if none exists.
+   */
   validate(input: Record<string, unknown>) {
     const path = input.path as string;
 
@@ -63,36 +67,47 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p,
       (b) => (b.existing as unknown[]).length > 0,
-      (() => {
-        let t = createProgram();
-        t = mapBindings(t, (b) => {
-          const existing = b.existing as Record<string, unknown>[];
-          return existing[0].id as string;
-        }, 'suiteId');
-        t = mapBindings(t, (b) => {
-          return b.suiteId as string;
-        }, 'resolvedSuiteId');
-        return completeFrom(t, 'ok', (b) => {
-          const suiteId = (b.existing as Record<string, unknown>[])[0].id as string;
-          const record = (b.existing as Record<string, unknown>[])[0];
-          const concepts = (record && typeof record.conceptCount === 'number') ? record.conceptCount : 0;
-          const syncs = (record && typeof record.syncCount === 'number') ? record.syncCount : 0;
-          return { suite: suiteId, concepts, syncs };
+      (thenP) => {
+        // Update existing suite status using traverse for dynamic key access
+        thenP = traverse(thenP, 'existing', '_entity', (item) => {
+          const entity = item as Record<string, unknown>;
+          const entityId = entity.id as string;
+          const updated = { ...entity, status: 'validated' };
+          delete updated._key;
+
+          let sub = createProgram();
+          sub = put(sub, 'suite-manager', entityId, updated);
+          return complete(sub, 'ok', {
+            suite: entityId,
+            concepts: (typeof entity.conceptCount === 'number') ? entity.conceptCount : 0,
+            syncs: (typeof entity.syncCount === 'number') ? entity.syncCount : 0,
+          });
+        }, '_validateResults');
+
+        return completeFrom(thenP, 'ok', (b) => {
+          const results = (b._validateResults || []) as Array<Record<string, unknown>>;
+          if (results.length > 0) {
+            return {
+              suite: results[0].suite as string,
+              concepts: results[0].concepts as number,
+              syncs: results[0].syncs as number,
+            };
+          }
+          return { suite: '', concepts: 0, syncs: 0 };
         });
-      })(),
-      (() => {
+      },
+      (elseP) => {
         const suiteId = nextId();
         const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
-        let e = createProgram();
-        e = put(e, 'suite-manager', suiteId, {
+        elseP = put(elseP, 'suite-manager', suiteId, {
           id: suiteId,
           name: suiteName,
           path,
           status: 'validated',
           createdAt: new Date().toISOString(),
         });
-        return complete(e, 'ok', { suite: suiteId, concepts: 0, syncs: 0 }) as StorageProgram<Result>;
-      })(),
+        return complete(elseP, 'ok', { suite: suiteId, concepts: 0, syncs: 0 }) as StorageProgram<Result>;
+      },
     ) as StorageProgram<Result>;
   },
 
@@ -158,45 +173,8 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_handler);
-
-// validate needs to update the status of an existing suite record found via find(),
-// which requires a dynamic storage key not supported by the StorageProgram DSL.
-async function _validate(input: Record<string, unknown>, storage: ConceptStorage) {
-  const path = input.path as string;
-
-  const existing = await storage.find('suite-manager', { path });
-  if (existing && existing.length > 0) {
-    const entity = existing[0];
-    const entityId = entity.id as string;
-    const updated = { ...entity, status: 'validated' };
-    delete updated._key;
-    await storage.put('suite-manager', entityId, updated);
-
-    const concepts = (typeof entity.conceptCount === 'number') ? entity.conceptCount : 0;
-    const syncs = (typeof entity.syncCount === 'number') ? entity.syncCount : 0;
-    return { variant: 'ok', suite: entityId, concepts, syncs };
-  }
-
-  // No existing suite — create a new entry
-  const suiteId = nextId();
-  const suiteName = path.replace(/^\.\/suites\//, '').replace(/\/$/, '');
-  await storage.put('suite-manager', suiteId, {
-    id: suiteId,
-    name: suiteName,
-    path,
-    status: 'validated',
-    createdAt: new Date().toISOString(),
-  });
-  return { variant: 'ok', suite: suiteId, concepts: 0, syncs: 0 };
-}
-
-export const suiteManagerHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'validate') return _validate;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
+// All actions are now fully functional — no imperative overrides needed.
+export const suiteManagerHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetSuiteManagerCounter(): void {

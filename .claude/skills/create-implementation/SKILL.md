@@ -123,7 +123,7 @@ Start with the imports and handler skeleton. **Default to functional style:**
 
 ```typescript
 import type { FunctionalConceptHandler } from '../runtime/functional-handler';
-import { createProgram, get, find, put, merge, del, branch, complete, pure,
+import { createProgram, get, find, put, merge, del, branch, complete, pure, traverse,
          relation, at, field, getLens, putLens, modifyLens } from '../runtime/storage-program';
 
 export const <name>Handler: FunctionalConceptHandler = {
@@ -464,7 +464,7 @@ Imperative handlers are a **fallback** for cases where functional style cannot b
 
 ```typescript
 import type { FunctionalConceptHandler } from '../runtime/functional-handler';
-import { createProgram, get, find, put, merge, del, branch, complete, pure,
+import { createProgram, get, find, put, merge, del, branch, complete, pure, traverse,
          relation, at, field, getLens, putLens, modifyLens } from '../runtime/storage-program';
 
 export const myHandler: FunctionalConceptHandler = {
@@ -505,6 +505,7 @@ export const myHandler: FunctionalConceptHandler = {
 | Terminate (static) | `complete(p, variant, output)` | completionVariants += variant |
 | Terminate (from bindings) | `completeFrom(p, variant, (bindings) => output)` | completionVariants += variant |
 | Derive value | `mapBindings(p, (bindings) => value, bindAs)` | (no effect) |
+| Iterate collection | `traverse(p, sourceBinding, itemBinding, (item, bindings) => subProgram, bindAs)` | union with body effects |
 | Monadic bind | `compose(first, bindAs, second)` | union of both programs |
 
 ### CRITICAL: Binding Semantics — `bindAs` Names Are NOT JavaScript Variables
@@ -580,6 +581,7 @@ actionName(input) {
 | Return fetched data | `complete(p, 'ok', { items: all })` | `completeFrom(p, 'ok', (b) => ({ items: b.all }))` |
 | Compute from fetched data | `const count = items.length` | `mapBindings(p, (b) => (b.items as any[]).length, 'count')` |
 | Filter fetched results | `const filtered = items.filter(...)` | `mapBindings(p, (b) => (b.items as any[]).filter(...), 'filtered')` |
+| Iterate and modify | `for (const item of items) { storage.put(...) }` | `traverse(p, 'items', '_item', (item) => { let s = createProgram(); s = put(s, ...); return complete(s, 'ok', {}); }, '_results')` |
 
 ### CRITICAL: Variant and Storage Anti-Patterns
 
@@ -613,19 +615,53 @@ let p2 = putFrom(p, 'items', key, (b) => record);
 return completeFrom(p2, 'ok', (b) => ({ item: id }));
 ```
 
-#### Dynamic storage keys require imperative style
-`putFrom(p, rel, key, fn)` requires `key` to be a static string. If the key is computed at runtime (e.g., a generated UUID), use imperative style for that action:
+#### Iterating over collections — use `traverse`
+When you need to find N records and perform an operation on each (e.g., mark all matching entries as stale), use `traverse` — the monadic `mapM`/`traverse` pattern:
+
 ```typescript
-const baseHandler = autoInterpret(_handler);
-const handler = {
-  ...baseHandler,
-  async myAction(input, storage) {
-    const id = generateId();
-    await storage.put('items', id, record);
-    return { variant: 'ok', item: id };
-  },
-};
-export const myHandler = handler;
+invalidateByKind(input: Record<string, unknown>) {
+  const kind = input.kind as string;
+  let p = createProgram();
+  p = find(p, 'entries', {}, 'allEntries');
+
+  // traverse: for each entry, conditionally mark stale
+  p = traverse(p, 'allEntries', '_entry', (item) => {
+    const entry = item as Record<string, unknown>;
+    const matches = (entry.kind as string) === kind;
+    let sub = createProgram();
+    if (matches) {
+      sub = put(sub, 'entries', entry.stepKey as string, { ...entry, stale: true });
+      return complete(sub, 'invalidated', { stepKey: entry.stepKey });
+    }
+    return complete(sub, 'skipped', {});
+  }, '_results');
+
+  return completeFrom(p, 'ok', (bindings) => {
+    const results = (bindings._results || []) as Array<Record<string, unknown>>;
+    const invalidated = results.filter(r => r.variant === 'invalidated').map(r => r.stepKey as string);
+    return { invalidated };
+  });
+}
+```
+
+`traverse(p, sourceBinding, itemBinding, bodyFn, bindAs)`:
+- **sourceBinding**: name of a bound array (from a prior `find`)
+- **itemBinding**: name to bind each item during iteration
+- **bodyFn**: `(item, bindings) => StorageProgram` — sub-program for each element
+- **bindAs**: name to bind the collected results array
+
+The interpreter executes each sub-program sequentially, collects their outputs, and binds the results array. Static analysis extracts effects from a sample invocation of the body.
+
+**Never use imperative overrides for collection iteration** — `traverse` is the standard functional solution.
+
+#### Dynamic storage keys — use `mapBindings`
+`putFrom(p, rel, key, fn)` requires `key` to be a static string. If the key is computed at runtime (e.g., a generated UUID), compute it via `mapBindings` then use `putFrom`:
+```typescript
+p = mapBindings(p, () => randomUUID(), '_id');
+p = putFrom(p, 'items', '_placeholder', (bindings) => {
+  // Note: the actual key resolution happens via the id field
+  return { id: bindings._id as string, name };
+});
 ```
 
 #### Actions requiring stateful engine calls

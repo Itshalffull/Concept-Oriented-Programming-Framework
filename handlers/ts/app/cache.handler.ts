@@ -3,11 +3,12 @@
 // Cache Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../runtime/types.ts';
+
+type Result = { variant: string; [key: string]: unknown };
 
 const _cacheHandler: FunctionalConceptHandler = {
   set(input: Record<string, unknown>) {
@@ -30,7 +31,7 @@ const _cacheHandler: FunctionalConceptHandler = {
       maxAge,
       createdAt,
     });
-    return complete(p, 'ok', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return complete(p, 'ok', {}) as StorageProgram<Result>;
   },
 
   get(input: Record<string, unknown>) {
@@ -47,7 +48,7 @@ const _cacheHandler: FunctionalConceptHandler = {
       }),
       (b) => complete(b, 'miss', {}),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
   invalidate(input: Record<string, unknown>) {
@@ -64,41 +65,37 @@ const _cacheHandler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'notfound', {}),
     );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return p as StorageProgram<Result>;
   },
 
-  invalidateByTags(_input: Record<string, unknown>) {
-    // invalidateByTags() requires dynamic iteration and deletion, delegated to imperative override
+  invalidateByTags(input: Record<string, unknown>) {
+    const tags = input.tags as string;
+    const targetTags = tags.split(',').map(t => t.trim()).filter(Boolean);
+
     let p = createProgram();
-    return complete(p, 'ok', { count: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, 'cacheEntry', {}, 'allEntries');
+
+    p = traverse(p, 'allEntries', '_entry', (item) => {
+      const entry = item as Record<string, unknown>;
+      const entryTags = Array.isArray(entry.tags) ? entry.tags : [];
+      const hasMatch = targetTags.some(t => entryTags.includes(t));
+
+      let sub = createProgram();
+      if (hasMatch) {
+        const compositeKey = `${entry.bin}:${entry.key}`;
+        sub = del(sub, 'cacheEntry', compositeKey);
+        return complete(sub, 'deleted', {});
+      }
+      return complete(sub, 'skipped', {});
+    }, '_traverseResults');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
+      const count = results.filter(r => r.variant === 'deleted').length;
+      return { count };
+    }) as StorageProgram<Result>;
   },
 };
 
-const _base = autoInterpret(_cacheHandler);
-
-// invalidateByTags() requires dynamic iteration and deletion, use imperative style.
-async function _invalidateByTags(input: Record<string, unknown>, storage: ConceptStorage) {
-  const tags = input.tags as string;
-  const targetTags = tags.split(',').map(t => t.trim()).filter(Boolean);
-
-  const allEntries = await storage.find('cacheEntry', {});
-  let count = 0;
-  for (const entry of allEntries) {
-    const entryTags = Array.isArray(entry.tags) ? entry.tags : [];
-    const hasMatch = targetTags.some(t => entryTags.includes(t));
-    if (hasMatch) {
-      const compositeKey = `${entry.bin}:${entry.key}`;
-      await storage.del('cacheEntry', compositeKey);
-      count++;
-    }
-  }
-  return { variant: 'ok', count };
-}
-
-export const cacheHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'invalidateByTags') return _invalidateByTags;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
-
+// All actions are now fully functional — no imperative overrides needed.
+export const cacheHandler = autoInterpret(_cacheHandler);

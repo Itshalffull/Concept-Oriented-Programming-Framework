@@ -10,9 +10,8 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
-  createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, del, branch, complete, completeFrom, mapBindings, putFrom, delFrom, traverse,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -25,6 +24,183 @@ function nextId(): string {
 }
 
 const _handler: FunctionalConceptHandler = {
+  create(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const hash = input.hash as string;
+
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'existingRefs');
+
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length > 0;
+      },
+      (b) => complete(b, 'exists', { message: `A ref with name '${name}' already exists` }),
+      (b) => {
+        const id = nextId();
+        let b2 = put(b, 'ref', id, { id, name, target: hash });
+
+        // Write reflog entry with sequence number for ordering
+        const seq = idCounter;
+        const ts = new Date().toISOString();
+        const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+        b2 = put(b2, 'ref-log', logKey, {
+          name,
+          oldHash: '',
+          newHash: hash,
+          timestamp: ts,
+          agent: 'system',
+          seq,
+        });
+
+        return complete(b2, 'ok', { ref: id });
+      },
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  update(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const newHash = input.newHash as string;
+    const expectedOldHash = input.expectedOldHash as string;
+
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'existingRefs');
+
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => {
+        // Extract the first record's info
+        let b2 = mapBindings(b, (bindings) => {
+          const refs = bindings.existingRefs as Record<string, unknown>[];
+          const record = refs[0];
+          return {
+            key: record._key as string,
+            currentHash: record.target as string,
+            record,
+          };
+        }, '_refInfo');
+
+        b2 = branch(b2,
+          (bindings) => {
+            const info = bindings._refInfo as Record<string, unknown>;
+            return (info.currentHash as string) !== expectedOldHash;
+          },
+          (t) => completeFrom(t, 'conflict', (bindings) => {
+            const info = bindings._refInfo as Record<string, unknown>;
+            return { current: info.currentHash as string };
+          }),
+          (e) => {
+            // Update the ref target using traverse over the single-element array
+            let e2 = traverse(e, 'existingRefs', '_refItem', (item) => {
+              const record = item as Record<string, unknown>;
+              const key = record._key as string;
+              let sub = createProgram();
+              sub = put(sub, 'ref', key, { ...record, target: newHash });
+              return complete(sub, 'updated', {});
+            }, '_updateResults');
+
+            // Write reflog entry
+            const seq = ++idCounter;
+            const ts = new Date().toISOString();
+            const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+            e2 = put(e2, 'ref-log', logKey, {
+              name,
+              oldHash: expectedOldHash,
+              newHash,
+              timestamp: ts,
+              agent: 'system',
+              seq,
+            });
+
+            return complete(e2, 'ok', {});
+          },
+        );
+
+        return b2;
+      },
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  delete(input: Record<string, unknown>) {
+    const name = input.name as string;
+
+    let p = createProgram();
+
+    // Check for protected refs
+    if (name === 'HEAD' || name.startsWith('protected/')) {
+      return complete(p, 'protected', { message: `Ref '${name}' is protected and cannot be deleted` }) as StorageProgram<Result>;
+    }
+
+    p = find(p, 'ref', { name }, 'existingRefs');
+
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.existingRefs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => {
+        // Use traverse over the found refs to delete each and write reflog
+        let b2 = traverse(b, 'existingRefs', '_refItem', (item) => {
+          const record = item as Record<string, unknown>;
+          const key = record._key as string;
+          const oldHash = record.target as string;
+          let sub = createProgram();
+          sub = del(sub, 'ref', key);
+
+          // Write reflog entry for deletion
+          const seq = ++idCounter;
+          const ts = new Date().toISOString();
+          const logKey = `${name}-${String(seq).padStart(10, '0')}`;
+          sub = put(sub, 'ref-log', logKey, {
+            name,
+            oldHash,
+            newHash: '',
+            timestamp: ts,
+            agent: 'system',
+            seq,
+          });
+
+          return complete(sub, 'deleted', {});
+        }, '_deleteResults');
+
+        return complete(b2, 'ok', {});
+      },
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
+  resolve(input: Record<string, unknown>) {
+    const name = input.name as string;
+
+    let p = createProgram();
+    p = find(p, 'ref', { name }, 'refs');
+
+    p = branch(p,
+      (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        return refs.length === 0;
+      },
+      (b) => complete(b, 'notFound', { message: `No ref with name '${name}'` }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const refs = bindings.refs as Record<string, unknown>[];
+        return { hash: refs[0].target as string };
+      }),
+    );
+
+    return p as StorageProgram<Result>;
+  },
+
   log(input: Record<string, unknown>) {
     const name = input.name as string;
 
@@ -56,123 +232,8 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-const baseHandler = autoInterpret(_handler);
-
-// create, update, delete, resolve need imperative style for dynamic storage keys and reflog writes
-const handler: ConceptHandler = {
-  ...baseHandler,
-
-  async create(input: Record<string, unknown>, storage: ConceptStorage) {
-    const name = input.name as string;
-    const hash = input.hash as string;
-
-    const existing = await storage.find('ref', { name });
-    if (existing.length > 0) {
-      return { variant: 'exists', message: `A ref with name '${name}' already exists` };
-    }
-
-    const id = nextId();
-    await storage.put('ref', id, { id, name, target: hash });
-
-    // Write reflog entry with sequence number for ordering
-    const seq = idCounter;
-    const ts = new Date().toISOString();
-    const logKey = `${name}-${String(seq).padStart(10, '0')}`;
-    await storage.put('ref-log', logKey, {
-      name,
-      oldHash: '',
-      newHash: hash,
-      timestamp: ts,
-      agent: 'system',
-      seq,
-    });
-
-    return { variant: 'ok', ref: id };
-  },
-
-  async update(input: Record<string, unknown>, storage: ConceptStorage) {
-    const name = input.name as string;
-    const newHash = input.newHash as string;
-    const expectedOldHash = input.expectedOldHash as string;
-
-    const existing = await storage.find('ref', { name });
-    if (existing.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
-
-    const record = existing[0];
-    const currentHash = record.target as string;
-    if (currentHash !== expectedOldHash) {
-      return { variant: 'conflict', current: currentHash };
-    }
-
-    // Update the ref target
-    const key = record._key as string;
-    await storage.put('ref', key, { ...record, target: newHash });
-
-    // Write reflog entry with sequence number for ordering
-    const seq = ++idCounter;
-    const ts = new Date().toISOString();
-    const logKey = `${name}-${String(seq).padStart(10, '0')}`;
-    await storage.put('ref-log', logKey, {
-      name,
-      oldHash: currentHash,
-      newHash,
-      timestamp: ts,
-      agent: 'system',
-      seq,
-    });
-
-    return { variant: 'ok' };
-  },
-
-  async delete(input: Record<string, unknown>, storage: ConceptStorage) {
-    const name = input.name as string;
-
-    // Check for protected refs
-    if (name === 'HEAD' || name.startsWith('protected/')) {
-      return { variant: 'protected', message: `Ref '${name}' is protected and cannot be deleted` };
-    }
-
-    const existing = await storage.find('ref', { name });
-    if (existing.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
-
-    const record = existing[0];
-    const key = record._key as string;
-    const oldHash = record.target as string;
-    await storage.del('ref', key);
-
-    // Write reflog entry for deletion with sequence number for ordering
-    const seq = ++idCounter;
-    const ts = new Date().toISOString();
-    const logKey = `${name}-${String(seq).padStart(10, '0')}`;
-    await storage.put('ref-log', logKey, {
-      name,
-      oldHash,
-      newHash: '',
-      timestamp: ts,
-      agent: 'system',
-      seq,
-    });
-
-    return { variant: 'ok' };
-  },
-
-  async resolve(input: Record<string, unknown>, storage: ConceptStorage) {
-    const name = input.name as string;
-
-    const results = await storage.find('ref', { name });
-    if (results.length === 0) {
-      return { variant: 'notFound', message: `No ref with name '${name}'` };
-    }
-
-    return { variant: 'ok', hash: results[0].target as string };
-  },
-};
-
-export const refHandler = handler as FunctionalConceptHandler & ConceptHandler;
+// All actions are now fully functional — no imperative overrides needed.
+export const refHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRefCounter(): void {

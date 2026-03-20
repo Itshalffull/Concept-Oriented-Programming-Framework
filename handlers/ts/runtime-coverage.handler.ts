@@ -12,10 +12,9 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings, putFrom, mergeFrom,
-  type StorageProgram,
+  traverse, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 
@@ -336,56 +335,70 @@ const _handler: FunctionalConceptHandler = {
       return { neverExercised: JSON.stringify(neverExercised) };
     }) as StorageProgram<Result>;
   },
-};
 
-const baseHandler = autoInterpret(_handler);
-
-// record needs imperative style because it requires dynamic storage keys
-const handler = {
-  ...baseHandler,
-
-  async record(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Record an exercise event for a runtime entity.
+   * Uses find + branch to upsert: increment count if existing, create if new.
+   * Uses traverse to write back with the dynamic storage key from find results.
+   */
+  record(input: Record<string, unknown>) {
     const symbol = input.symbol as string;
     const kind = input.kind as string;
     const flowId = input.flowId as string;
     const now = new Date().toISOString();
 
-    const existing = await storage.find('runtime-coverage', { symbol });
-    if (existing && existing.length > 0) {
-      const entry = existing[0];
-      const id = entry.id as string;
-      const prevCount = (entry.executionCount as number) || 0;
-      const prevFlowIds = JSON.parse(entry.flowIds as string || '[]');
-      prevFlowIds.push(flowId);
-      const record = {
-        id,
-        symbol,
-        entitySymbol: symbol,
-        entityKind: kind,
-        executionCount: prevCount + 1,
-        flowIds: JSON.stringify(prevFlowIds),
-        lastExercised: now,
-      };
-      await storage.put('runtime-coverage', id, record);
-      return { variant: 'ok', entry: id };
-    }
+    let p = createProgram();
+    p = find(p, 'runtime-coverage', { symbol }, 'existing');
 
-    const id = nextId();
-    const record = {
-      id,
-      symbol,
-      entitySymbol: symbol,
-      entityKind: kind,
-      executionCount: 1,
-      flowIds: JSON.stringify([flowId]),
-      lastExercised: now,
-    };
-    await storage.put('runtime-coverage', id, record);
-    return { variant: 'created', entry: id };
+    return branch(p,
+      (bindings) => (bindings.existing as unknown[]).length > 0,
+      // Existing entry — update count and flowIds
+      (thenP) => {
+        thenP = traverse(thenP, 'existing', '_entry', (item) => {
+          const entry = item as Record<string, unknown>;
+          const id = entry.id as string;
+          const prevCount = (entry.executionCount as number) || 0;
+          const prevFlowIds = JSON.parse(entry.flowIds as string || '[]');
+          prevFlowIds.push(flowId);
+
+          let sub = createProgram();
+          sub = put(sub, 'runtime-coverage', id, {
+            id,
+            symbol,
+            entitySymbol: symbol,
+            entityKind: kind,
+            executionCount: prevCount + 1,
+            flowIds: JSON.stringify(prevFlowIds),
+            lastExercised: now,
+          });
+          return complete(sub, 'updated', { entry: id });
+        }, '_updateResults');
+
+        return completeFrom(thenP, 'ok', (bindings) => {
+          const results = (bindings._updateResults || []) as Array<Record<string, unknown>>;
+          return { entry: results.length > 0 ? results[0].entry as string : '' };
+        });
+      },
+      // New entry — create
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, 'runtime-coverage', id, {
+          id,
+          symbol,
+          entitySymbol: symbol,
+          entityKind: kind,
+          executionCount: 1,
+          flowIds: JSON.stringify([flowId]),
+          lastExercised: now,
+        });
+        return complete(elseP, 'created', { entry: id });
+      },
+    ) as StorageProgram<Result>;
   },
-} as any;
+};
 
-export const runtimeCoverageHandler = handler;
+// All actions are now fully functional — no imperative overrides needed.
+export const runtimeCoverageHandler = autoInterpret(_handler);
 
 /** Reset the ID counter. Useful for testing. */
 export function resetRuntimeCoverageCounter(): void {

@@ -10,8 +10,8 @@
 
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
-  mapBindings, putFrom, type StorageProgram,
+  createProgram, get, find, put, del, branch, complete, completeFrom,
+  mapBindings, putFrom, traverse, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
 
@@ -166,13 +166,18 @@ const _handler: FunctionalConceptHandler = {
     return p as StorageProgram<Result>;
   },
 
+  /**
+   * Approve all changed/new comparisons. Uses traverse to iterate over
+   * filtered comparisons, creating baseline records and updating each
+   * comparison status.
+   */
   approveAll(input: Record<string, unknown>) {
     let p = createProgram();
     const paths = input.paths as string[] | undefined;
 
     p = find(p, COMPARISONS, {}, 'allComparisons');
 
-    // Use mapBindings to compute the approval plan, then execute puts
+    // Filter to only those needing approval
     p = mapBindings(p, (bindings) => {
       const allComparisons = (bindings.allComparisons || []) as Array<Record<string, unknown>>;
       const toApprove: Array<Record<string, unknown>> = [];
@@ -193,29 +198,28 @@ const _handler: FunctionalConceptHandler = {
       return toApprove;
     }, 'toApprove');
 
-    // We need to iterate in the callback since we can't loop with put in functional style
-    // after a find. Use completeFrom to compute the result and putFrom for side effects.
-    // Since we need multiple puts, we'll use mapBindings to prepare data and then
-    // a single completeFrom that returns the count.
-    // However, the puts must happen before complete. We'll use a different approach:
-    // compute everything in completeFrom since we can't dynamically issue puts.
-    // Actually, the correct approach is to not try to do dynamic puts in a loop
-    // after a find — we need to process in the callback.
-    // For this pattern, we should do all the work in completeFrom and accept
-    // that the storage updates need a different mechanism, or we accept the
-    // limitation and just return the count.
-    //
-    // The pragmatic fix: since we can't do dynamic puts from find results,
-    // we return what needs to be approved and let the caller handle it,
-    // OR we accept that this is a known limitation of the functional DSL
-    // for batch operations. For now, keep the same semantic by noting
-    // that the runtime will interpret the program including dynamic puts.
-    //
-    // Actually, re-reading the original code more carefully: the original
-    // imperative code did puts in a loop which IS valid in the DSL as
-    // program construction (not execution). The bug was only that
-    // allComparisons was referenced as a bare variable. We need to
-    // restructure so that the loop happens inside a callback.
+    // Traverse each comparison that needs approval
+    p = traverse(p, 'toApprove', '_comp', (item) => {
+      const comp = item as Record<string, unknown>;
+      const compPath = comp.path as string;
+      const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString();
+
+      let sub = createProgram();
+      sub = put(sub, BASELINES, compPath, {
+        id: snapshotId,
+        path: compPath,
+        contentHash: comp.currentHash as string,
+        approvedAt: now,
+        approvedBy: null,
+      });
+      sub = put(sub, COMPARISONS, compPath, {
+        ...comp,
+        status: 'current',
+        diffSummary: null,
+      });
+      return complete(sub, 'ok', {});
+    }, '_approveResults');
 
     return completeFrom(p, 'ok', (bindings) => {
       const toApprove = (bindings.toApprove || []) as Array<Record<string, unknown>>;
@@ -340,85 +344,47 @@ const _handler: FunctionalConceptHandler = {
     return p as StorageProgram<Result>;
   },
 
+  /**
+   * Remove baselines that have no corresponding comparison (orphaned).
+   * Uses traverse to delete each orphaned baseline.
+   */
   clean(input: Record<string, unknown>) {
     let p = createProgram();
     const _outputDir = input.outputDir as string;
 
-    // Remove baselines that have no corresponding comparison (orphaned)
     p = find(p, BASELINES, {}, 'allBaselines');
     p = find(p, COMPARISONS, {}, 'allComparisons');
 
-    // Use mapBindings to identify orphaned baselines (no matching comparison)
+    // Identify orphaned baselines
     p = mapBindings(p, (bindings) => {
       const allBaselines = (bindings.allBaselines || []) as Array<Record<string, unknown>>;
       const allComparisons = (bindings.allComparisons || []) as Array<Record<string, unknown>>;
       const comparisonPaths = new Set(allComparisons.map(c => c.path as string));
 
-      const orphaned: string[] = [];
+      const orphaned: Array<Record<string, unknown>> = [];
       for (const baseline of allBaselines) {
         const path = baseline.path as string;
         if (!comparisonPaths.has(path)) {
-          orphaned.push(path);
+          orphaned.push({ path });
         }
       }
       return orphaned;
-    }, 'orphanedPaths');
+    }, 'orphanedList');
 
-    // Delete each orphaned baseline and complete with the list
-    // Since we can't dynamically loop with del after mapBindings,
-    // we use completeFrom to return the orphaned paths.
-    // The caller can issue individual deletes, or we accept the
-    // batch limitation. For semantic correctness, return the list.
+    // Traverse orphaned baselines and delete each
+    p = traverse(p, 'orphanedList', '_orphan', (item) => {
+      const orphan = item as Record<string, unknown>;
+      let sub = createProgram();
+      sub = del(sub, BASELINES, orphan.path as string);
+      return complete(sub, 'ok', { path: orphan.path });
+    }, '_cleanResults');
+
     return completeFrom(p, 'ok', (bindings) => {
-      return { removed: bindings.orphanedPaths };
+      const orphanedList = (bindings.orphanedList || []) as Array<Record<string, unknown>>;
+      return { removed: orphanedList.map(o => o.path) };
     }) as StorageProgram<Result>;
   },
 };
 
-const _interpreted = autoInterpret(_handler);
-
-// approveAll requires dynamic N puts which the functional DSL cannot express
-// at construction time. Override with an imperative implementation.
-export const snapshotHandler: Record<string, (...args: unknown[]) => unknown> = {
-  ..._interpreted,
-  async approveAll(input: Record<string, unknown>, storage: unknown) {
-    if (!storage) return (_interpreted as Record<string, (...args: unknown[]) => unknown>).approveAll(input);
-
-    const st = storage as import('../../../../runtime/types.ts').ConceptStorage;
-    const paths = (input as Record<string, unknown>).paths as string[] | undefined;
-
-    const allComparisons = await st.find(COMPARISONS, {});
-    const toApprove: Array<Record<string, unknown>> = [];
-
-    for (const comp of allComparisons) {
-      const status = comp.status as string;
-      if (status !== 'changed' && status !== 'new') continue;
-      const compPath = comp.path as string;
-      if (paths && paths.length > 0) {
-        const matchesPath = paths.some((prefix: string) => compPath.startsWith(prefix));
-        if (!matchesPath) continue;
-      }
-      toApprove.push(comp);
-    }
-
-    const now = new Date().toISOString();
-    for (const comp of toApprove) {
-      const compPath = comp.path as string;
-      const snapshotId = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await st.put(BASELINES, compPath, {
-        id: snapshotId,
-        path: compPath,
-        contentHash: comp.currentHash as string,
-        approvedAt: now,
-        approvedBy: null,
-      });
-      await st.put(COMPARISONS, compPath, {
-        ...comp,
-        status: 'current',
-        diffSummary: null,
-      });
-    }
-
-    return { variant: 'ok', approved: toApprove.length };
-  },
-};
+// All actions are now fully functional — no imperative overrides needed.
+export const snapshotHandler = autoInterpret(_handler);

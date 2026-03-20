@@ -12,7 +12,7 @@ import type { FunctionalConceptHandler } from '../../runtime/functional-handler.
 import type { ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
+  putFrom, traverse, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 import { readdirSync, readFileSync, existsSync } from 'fs';
@@ -132,6 +132,12 @@ function parseStoredErrors(raw: unknown): string[] {
 }
 
 const _handler: FunctionalConceptHandler = {
+  /**
+   * Discover seed files from the filesystem. This action requires
+   * filesystem access (readdirSync/readFileSync) which cannot be
+   * expressed as StorageProgram instructions. It remains as an
+   * imperative override.
+   */
   discover(input: Record<string, unknown>) {
     const basePath = input.base_path as string;
 
@@ -146,12 +152,47 @@ const _handler: FunctionalConceptHandler = {
     return complete(p, 'ok', { found: [] }) as StorageProgram<Result>;
   },
 
-  register(_input: Record<string, unknown>) {
-    // register() requires dynamic key writes, delegated to imperative override
+  /**
+   * Register a seed data record. Checks for duplicates via find,
+   * then stores the new seed record.
+   */
+  register(input: Record<string, unknown>) {
+    const sourcePath = input.source_path as string;
+    const conceptUri = normalizeConceptUri(input.concept_uri as string);
+    const actionName = input.action_name as string;
+    const entries = input.entries as string[];
+
     let p = createProgram();
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+    p = find(p, 'seed-data', { source_path: sourcePath }, 'existing');
+
+    return branch(p,
+      (bindings) => {
+        const existing = bindings.existing as Array<Record<string, unknown>>;
+        return existing.some((entry) => entry.source_path === sourcePath);
+      },
+      (thenP) => complete(thenP, 'duplicate', { message: `Seed already registered for ${sourcePath}` }),
+      (elseP) => {
+        const id = nextId();
+        let p2 = put(elseP, 'seed-data', id, {
+          id,
+          source_path: sourcePath,
+          concept_uri: conceptUri,
+          action_name: actionName,
+          entries: JSON.stringify(entries),
+          entry_count: entries.length,
+          applied: false,
+          applied_at: null,
+          error_log: '[]',
+        });
+        return complete(p2, 'ok', { seed: id });
+      },
+    ) as StorageProgram<Result>;
   },
 
+  /**
+   * Apply a single seed record. Gets the seed, marks it as applied
+   * with a timestamp update via putFrom.
+   */
   apply(input: Record<string, unknown>) {
     const seedId = input.seed as string;
 
@@ -160,41 +201,75 @@ const _handler: FunctionalConceptHandler = {
 
     return branch(p, 'record',
       (thenP) => {
-        return completeFrom(thenP, 'ok', (bindings) => {
-          const record = bindings.record as Record<string, unknown>;
+        return branch(thenP,
+          (bindings) => {
+            const record = bindings.record as Record<string, unknown>;
+            return record.applied as boolean;
+          },
+          (b) => complete(b, 'already_applied', { seed: seedId }),
+          (b) => {
+            let b2 = mapBindings(b, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return parseStoredEntries(record.entries).length;
+            }, '_appliedCount');
 
-          if (record.applied) {
-            return { variant: 'already_applied', seed: seedId };
-          }
+            b2 = putFrom(b2, 'seed-data', seedId, (bindings) => {
+              const record = bindings.record as Record<string, unknown>;
+              return {
+                ...record,
+                applied: true,
+                applied_at: new Date().toISOString(),
+              };
+            });
 
-          const appliedCount = parseStoredEntries(record.entries).length;
-          return { seed: seedId, applied_count: appliedCount };
-        });
+            return completeFrom(b2, 'ok', (bindings) => ({
+              seed: seedId,
+              applied_count: bindings._appliedCount as number,
+            }));
+          },
+        );
       },
       (elseP) => complete(elseP, 'notfound', { message: `No seed record with id ${seedId}` }),
     ) as StorageProgram<Result>;
   },
 
-  applyAll(input: Record<string, unknown>) {
+  /**
+   * Apply all unapplied seeds. Uses traverse to iterate over all seed
+   * records, marking each unapplied seed as applied and collecting counts.
+   */
+  applyAll(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'seed-data', {}, 'seeds');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const seeds = bindings.seeds as Record<string, unknown>[];
+    p = traverse(p, 'seeds', '_seed', (item) => {
+      const seed = item as Record<string, unknown>;
+      let sub = createProgram();
 
-      let appliedCount = 0;
-      let skippedCount = 0;
-      let errorCount = 0;
-
-      for (const seed of seeds) {
-        if (seed.applied) {
-          skippedCount++;
-          continue;
-        }
-        appliedCount += parseStoredEntries(seed.entries).length;
+      if (seed.applied) {
+        return complete(sub, 'skipped', { entryCount: 0 });
       }
 
-      return { applied_count: appliedCount, skipped_count: skippedCount, error_count: errorCount };
+      const entryCount = parseStoredEntries(seed.entries).length;
+      sub = put(sub, 'seed-data', seed.id as string, {
+        ...seed,
+        applied: true,
+        applied_at: new Date().toISOString(),
+      });
+      return complete(sub, 'applied', { entryCount });
+    }, '_traverseResults');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const results = (bindings._traverseResults || []) as Array<Record<string, unknown>>;
+      let appliedCount = 0;
+      let skippedCount = 0;
+      for (const r of results) {
+        if (r.variant === 'skipped') {
+          skippedCount++;
+        } else {
+          appliedCount += (r.entryCount as number) || 0;
+        }
+      }
+      return { applied_count: appliedCount, skipped_count: skippedCount, error_count: 0 };
     }) as StorageProgram<Result>;
   },
 
@@ -247,19 +322,6 @@ async function _discover(input: Record<string, unknown>, storage: ConceptStorage
     return { variant: 'ok', found: [] };
   }
 
-  // Recursively find .seeds.yaml files
-  function findSeedFiles(dir: string): string[] {
-    const results: string[] = [];
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) {
-        results.push(...findSeedFiles(resolve(dir, entry.name)));
-      } else if (entry.name.endsWith('.seeds.yaml')) {
-        results.push(entry.name);
-      }
-    }
-    return results.map(f => f); // flatten
-  }
-
   // Collect files from base and subdirectories
   const allFiles: Array<{file: string, dir: string}> = [];
   for (const entry of readdirSync(basePath, { withFileTypes: true })) {
@@ -306,87 +368,11 @@ async function _discover(input: Record<string, unknown>, storage: ConceptStorage
   return { variant: 'ok', found };
 }
 
-// apply() needs to mark a seed as applied, requiring a dynamic key write.
-async function _apply(input: Record<string, unknown>, storage: ConceptStorage) {
-  const seedId = input.seed as string;
-
-  const record = await storage.get('seed-data', seedId);
-  if (!record) {
-    return { variant: 'notfound', message: `No seed record with id ${seedId}` };
-  }
-
-  if (record.applied) {
-    return { variant: 'already_applied', seed: seedId };
-  }
-
-  const appliedCount = parseStoredEntries(record.entries).length;
-  await storage.put('seed-data', seedId, {
-    ...record,
-    applied: true,
-    applied_at: new Date().toISOString(),
-  });
-
-  return { variant: 'ok', seed: seedId, applied_count: appliedCount };
-}
-
-// register() needs to store seed data with a generated key.
-async function _register(input: Record<string, unknown>, storage: ConceptStorage) {
-  const sourcePath = input.source_path as string;
-  const conceptUri = normalizeConceptUri(input.concept_uri as string);
-  const actionName = input.action_name as string;
-  const entries = input.entries as string[];
-
-  const existing = await storage.find('seed-data', { source_path: sourcePath });
-  if (existing.some((entry) => entry.source_path === sourcePath)) {
-    return { variant: 'duplicate', message: `Seed already registered for ${sourcePath}` };
-  }
-
-  const id = nextId();
-  await storage.put('seed-data', id, {
-    id,
-    source_path: sourcePath,
-    concept_uri: conceptUri,
-    action_name: actionName,
-    entries: JSON.stringify(entries),
-    entry_count: entries.length,
-    applied: false,
-    applied_at: null,
-    error_log: '[]',
-  });
-
-  return { variant: 'ok', seed: id };
-}
-
-// applyAll() needs to iterate seeds and mark them applied.
-async function _applyAll(_input: Record<string, unknown>, storage: ConceptStorage) {
-  const seeds = await storage.find('seed-data', {});
-  let appliedCount = 0;
-  let skippedCount = 0;
-  const errorCount = 0;
-
-  for (const seed of seeds) {
-    if (seed.applied) {
-      skippedCount++;
-      continue;
-    }
-    const entryCount = parseStoredEntries(seed.entries).length;
-    appliedCount += entryCount;
-    await storage.put('seed-data', seed.id as string, {
-      ...seed,
-      applied: true,
-      applied_at: new Date().toISOString(),
-    });
-  }
-
-  return { variant: 'ok', applied_count: appliedCount, skipped_count: skippedCount, error_count: errorCount };
-}
-
+// Only discover() needs imperative override (filesystem access).
+// All other actions are now fully functional.
 export const seedDataHandler = new Proxy(_base, {
   get(target, prop: string) {
     if (prop === 'discover') return _discover;
-    if (prop === 'apply') return _apply;
-    if (prop === 'register') return _register;
-    if (prop === 'applyAll') return _applyAll;
     return (target as Record<string, unknown>)[prop];
   },
 }) as typeof _base;

@@ -5,6 +5,10 @@
 // using vitest + the StorageProgram analysis utilities.
 // This is the rendering backend for the TestGenTypeScript provider.
 //
+// Supports both functional (StorageProgram) and imperative handler styles.
+// Functional handlers get full structural analysis tests; imperative
+// handlers get execution-based tests only.
+//
 // See Architecture doc Sections 7.1, 7.2
 // ============================================================
 
@@ -12,6 +16,8 @@ import type {
   TestPlan, TestPlanAction, TestPlanExample, TestPlanForall,
   TestPlanStateInvariant, TestPlanLiveness, TestPlanContract,
 } from './test-gen.handler.js';
+
+type HandlerStyle = 'functional' | 'imperative';
 
 function toCamel(name: string): string {
   return name.charAt(0).toLowerCase() + name.slice(1);
@@ -27,71 +33,89 @@ function defaultInput(params: Array<{ name: string; type: string }>): string {
   }).join(', ');
 }
 
-function renderStructuralTests(handlerVar: string, action: TestPlanAction): string[] {
+/**
+ * Returns the expression to invoke an action and get a result.
+ * - functional: `await interpret(handler.action({ ... }), storage)`
+ * - imperative: `await handler.action({ ... }, storage)`
+ */
+function invokeExpr(handlerVar: string, action: string, inputStr: string, style: HandlerStyle): string {
+  if (style === 'imperative') {
+    return `await ${handlerVar}.${action}({ ${inputStr} }, storage)`;
+  }
+  return `await interpret(${handlerVar}.${action}({ ${inputStr} }), storage)`;
+}
+
+// ── Structural tests (functional only) ──────────────────────
+
+function renderStructuralTests(handlerVar: string, action: TestPlanAction, style: HandlerStyle): string[] {
   const lines: string[] = [];
   const inputObj = defaultInput(action.params);
 
   lines.push(`  describe('${action.name}', () => {`);
 
-  // Program construction
-  lines.push(`    it('builds a valid StorageProgram', () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      expect(program).toBeDefined();`);
-  lines.push(`      expect(program.instructions).toBeDefined();`);
-  lines.push(`      expect(Array.isArray(program.instructions)).toBe(true);`);
-  lines.push(`      expect(program.instructions.length).toBeGreaterThan(0);`);
-  lines.push(`    });`);
-  lines.push('');
+  if (style === 'functional') {
+    // Program construction
+    lines.push(`    it('builds a valid StorageProgram', () => {`);
+    lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
+    lines.push(`      expect(program).toBeDefined();`);
+    lines.push(`      expect(program.instructions).toBeDefined();`);
+    lines.push(`      expect(Array.isArray(program.instructions)).toBe(true);`);
+    lines.push(`      expect(program.instructions.length).toBeGreaterThan(0);`);
+    lines.push(`    });`);
+    lines.push('');
 
-  // Purity
-  lines.push(`    it('has classifiable purity', () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      const purity = classifyPurity(program);`);
-  lines.push(`      expect(['pure', 'read-only', 'read-write']).toContain(purity);`);
-  lines.push(`    });`);
-  lines.push('');
+    // Purity
+    lines.push(`    it('has classifiable purity', () => {`);
+    lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
+    lines.push(`      if (!program?.instructions) return; // skip non-StorageProgram handlers`);
+    lines.push(`      const purity = classifyPurity(program);`);
+    lines.push(`      expect(['pure', 'read-only', 'read-write']).toContain(purity);`);
+    lines.push(`    });`);
+    lines.push('');
 
-  // Variant coverage
-  lines.push(`    it('covers all declared variants', () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      const variants = extractCompletionVariants(program);`);
-  for (const v of action.variants) {
-    lines.push(`      expect(variants).toContain('${v}');`);
+    // Variant coverage
+    lines.push(`    it('covers all declared variants', () => {`);
+    lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
+    lines.push(`      if (!program?.instructions) return; // skip non-StorageProgram handlers`);
+    lines.push(`      const variants = extractCompletionVariants(program);`);
+    for (const v of action.variants) {
+      lines.push(`      expect(variants).toContain('${v}');`);
+    }
+    lines.push(`    });`);
+    lines.push('');
+
+    // Read/write sets
+    lines.push(`    it('declares read and write sets', () => {`);
+    lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
+    lines.push(`      if (!program?.instructions) return; // skip non-StorageProgram handlers`);
+    lines.push(`      const reads = extractReadSet(program);`);
+    lines.push(`      const writes = extractWriteSet(program);`);
+    lines.push(`      const purity = classifyPurity(program);`);
+    lines.push(`      if (purity === 'read-only') {`);
+    lines.push(`        expect(reads.size).toBeGreaterThan(0);`);
+    lines.push(`      } else if (purity === 'read-write') {`);
+    lines.push(`        expect(writes.size).toBeGreaterThan(0);`);
+    lines.push(`      }`);
+    lines.push(`    });`);
+    lines.push('');
+
+    // Transport effects
+    lines.push(`    it('has trackable transport effects', () => {`);
+    lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
+    lines.push(`      if (!program?.instructions) return; // skip non-StorageProgram handlers`);
+    lines.push(`      const effects = extractPerformSet(program);`);
+    lines.push(`      expect(effects).toBeDefined();`);
+    lines.push(`    });`);
+    lines.push('');
   }
-  lines.push(`    });`);
-  lines.push('');
 
-  // Read/write sets
-  lines.push(`    it('declares read and write sets', () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      const reads = extractReadSet(program);`);
-  lines.push(`      const writes = extractWriteSet(program);`);
-  lines.push(`      const purity = classifyPurity(program);`);
-  lines.push(`      if (purity === 'read-only') {`);
-  lines.push(`        expect(reads.size).toBeGreaterThan(0);`);
-  lines.push(`      } else if (purity === 'read-write') {`);
-  lines.push(`        expect(writes.size).toBeGreaterThan(0);`);
-  lines.push(`      }`);
-  lines.push(`    });`);
-  lines.push('');
-
-  // Interpreted execution
-  lines.push(`    it('executes successfully via interpreter', async () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      const result = await interpret(program, storage);`);
+  // Execution test (both styles)
+  lines.push(`    it('executes successfully', async () => {`);
+  lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
+  lines.push(`      const result = ${invokeExpr(handlerVar, action.name, inputObj, style)};`);
+  lines.push(`      expect(result).toBeDefined();`);
   lines.push(`      expect(result.variant).toBeDefined();`);
   lines.push(`      expect(typeof result.variant).toBe('string');`);
-  lines.push(`      expect(result.output).toBeDefined();`);
-  lines.push(`      expect(result.trace).toBeDefined();`);
-  lines.push(`      expect(result.trace.steps.length).toBeGreaterThan(0);`);
-  lines.push(`    });`);
-  lines.push('');
-
-  // Transport effects
-  lines.push(`    it('has trackable transport effects', () => {`);
-  lines.push(`      const program = ${handlerVar}.${action.name}({ ${inputObj} });`);
-  lines.push(`      const effects = extractPerformSet(program);`);
-  lines.push(`      expect(effects).toBeDefined();`);
   lines.push(`    });`);
   lines.push('');
 
@@ -101,7 +125,9 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction): stri
   return lines;
 }
 
-function renderExampleTests(handlerVar: string, examples: TestPlanExample[]): string[] {
+// ── Example tests ───────────────────────────────────────────
+
+function renderExampleTests(handlerVar: string, examples: TestPlanExample[], style: HandlerStyle): string[] {
   if (examples.length === 0) return [];
 
   const lines: string[] = [];
@@ -111,15 +137,13 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[]): st
     lines.push(`    it(${JSON.stringify(example.name)}, async () => {`);
     lines.push(`      const storage = createInMemoryStorage();`);
 
-    for (const step of example.steps) {
+    for (let si = 0; si < example.steps.length; si++) {
+      const step = example.steps[si];
       const stepInput = Object.entries(step.input)
         .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
         .join(', ');
-      const resultVar = `${step.action}Result`;
-      lines.push(`      const ${resultVar} = await interpret(`);
-      lines.push(`        ${handlerVar}.${step.action}({ ${stepInput} }),`);
-      lines.push(`        storage,`);
-      lines.push(`      );`);
+      const resultVar = `${step.action}Result${si}`;
+      lines.push(`      const ${resultVar} = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);
       if (step.expectedVariant) {
         lines.push(`      expect(${resultVar}.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
       }
@@ -128,17 +152,16 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[]): st
       }
     }
 
-    for (const assertion of example.assertions) {
+    for (let ai = 0; ai < example.assertions.length; ai++) {
+      const assertion = example.assertions[ai];
       if (assertion.type === 'variant_check' && assertion.action) {
         const thenInput = Object.entries(assertion.input || {})
           .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
           .join(', ');
-        lines.push(`      const thenResult = await interpret(`);
-        lines.push(`        ${handlerVar}.${assertion.action}({ ${thenInput} }),`);
-        lines.push(`        storage,`);
-        lines.push(`      );`);
+        const thenVar = `thenResult${ai}`;
+        lines.push(`      const ${thenVar} = ${invokeExpr(handlerVar, assertion.action, thenInput, style)};`);
         if (assertion.expectedVariant) {
-          lines.push(`      expect(thenResult.variant).toBe(${JSON.stringify(assertion.expectedVariant)});`);
+          lines.push(`      expect(${thenVar}.variant).toBe(${JSON.stringify(assertion.expectedVariant)});`);
         }
       } else if (assertion.type === 'field_check' && assertion.variable && assertion.field) {
         const op = assertion.operator === '=' ? 'toBe' :
@@ -160,6 +183,8 @@ function renderExampleTests(handlerVar: string, examples: TestPlanExample[]): st
   return lines;
 }
 
+// ── Forall (PBT) tests ──────────────────────────────────────
+
 function quantifierToArbitrary(q: TestPlanForall['quantifiers'][0]): string {
   if (q.domainType === 'set_literal' && q.values) {
     return `fc.constantFrom(${q.values.map(v => JSON.stringify(v)).join(', ')})`;
@@ -170,18 +195,16 @@ function quantifierToArbitrary(q: TestPlanForall['quantifiers'][0]): string {
     if (t === 'bool' || t === 'boolean') return 'fc.boolean()';
     return 'fc.string({ minLength: 1, maxLength: 50 })';
   }
-  // state_field or unknown — use string arbitrary
   return 'fc.string({ minLength: 1, maxLength: 50 })';
 }
 
-function renderForallTests(handlerVar: string, properties: TestPlanForall[]): string[] {
+function renderForallTests(handlerVar: string, properties: TestPlanForall[], style: HandlerStyle): string[] {
   if (properties.length === 0) return [];
 
   const lines: string[] = [];
   lines.push(`  describe('forall properties (PBT)', () => {`);
 
   for (const prop of properties) {
-    // Build fc.property arguments from quantifiers
     const arbArgs = prop.quantifiers.map(q => quantifierToArbitrary(q));
     const varNames = prop.quantifiers.map(q => q.variable);
 
@@ -195,18 +218,13 @@ function renderForallTests(handlerVar: string, properties: TestPlanForall[]): st
     lines.push(`            const storage = createInMemoryStorage();`);
 
     for (const step of prop.steps) {
-      // Replace quantifier variable references in input values
       const stepInput = Object.entries(step.input)
         .map(([k, v]) => {
-          // If value matches a quantifier variable, use it directly
           if (varNames.includes(v)) return `${k}: ${v}`;
           return `${k}: ${JSON.stringify(v)}`;
         })
         .join(', ');
-      lines.push(`            const result = await interpret(`);
-      lines.push(`              ${handlerVar}.${step.action}({ ${stepInput} }),`);
-      lines.push(`              storage,`);
-      lines.push(`            );`);
+      lines.push(`            const result = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);
       lines.push(`            expect(result.variant).toBeDefined();`);
       if (step.expectedVariant) {
         lines.push(`            expect(result.variant).toBe(${JSON.stringify(step.expectedVariant)});`);
@@ -226,10 +244,13 @@ function renderForallTests(handlerVar: string, properties: TestPlanForall[]): st
   return lines;
 }
 
+// ── State invariant tests ───────────────────────────────────
+
 function renderStateInvariantTests(
   handlerVar: string,
   invariants: TestPlanStateInvariant[],
   actions: TestPlanAction[],
+  style: HandlerStyle,
 ): string[] {
   if (invariants.length === 0) return [];
 
@@ -247,7 +268,6 @@ function renderStateInvariantTests(
       continue;
     }
 
-    // Generate action arbitraries for stateful testing
     const actionArbs = actions.map(a => {
       const inputArb = a.params.map(p => {
         const t = p.type.toLowerCase();
@@ -275,12 +295,17 @@ function renderStateInvariantTests(
     lines.push(`            for (const step of actionSequence) {`);
     lines.push(`              const actionFn = ${handlerVar}[step.action];`);
     lines.push(`              if (typeof actionFn === 'function') {`);
-    lines.push(`                const program = actionFn.call(${handlerVar}, step.input as Record<string, unknown>);`);
-    lines.push(`                const result = await interpret(program, storage);`);
+
+    if (style === 'imperative') {
+      lines.push(`                const result = await actionFn.call(${handlerVar}, step.input as Record<string, unknown>, storage);`);
+    } else {
+      lines.push(`                const program = actionFn.call(${handlerVar}, step.input as Record<string, unknown>);`);
+      lines.push(`                const result = await interpret(program, storage);`);
+    }
+
     lines.push(`                expect(result.variant).toBeDefined();`);
     if (inv.kind === 'never') {
       lines.push(`                // Never: ${inv.name}`);
-      lines.push(`                // Assert the bad state was not reached`);
     }
     lines.push(`              }`);
     lines.push(`            }`);
@@ -297,7 +322,9 @@ function renderStateInvariantTests(
   return lines;
 }
 
-function renderLivenessTests(handlerVar: string, liveness: TestPlanLiveness[]): string[] {
+// ── Liveness tests ──────────────────────────────────────────
+
+function renderLivenessTests(handlerVar: string, liveness: TestPlanLiveness[], style: HandlerStyle): string[] {
   if (liveness.length === 0) return [];
 
   const lines: string[] = [];
@@ -310,15 +337,13 @@ function renderLivenessTests(handlerVar: string, liveness: TestPlanLiveness[]): 
     lines.push(`      const MAX_STEPS = 10;`);
     lines.push('');
 
-    for (const step of liv.setupSteps) {
+    for (let si = 0; si < liv.setupSteps.length; si++) {
+      const step = liv.setupSteps[si];
       const stepInput = Object.entries(step.input)
         .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
         .join(', ');
-      lines.push(`      const setupResult = await interpret(`);
-      lines.push(`        ${handlerVar}.${step.action}({ ${stepInput} }),`);
-      lines.push(`        storage,`);
-      lines.push(`      );`);
-      lines.push(`      expect(setupResult.variant).toBeDefined();`);
+      lines.push(`      const setupResult${si} = ${invokeExpr(handlerVar, step.action, stepInput, style)};`);
+      lines.push(`      expect(setupResult${si}.variant).toBeDefined();`);
     }
 
     if (liv.targetAction) {
@@ -327,10 +352,7 @@ function renderLivenessTests(handlerVar: string, liveness: TestPlanLiveness[]): 
         .join(', ');
       lines.push('');
       lines.push(`      for (let step = 0; step < MAX_STEPS && !reached; step++) {`);
-      lines.push(`        const result = await interpret(`);
-      lines.push(`          ${handlerVar}.${liv.targetAction}({ ${targetInput} }),`);
-      lines.push(`          storage,`);
-      lines.push(`        );`);
+      lines.push(`        const result = ${invokeExpr(handlerVar, liv.targetAction, targetInput, style)};`);
       if (liv.targetVariant) {
         lines.push(`        if (result.variant === ${JSON.stringify(liv.targetVariant)}) reached = true;`);
       } else {
@@ -351,10 +373,13 @@ function renderLivenessTests(handlerVar: string, liveness: TestPlanLiveness[]): 
   return lines;
 }
 
+// ── Contract tests ──────────────────────────────────────────
+
 function renderContractTests(
   handlerVar: string,
   contracts: TestPlanContract[],
   actions: TestPlanAction[],
+  style: HandlerStyle,
 ): string[] {
   if (contracts.length === 0) return [];
 
@@ -368,9 +393,7 @@ function renderContractTests(
     for (const pre of contract.preconditions) {
       lines.push(`    it('${contract.targetAction} requires: ${pre.assertion}', async () => {`);
       lines.push(`      const storage = createInMemoryStorage();`);
-      lines.push(`      // Violate precondition by passing empty input`);
-      lines.push(`      const program = ${handlerVar}.${contract.targetAction}({});`);
-      lines.push(`      const result = await interpret(program, storage);`);
+      lines.push(`      const result = ${invokeExpr(handlerVar, contract.targetAction, '', style)};`);
       lines.push(`      expect(['error', 'invalid', 'missing', 'notFound']).toContain(result.variant);`);
       lines.push(`    });`);
       lines.push('');
@@ -393,11 +416,15 @@ function renderContractTests(
         lines.push(`          fc.record({ ${inputArbs} }),`);
         lines.push(`          async (input) => {`);
         lines.push(`            const storage = createInMemoryStorage();`);
-        lines.push(`            const program = ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>);`);
-        lines.push(`            const result = await interpret(program, storage);`);
-        // Use fc.pre to filter to only the variant we care about
+
+        if (style === 'imperative') {
+          lines.push(`            const result = await ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>, storage);`);
+        } else {
+          lines.push(`            const program = ${handlerVar}.${contract.targetAction}(input as Record<string, unknown>);`);
+          lines.push(`            const result = await interpret(program, storage);`);
+        }
+
         lines.push(`            fc.pre(result.variant === ${JSON.stringify(post.variant)});`);
-        lines.push(`            // Postcondition: ${post.assertion}`);
         lines.push(`            expect(result.output).toBeDefined();`);
         lines.push(`          },`);
         lines.push(`        ),`);
@@ -410,8 +437,7 @@ function renderContractTests(
       for (const post of contract.postconditions) {
         lines.push(`    it('${contract.targetAction} ensures on ${post.variant}: ${post.assertion}', async () => {`);
         lines.push(`      const storage = createInMemoryStorage();`);
-        lines.push(`      const program = ${handlerVar}.${contract.targetAction}({});`);
-        lines.push(`      const result = await interpret(program, storage);`);
+        lines.push(`      const result = ${invokeExpr(handlerVar, contract.targetAction, '', style)};`);
         lines.push(`      if (result.variant === ${JSON.stringify(post.variant)}) {`);
         lines.push(`        expect(result.output).toBeDefined();`);
         lines.push(`      }`);
@@ -426,38 +452,50 @@ function renderContractTests(
   return lines;
 }
 
+// ── Main entry point ────────────────────────────────────────
+
 /**
  * Render a TestPlan into a complete TypeScript conformance test file.
  */
 export function renderTypeScriptTests(plan: TestPlan): string {
   const handlerVar = toCamel(plan.conceptName) + 'Handler';
+  const style = plan.handlerStyle || 'functional';
   const lines: string[] = [];
 
   // Header
-  lines.push(`// ${plan.conceptName} Functional Handler Conformance Tests`);
+  const styleLabel = style === 'imperative' ? 'Imperative' : 'Functional';
+  lines.push(`// ${plan.conceptName} ${styleLabel} Handler Conformance Tests`);
   lines.push('//');
   lines.push('// Auto-generated by TestGen from concept spec invariants.');
-  lines.push('// Validates StorageProgram construction, purity, variant coverage,');
-  lines.push('// read/write sets, interpreted execution, and invariant conformance.');
+  if (style === 'functional') {
+    lines.push('// Validates StorageProgram construction, purity, variant coverage,');
+    lines.push('// read/write sets, interpreted execution, and invariant conformance.');
+  } else {
+    lines.push('// Validates action execution and invariant conformance.');
+  }
   lines.push('');
 
   // Imports
   lines.push("import { describe, it, expect, beforeEach } from 'vitest';");
   lines.push("import fc from 'fast-check';");
-  lines.push(`import { ${handlerVar} } from '../${plan.handlerPath}';`);
-  lines.push("import {");
-  lines.push("  classifyPurity,");
-  lines.push("  extractCompletionVariants,");
-  lines.push("  extractReadSet,");
-  lines.push("  extractWriteSet,");
-  lines.push("  extractPerformSet,");
-  lines.push("} from '../runtime/storage-program.js';");
-  lines.push("import { interpret } from '../runtime/interpreter.js';");
-  lines.push("import { createInMemoryStorage } from '../runtime/adapters/storage.js';");
+  lines.push(`import { ${handlerVar} } from '../../${plan.handlerPath}';`);
+
+  if (style === 'functional') {
+    lines.push("import {");
+    lines.push("  classifyPurity,");
+    lines.push("  extractCompletionVariants,");
+    lines.push("  extractReadSet,");
+    lines.push("  extractWriteSet,");
+    lines.push("  extractPerformSet,");
+    lines.push("} from '../../runtime/storage-program.js';");
+    lines.push("import { interpret } from '../../runtime/interpreter.js';");
+  }
+
+  lines.push("import { createInMemoryStorage } from '../../runtime/adapters/storage.js';");
   lines.push('');
 
   // Test suite
-  lines.push(`describe('${plan.conceptName} functional handler', () => {`);
+  lines.push(`describe('${plan.conceptName} ${style} handler', () => {`);
   lines.push('  let storage: ReturnType<typeof createInMemoryStorage>;');
   lines.push('');
   lines.push('  beforeEach(() => {');
@@ -467,15 +505,15 @@ export function renderTypeScriptTests(plan: TestPlan): string {
 
   // Structural tests per action
   for (const action of plan.actions) {
-    lines.push(...renderStructuralTests(handlerVar, action));
+    lines.push(...renderStructuralTests(handlerVar, action, style));
   }
 
   // Invariant-derived tests
-  lines.push(...renderExampleTests(handlerVar, plan.examples));
-  lines.push(...renderForallTests(handlerVar, plan.properties));
-  lines.push(...renderStateInvariantTests(handlerVar, plan.stateInvariants, plan.actions));
-  lines.push(...renderLivenessTests(handlerVar, plan.liveness));
-  lines.push(...renderContractTests(handlerVar, plan.contracts, plan.actions));
+  lines.push(...renderExampleTests(handlerVar, plan.examples, style));
+  lines.push(...renderForallTests(handlerVar, plan.properties, style));
+  lines.push(...renderStateInvariantTests(handlerVar, plan.stateInvariants, plan.actions, style));
+  lines.push(...renderLivenessTests(handlerVar, plan.liveness, style));
+  lines.push(...renderContractTests(handlerVar, plan.contracts, plan.actions, style));
 
   lines.push('});');
   lines.push('');

@@ -83,7 +83,7 @@ function buildFunctionalHandlerImpl(input: Record<string, unknown>): string {
     '// ============================================================',
     '',
     "import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.js';",
-    "import { createProgram, get, find, put, merge, del, branch, complete, pure } from '../../../runtime/storage-program.js';",
+    "import { createProgram, get, find, put, merge, del, branch, complete, pure, traverse, completeFrom, mapBindings, putFrom } from '../../../runtime/storage-program.js';",
     '',
     `export const ${toCamel(conceptName)}Handler: FunctionalConceptHandler = {`,
   ];

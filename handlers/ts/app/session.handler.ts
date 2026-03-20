@@ -7,10 +7,9 @@ import type { FunctionalConceptHandler } from '../../../runtime/functional-handl
 import { randomUUID } from 'crypto';
 import {
   createProgram, get as spGet, find, put, del, putFrom, branch, complete, completeFrom, mapBindings,
-  type StorageProgram,
+  traverse, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
-import type { ConceptStorage } from '../../../runtime/types.ts';
 
 const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
 let idCounter = 1;
@@ -108,11 +107,35 @@ const _sessionHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  /**
+   * Destroy all sessions for a user. Reads the user's session list,
+   * uses traverse to delete each session, then clears the list.
+   */
   destroyAll(input: Record<string, unknown>) {
     const userId = input.userId as string;
 
     let p = createProgram();
+    p = spGet(p, 'userSessions', userId, 'userSessions');
+
+    // Parse the stored session IDs into an array binding
+    p = mapBindings(p, (bindings) => {
+      const record = bindings.userSessions as Record<string, unknown> | null;
+      if (!record) return [];
+      const sessionIds: string[] = JSON.parse(record.sessionIds as string);
+      return sessionIds.map(sid => ({ sid }));
+    }, 'sessionList');
+
+    // Traverse the session list and delete each session
+    p = traverse(p, 'sessionList', '_sess', (item) => {
+      const sess = item as Record<string, unknown>;
+      let sub = createProgram();
+      sub = del(sub, 'session', sess.sid as string);
+      return complete(sub, 'ok', {});
+    }, '_deleteResults');
+
+    // Clear the user's session list
     p = put(p, 'userSessions', userId, { userId, sessionIds: JSON.stringify([]) });
+
     return complete(p, 'ok', { userId }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -132,26 +155,5 @@ const _sessionHandler: FunctionalConceptHandler = {
   },
 };
 
-const _base = autoInterpret(_sessionHandler);
-
-// destroyAll() requires dynamic key deletion (iterating session IDs), use imperative style.
-async function _destroyAll(input: Record<string, unknown>, storage: ConceptStorage) {
-  const userId = input.userId as string;
-  const userSessions = await storage.get('userSessions', userId);
-  if (userSessions) {
-    const sessionIds: string[] = JSON.parse(userSessions.sessionIds as string);
-    for (const sid of sessionIds) {
-      await storage.del('session', sid);
-    }
-  }
-  await storage.put('userSessions', userId, { userId, sessionIds: JSON.stringify([]) });
-  return { variant: 'ok', userId };
-}
-
-export const sessionHandler = new Proxy(_base, {
-  get(target, prop: string) {
-    if (prop === 'destroyAll') return _destroyAll;
-    return (target as Record<string, unknown>)[prop];
-  },
-}) as typeof _base;
-
+// All actions are now fully functional — no imperative overrides needed.
+export const sessionHandler = autoInterpret(_sessionHandler);

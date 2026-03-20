@@ -106,9 +106,9 @@ interface ProviderMapping {
  * Note: This uses synchronous register() calls since providers return
  * simple metadata without storage operations.
  */
-function discoverProviderMappings(
+async function discoverProviderMappings(
   providers: Record<string, ConceptHandler>,
-): ProviderMapping {
+): Promise<ProviderMapping> {
   const targetProviders: Record<string, string> = {};
   const sdkProviders: Record<string, string> = {};
   const specProviders: Record<string, string> = {};
@@ -116,11 +116,10 @@ function discoverProviderMappings(
   for (const [name, handler] of Object.entries(providers)) {
     if (!handler.register) continue;
     try {
-      // register() returns metadata synchronously for stub providers
+      // register() may return a Promise (autoInterpret-wrapped) or sync result
       const meta = handler.register({}, null as never);
-      // Handle both sync and Promise returns
-      const resolved = meta && typeof (meta as { then?: unknown }).then === 'function'
-        ? null // Skip async providers — they need perform() transport effects
+      const resolved = (meta && typeof (meta as { then?: unknown }).then === 'function')
+        ? await (meta as Promise<Record<string, unknown>>)
         : meta as Record<string, unknown>;
       if (!resolved || resolved.variant !== 'ok' || !resolved.targetKey) continue;
       const key = resolved.targetKey as string;
@@ -138,6 +137,33 @@ function discoverProviderMappings(
   return { targetProviders, sdkProviders, specProviders };
 }
 
+/** Synchronous variant for stub providers that return sync register() results. */
+function discoverProviderMappingsSync(
+  providers: Record<string, ConceptHandler>,
+): ProviderMapping {
+  const targetProviders: Record<string, string> = {};
+  const sdkProviders: Record<string, string> = {};
+  const specProviders: Record<string, string> = {};
+
+  for (const [name, handler] of Object.entries(providers)) {
+    if (!handler.register) continue;
+    try {
+      const meta = handler.register({}, null as never) as Record<string, unknown>;
+      if (!meta || typeof (meta as { then?: unknown }).then === 'function') continue;
+      if (meta.variant !== 'ok' || !meta.targetKey) continue;
+      const key = meta.targetKey as string;
+      const type = meta.providerType as string;
+      switch (type) {
+        case 'target': targetProviders[key] = name; break;
+        case 'sdk':    sdkProviders[key] = name; break;
+        case 'spec':   specProviders[key] = name; break;
+      }
+    } catch { /* skip */ }
+  }
+
+  return { targetProviders, sdkProviders, specProviders };
+}
+
 // --- Provider Handler Registry ---
 
 export type ProviderRegistry = Record<string, ConceptHandler>;
@@ -149,19 +175,37 @@ export type ProviderRegistry = Record<string, ConceptHandler>;
  * The factory discovers provider mappings from register() metadata,
  * replacing hardcoded dispatch maps with dynamic discovery.
  */
-export function createInterfaceGeneratorHandler(
+/**
+ * Create an interface generator handler (async). Use when providers are
+ * autoInterpret-wrapped (register() returns Promises).
+ */
+export async function createInterfaceGeneratorHandler(
   providers: ProviderRegistry,
-): FunctionalConceptHandler {
-  // Provider mappings are resolved lazily on first use and cached.
-  let mappingsCache: ProviderMapping | null = null;
+): Promise<ReturnType<typeof autoInterpret>> {
+  const mappingsCache = await discoverProviderMappings(providers);
+  return _buildHandler(mappingsCache, providers);
+}
+
+/**
+ * Create an interface generator handler (sync). Use when providers have
+ * synchronous register() (e.g., stub providers for static exports/tests).
+ */
+export function createInterfaceGeneratorHandlerSync(
+  providers: ProviderRegistry,
+): ReturnType<typeof autoInterpret> {
+  const mappingsCache = discoverProviderMappingsSync(providers);
+  return _buildHandler(mappingsCache, providers);
+}
+
+function _buildHandler(
+  mappingsCache: ProviderMapping,
+  providers: ProviderRegistry,
+): ReturnType<typeof autoInterpret> {
   function getMappings(): ProviderMapping {
-    if (!mappingsCache) {
-      mappingsCache = discoverProviderMappings(providers);
-    }
     return mappingsCache;
   }
 
-  return {
+  const handler: FunctionalConceptHandler = {
     plan(
       input: Record<string, unknown>,
     ) {
@@ -335,6 +379,8 @@ export function createInterfaceGeneratorHandler(
       return p;
     },
   };
+
+  return autoInterpret(handler);
 }
 
 // --- Backward-compatible static export (for existing tests) ---
@@ -348,7 +394,7 @@ function stubProvider(meta: Record<string, unknown>): ConceptHandler {
   };
 }
 
-const _handler = createInterfaceGeneratorHandler({
+export const interfaceGeneratorHandler = createInterfaceGeneratorHandlerSync({
   RestTarget: stubProvider({ name: 'RestTarget', inputKind: 'InterfaceProjection', outputKind: 'RestRoutes', capabilities: '[]', targetKey: 'rest', providerType: 'target' }),
   GraphqlTarget: stubProvider({ name: 'GraphqlTarget', inputKind: 'InterfaceProjection', outputKind: 'GraphQLSchema', capabilities: '[]', targetKey: 'graphql', providerType: 'target' }),
   GrpcTarget: stubProvider({ name: 'GrpcTarget', inputKind: 'InterfaceProjection', outputKind: 'GrpcProto', capabilities: '[]', targetKey: 'grpc', providerType: 'target' }),
@@ -364,8 +410,6 @@ const _handler = createInterfaceGeneratorHandler({
   OpenapiTarget: stubProvider({ name: 'OpenapiTarget', inputKind: 'InterfaceProjection', outputKind: 'OpenApiSpec', capabilities: '[]', targetKey: 'openapi', providerType: 'spec' }),
   AsyncapiTarget: stubProvider({ name: 'AsyncapiTarget', inputKind: 'InterfaceProjection', outputKind: 'AsyncApiSpec', capabilities: '[]', targetKey: 'asyncapi', providerType: 'spec' }),
 });
-
-export const interfaceGeneratorHandler = autoInterpret(_handler);
 
 // --- Manifest Helpers ---
 

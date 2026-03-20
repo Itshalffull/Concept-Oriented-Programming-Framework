@@ -9,9 +9,8 @@
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
-  createProgram, find, put, complete, completeFrom,
+  createProgram, find, put, complete, completeFrom, branch,
   type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
@@ -178,31 +177,34 @@ const _handler: FunctionalConceptHandler = {
     const p = createProgram();
     return complete(p, 'ok', { result }) as StorageProgram<Result>;
   },
-};
 
-const baseHandler = autoInterpret(_handler);
-
-// register needs imperative style for dynamic storage keys
-const handler: ConceptHandler = {
-  ...baseHandler,
-
-  async register(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Register a provider for a given source type.
+   * Uses find + branch to check for duplicates, then put with a generated id.
+   */
+  register(input: Record<string, unknown>) {
     const sourceType = input.source_type as string;
     const provider = input.provider as string;
 
-    const existing = await storage.find('provider', {});
-    const alreadyRegistered = existing.find(
-      (pr: Record<string, unknown>) => pr.source_type === sourceType,
-    );
+    let p = createProgram();
+    p = find(p, 'provider', {}, 'allProviders');
 
-    if (alreadyRegistered) {
-      return { variant: 'already_registered', source_type: sourceType };
-    }
-
-    const id = nextId();
-    await storage.put('provider', id, { id, source_type: sourceType, provider });
-    return { variant: 'ok' };
+    return branch(p,
+      (bindings) => {
+        const allProviders = bindings.allProviders as Record<string, unknown>[];
+        return allProviders.some(
+          (pr: Record<string, unknown>) => pr.source_type === sourceType,
+        );
+      },
+      (thenP) => complete(thenP, 'already_registered', { source_type: sourceType }),
+      (elseP) => {
+        const id = nextId();
+        elseP = put(elseP, 'provider', id, { id, source_type: sourceType, provider });
+        return complete(elseP, 'ok', {});
+      },
+    ) as StorageProgram<Result>;
   },
 };
 
-export const slotSourceHandler = handler as FunctionalConceptHandler & ConceptHandler;
+// All actions are now fully functional — no imperative overrides needed.
+export const slotSourceHandler = autoInterpret(_handler);

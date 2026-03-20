@@ -55,77 +55,77 @@ async function loadProviders(): Promise<ProviderRegistry> {
   const providerDir = '../../../handlers/ts/framework/providers';
 
   try {
-    const { restTargetHandler } = await import(`${providerDir}/rest-target.handler.js`);
+    const { restTargetHandler } = await import(`${providerDir}/rest-target.handler.ts`);
     providers.RestTarget = restTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { graphqlTargetHandler } = await import(`${providerDir}/graphql-target.handler.js`);
+    const { graphqlTargetHandler } = await import(`${providerDir}/graphql-target.handler.ts`);
     providers.GraphqlTarget = graphqlTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { grpcTargetHandler } = await import(`${providerDir}/grpc-target.handler.js`);
+    const { grpcTargetHandler } = await import(`${providerDir}/grpc-target.handler.ts`);
     providers.GrpcTarget = grpcTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { cliTargetHandler } = await import(`${providerDir}/cli-target.handler.js`);
+    const { cliTargetHandler } = await import(`${providerDir}/cli-target.handler.ts`);
     providers.CliTarget = cliTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { mcpTargetHandler } = await import(`${providerDir}/mcp-target.handler.js`);
+    const { mcpTargetHandler } = await import(`${providerDir}/mcp-target.handler.ts`);
     providers.McpTarget = mcpTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { claudeSkillsTargetHandler } = await import(`${providerDir}/claude-skills-target.handler.js`);
+    const { claudeSkillsTargetHandler } = await import(`${providerDir}/claude-skills-target.handler.ts`);
     providers.ClaudeSkillsTarget = claudeSkillsTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { tsSdkTargetHandler } = await import(`${providerDir}/ts-sdk-target.handler.js`);
+    const { tsSdkTargetHandler } = await import(`${providerDir}/ts-sdk-target.handler.ts`);
     providers.TsSdkTarget = tsSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { pySdkTargetHandler } = await import(`${providerDir}/py-sdk-target.handler.js`);
+    const { pySdkTargetHandler } = await import(`${providerDir}/py-sdk-target.handler.ts`);
     providers.PySdkTarget = pySdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { goSdkTargetHandler } = await import(`${providerDir}/go-sdk-target.handler.js`);
+    const { goSdkTargetHandler } = await import(`${providerDir}/go-sdk-target.handler.ts`);
     providers.GoSdkTarget = goSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { rustSdkTargetHandler } = await import(`${providerDir}/rust-sdk-target.handler.js`);
+    const { rustSdkTargetHandler } = await import(`${providerDir}/rust-sdk-target.handler.ts`);
     providers.RustSdkTarget = rustSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { javaSdkTargetHandler } = await import(`${providerDir}/java-sdk-target.handler.js`);
+    const { javaSdkTargetHandler } = await import(`${providerDir}/java-sdk-target.handler.ts`);
     providers.JavaSdkTarget = javaSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { swiftSdkTargetHandler } = await import(`${providerDir}/swift-sdk-target.handler.js`);
+    const { swiftSdkTargetHandler } = await import(`${providerDir}/swift-sdk-target.handler.ts`);
     providers.SwiftSdkTarget = swiftSdkTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { openapiTargetHandler } = await import(`${providerDir}/openapi-target.handler.js`);
+    const { openapiTargetHandler } = await import(`${providerDir}/openapi-target.handler.ts`);
     providers.OpenapiTarget = openapiTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { asyncapiTargetHandler } = await import(`${providerDir}/asyncapi-target.handler.js`);
+    const { asyncapiTargetHandler } = await import(`${providerDir}/asyncapi-target.handler.ts`);
     providers.AsyncapiTarget = asyncapiTargetHandler;
   } catch { /* provider not available */ }
 
   try {
-    const { projectInstructionsTargetHandler } = await import(`${providerDir}/project-instructions-target.handler.js`);
+    const { projectInstructionsTargetHandler } = await import(`${providerDir}/project-instructions-target.handler.ts`);
     providers.ProjectInstructionsTarget = projectInstructionsTargetHandler;
   } catch { /* provider not available */ }
 
@@ -513,7 +513,7 @@ async function interfaceGenerate(
   console.log(`  Loaded ${providerCount} provider handler(s)`);
 
   // 4. Create generator with providers and run
-  const generatorHandler = createInterfaceGeneratorHandler(providers);
+  const generatorHandler = await createInterfaceGeneratorHandler(providers);
   const generatorStorage = createInMemoryStorage();
 
   // Plan

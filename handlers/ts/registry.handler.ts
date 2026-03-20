@@ -4,7 +4,6 @@
 // Index of available module metadata with versioned artifacts, dependency edges,
 // capability declarations, and compile-time feature definitions.
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
-import type { ConceptHandler, ConceptStorage } from '../../runtime/types.ts';
 import {
   createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
@@ -185,15 +184,12 @@ const _handler: FunctionalConceptHandler = {
       return { providers: providers.map((m) => m.moduleId as string) };
     }) as StorageProgram<Result>;
   },
-};
 
-const baseHandler = autoInterpret(_handler);
-
-// publish and yank need imperative style for dynamic storage keys
-const handler: ConceptHandler = {
-  ...baseHandler,
-
-  async publish(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Publish a new module version to the registry.
+   * Uses find + mapBindings to check for duplicates, then put with a generated moduleId.
+   */
+  publish(input: Record<string, unknown>) {
     const name = input.name as string;
     const namespace = input.namespace as string;
     const version = input.version as string;
@@ -216,54 +212,85 @@ const handler: ConceptHandler = {
 
     // Validate artifact hash format
     if (!artifactHash || !artifactHash.includes(':')) {
-      return { variant: 'invalid', message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'Artifact hash must be in algorithm:digest format (e.g., sha256:abc)' }) as StorageProgram<Result>;
     }
 
     // Validate required metadata fields
     if (!metadata || !metadata.description || !metadata.license) {
-      return { variant: 'invalid', message: 'Metadata must include description and license fields' };
+      const p = createProgram();
+      return complete(p, 'invalid', { message: 'Metadata must include description and license fields' }) as StorageProgram<Result>;
     }
 
-    // Check for duplicate
-    const existing = await storage.find('registryModule', {});
-    for (const mod of existing) {
-      if (mod.name === name && mod.namespace === namespace && mod.version === version) {
-        return { variant: 'duplicate' };
-      }
-    }
+    let p = createProgram();
+    p = find(p, 'registryModule', {}, 'allModules');
 
-    const moduleId = `mod-${nextId++}`;
-    await storage.put('registryModule', moduleId, {
-      moduleId,
-      name,
-      namespace,
-      version,
-      kind,
-      artifactHash,
-      dependencies: JSON.stringify(dependencies || []),
-      metadata,
-      capabilitiesProvided: capabilitiesProvided || [],
-      yanked: false,
-    });
+    // Check for duplicate and conditionally publish
+    p = mapBindings(p, (bindings) => {
+      const allModules = bindings.allModules as Record<string, unknown>[];
+      return allModules.some(
+        (mod) => mod.name === name && mod.namespace === namespace && mod.version === version,
+      );
+    }, '_isDuplicate');
 
-    return { variant: 'ok', module: moduleId };
+    return branch(p,
+      (bindings) => bindings._isDuplicate as boolean,
+      (thenP) => complete(thenP, 'duplicate', {}),
+      (elseP) => {
+        const moduleId = `mod-${nextId++}`;
+        elseP = put(elseP, 'registryModule', moduleId, {
+          moduleId,
+          name,
+          namespace,
+          version,
+          kind,
+          artifactHash,
+          dependencies: JSON.stringify(dependencies || []),
+          metadata,
+          capabilitiesProvided: capabilitiesProvided || [],
+          yanked: false,
+        });
+        return complete(elseP, 'ok', { module: moduleId });
+      },
+    ) as StorageProgram<Result>;
   },
 
-  async yank(input: Record<string, unknown>, storage: ConceptStorage) {
+  /**
+   * Yank (deprecate) a module version by marking it as yanked.
+   * Uses get + branch to find the module by its moduleId key and update it.
+   */
+  yank(input: Record<string, unknown>) {
     const moduleId = input.module as string;
 
-    const mod = await storage.get('registryModule', moduleId);
-    if (!mod) {
-      return { variant: 'notfound' };
-    }
+    let p = createProgram();
+    p = get(p, 'registryModule', moduleId, 'mod');
 
-    await storage.put('registryModule', moduleId, {
-      ...mod,
-      yanked: true,
-    });
+    return branch(p, 'mod',
+      (thenP) => {
+        // Module found — mark as yanked by re-putting with yanked: true
+        thenP = mapBindings(thenP, (bindings) => {
+          const mod = bindings.mod as Record<string, unknown>;
+          return { ...mod, yanked: true };
+        }, '_updatedMod');
 
-    return { variant: 'ok' };
+        // Use traverse over a single-element array to write with dynamic data
+        thenP = mapBindings(thenP, (bindings) => {
+          return [bindings._updatedMod];
+        }, '_modArray');
+
+        thenP = traverse(thenP, '_modArray', '_m', (item) => {
+          const mod = item as Record<string, unknown>;
+          let sub = createProgram();
+          sub = put(sub, 'registryModule', moduleId, mod);
+          return complete(sub, 'ok', {});
+        }, '_yankResults');
+
+        return complete(thenP, 'ok', {});
+      },
+      (elseP) => complete(elseP, 'notfound', {}),
+    ) as StorageProgram<Result>;
   },
 };
 
-export const registryHandler = handler as FunctionalConceptHandler & ConceptHandler;
+// All actions are now fully functional — no imperative overrides needed.
+export const registryHandler = autoInterpret(_handler);
