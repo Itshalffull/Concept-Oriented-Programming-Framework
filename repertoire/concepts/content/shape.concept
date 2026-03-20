@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Shape [S] {
 
@@ -22,24 +23,33 @@ concept Shape [S] {
         Creates a new shape of the given kind (rectangle, ellipse, triangle,
         line, arrow, or polygon) with optional fill, stroke, and text.
       }
+
+      fixture valid_create { kind: "rectangle", fill: "blue", stroke: "black", text: "Hello" }
+      fixture ellipse_no_text { kind: "ellipse", fill: "red", stroke: "gray" }
     }
 
     action update(shape: S, fill: option String, stroke: option String, text: option String) {
       -> ok() {
         Updates the fill, stroke, and text properties of an existing shape.
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The shape does not exist.
       }
+
+      fixture valid_update { shape: "shape-1", fill: "green", stroke: "white", text: "Updated" }
+      fixture update_missing { shape: "nonexistent", fill: "red" } -> notFound
     }
 
     action delete(shape: S) {
       -> ok() {
         Removes the shape permanently.
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The shape does not exist.
       }
+
+      fixture valid_delete { shape: "shape-1" }
+      fixture delete_missing { shape: "nonexistent" } -> notFound
     }
   }
 

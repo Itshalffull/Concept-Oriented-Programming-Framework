@@ -28,6 +28,11 @@ concept MobileAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to mobile.
       }
+
+      fixture normalize_touch_events { adapter: "mobile-1", props: "{ \"onclick\": \"handleTap\", \"onswipeleft\": \"goBack\", \"class\": \"card\" }" }
+      fixture normalize_a11y { adapter: "mobile-1", props: "{ \"aria-label\": \"Submit\", \"data-testid\": \"btn-submit\" }" }
+      fixture normalize_empty_props { adapter: "mobile-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "mobile-1", props: "not{json" } -> error
     }
   }
 

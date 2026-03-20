@@ -30,6 +30,11 @@ concept Machine [M] {
       }
       -> notfound(message: String) { Widget not registered. }
       -> invalid(message: String) { Context malformed. }
+
+      fixture valid_spawn { widget: "dialog", context: "{\"title\":\"Confirm\"}" }
+      fixture empty_context { widget: "dialog", context: "{}" }
+      fixture bad_context { widget: "dialog", context: "not-json" } -> invalid
+      fixture unknown_widget { widget: "nonexistent-widget", context: "{}" } -> notfound
     }
 
     action send(machine: M, event: String) {
@@ -40,6 +45,9 @@ concept Machine [M] {
       }
       -> invalid(message: String) { Event not handled in current state. }
       -> guarded(machine: M, guard: String) { Guard blocked transition. }
+
+      fixture valid_send { event: "start" }
+      fixture missing_machine { machine: "nonexistent-machine", event: "start" } -> invalid
     }
 
     action connect(machine: M) {
@@ -51,6 +59,9 @@ concept Machine [M] {
         connect section.
       }
       -> notfound(message: String) { Machine missing. }
+
+      fixture valid_connect { }
+      fixture missing_connect { machine: "nonexistent-machine" } -> notfound
     }
 
     action destroy(machine: M) {
@@ -58,6 +69,9 @@ concept Machine [M] {
         Run exit actions on current state, dispose machine.
       }
       -> notfound(message: String) { Machine missing. }
+
+      fixture valid_destroy { }
+      fixture missing_destroy { machine: "nonexistent-machine" } -> notfound
     }
   }
 

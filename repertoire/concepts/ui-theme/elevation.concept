@@ -23,11 +23,20 @@ concept Elevation [W] {
         of layers: [{ "y": 2, "blur": 4, "color": "rgba(0,0,0,0.1)" }]
       }
       -> invalid(message: String) { Level must be 0-5. }
+
+      fixture define_raised { elevation: "W-1", level: 1, shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }
+      fixture define_overlay { elevation: "W-2", level: 3, shadow: "[{ \"y\": 6, \"blur\": 12, \"color\": \"rgba(0,0,0,0.15)\" }]" }
+      fixture define_flat { elevation: "W-3", level: 0, shadow: "none" }
+      fixture define_level_too_high { elevation: "W-4", level: 7, shadow: "[]" } -> invalid
+      fixture define_missing_shadow { elevation: "W-5", level: 2, shadow: "" } -> invalid
     }
 
     action get(elevation: W) {
       -> ok(elevation: W, shadow: String) { Return shadow definition. }
       -> notfound(message: String) { Not defined for this level. }
+
+      fixture get_existing { elevation: "W-1" }
+      fixture get_unknown { elevation: "W-nonexistent" } -> notfound
     }
 
     action generateScale(baseColor: String) {
@@ -35,6 +44,9 @@ concept Elevation [W] {
         Auto-generate all 6 levels from base shadow color.
       }
       -> invalid(message: String) { Invalid color. }
+
+      fixture scale_from_black { baseColor: "0,0,0" }
+      fixture scale_empty_color { baseColor: "" } -> invalid
     }
   }
 

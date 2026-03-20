@@ -33,6 +33,10 @@ concept Navigator [N] {
                     meta: option String) {
       -> ok(nav: N) { Register a navigable destination. }
       -> duplicate(message: String) { Name already registered. }
+
+      fixture valid_register { name: "detail", targetConcept: "Article", targetView: "detail", paramsSchema: "", meta: "" }
+      fixture with_schema { name: "list", targetConcept: "Article", targetView: "list", paramsSchema: "{\"page\":\"Int\"}", meta: "{\"icon\":\"list\"}" }
+      fixture duplicate_name { name: "detail", targetConcept: "Article", targetView: "detail" } -> duplicate
     }
 
     action go(nav: N, params: option String) {
@@ -42,6 +46,10 @@ concept Navigator [N] {
       }
       -> blocked(nav: N, reason: String) { Guard prevented transition. }
       -> notfound(message: String) { Destination not registered. }
+
+      fixture valid_go { params: "{\"id\":\"article-42\"}" }
+      fixture no_params { params: "" }
+      fixture missing_nav { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
     action back(nav: N) {
@@ -49,6 +57,9 @@ concept Navigator [N] {
         Pop from history, push current to forward.
       }
       -> empty(message: String) { History empty. }
+
+      fixture valid_back { }
+      fixture empty_history { nav: "nonexistent-nav" } -> empty
     }
 
     action forward(nav: N) {
@@ -56,6 +67,9 @@ concept Navigator [N] {
         Pop from forward, push current to history.
       }
       -> empty(message: String) { Forward stack empty. }
+
+      fixture valid_forward { }
+      fixture empty_stack { nav: "nonexistent-nav" } -> empty
     }
 
     action replace(nav: N, params: option String) {
@@ -63,16 +77,25 @@ concept Navigator [N] {
         Replace current without modifying history.
       }
       -> notfound(message: String) { Destination not registered. }
+
+      fixture valid_replace { params: "{\"id\":\"article-99\"}" }
+      fixture missing_nav_replace { nav: "nonexistent-nav", params: "" } -> notfound
     }
 
     action addGuard(nav: N, guard: String) {
       -> ok(nav: N) { Register guard evaluated before departure. }
       -> invalid(message: String) { Guard expression invalid. }
+
+      fixture valid_guard { guard: "unsaved-changes-check" }
+      fixture empty_guard { guard: "" } -> invalid
     }
 
     action removeGuard(nav: N, guard: String) {
       -> ok(nav: N) { Remove guard. }
       -> notfound(message: String) { Guard not registered. }
+
+      fixture valid_remove_guard { guard: "unsaved-changes-check" }
+      fixture missing_guard { nav: "nonexistent-nav", guard: "no-such-guard" } -> notfound
     }
   }
 

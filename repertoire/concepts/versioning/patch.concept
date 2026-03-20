@@ -45,6 +45,9 @@ concept Patch [P] {
       -> notFound(message: String) {
         patchId not found.
       }
+
+      fixture apply_existing { patchId: "patch-1", content: "hello\nworld" }
+      fixture apply_missing { patchId: "patch-nonexistent", content: "hello" } -> error
     }
 
     action invert(patchId: P) {
@@ -55,6 +58,9 @@ concept Patch [P] {
       -> notFound(message: String) {
         patchId not found.
       }
+
+      fixture invert_existing { patchId: "patch-1" }
+      fixture invert_missing { patchId: "patch-nonexistent" } -> error
     }
 
     action compose(first: P, second: P) {
@@ -68,6 +74,9 @@ concept Patch [P] {
       -> notFound(message: String) {
         first or second not found.
       }
+
+      fixture compose_sequential { first: "patch-1", second: "patch-2" }
+      fixture compose_missing { first: "patch-nonexistent", second: "patch-2" } -> error
     }
 
     action commute(p1: P, p2: P) {
@@ -81,6 +90,9 @@ concept Patch [P] {
       -> notFound(message: String) {
         p1 or p2 not found.
       }
+
+      fixture commute_independent { p1: "patch-1", p2: "patch-2" }
+      fixture commute_missing { p1: "patch-nonexistent", p2: "patch-2" } -> error
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Template [T] {
 
@@ -21,6 +22,9 @@ concept Template [T] {
       -> exists(message: String) {
         A template with this identity already exists.
       }
+
+      fixture valid_define { template: "welcome-email", body: "Hello {{name}}", variables: "name" }
+      fixture duplicate_define { template: "welcome-email", body: "Hi {{name}}", variables: "name" } -> exists
     }
 
     action instantiate(template: T, values: String) {
@@ -30,6 +34,9 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_instantiate { template: "welcome-email", values: "name=World" }
+      fixture missing_template { template: "nonexistent", values: "name=Test" } -> notfound
     }
 
     action registerTrigger(template: T, trigger: String) {
@@ -39,6 +46,9 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_trigger { template: "welcome-email", trigger: "on-signup" }
+      fixture trigger_missing_template { template: "nonexistent", trigger: "on-login" } -> notfound
     }
 
     action mergeProperties(template: T, properties: String) {
@@ -48,6 +58,9 @@ concept Template [T] {
       -> notfound(message: String) {
         The template does not exist.
       }
+
+      fixture valid_merge { template: "welcome-email", properties: "greeting,signature" }
+      fixture merge_missing_template { template: "nonexistent", properties: "extra" } -> notfound
     }
   }
 

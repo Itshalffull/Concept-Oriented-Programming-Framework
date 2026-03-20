@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept FormalProperty [P] {
 
@@ -30,7 +31,7 @@ concept FormalProperty [P] {
 
   actions {
 
-    action define(target_symbol: String, kind: String, property_text: String, formal_language: String, scope: String, priority: String) {
+    action define(name: String, target_symbol: String, kind: String, expression: String, formal_language: String, scope: String, priority: String) {
       -> ok(property: P) {
         Creates new formal property in "unproven" status.
         kind: invariant | precondition | postcondition | temporal | safety | liveness
@@ -41,40 +42,49 @@ concept FormalProperty [P] {
       -> invalid(message: String) {
         Invalid kind, language, or malformed property text.
       }
+
+      fixture valid_define { name: "hash-nonzero", target_symbol: "clef/concept/Password", kind: "invariant", expression: "forall p: Password | len(p.hash) > 0", formal_language: "smtlib", scope: "local", priority: "required" }
+      fixture invalid_kind { name: "bad-prop", target_symbol: "clef/concept/User", kind: "bogus", expression: "true", formal_language: "smtlib", scope: "local", priority: "optional" } -> invalid
     }
 
-    action prove(property: P, evidence_ref: String) {
-      -> ok(property: P, evidence: String) {
+    action prove(id: String, evidence_ref: String) {
+      -> ok(id: String, status: String, evidence_ref: String) {
         Transitions from unproven to "proved". Links Evidence artifact.
       }
-      -> notfound(property: P) {
+      -> notfound(id: String) {
         Property does not exist.
       }
+
+      fixture valid_prove { id: "fp-001", evidence_ref: "ev-abc" }
+      fixture prove_missing { id: "nonexistent", evidence_ref: "ev-abc" } -> notfound
     }
 
-    action refute(property: P, evidence_ref: String) {
-      -> ok(property: P, counterexample: String) {
+    action refute(id: String, evidence_ref: String) {
+      -> ok(id: String, status: String, evidence_ref: String) {
         Transitions to "refuted". Links Evidence counterexample artifact.
       }
-      -> notfound(property: P) {
+      -> notfound(id: String) {
         Property does not exist.
       }
+
+      fixture valid_refute { id: "fp-001", evidence_ref: "ev-counter" }
+      fixture refute_missing { id: "nonexistent", evidence_ref: "ev-counter" } -> notfound
     }
 
-    action check(property: P, solver: String, timeout_ms: Int) {
-      -> ok(property: P, status: String) {
+    action check(id: String, solver: option String) {
+      -> ok(id: String, current_status: String, check_result: String, solver: String) {
         Dispatches to SolverProvider. Returns updated status.
       }
-      -> timeout(property: P, elapsed_ms: Int) {
-        Solver exceeded timeout. Status becomes "timeout".
+      -> notfound(id: String) {
+        Property does not exist.
       }
-      -> unknown(property: P, reason: String) {
-        Solver returned unknown. Status becomes "unknown".
-      }
+
+      fixture valid_check { id: "fp-001", solver: "z3" }
+      fixture check_missing { id: "nonexistent", solver: "z3" } -> notfound
     }
 
-    action synthesize(target_symbol: String, intent_ref: String) {
-      -> ok(properties: list P) {
+    action synthesize(target_symbol: String, intent_ref: String, formal_language: option String) {
+      -> ok(intent_ref: String, property_ids: String, count: Int) {
         Generates formal properties from Intent.operationalPrinciples.
         Uses pattern matching against SpecificationSchema library,
         or LLM generation via sync to AgentLoop.
@@ -82,28 +92,40 @@ concept FormalProperty [P] {
       -> invalid(message: String) {
         Intent not found or has no principles.
       }
+
+      fixture valid_synthesize { target_symbol: "clef/concept/Password", intent_ref: "intent-001" }
+      fixture synthesize_with_lang { target_symbol: "clef/concept/User", intent_ref: "intent-002", formal_language: "lean" }
     }
 
     action coverage(target_symbol: String) {
-      -> ok(total: Int, proved: Int, refuted: Int, unknown: Int, timeout: Int, coverage_pct: Float) {
+      -> ok(total: Int, proved: Int, refuted: Int, unproven: Int, coverage_pct: Float) {
         Proof coverage statistics for target.
       }
+
+      fixture valid_coverage { target_symbol: "clef/concept/Password" }
+      fixture coverage_unknown { target_symbol: "clef/concept/Unknown" }
     }
 
     action list(target_symbol: option String, kind: option String, status: option String) {
-      -> ok(properties: list P) {
+      -> ok(count: Int, items: String) {
         Filtered listing. All params optional.
       }
+
+      fixture list_all { }
+      fixture list_by_kind { kind: "invariant" }
     }
 
-    action invalidate(property: P) {
-      -> ok(property: P) {
+    action invalidate(id: String) {
+      -> ok(id: String, previous_status: String, status: String) {
         Resets proved/refuted property to "unproven" when source changes.
         Triggered by Score change detection via sync.
       }
-      -> notfound(property: P) {
+      -> notfound(id: String) {
         Property does not exist.
       }
+
+      fixture valid_invalidate { id: "fp-001" }
+      fixture invalidate_missing { id: "nonexistent" } -> notfound
     }
   }
 

@@ -17,6 +17,9 @@ concept Backlink [B] {
         Returns all source entities that have formal forward references
         pointing to this entity, enabling reverse navigation.
       }
+
+      fixture valid_backlinks { entity: "doc-1" }
+      fixture no_backlinks { entity: "orphaned-doc" }
     }
 
     action getUnlinkedMentions(entity: B) {
@@ -24,6 +27,9 @@ concept Backlink [B] {
         Returns text mentions of this entity that have not been
         converted into formal links, useful for suggesting new connections.
       }
+
+      fixture valid_mentions { entity: "doc-1" }
+      fixture no_mentions { entity: "orphaned-doc" }
     }
 
     action reindex() {
@@ -31,6 +37,8 @@ concept Backlink [B] {
         Scans all forward references and rebuilds the reverse index
         from scratch. Returns the total number of backlinks indexed.
       }
+
+      fixture valid {}
     }
   }
 

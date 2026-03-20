@@ -30,6 +30,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture link_records { pairId: "pair-1", idA: "local-42", idB: "remote-99" }
+      fixture link_missing_pair { pairId: "pair-missing", idA: "local-1", idB: "remote-1" } -> notfound
     }
 
     action sync(pairId: String) {
@@ -42,6 +45,9 @@ concept SyncPair [S] {
       -> conflict(conflicts: String) {
         Conflicts detected that require resolution.
       }
+
+      fixture sync_existing { pairId: "pair-1" }
+      fixture sync_missing { pairId: "pair-missing" } -> notfound
     }
 
     action detectConflicts(pairId: String) {
@@ -51,6 +57,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture detect_existing { pairId: "pair-1" }
+      fixture detect_missing { pairId: "pair-missing" } -> notfound
     }
 
     action resolve(conflictId: String, resolution: String) {
@@ -63,6 +72,9 @@ concept SyncPair [S] {
       -> error(message: String) {
         The resolver could not determine a winner or the records are incompatible.
       }
+
+      fixture resolve_conflict { conflictId: "conflict-1", resolution: "keep_local" }
+      fixture resolve_missing { conflictId: "conflict-missing", resolution: "keep_local" } -> notfound
     }
 
     action unlink(pairId: String, idA: String) {
@@ -72,6 +84,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair or record not found.
       }
+
+      fixture unlink_existing { pairId: "pair-1", idA: "local-42" }
+      fixture unlink_missing { pairId: "pair-missing", idA: "local-1" } -> notfound
     }
 
     action getChangeLog(pairId: String, since: String) {
@@ -81,6 +96,9 @@ concept SyncPair [S] {
       -> notfound(message: String) {
         Pair does not exist.
       }
+
+      fixture changelog_recent { pairId: "pair-1", since: "2026-01-01T00:00:00Z" }
+      fixture changelog_missing { pairId: "pair-missing", since: "" } -> notfound
     }
   }
 

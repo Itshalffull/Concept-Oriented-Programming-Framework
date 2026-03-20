@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Frame [F] {
 
@@ -30,42 +31,63 @@ concept Frame [F] {
         Creates a new named frame at the specified position and size
         on the given canvas.
       }
+
+      fixture valid_create { canvas: "c1", name: "Group A", x: 0, y: 0, width: 400, height: 300 }
+      fixture labeled_frame { canvas: "c1", name: "Sidebar", x: 50, y: 100, width: 200, height: 600 }
     }
 
     action resize(frame: F, width: Int, height: Int) {
       -> ok() {
         Updates the width and height of the frame.
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The frame does not exist.
       }
+
+      fixture valid_resize { frame: "frame-1", width: 500, height: 400 }
+      fixture resize_missing { frame: "nonexistent", width: 100, height: 100 } -> notFound
     }
 
     action addItem(frame: F, item_id: String) {
       -> ok() {
         Adds an item to the frame's contained items list.
       }
-      -> notfound(message: String) {
-        The frame or item does not exist.
+      -> notFound(message: String) {
+        The frame does not exist.
       }
+      -> already_present(message: String) {
+        The item is already in the frame.
+      }
+
+      fixture valid_add_item { frame: "frame-1", item_id: "item1" }
+      fixture add_to_missing_frame { frame: "nonexistent", item_id: "item1" } -> notFound
     }
 
     action removeItem(frame: F, item_id: String) {
       -> ok() {
         Removes an item from the frame's contained items list.
       }
-      -> notfound(message: String) {
-        The frame or item does not exist.
+      -> notFound(message: String) {
+        The frame does not exist.
       }
+      -> not_present(message: String) {
+        The item is not in the frame.
+      }
+
+      fixture valid_remove_item { frame: "frame-1", item_id: "item1" }
+      fixture remove_from_missing_frame { frame: "nonexistent", item_id: "item1" } -> notFound
     }
 
     action setBackground(frame: F, color: String) {
       -> ok() {
         Sets the background color of the frame.
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The frame does not exist.
       }
+
+      fixture valid_background { frame: "frame-1", color: "#f0f0f0" }
+      fixture background_missing_frame { frame: "nonexistent", color: "red" } -> notFound
     }
   }
 

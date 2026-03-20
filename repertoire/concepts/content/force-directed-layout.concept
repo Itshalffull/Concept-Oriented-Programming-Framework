@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ForceDirectedLayout [L] {
 
@@ -26,6 +27,8 @@ concept ForceDirectedLayout [L] {
         Registers this provider with the SpatialLayout coordinator
         under the "force-directed" algorithm name.
       }
+
+      fixture valid {}
     }
 
     action apply(canvas: String, items: String) {
@@ -38,6 +41,9 @@ concept ForceDirectedLayout [L] {
         The layout could not be applied, e.g. canvas identifier is missing
         or the item set is malformed.
       }
+
+      fixture valid_apply { canvas: "c1", items: "a,b,c" }
+      fixture missing_canvas { canvas: "", items: "a" } -> error
     }
   }
 

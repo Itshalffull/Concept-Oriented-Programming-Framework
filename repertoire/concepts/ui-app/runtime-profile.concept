@@ -32,6 +32,9 @@ concept RuntimeProfile [R] {
                     router: String, baseUrl: String, retryPolicy: String,
                     authMode: option String) {
       -> ok(profile: R) { Store or update a named runtime profile. }
+
+      fixture register_web_profile { profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" }
+      fixture register_mobile_profile { profile: "R-2", name: "mobile-staging", shellId: "S-2", navigatorId: "N-2", transportId: "P-2", platformAdapterId: "D-2", platform: "mobile", router: "stack", baseUrl: "https://m.example.com", retryPolicy: "{ \"maxRetries\": 1 }", authMode: "" }
     }
 
     action resolve(name: String) {
@@ -41,6 +44,9 @@ concept RuntimeProfile [R] {
         Resolve a runtime profile by name.
       }
       -> notfound(message: String) { No runtime profile exists with this name. }
+
+      fixture resolve_web { name: "web-production" }
+      fixture resolve_unknown { name: "nonexistent-profile" } -> notfound
     }
 
     action list() {
@@ -51,6 +57,8 @@ concept RuntimeProfile [R] {
       }) {
         Return all declared runtime profiles.
       }
+
+      fixture list_all { }
     }
   }
 

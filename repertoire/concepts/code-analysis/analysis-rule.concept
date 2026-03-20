@@ -34,6 +34,11 @@ concept AnalysisRule [U] {
       -> invalidSyntax(message: String) {
         The rule source has syntax errors for the given engine.
       }
+
+      fixture valid_create { name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }
+      fixture pattern_match { name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }
+      fixture bad_engine { name: "test-rule", engine: "unknown-engine", source: "[]", severity: "info", category: "security" } -> invalidSyntax
+      fixture bad_source { name: "test-rule", engine: "datalog", source: "not-valid-json", severity: "info", category: "security" } -> invalidSyntax
     }
 
     action evaluate(rule: U) {
@@ -48,6 +53,9 @@ concept AnalysisRule [U] {
       -> evaluationError(message: String) {
         Rule evaluation failed.
       }
+
+      fixture valid_evaluate { }
+      fixture missing_rule { rule: "analysis-rule-nonexistent" } -> evaluationError
     }
 
     action evaluateAll(category: String) {
@@ -56,6 +64,9 @@ concept AnalysisRule [U] {
         Results as serialized JSON array of { rule, findingCount,
         findings }.
       }
+
+      fixture all_rules { category: "" }
+      fixture by_category { category: "dead-code" }
     }
 
     action get(rule: U) {
@@ -65,6 +76,9 @@ concept AnalysisRule [U] {
       -> notfound() {
         Rule does not exist.
       }
+
+      fixture valid_get { }
+      fixture missing_get { rule: "analysis-rule-nonexistent" } -> notfound
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept ThreeWayMerge [C] {
 
@@ -18,6 +19,8 @@ concept ThreeWayMerge [C] {
         name: "three-way", category: "merge",
         contentTypes: ["text/plain", "text/*"]
       }
+
+      fixture valid {}
     }
 
     action execute(base: Bytes, ours: Bytes, theirs: Bytes) {
@@ -30,6 +33,10 @@ concept ThreeWayMerge [C] {
       -> unsupportedContent(message: String) {
         Content type not supported by this provider.
       }
+
+      fixture clean_merge { base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }
+      fixture conflicting_merge { base: "line1", ours: "lineA", theirs: "lineB" }
+      fixture non_string_content { base: 42, ours: "text", theirs: "text" } -> error
     }
   }
 

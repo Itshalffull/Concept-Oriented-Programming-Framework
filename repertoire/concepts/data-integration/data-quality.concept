@@ -30,12 +30,18 @@ concept DataQuality [D] {
       -> notfound(message: String) {
         Ruleset does not exist.
       }
+
+      fixture validate_ok { item: "{\"title\":\"Test Article\",\"body\":\"Full content here\"}", rulesetId: "article_rules" }
+      fixture validate_invalid_json { item: "not-json", rulesetId: "article_rules" } -> invalid
+      fixture validate_missing_ruleset { item: "{\"title\":\"Test\"}", rulesetId: "nonexistent" } -> notfound
     }
 
     action quarantine(itemId: String, violations: String) {
       -> ok() {
         Item held for review with violation details.
       }
+
+      fixture quarantine_item { itemId: "item-1", violations: "[{\"rule\":\"required\",\"field\":\"title\"}]" }
     }
 
     action release(itemId: String) {
@@ -45,18 +51,25 @@ concept DataQuality [D] {
       -> notfound(message: String) {
         Item not in quarantine.
       }
+
+      fixture release_quarantined { itemId: "item-1" }
+      fixture release_missing { itemId: "item-missing" } -> notfound
     }
 
     action profile(datasetQuery: String) {
       -> ok(profile: String) {
         Returns completeness, distribution, and anomaly statistics for the dataset.
       }
+
+      fixture profile_articles { datasetQuery: "SELECT * FROM articles" }
     }
 
     action reconcile(field: String, knowledgeBase: String) {
       -> ok(matches: String) {
         Returns candidate matches from the knowledge base for the given field value.
       }
+
+      fixture reconcile_author { field: "author_name", knowledgeBase: "wikidata" }
     }
 
   }

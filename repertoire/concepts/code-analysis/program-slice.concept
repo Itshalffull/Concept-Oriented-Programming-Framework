@@ -34,6 +34,11 @@ concept ProgramSlice [Z] {
         No dependence graph has been computed for files
         containing this symbol.
       }
+
+      fixture forward_slice { criterion: "clef/state-field/Article/title", direction: "forward" }
+      fixture backward_slice { criterion: "clef/action/Article/publish", direction: "backward" }
+      fixture with_location { criterion: "myFunc@src/handler.ts:42:5", direction: "backward" }
+      fixture no_data { criterion: "nonexistent/symbol", direction: "forward" } -> noDependenceData
     }
 
     action filesInSlice(slice: Z) {
@@ -41,6 +46,9 @@ concept ProgramSlice [Z] {
         Return all files included in the slice.
         Results as serialized JSON array.
       }
+
+      fixture valid_files { }
+      fixture empty_slice { slice: "program-slice-empty" }
     }
 
     action symbolsInSlice(slice: Z) {
@@ -48,6 +56,9 @@ concept ProgramSlice [Z] {
         Return all symbols included in the slice.
         Results as serialized JSON array.
       }
+
+      fixture valid_symbols { }
+      fixture empty_slice { slice: "program-slice-empty" }
     }
 
     action get(slice: Z) {
@@ -57,6 +68,9 @@ concept ProgramSlice [Z] {
       -> notfound() {
         Slice does not exist.
       }
+
+      fixture valid_get { }
+      fixture missing_slice { slice: "program-slice-nonexistent" } -> notfound
     }
   }
 

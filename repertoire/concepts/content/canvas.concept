@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(3)
 concept Canvas [V] {
 
@@ -22,6 +23,9 @@ concept Canvas [V] {
       -> notfound(message: String) {
         The canvas does not exist.
       }
+
+      fixture valid_add { canvas: "board-1", node: "card-a", x: 100, y: 200 }
+      fixture add_to_new_canvas { canvas: "board-2", node: "card-b", x: 0, y: 0 }
     }
 
     action moveNode(canvas: V, node: String, x: Int, y: Int) {
@@ -31,6 +35,9 @@ concept Canvas [V] {
       -> notfound(message: String) {
         The canvas or node does not exist.
       }
+
+      fixture valid_move { canvas: "board-1", node: "card-a", x: 300, y: 400 }
+      fixture move_missing_canvas { canvas: "nonexistent", node: "card-a", x: 0, y: 0 } -> notfound
     }
 
     action groupNodes(canvas: V, nodes: String, group: String) {
@@ -40,6 +47,9 @@ concept Canvas [V] {
       -> notfound(message: String) {
         The canvas or one of the nodes does not exist.
       }
+
+      fixture valid_group { canvas: "board-1", nodes: "[\"card-a\",\"card-b\"]", group: "section-1" }
+      fixture group_missing_canvas { canvas: "nonexistent", nodes: "[\"card-a\"]", group: "g1" } -> notfound
     }
 
     action removeItem(canvas: V, node: String) {
@@ -49,6 +59,9 @@ concept Canvas [V] {
       -> notfound(message: String) {
         The canvas or node does not exist.
       }
+
+      fixture valid_remove { canvas: "board-1", node: "card-a" }
+      fixture remove_missing { canvas: "nonexistent", node: "card-a" } -> notfound
     }
 
     action resizeItem(canvas: V, node: String, width: Int, height: Int) {
@@ -58,6 +71,9 @@ concept Canvas [V] {
       -> notfound(message: String) {
         The canvas or node does not exist.
       }
+
+      fixture valid_resize { canvas: "board-1", node: "card-a", width: 200, height: 150 }
+      fixture resize_missing { canvas: "nonexistent", node: "card-a", width: 100, height: 100 } -> notfound
     }
   }
 

@@ -21,6 +21,10 @@ concept Reference [R] {
       -> exists(source: R, target: String) {
         A reference from this source to this target already exists.
       }
+
+      fixture valid_add { source: "page-1", target: "doc-1" }
+      fixture another_ref { source: "page-2", target: "doc-3" }
+      fixture duplicate_ref { source: "page-1", target: "doc-1" } -> exists
     }
 
     action removeRef(source: R, target: String) {
@@ -31,6 +35,9 @@ concept Reference [R] {
       -> notfound(source: R, target: String) {
         No reference exists between this source and target.
       }
+
+      fixture valid_remove { source: "page-1", target: "doc-1" }
+      fixture missing_ref { source: "page-999", target: "doc-999" } -> notfound
     }
 
     action getRefs(source: R) {
@@ -41,6 +48,9 @@ concept Reference [R] {
       -> notfound(source: R) {
         The source entity was not found.
       }
+
+      fixture valid_refs { source: "page-1" }
+      fixture missing_source { source: "page-nonexistent" } -> notfound
     }
 
     action resolveTarget(target: String) {
@@ -48,6 +58,9 @@ concept Reference [R] {
         Checks whether the referenced target entity exists,
         useful for detecting broken links.
       }
+
+      fixture valid_target { target: "doc-1" }
+      fixture broken_link { target: "nonexistent-target" }
     }
   }
 

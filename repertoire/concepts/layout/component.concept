@@ -24,6 +24,9 @@ concept Component [C] {
       -> exists(message: String) {
         A component with this identity is already registered.
       }
+
+      fixture register_hero { component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }
+      fixture register_sidebar_nav { component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }
     }
 
     action render(component: C, context: String) {
@@ -34,6 +37,9 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture render_homepage { component: "hero-banner", context: "homepage" }
+      fixture render_unknown { component: "nonexistent-widget", context: "homepage" } -> notfound
     }
 
     action place(component: C, region: String) {
@@ -44,6 +50,9 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture place_in_header { component: "hero-banner", region: "header" }
+      fixture place_unknown { component: "nonexistent-widget", region: "sidebar" } -> notfound
     }
 
     action setVisibility(component: C, visible: Bool) {
@@ -54,6 +63,10 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture set_visible_true { component: "hero-banner", visible: true }
+      fixture set_visible_false { component: "hero-banner", visible: false }
+      fixture set_visible_unknown { component: "nonexistent-widget", visible: true } -> notfound
     }
 
     action evaluateVisibility(component: C, context: String) {
@@ -64,6 +77,9 @@ concept Component [C] {
       -> notfound(message: String) {
         No component exists with this identifier.
       }
+
+      fixture evaluate_homepage { component: "hero-banner", context: "homepage" }
+      fixture evaluate_unknown { component: "nonexistent-widget", context: "homepage" } -> notfound
     }
   }
 

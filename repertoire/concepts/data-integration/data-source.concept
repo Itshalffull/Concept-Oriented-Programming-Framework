@@ -26,6 +26,10 @@ concept DataSource [D] {
       -> exists(message: String) {
         A source with this name is already registered.
       }
+
+      fixture register_api { name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" }
+      fixture register_db { name: "analytics_db", uri: "postgres://db.internal:5432/analytics", credentials: "user:pass" }
+      fixture register_duplicate { name: "blog_api", uri: "https://blog.example.com/api", credentials: "token:abc123" } -> exists
     }
 
     action connect(sourceId: String) {
@@ -38,6 +42,9 @@ concept DataSource [D] {
       -> error(message: String) {
         The source is unreachable or credentials were rejected.
       }
+
+      fixture connect_existing { sourceId: "src-1" }
+      fixture connect_missing { sourceId: "src-missing" } -> notfound
     }
 
     action discover(sourceId: String) {
@@ -50,6 +57,9 @@ concept DataSource [D] {
       -> error(message: String) {
         The source does not support introspection or the query failed.
       }
+
+      fixture discover_existing { sourceId: "src-1" }
+      fixture discover_missing { sourceId: "src-missing" } -> notfound
     }
 
     action healthCheck(sourceId: String) {
@@ -59,6 +69,9 @@ concept DataSource [D] {
       -> notfound(message: String) {
         Source does not exist.
       }
+
+      fixture health_existing { sourceId: "src-1" }
+      fixture health_missing { sourceId: "src-missing" } -> notfound
     }
 
     action deactivate(sourceId: String) {
@@ -68,6 +81,9 @@ concept DataSource [D] {
       -> notfound(message: String) {
         Source does not exist.
       }
+
+      fixture deactivate_existing { sourceId: "src-1" }
+      fixture deactivate_missing { sourceId: "src-missing" } -> notfound
     }
   }
 

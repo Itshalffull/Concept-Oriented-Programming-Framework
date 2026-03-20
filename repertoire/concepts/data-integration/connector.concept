@@ -24,6 +24,10 @@ concept Connector [C] {
       -> error(message: String) {
         The protocol ID is unknown or the config is malformed for the protocol.
       }
+
+      fixture configure_rest { sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }
+      fixture configure_sql { sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }
+      fixture configure_bad_json { sourceId: "src-1", protocolId: "rest", config: "not-json" } -> error
     }
 
     action read(connectorId: String, query: String, options: String) {
@@ -36,6 +40,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system rejected the query or the connection timed out.
       }
+
+      fixture read_posts { connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }
+      fixture read_missing_connector { connectorId: "conn-missing", query: "{}", options: "{}" } -> notfound
     }
 
     action write(connectorId: String, data: String, options: String) {
@@ -48,6 +55,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system rejected the write or the connection timed out.
       }
+
+      fixture write_records { connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }
+      fixture write_missing_connector { connectorId: "conn-missing", data: "[]", options: "{}" } -> notfound
     }
 
     action test(connectorId: String) {
@@ -60,6 +70,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system is unreachable or authentication was rejected.
       }
+
+      fixture test_existing { connectorId: "conn-1" }
+      fixture test_missing { connectorId: "conn-missing" } -> notfound
     }
 
     action discover(connectorId: String) {
@@ -72,6 +85,9 @@ concept Connector [C] {
       -> error(message: String) {
         The external system does not support schema introspection or the query failed.
       }
+
+      fixture discover_existing { connectorId: "conn-1" }
+      fixture discover_missing { connectorId: "conn-missing" } -> notfound
     }
   }
 

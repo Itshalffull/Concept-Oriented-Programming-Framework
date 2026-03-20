@@ -22,16 +22,26 @@ concept Slot [L] {
                   position: String, fallback: option String) {
       -> ok(slot: L) { Define an insertion point. }
       -> duplicate(message: String) { Name taken on this host. }
+
+      fixture valid_define { name: "header", host: "dialog", position: "before-title", fallback: "Default Header" }
+      fixture no_fallback { name: "footer", host: "dialog", position: "after-body" }
+      fixture duplicate_slot { name: "header", host: "dialog", position: "before-title" } -> duplicate
     }
 
     action fill(slot: L, content: String) {
       -> ok(slot: L) { Inject content into slot. }
       -> notfound(message: String) { Slot missing. }
+
+      fixture valid_fill { content: "<h2>Custom Header</h2>" }
+      fixture missing_slot { slot: "nonexistent-slot", content: "some content" } -> notfound
     }
 
     action clear(slot: L) {
       -> ok(slot: L) { Remove content, revert to fallback. }
       -> notfound(message: String) { Slot missing. }
+
+      fixture valid_clear { }
+      fixture missing_clear { slot: "nonexistent-slot" } -> notfound
     }
   }
 

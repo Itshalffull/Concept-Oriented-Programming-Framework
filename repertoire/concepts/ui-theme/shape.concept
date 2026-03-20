@@ -16,18 +16,30 @@ concept Shape [H] {
   actions {
     action configure(name: String, config: String) {
       -> ok(shapeId: ShapeProfileId) { Shape profile configured. }
+
+      fixture configure_rounded { name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }
+      fixture configure_pill { name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }
     }
 
     action resolve(shapeId: ShapeProfileId, element: String) {
       -> ok(value: String) { Shape value resolved for the element. }
+
+      fixture resolve_button { shapeId: "shape-1", element: "button" }
+      fixture resolve_card { shapeId: "shape-1", element: "card" }
     }
 
     action computeRadius(shapeId: ShapeProfileId, element: String) {
       -> ok(radius: String) { Radius computed for the element. }
+
+      fixture radius_chip { shapeId: "shape-1", element: "chip" }
+      fixture radius_dialog { shapeId: "shape-1", element: "dialog" }
     }
 
     action computeClipPath(shapeId: ShapeProfileId, element: String) {
       -> ok(clipPath: String) { Clip path computed for the element. }
+
+      fixture clip_avatar { shapeId: "shape-1", element: "avatar" }
+      fixture clip_badge { shapeId: "shape-1", element: "badge" }
     }
   }
 

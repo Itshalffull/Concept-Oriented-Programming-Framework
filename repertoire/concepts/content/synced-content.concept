@@ -21,6 +21,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The original content does not exist.
       }
+
+      fixture create_ref { ref: "ref-1", original: "doc-main" }
+      fixture create_ref_missing { ref: "ref-2", original: "doc-missing" } -> notfound
     }
 
     action editOriginal(original: S, content: String) {
@@ -30,6 +33,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The original content does not exist.
       }
+
+      fixture edit_content { original: "doc-main", content: "Updated paragraph text" }
+      fixture edit_missing { original: "doc-missing", content: "text" } -> notfound
     }
 
     action deleteReference(ref: S) {
@@ -39,6 +45,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The reference does not exist.
       }
+
+      fixture delete_ref { ref: "ref-1" }
+      fixture delete_missing { ref: "ref-missing" } -> notfound
     }
 
     action convertToIndependent(ref: S) {
@@ -48,6 +57,9 @@ concept SyncedContent [S] {
       -> notfound(message: String) {
         The reference does not exist.
       }
+
+      fixture convert_ref { ref: "ref-1" }
+      fixture convert_missing { ref: "ref-missing" } -> notfound
     }
   }
 

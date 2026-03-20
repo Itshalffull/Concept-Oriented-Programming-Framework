@@ -31,6 +31,11 @@ concept DependenceGraph [N] {
       -> unsupportedLanguage(language: String) {
         No dependence provider available for this language.
       }
+
+      fixture file_scope { scopeRef: "src/handler.ts" }
+      fixture module_scope { scopeRef: "clef::runtime" }
+      fixture project_scope { scopeRef: "my-project" }
+      fixture empty_scope { scopeRef: "" } -> unsupportedLanguage
     }
 
     action queryDependents(symbol: String, edgeKinds: String) {
@@ -39,6 +44,9 @@ concept DependenceGraph [N] {
         optionally filtered by edge kind (data-dep, control-dep,
         call, import, type-dep). Results as serialized JSON array.
       }
+
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" }
+      fixture data_deps_only { symbol: "clef/state-field/Article/title", edgeKinds: "data-dep" }
     }
 
     action queryDependencies(symbol: String, edgeKinds: String) {
@@ -46,6 +54,9 @@ concept DependenceGraph [N] {
         Find all symbols the given symbol depends on.
         Results as serialized JSON array.
       }
+
+      fixture all_kinds { symbol: "clef/state-field/Article/title", edgeKinds: "" }
+      fixture call_only { symbol: "clef/action/Article/publish", edgeKinds: "call" }
     }
 
     action sliceForward(criterion: String) {
@@ -54,6 +65,9 @@ concept DependenceGraph [N] {
         affected by changes to the criterion. Results as
         serialized JSON.
       }
+
+      fixture valid_forward { criterion: "clef/state-field/Article/title" }
+      fixture action_criterion { criterion: "clef/action/Article/publish" }
     }
 
     action sliceBackward(criterion: String) {
@@ -62,6 +76,9 @@ concept DependenceGraph [N] {
         that contribute to the criterion. Results as
         serialized JSON.
       }
+
+      fixture valid_backward { criterion: "clef/state-field/Article/title" }
+      fixture output_criterion { criterion: "clef/output/report.json" }
     }
 
     action impactAnalysis(changed: String) {
@@ -70,6 +87,9 @@ concept DependenceGraph [N] {
         set of affected symbols and the dependency paths.
         Results as serialized JSON.
       }
+
+      fixture single_change { changed: "[\"clef/state-field/Article/title\"]" }
+      fixture multi_change { changed: "[\"clef/action/Article/publish\",\"clef/state-field/Article/status\"]" }
     }
 
     action get(graph: N) {
@@ -79,6 +99,9 @@ concept DependenceGraph [N] {
       -> notfound() {
         Graph does not exist.
       }
+
+      fixture valid_get { }
+      fixture missing_graph { graph: "dependence-graph-nonexistent" } -> notfound
     }
   }
 

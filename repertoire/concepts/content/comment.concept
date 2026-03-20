@@ -21,6 +21,9 @@ concept Comment [C] {
       -> ok(comment: C) {
         Attaches a new top-level comment to the specified entity.
       }
+
+      fixture valid_add { comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }
+      fixture empty_comment { comment: "", entity: "doc-42", content: "text", author: "alice" } -> error
     }
 
     action reply(comment: C, parent: C, content: String, author: String) {
@@ -28,6 +31,9 @@ concept Comment [C] {
         Creates a threaded reply under the given parent comment,
         extending the materialized thread path.
       }
+
+      fixture valid_reply { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }
+      fixture missing_parent { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" } -> error
     }
 
     action publish(comment: C) {
@@ -37,6 +43,9 @@ concept Comment [C] {
       -> notfound(message: String) {
         The comment does not exist.
       }
+
+      fixture valid_publish { comment: "c1" }
+      fixture publish_missing { comment: "nonexistent" } -> notfound
     }
 
     action unpublish(comment: C) {
@@ -46,6 +55,9 @@ concept Comment [C] {
       -> notfound(message: String) {
         The comment does not exist.
       }
+
+      fixture valid_unpublish { comment: "c1" }
+      fixture unpublish_missing { comment: "nonexistent" } -> notfound
     }
 
     action delete(comment: C) {
@@ -55,6 +67,9 @@ concept Comment [C] {
       -> notfound(message: String) {
         The comment does not exist.
       }
+
+      fixture valid_delete { comment: "c1" }
+      fixture delete_missing { comment: "nonexistent" } -> notfound
     }
   }
 

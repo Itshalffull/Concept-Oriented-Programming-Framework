@@ -29,6 +29,11 @@ concept DesktopAdapter [A] {
       -> error(message: String) {
         Props contain patterns not mappable to desktop.
       }
+
+      fixture normalize_ipc_events { adapter: "desktop-1", props: "{ \"onclick\": \"openFile\", \"onclose\": \"cleanup\", \"class\": \"toolbar-btn\" }" }
+      fixture normalize_style_attrs { adapter: "desktop-1", props: "{ \"style\": { \"width\": 200 }, \"aria-label\": \"Save\" }" }
+      fixture normalize_empty_props { adapter: "desktop-1", props: "" } -> error
+      fixture normalize_invalid_json { adapter: "desktop-1", props: "<<<" } -> error
     }
   }
 

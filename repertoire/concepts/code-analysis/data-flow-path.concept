@@ -29,6 +29,10 @@ concept DataFlowPath [W] {
       -> noPath() {
         No data flow path exists between source and sink.
       }
+
+      fixture valid_trace { source: "config/db-url", sink: "ts/function/connect" }
+      fixture taint_trace { source: "user-input/form", sink: "ts/function/query" }
+      fixture no_path { source: "isolated/node-a", sink: "isolated/node-b" } -> noPath
     }
 
     action traceFromConfig(configKey: String) {
@@ -36,6 +40,9 @@ concept DataFlowPath [W] {
         Trace all places a config value flows to. Results as
         serialized JSON array of paths.
       }
+
+      fixture valid_config { configKey: "db-url" }
+      fixture prefixed_config { configKey: "config/api-key" }
     }
 
     action traceToOutput(output: String) {
@@ -43,6 +50,9 @@ concept DataFlowPath [W] {
         Trace all data sources that contribute to a generated
         output file. Results as serialized JSON array of paths.
       }
+
+      fixture valid_output { output: "dist/bundle.js" }
+      fixture report_output { output: "reports/coverage.json" }
     }
 
     action get(path: W) {
@@ -52,6 +62,9 @@ concept DataFlowPath [W] {
       -> notfound() {
         Path does not exist.
       }
+
+      fixture valid_get { }
+      fixture missing_path { path: "data-flow-path-nonexistent" } -> notfound
     }
   }
 

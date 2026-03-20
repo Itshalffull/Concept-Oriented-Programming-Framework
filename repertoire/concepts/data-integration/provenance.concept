@@ -24,6 +24,9 @@ concept Provenance [P] {
       -> ok(recordId: String) {
         Lineage event recorded with entity, activity, agent, and inputs.
       }
+
+      fixture record_capture { entity: "item-1", activity: "capture", agent: "system", inputs: "" }
+      fixture record_transform { entity: "item-2", activity: "transform", agent: "enricher-ocr", inputs: "item-1" }
     }
 
     action trace(entityId: String) {
@@ -33,6 +36,9 @@ concept Provenance [P] {
       -> notfound(message: String) {
         Entity has no provenance records.
       }
+
+      fixture trace_existing { entityId: "item-1" }
+      fixture trace_missing { entityId: "item-missing" } -> notfound
     }
 
     action audit(batchId: String) {
@@ -42,6 +48,9 @@ concept Provenance [P] {
       -> notfound(message: String) {
         Batch does not exist.
       }
+
+      fixture audit_batch { batchId: "batch-2026-03-01" }
+      fixture audit_missing { batchId: "batch-missing" } -> notfound
     }
 
     action rollback(batchId: String) {
@@ -51,6 +60,9 @@ concept Provenance [P] {
       -> notfound(message: String) {
         Batch does not exist.
       }
+
+      fixture rollback_batch { batchId: "batch-2026-03-01" }
+      fixture rollback_missing { batchId: "batch-missing" } -> notfound
     }
 
     action diff(entityId: String, version1: String, version2: String) {
@@ -60,6 +72,9 @@ concept Provenance [P] {
       -> notfound(message: String) {
         Entity or versions not found.
       }
+
+      fixture diff_versions { entityId: "item-1", version1: "prov-1", version2: "prov-2" }
+      fixture diff_missing { entityId: "item-missing", version1: "prov-x", version2: "prov-y" } -> notfound
     }
 
     action reproduce(entityId: String) {
@@ -69,6 +84,9 @@ concept Provenance [P] {
       -> notfound(message: String) {
         Entity has no provenance records.
       }
+
+      fixture reproduce_existing { entityId: "item-1" }
+      fixture reproduce_missing { entityId: "item-missing" } -> notfound
     }
   }
 

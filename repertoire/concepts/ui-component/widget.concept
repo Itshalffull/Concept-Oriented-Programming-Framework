@@ -29,6 +29,9 @@ concept Widget [P] {
       }
       -> duplicate(message: String) { Name already registered. }
       -> invalid(message: String) { AST failed validation. }
+
+      fixture valid_register { name: "dialog", ast: "{\"type\":\"widget\",\"states\":[\"open\",\"closed\"]}", category: "overlay" }
+      fixture invalid_ast { name: "broken-widget", ast: "not-valid-json", category: "general" } -> invalid
     }
 
     action get(widget: P) {
@@ -36,17 +39,26 @@ concept Widget [P] {
         Retrieve widget AST for instantiation.
       }
       -> notfound(message: String) { Not registered. }
+
+      fixture valid_get { }
+      fixture missing_widget { widget: "nonexistent-widget" } -> notfound
     }
 
     action list(category: option String) {
       -> ok(widgets: String) {
         List registered widgets, optionally filtered.
       }
+
+      fixture list_all { }
+      fixture list_by_category { category: "overlay" }
     }
 
     action unregister(widget: P) {
       -> ok(widget: P) { Remove from catalog. }
       -> notfound(message: String) { Not registered. }
+
+      fixture valid_unregister { }
+      fixture missing_unregister { widget: "nonexistent-widget" } -> notfound
     }
   }
 

@@ -30,11 +30,19 @@ concept Shell [S] {
         a name and role. Status becomes "ready".
       }
       -> invalid(message: String) { Zone config malformed. }
+
+      fixture init_two_zones { shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }
+      fixture init_single_zone { shell: "S-2", zones: "[\"main\"]" }
+      fixture init_invalid_json { shell: "S-3", zones: "not-json" } -> invalid
+      fixture init_empty_zones { shell: "S-4", zones: "[]" } -> invalid
     }
 
     action assignToZone(shell: S, zone: String, ref: String) {
       -> ok(shell: S) { Place a host reference in a zone. }
       -> notfound(message: String) { Zone not defined. }
+
+      fixture assign_host_to_primary { shell: "S-1", zone: "primary", ref: "host-1" }
+      fixture assign_unknown_shell { shell: "S-nonexistent", zone: "primary", ref: "host-1" } -> notfound
     }
 
     action adapt(shell: S, config: String) {
@@ -45,6 +53,10 @@ concept Shell [S] {
       }
       -> invalid(message: String) { Shell config malformed. }
       -> notfound(message: String) { Shell not defined. }
+
+      fixture adapt_new_layout { shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" }
+      fixture adapt_unknown_shell { shell: "S-nonexistent", config: "{ \"zones\": [\"main\"] }" } -> notfound
+      fixture adapt_invalid_config { shell: "S-1", config: "bad-json" } -> invalid
     }
 
     action clearZone(shell: S, zone: String) {
@@ -52,16 +64,25 @@ concept Shell [S] {
         Remove content from zone. Return previous ref.
       }
       -> notfound(message: String) { Zone not defined. }
+
+      fixture clear_primary_zone { shell: "S-1", zone: "primary" }
+      fixture clear_unknown_shell { shell: "S-nonexistent", zone: "primary" } -> notfound
     }
 
     action pushOverlay(shell: S, ref: String) {
       -> ok(shell: S) { Add overlay to stack. }
       -> invalid(message: String) { Shell not ready. }
+
+      fixture push_modal { shell: "S-1", ref: "modal-confirm-delete" }
+      fixture push_no_ref { shell: "S-1", ref: "" } -> invalid
     }
 
     action popOverlay(shell: S) {
       -> ok(shell: S, overlay: String) { Remove top overlay. }
       -> empty(message: String) { No overlays. }
+
+      fixture pop_existing { shell: "S-1" }
+      fixture pop_unknown_shell { shell: "S-nonexistent" } -> empty
     }
   }
 

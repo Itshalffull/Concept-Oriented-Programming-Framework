@@ -20,6 +20,10 @@ concept Alias [A] {
       -> exists(entity: A, name: String) {
         This alias name is already registered for the entity.
       }
+
+      fixture valid_add { entity: "page-123", name: "homepage" }
+      fixture another_alias { entity: "page-456", name: "about-us" }
+      fixture duplicate_alias { entity: "page-123", name: "homepage" } -> exists
     }
 
     action removeAlias(entity: A, name: String) {
@@ -29,6 +33,9 @@ concept Alias [A] {
       -> notfound(entity: A, name: String) {
         No such alias exists for the entity.
       }
+
+      fixture valid_remove { entity: "page-123", name: "homepage" }
+      fixture missing_alias { entity: "page-999", name: "nonexistent" } -> notfound
     }
 
     action resolve(name: String) {
@@ -39,6 +46,9 @@ concept Alias [A] {
       -> notfound(name: String) {
         No entity is associated with this alias name.
       }
+
+      fixture valid_resolve { name: "homepage" }
+      fixture unknown_name { name: "no-such-alias" } -> notfound
     }
   }
 

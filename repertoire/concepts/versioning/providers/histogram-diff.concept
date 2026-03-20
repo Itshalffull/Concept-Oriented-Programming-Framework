@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept HistogramDiff [C] {
 
@@ -18,6 +19,8 @@ concept HistogramDiff [C] {
         name: "histogram", category: "diff",
         contentTypes: ["text/plain", "text/*"]
       }
+
+      fixture valid {}
     }
 
     action compute(contentA: Bytes, contentB: Bytes) {
@@ -27,6 +30,9 @@ concept HistogramDiff [C] {
       -> unsupportedContent(message: String) {
         Content type not supported by this provider.
       }
+
+      fixture diff_text { contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }
+      fixture non_string { contentA: 123, contentB: "text" } -> error
     }
   }
 

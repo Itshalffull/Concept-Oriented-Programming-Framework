@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SpatialConnector [C] {
 
@@ -27,9 +28,12 @@ concept SpatialConnector [C] {
         Creates a new connector between source and target items on the canvas
         with the given type (visual, semantic, or surfaced).
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The canvas, source item, or target item does not exist.
       }
+
+      fixture valid_draw { canvas: "c1", source: "node-a", target: "node-b", type: "visual" }
+      fixture semantic_draw { canvas: "c1", source: "node-a", target: "node-c", type: "semantic" }
     }
 
     action promote(connector: C) {
@@ -40,6 +44,9 @@ concept SpatialConnector [C] {
       -> already_semantic(message: String) {
         The connector is already semantic or surfaced.
       }
+
+      fixture valid_promote { connector: "connector-1" }
+      fixture already_promoted { connector: "connector-1" } -> already_semantic
     }
 
     action demote(connector: C) {
@@ -50,6 +57,9 @@ concept SpatialConnector [C] {
       -> not_semantic(message: String) {
         The connector is not semantic and cannot be demoted.
       }
+
+      fixture valid_demote { connector: "connector-1" }
+      fixture demote_visual { connector: "connector-1" } -> not_semantic
     }
 
     action surface(canvas: String, source: String, target: String) {
@@ -60,15 +70,21 @@ concept SpatialConnector [C] {
       -> no_reference(message: String) {
         No existing Reference found between source and target.
       }
+
+      fixture valid_surface { canvas: "c1", source: "node-a", target: "node-b" }
+      fixture surface_no_ref { canvas: "c1", source: "orphan-x", target: "orphan-y" } -> no_reference
     }
 
     action hide(connector: C) {
       -> ok() {
         Removes the connector from the canvas display.
       }
-      -> notfound(message: String) {
+      -> notFound(message: String) {
         The connector does not exist.
       }
+
+      fixture valid_hide { connector: "connector-1" }
+      fixture hide_missing { connector: "nonexistent" } -> notFound
     }
   }
 

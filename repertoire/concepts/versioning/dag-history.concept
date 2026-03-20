@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept DAGHistory [N] {
 
@@ -29,6 +30,10 @@ concept DAGHistory [N] {
       -> unknownParent(message: String) {
         One or more parent IDs not found in the DAG.
       }
+
+      fixture append_root { parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }
+      fixture append_with_parent { parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }
+      fixture empty_content_ref { parents: [], contentRef: "", metadata: "" } -> error
     }
 
     action ancestors(nodeId: N) {
@@ -38,6 +43,9 @@ concept DAGHistory [N] {
       -> notFound(message: String) {
         nodeId not in DAG.
       }
+
+      fixture ancestors_existing { nodeId: "dag-history-2" }
+      fixture ancestors_missing { nodeId: "dag-history-nonexistent" } -> error
     }
 
     action commonAncestor(a: N, b: N) {
@@ -50,6 +58,9 @@ concept DAGHistory [N] {
       -> notFound(message: String) {
         a or b not in DAG.
       }
+
+      fixture find_common { a: "dag-history-2", b: "dag-history-3" }
+      fixture missing_node { a: "dag-history-nonexistent", b: "dag-history-1" } -> error
     }
 
     action descendants(nodeId: N) {
@@ -59,6 +70,9 @@ concept DAGHistory [N] {
       -> notFound(message: String) {
         nodeId not in DAG.
       }
+
+      fixture descendants_existing { nodeId: "dag-history-1" }
+      fixture descendants_missing { nodeId: "dag-history-nonexistent" } -> error
     }
 
     action between(from: N, to: N) {
@@ -71,6 +85,9 @@ concept DAGHistory [N] {
       -> notFound(message: String) {
         from or to not in DAG.
       }
+
+      fixture path_between { from: "dag-history-1", to: "dag-history-3" }
+      fixture between_missing { from: "dag-history-nonexistent", to: "dag-history-1" } -> error
     }
 
     action getNode(nodeId: N) {
@@ -80,6 +97,9 @@ concept DAGHistory [N] {
       -> notFound(message: String) {
         nodeId not in DAG.
       }
+
+      fixture get_existing { nodeId: "dag-history-1" }
+      fixture get_missing { nodeId: "dag-history-nonexistent" } -> error
     }
   }
 

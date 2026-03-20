@@ -25,6 +25,10 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture map_title { mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }
+      fixture map_body_html { mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }
+      fixture map_missing { mappingId: "map-missing", sourceField: "x", destField: "y", transform: "" } -> notfound
     }
 
     action apply(record: String, mappingId: String) {
@@ -37,6 +41,10 @@ concept FieldMapping [F] {
       -> error(message: String) {
         A required field is missing or a transform within the mapping failed.
       }
+
+      fixture apply_record { record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }
+      fixture apply_missing { record: "{\"title\":\"Hello\"}", mappingId: "map-missing" } -> notfound
+      fixture apply_bad_json { record: "not-json", mappingId: "map-1" } -> error
     }
 
     action reverse(record: String, mappingId: String) {
@@ -46,12 +54,17 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture reverse_record { record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }
+      fixture reverse_missing { record: "{}", mappingId: "map-missing" } -> notfound
     }
 
     action autoDiscover(sourceSchema: String, destSchema: String) {
       -> ok(mappingId: String, suggestions: String) {
         Suggested mappings generated from name similarity and type compatibility.
       }
+
+      fixture discover_schemas { sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" }
     }
 
     action validate(mappingId: String) {
@@ -61,6 +74,9 @@ concept FieldMapping [F] {
       -> notfound(message: String) {
         Mapping does not exist.
       }
+
+      fixture validate_existing { mappingId: "map-1" }
+      fixture validate_missing { mappingId: "map-missing" } -> notfound
     }
   }
 
