@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Session [S] {
 
@@ -28,6 +29,9 @@ concept Session [S] {
         Session creation failed, for example due to exceeding the
         maximum number of concurrent sessions for the user.
       }
+
+      fixture create_mobile { session: "sess-001", userId: "alice", device: "mobile" }
+      fixture create_empty_user { session: "sess-002", userId: "", device: "desktop" } -> error
     }
 
     action validate(session: S) {
@@ -38,6 +42,9 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture validate_existing { session: "sess-001" }
+      fixture validate_nonexistent { session: "sess-missing" } -> error
     }
 
     action refresh(session: S) {
@@ -52,6 +59,9 @@ concept Session [S] {
         The session has already expired and cannot be refreshed.
         The user must re-authenticate.
       }
+
+      fixture refresh_valid { session: "sess-001" }
+      fixture refresh_nonexistent { session: "sess-missing" } -> error
     }
 
     action destroy(session: S) {
@@ -61,6 +71,9 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture destroy_existing { session: "sess-001" }
+      fixture destroy_nonexistent { session: "sess-missing" } -> error
     }
 
     action destroyAll(userId: String) {
@@ -68,6 +81,9 @@ concept Session [S] {
         Invalidate and remove all sessions belonging to the given
         user across all devices.
       }
+
+      fixture destroy_all_alice { userId: "alice" }
+      fixture destroy_all_empty { userId: "" } -> error
     }
 
     action getContext(session: S) {
@@ -78,6 +94,9 @@ concept Session [S] {
       -> notfound(message: String) {
         No session exists with this identifier.
       }
+
+      fixture context_existing { session: "sess-001" }
+      fixture context_nonexistent { session: "sess-missing" } -> error
     }
   }
 

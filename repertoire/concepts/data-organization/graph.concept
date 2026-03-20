@@ -49,11 +49,17 @@ concept Graph [G] {
     action getNeighbors(graph: G, node: String, depth: Int) {
       -> ok(neighbors: String) { Returns neighbors within the specified depth. }
       -> notfound() { Graph or node does not exist. }
+
+      fixture neighbors_depth_1 { graph: "social-network", node: "alice", depth: 1 }
+      fixture neighbors_no_graph { graph: "nonexistent", node: "alice", depth: 1 } -> error
     }
 
     action filterNodes(graph: G, filter: String) {
       -> ok(filtered: String) { Returns nodes matching the filter criteria. }
       -> notfound() { Graph does not exist. }
+
+      fixture filter_by_type { graph: "social-network", filter: "type=person" }
+      fixture filter_no_graph { graph: "nonexistent", filter: "type=any" } -> error
     }
   }
 

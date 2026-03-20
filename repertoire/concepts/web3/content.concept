@@ -17,7 +17,7 @@ concept Content [C] {
   }
 
   actions {
-    action store(data: Bytes, name: String, contentType: String) {
+    action store(data: String, name: String, contentType: String) {
       -> ok(cid: String, size: Int) {
         Content stored on IPFS. Returns the content-addressed hash (CID)
         and size in bytes. The CID is deterministic — same data always
@@ -27,6 +27,9 @@ concept Content [C] {
         Failed to store content. IPFS node unreachable or storage quota
         exceeded.
       }
+
+      fixture store_text_file { data: "Hello, World!", name: "greeting.txt", contentType: "text/plain" }
+      fixture store_empty_name { data: "content", name: "", contentType: "text/plain" } -> error
     }
 
     action pin(cid: String) {
@@ -38,6 +41,9 @@ concept Content [C] {
         Pinning failed. The CID may not exist or the pinning service
         is unreachable.
       }
+
+      fixture pin_existing { cid: "abc123def456" }
+      fixture pin_empty_cid { cid: "" } -> error
     }
 
     action unpin(cid: String) {
@@ -48,10 +54,13 @@ concept Content [C] {
       -> error(cid: String, message: String) {
         Unpin failed.
       }
+
+      fixture unpin_existing { cid: "abc123def456" }
+      fixture unpin_empty_cid { cid: "" } -> error
     }
 
     action resolve(cid: String) {
-      -> ok(data: Bytes, contentType: String, size: Int) {
+      -> ok(data: String, contentType: String, size: Int) {
         Content retrieved from IPFS. Returns the raw data, content type,
         and size.
       }
@@ -63,6 +72,9 @@ concept Content [C] {
         to this variant with retry logic, fallback to a different
         gateway, or alert operators.
       }
+
+      fixture resolve_existing { cid: "abc123def456" }
+      fixture resolve_nonexistent { cid: "000000000000" } -> error
     }
   }
 

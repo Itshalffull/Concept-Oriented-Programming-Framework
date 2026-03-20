@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept DesignToken [T] {
 
@@ -35,6 +36,10 @@ concept DesignToken [T] {
       -> duplicate(message: String) {
         A token with this name already exists in this group.
       }
+
+      fixture valid_define_color { token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" }
+      fixture valid_define_spacing { token: "spacing-md", name: "spacing-md", value: "16px", type: "dimension", tier: "semantic" }
+      fixture define_duplicate { token: "blue-500", name: "blue-500", value: "#3b82f6", type: "color", tier: "primitive" } -> error
     }
 
     action alias(token: T, name: String, reference: T, tier: String) {
@@ -45,6 +50,9 @@ concept DesignToken [T] {
       }
       -> notfound(message: String) { The referenced token does not exist. }
       -> cycle(message: String) { The alias would create a circular reference chain. }
+
+      fixture valid_alias { token: "primary-color", name: "primary-color", reference: "blue-500", tier: "semantic" }
+      fixture alias_nonexistent_ref { token: "bad-alias", name: "bad-alias", reference: "nonexistent-token", tier: "semantic" } -> error
     }
 
     action resolve(token: T) {
@@ -53,16 +61,25 @@ concept DesignToken [T] {
       }
       -> notfound(message: String) { The token does not exist. }
       -> broken(message: String, brokenAt: T) { The reference chain is broken. }
+
+      fixture valid_resolve { token: "blue-500" }
+      fixture resolve_nonexistent { token: "nonexistent-token" } -> error
     }
 
     action update(token: T, value: option String) {
       -> ok(token: T) { Update the token's value or reference target. }
       -> notfound(message: String) { The token does not exist. }
+
+      fixture valid_update { token: "blue-500", value: "#2563eb" }
+      fixture update_nonexistent { token: "nonexistent-token", value: "#000000" } -> error
     }
 
     action remove(token: T) {
       -> ok(token: T) { Delete the token. Aliases pointing here become broken. }
       -> notfound(message: String) { The token does not exist. }
+
+      fixture valid_remove { token: "blue-500" }
+      fixture remove_nonexistent { token: "nonexistent-token" } -> error
     }
 
     action export(format: String) {
@@ -71,6 +88,10 @@ concept DesignToken [T] {
         (Custom Properties), "swift", "kotlin", "json".
       }
       -> unsupported(message: String) { Format not supported. }
+
+      fixture export_css { format: "css" }
+      fixture export_dtcg { format: "dtcg" }
+      fixture export_unsupported { format: "yaml" } -> error
     }
   }
 

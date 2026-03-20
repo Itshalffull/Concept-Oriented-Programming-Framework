@@ -33,6 +33,9 @@ concept OptimismProvider [P] {
       -> unreachable(message: String) {
         The L2 RPC endpoint did not respond during registration.
       }
+
+      fixture register_mainnet { rpc_url: "https://mainnet.optimism.io", l1_bridge_address: "0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1" }
+      fixture register_missing_rpc { rpc_url: "", l1_bridge_address: "0x1234" } -> error
     }
 
     action poll(provider: P) {
@@ -46,6 +49,9 @@ concept OptimismProvider [P] {
       -> error(message: String) {
         The polling RPC call failed or returned unexpected data.
       }
+
+      fixture poll_existing { provider: "op-provider-1" }
+      fixture poll_missing { provider: "" } -> error
     }
 
     action checkFinality(provider: P, tx_hash: String) {
@@ -60,6 +66,9 @@ concept OptimismProvider [P] {
       -> notfound(provider: P) {
         No provider is registered with this identifier.
       }
+
+      fixture check_finalized_tx { provider: "op-provider-1", tx_hash: "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890" }
+      fixture check_missing_provider { provider: "", tx_hash: "0xabc" } -> error
     }
 
     action relayMessage(provider: P, message_hash: String) {
@@ -74,6 +83,9 @@ concept OptimismProvider [P] {
         The relay transaction failed, typically due to an invalid
         proof or insufficient L1 gas.
       }
+
+      fixture relay_valid_message { provider: "op-provider-1", message_hash: "0xdeadbeef1234567890abcdef1234567890abcdef1234567890abcdef12345678" }
+      fixture relay_missing_provider { provider: "", message_hash: "0xabc" } -> error
     }
   }
 

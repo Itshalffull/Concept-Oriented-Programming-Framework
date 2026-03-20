@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Signal [G] {
 
@@ -24,6 +25,10 @@ concept Signal [G] {
         (read-only derived), "effect" (side-effect on change).
       }
       -> invalid(message: String) { Kind not recognized. }
+
+      fixture valid_create_state { signal: "G-1", kind: "state", initialValue: "hello" }
+      fixture valid_create_computed { signal: "G-2", kind: "computed", initialValue: "" }
+      fixture invalid_kind { signal: "G-3", kind: "unknown", initialValue: "" } -> error
     }
 
     action read(signal: G) {
@@ -31,6 +36,9 @@ concept Signal [G] {
         Read current value and register caller as dependency.
       }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_read { signal: "G-1" }
+      fixture read_nonexistent { signal: "G-999" } -> error
     }
 
     action write(signal: G, value: String) {
@@ -40,6 +48,9 @@ concept Signal [G] {
       }
       -> readonly(message: String) { Cannot write to computed signal. }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_write { signal: "G-1", value: "world" }
+      fixture write_nonexistent { signal: "G-999", value: "x" } -> error
     }
 
     action batch(signals: String) {
@@ -50,11 +61,17 @@ concept Signal [G] {
       -> partial(message: String, succeeded: Int, failed: Int) {
         Some updates failed.
       }
+
+      fixture valid_batch { signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }
+      fixture invalid_batch { signals: "not-valid-json" } -> error
     }
 
     action dispose(signal: G) {
       -> ok(signal: G) { Remove signal, unsubscribe from dependencies. }
       -> notfound(message: String) { Signal does not exist. }
+
+      fixture valid_dispose { signal: "G-1" }
+      fixture dispose_nonexistent { signal: "G-999" } -> error
     }
   }
 

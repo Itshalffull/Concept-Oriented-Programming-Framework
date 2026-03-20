@@ -43,6 +43,9 @@ concept ResourceGrantPolicy [G] {
         Resolve the most specific grant for this resource and action, preferring exact resource matches and then wildcard defaults.
       }
       -> notfound(message: String) { No grant matches this scope, resource, and action. }
+
+      fixture resolve_article_view { scope: "schema", resource: "Article", actionName: "view" }
+      fixture resolve_no_match { scope: "schema", resource: "Secret", actionName: "destroy" } -> error
     }
 
     action list(scope: option String) {
@@ -52,6 +55,9 @@ concept ResourceGrantPolicy [G] {
       }) {
         Return all grants, optionally filtered by scope.
       }
+
+      fixture list_by_scope { scope: "schema" }
+      fixture list_all { }
     }
   }
 

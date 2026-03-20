@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Workflow [W] {
 
@@ -22,6 +23,17 @@ concept Workflow [W] {
       -> exists(message: String) {
         A state with this name already exists in the workflow.
       }
+
+      fixture define_draft_state {
+        workflow: "content-lifecycle"
+        name: "draft"
+        flags: "initial"
+      }
+      fixture define_empty_workflow {
+        workflow: ""
+        name: "draft"
+        flags: "initial"
+      } -> error
     }
 
     action defineTransition(workflow: W, from: String, to: String, label: String, guard: String) {
@@ -31,6 +43,21 @@ concept Workflow [W] {
       -> error(message: String) {
         One or both states do not exist, or the transition is invalid.
       }
+
+      fixture define_publish_transition {
+        workflow: "content-lifecycle"
+        from: "draft"
+        to: "published"
+        label: "publish"
+        guard: "approved"
+      }
+      fixture define_transition_no_workflow {
+        workflow: "nonexistent"
+        from: "draft"
+        to: "published"
+        label: "publish"
+        guard: ""
+      } -> error
     }
 
     action transition(workflow: W, entity: String, transition: String) {
@@ -43,6 +70,17 @@ concept Workflow [W] {
       -> forbidden(message: String) {
         The guard condition prevented the transition.
       }
+
+      fixture transition_publish {
+        workflow: "content-lifecycle"
+        entity: "doc-42"
+        transition: "publish"
+      }
+      fixture transition_unknown_workflow {
+        workflow: "nonexistent"
+        entity: "doc-42"
+        transition: "publish"
+      } -> notfound
     }
 
     action getCurrentState(workflow: W, entity: String) {
@@ -52,6 +90,15 @@ concept Workflow [W] {
       -> notfound(message: String) {
         The workflow or entity was not found.
       }
+
+      fixture get_current_state {
+        workflow: "content-lifecycle"
+        entity: "doc-42"
+      }
+      fixture get_state_unknown_workflow {
+        workflow: "nonexistent"
+        entity: "doc-42"
+      } -> notfound
     }
   }
 

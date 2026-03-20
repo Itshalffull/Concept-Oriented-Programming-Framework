@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Queue [Q] {
 
@@ -21,6 +22,17 @@ concept Queue [Q] {
       -> notfound(message: String) {
         The queue was not found.
       }
+
+      fixture enqueue_high_priority {
+        queue: "email-queue"
+        item: "send_welcome_email"
+        priority: 1
+      }
+      fixture enqueue_empty_queue {
+        queue: ""
+        item: "task"
+        priority: 1
+      } -> notfound
     }
 
     action claim(queue: Q, worker: String) {
@@ -30,6 +42,15 @@ concept Queue [Q] {
       -> empty(message: String) {
         No items are available in the queue.
       }
+
+      fixture claim_from_queue {
+        queue: "email-queue"
+        worker: "worker-alpha"
+      }
+      fixture claim_from_empty_queue {
+        queue: "empty-queue"
+        worker: "worker-alpha"
+      } -> empty
     }
 
     action process(queue: Q, itemId: String, result: String) {
@@ -39,6 +60,17 @@ concept Queue [Q] {
       -> notfound(message: String) {
         The item was not found in the queue.
       }
+
+      fixture process_item {
+        queue: "email-queue"
+        itemId: "item-1"
+        result: "sent_successfully"
+      }
+      fixture process_missing_item {
+        queue: "email-queue"
+        itemId: "nonexistent"
+        result: "failed"
+      } -> notfound
     }
 
     action release(queue: Q, itemId: String) {
@@ -48,6 +80,15 @@ concept Queue [Q] {
       -> notfound(message: String) {
         The item was not found in the queue.
       }
+
+      fixture release_claimed_item {
+        queue: "email-queue"
+        itemId: "item-1"
+      }
+      fixture release_missing_item {
+        queue: "email-queue"
+        itemId: "nonexistent"
+      } -> notfound
     }
 
     action delete(queue: Q, itemId: String) {
@@ -57,6 +98,15 @@ concept Queue [Q] {
       -> notfound(message: String) {
         The item was not found in the queue.
       }
+
+      fixture delete_existing_item {
+        queue: "email-queue"
+        itemId: "item-1"
+      }
+      fixture delete_missing_item {
+        queue: "email-queue"
+        itemId: "nonexistent"
+      } -> notfound
     }
   }
 

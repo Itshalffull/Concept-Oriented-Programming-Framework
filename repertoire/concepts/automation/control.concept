@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Control [K] {
 
@@ -22,6 +23,17 @@ concept Control [K] {
       -> exists(message: String) {
         A control with this identity already exists.
       }
+
+      fixture create_slider {
+        control: "volume-slider"
+        type: "slider"
+        binding: "audio.volume"
+      }
+      fixture create_empty_control {
+        control: ""
+        type: "slider"
+        binding: "audio.volume"
+      } -> error
     }
 
     action interact(control: K, input: String) {
@@ -31,6 +43,15 @@ concept Control [K] {
       -> notfound(message: String) {
         The control was not found.
       }
+
+      fixture interact_slider {
+        control: "volume-slider"
+        input: "75"
+      }
+      fixture interact_nonexistent {
+        control: "nonexistent"
+        input: "50"
+      } -> notfound
     }
 
     action getValue(control: K) {
@@ -40,6 +61,13 @@ concept Control [K] {
       -> notfound(message: String) {
         The control was not found.
       }
+
+      fixture get_value_existing {
+        control: "volume-slider"
+      }
+      fixture get_value_nonexistent {
+        control: "nonexistent"
+      } -> notfound
     }
 
     action setValue(control: K, value: String) {
@@ -49,6 +77,15 @@ concept Control [K] {
       -> notfound(message: String) {
         The control was not found.
       }
+
+      fixture set_value_existing {
+        control: "volume-slider"
+        value: "100"
+      }
+      fixture set_value_nonexistent {
+        control: "nonexistent"
+        value: "50"
+      } -> notfound
     }
 
     action triggerAction(control: K) {
@@ -58,6 +95,13 @@ concept Control [K] {
       -> notfound(message: String) {
         The control was not found.
       }
+
+      fixture trigger_existing {
+        control: "volume-slider"
+      }
+      fixture trigger_nonexistent {
+        control: "nonexistent"
+      } -> notfound
     }
   }
 

@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 @gate
 concept OptimisticApproval [O] {
@@ -30,6 +31,9 @@ concept OptimisticApproval [O] {
         A new assertion is created in Pending status.
         ExpiresAt is set to now + challengePeriod.
       }
+
+      fixture assert_valid { asserter: "alice", payload: "Transfer 1000 tokens to treasury", bond: 100.0, challengePeriodHours: 48.0 }
+      fixture assert_zero_bond { asserter: "alice", payload: "Unauthorized action", bond: 0.0, challengePeriodHours: 24.0 } -> error
     }
 
     action challenge(assertion: O, challenger: String, bond: Float, evidence: String) {
@@ -43,6 +47,9 @@ concept OptimisticApproval [O] {
       -> already_challenged(assertion: O) {
         The assertion is already being challenged.
       }
+
+      fixture challenge_pending { assertion: "assertion-001", challenger: "bob", bond: 100.0, evidence: "Transaction exceeds approved limit" }
+      fixture challenge_expired { assertion: "assertion-expired", challenger: "bob", bond: 50.0, evidence: "Too late" } -> error
     }
 
     action finalize(assertion: O) {
@@ -56,6 +63,9 @@ concept OptimisticApproval [O] {
       -> is_challenged(assertion: O) {
         The assertion is currently being challenged and cannot finalize.
       }
+
+      fixture finalize_unchallenged { assertion: "assertion-001" }
+      fixture finalize_missing { assertion: "assertion-nonexistent" } -> error
     }
 
     action resolve(assertion: O, outcome: String) {
@@ -67,6 +77,9 @@ concept OptimisticApproval [O] {
         The dispute was resolved against the asserter.
         Asserter's bond is forfeited.
       }
+
+      fixture resolve_in_favor { assertion: "assertion-001", outcome: "approved" }
+      fixture resolve_missing { assertion: "assertion-nonexistent", outcome: "rejected" } -> error
     }
   }
 

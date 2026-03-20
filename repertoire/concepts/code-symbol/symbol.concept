@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Symbol [S] {
 
@@ -34,6 +35,10 @@ concept Symbol [S] {
       -> alreadyExists(existing: S) {
         A symbol with this symbol string is already registered.
       }
+
+      fixture valid_register { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }
+      fixture register_concept { symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }
+      fixture register_duplicate { symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" } -> error
     }
 
     action resolve(symbolString: String) {
@@ -47,6 +52,9 @@ concept Symbol [S] {
         Multiple symbols match this string. Candidates
         returned as serialized JSON array of symbol strings.
       }
+
+      fixture valid_resolve { symbolString: "clef/concept/Order" }
+      fixture resolve_nonexistent { symbolString: "clef/concept/NonExistent" } -> error
     }
 
     action findByKind(kind: String, namespace: String) {
@@ -54,6 +62,9 @@ concept Symbol [S] {
         Return all symbols of the given kind, optionally filtered
         by namespace. Results as serialized JSON array.
       }
+
+      fixture find_functions { kind: "function", namespace: "ts/function/src/handlers" }
+      fixture find_all_concepts { kind: "concept", namespace: "" }
     }
 
     action findByFile(file: String) {
@@ -61,6 +72,9 @@ concept Symbol [S] {
         Return all symbols defined in the given file.
         Results as serialized JSON array.
       }
+
+      fixture find_in_file { file: "src/handlers/user.ts" }
+      fixture find_in_empty_file { file: "src/empty.ts" }
     }
 
     action rename(symbol: S, newName: String) {
@@ -73,6 +87,9 @@ concept Symbol [S] {
       -> notfound() {
         Symbol does not exist.
       }
+
+      fixture valid_rename { symbol: "symbol-1", newName: "updateUser" }
+      fixture rename_nonexistent { symbol: "symbol-999", newName: "foo" } -> error
     }
 
     action get(symbol: S) {

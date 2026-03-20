@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Notification [N] {
   purpose {
@@ -23,6 +24,15 @@ concept Notification [N] {
       -> exists(message: String) {
         A channel with this name is already registered.
       }
+
+      fixture register_email_channel {
+        name: "email"
+        config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}"
+      }
+      fixture register_empty_name {
+        name: ""
+        config: "{}"
+      } -> error
     }
 
     action defineTemplate(notification: N, template: String) {
@@ -33,6 +43,15 @@ concept Notification [N] {
       -> exists(message: String) {
         A template already exists for this notification type.
       }
+
+      fixture define_welcome_template {
+        notification: "welcome"
+        template: "Hello {{name}}, welcome to our platform!"
+      }
+      fixture define_empty_template {
+        notification: "welcome"
+        template: ""
+      } -> error
     }
 
     action subscribe(user: String, eventType: String, channel: String) {
@@ -43,6 +62,17 @@ concept Notification [N] {
       -> exists(message: String) {
         This user-event-channel subscription already exists.
       }
+
+      fixture subscribe_user_email {
+        user: "user-42"
+        eventType: "order_shipped"
+        channel: "email"
+      }
+      fixture subscribe_empty_user {
+        user: ""
+        eventType: "order_shipped"
+        channel: "email"
+      } -> error
     }
 
     action unsubscribe(user: String, eventType: String, channel: String) {
@@ -53,6 +83,17 @@ concept Notification [N] {
       -> notfound(message: String) {
         No matching subscription exists for this user-event-channel combination.
       }
+
+      fixture unsubscribe_existing {
+        user: "user-42"
+        eventType: "order_shipped"
+        channel: "email"
+      }
+      fixture unsubscribe_nonexistent {
+        user: "user-42"
+        eventType: "unknown_event"
+        channel: "email"
+      } -> notfound
     }
 
     action notify(notification: N, user: String, template: String, data: String) {
@@ -63,6 +104,19 @@ concept Notification [N] {
       -> error(message: String) {
         Delivery failed due to a channel transport error or missing template.
       }
+
+      fixture notify_order_shipped {
+        notification: "notif-001"
+        user: "user-42"
+        template: "order_shipped"
+        data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}"
+      }
+      fixture notify_missing_template {
+        notification: "notif-002"
+        user: "user-42"
+        template: ""
+        data: "{}"
+      } -> error
     }
 
     action markRead(notification: N) {
@@ -72,12 +126,26 @@ concept Notification [N] {
       -> notfound(message: String) {
         No notification exists with this identifier.
       }
+
+      fixture mark_read_existing {
+        notification: "notif-001"
+      }
+      fixture mark_read_nonexistent {
+        notification: "nonexistent"
+      } -> notfound
     }
 
     action getUnread(user: String) {
       -> ok(notifications: String) {
         Returns all unread notifications for the user, ordered by delivery time.
       }
+
+      fixture get_unread_valid {
+        user: "user-42"
+      }
+      fixture get_unread_empty_user {
+        user: ""
+      } -> error
     }
   }
 

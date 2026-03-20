@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Query [Q] {
 
@@ -25,6 +26,10 @@ concept Query [Q] {
         The expression contains invalid syntax or
         references unknown fields.
       }
+
+      fixture parse_status_filter { query: "q-001", expression: "status = 'active'" }
+      fixture parse_complex { query: "q-002", expression: "age > 18 AND role = 'admin'" }
+      fixture parse_empty_expression { query: "q-003", expression: "" } -> error
     }
 
     action execute(query: Q) {
@@ -35,6 +40,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture execute_parsed { query: "q-001" }
+      fixture execute_missing { query: "q-nonexistent" } -> error
     }
 
     action subscribe(query: Q) {

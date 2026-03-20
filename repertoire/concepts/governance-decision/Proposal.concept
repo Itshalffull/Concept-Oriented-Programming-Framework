@@ -32,6 +32,9 @@ concept Proposal [P] {
       -> invalid(reason: String) {
         The proposal content is invalid (empty title, no actions, etc.).
       }
+
+      fixture create_budget_proposal { proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }
+      fixture create_empty_title { proposer: "alice", title: "", description: "No title given", actions: ["noop"] } -> error
     }
 
     action sponsor(proposal: P, sponsorId: String) {
@@ -41,6 +44,9 @@ concept Proposal [P] {
       -> not_pending(proposal: P) {
         The proposal is not in Pending status.
       }
+
+      fixture sponsor_pending { proposal: "proposal-001", sponsorId: "bob" }
+      fixture sponsor_missing { proposal: "proposal-nonexistent", sponsorId: "bob" } -> error
     }
 
     action activate(proposal: P) {
@@ -48,6 +54,9 @@ concept Proposal [P] {
         The proposal moves to Active status, indicating voting or
         decision-making has begun.
       }
+
+      fixture activate_sponsored { proposal: "proposal-001" }
+      fixture activate_missing { proposal: "proposal-nonexistent" } -> error
     }
 
     action advance(proposal: P, newStatus: String) {
@@ -58,6 +67,9 @@ concept Proposal [P] {
       -> invalid_transition(proposal: P, from: String, to: String) {
         The requested status transition is not valid.
       }
+
+      fixture advance_to_passed { proposal: "proposal-001", newStatus: "Passed" }
+      fixture advance_missing { proposal: "proposal-nonexistent", newStatus: "Passed" } -> error
     }
 
     action cancel(proposal: P, canceller: String) {
@@ -71,6 +83,9 @@ concept Proposal [P] {
       -> not_cancellable(proposal: P) {
         The proposal is in a terminal state and cannot be cancelled.
       }
+
+      fixture cancel_draft { proposal: "proposal-001", canceller: "alice" }
+      fixture cancel_missing { proposal: "proposal-nonexistent", canceller: "alice" } -> error
     }
   }
 

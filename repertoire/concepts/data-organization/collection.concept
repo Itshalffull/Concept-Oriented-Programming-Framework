@@ -19,26 +19,41 @@ concept Collection [C] {
     action create(collection: C, type: String, schema: String) {
       -> ok() { New collection initialized with the given type and schema. }
       -> exists() { Collection already exists. }
+
+      fixture create_articles { collection: "articles", type: "list", schema: "article-v1" }
+      fixture create_empty_name { collection: "", type: "", schema: "" } -> error
     }
 
     action addMember(collection: C, member: String) {
       -> ok() { Member added to collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture add_article_member { collection: "articles", member: "post-2026-01" }
+      fixture add_to_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
     action removeMember(collection: C, member: String) {
       -> ok() { Member removed from collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture remove_article { collection: "articles", member: "post-2026-01" }
+      fixture remove_from_nonexistent { collection: "nonexistent", member: "item" } -> error
     }
 
     action getMembers(collection: C) {
       -> ok(members: String) { Returns all members of the collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture get_article_members { collection: "articles" }
+      fixture get_nonexistent_members { collection: "nonexistent" } -> error
     }
 
     action setSchema(collection: C, schema: String) {
       -> ok() { Schema updated for the collection. }
       -> notfound() { Collection does not exist. }
+
+      fixture set_article_schema { collection: "articles", schema: "article-v2" }
+      fixture set_schema_nonexistent { collection: "nonexistent", schema: "any" } -> error
     }
   }
 

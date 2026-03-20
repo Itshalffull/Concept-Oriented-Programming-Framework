@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Authentication [U] {
 
@@ -24,6 +25,9 @@ concept Authentication [U] {
       -> exists(message: String) {
         The user already has a registered account.
       }
+
+      fixture register_local { user: "alice", provider: "local", credentials: "secret123" }
+      fixture register_empty_user { user: "", provider: "local", credentials: "pass" } -> error
     }
 
     action login(user: U, credentials: String) {
@@ -34,6 +38,9 @@ concept Authentication [U] {
       -> invalid(message: String) {
         Credentials do not match the stored value for this user.
       }
+
+      fixture login_valid { user: "alice", credentials: "secret123" }
+      fixture login_wrong_pass { user: "alice", credentials: "wrong-password" } -> error
     }
 
     action logout(user: U) {
@@ -44,6 +51,9 @@ concept Authentication [U] {
       -> notfound(message: String) {
         No active session exists for this user.
       }
+
+      fixture logout_existing { user: "alice" }
+      fixture logout_unknown { user: "nonexistent-user" } -> error
     }
 
     action authenticate(token: String) {
@@ -54,6 +64,9 @@ concept Authentication [U] {
       -> invalid(message: String) {
         Token is expired, malformed, or has been revoked.
       }
+
+      fixture auth_valid_token { token: "tok-abc-123" }
+      fixture auth_invalid_token { token: "expired-or-revoked" } -> error
     }
 
     action resetPassword(user: U, newCredentials: String) {
@@ -64,6 +77,9 @@ concept Authentication [U] {
       -> notfound(message: String) {
         No account exists for this user.
       }
+
+      fixture reset_existing { user: "alice", newCredentials: "newpass456" }
+      fixture reset_unknown { user: "nonexistent-user", newCredentials: "pass" } -> error
     }
   }
 

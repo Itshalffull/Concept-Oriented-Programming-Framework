@@ -9,10 +9,8 @@ concept SimpleAccumulator [SA] {
 
   state {
     configurations: set SA
-    decayHalfLifeDays: SA -> option Float
-    initialScore: SA -> Float
-    minScore: SA -> Float
-    maxScore: SA -> option Float
+    decayRate: SA -> option Float
+    cap: SA -> option Float
   }
 
   actions {
