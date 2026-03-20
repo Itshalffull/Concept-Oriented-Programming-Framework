@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Vote [V] {
 
@@ -33,6 +34,10 @@ concept Vote [V] {
         A voting session is created in Open status for the given proposal.
         If snapshotRef is provided, voter weights come from that snapshot.
       }
+
+      fixture open_with_snapshot { proposalRef: "proposal-001", deadline: "2026-04-15T23:59:59Z", snapshotRef: "snapshot-abc" }
+      fixture open_without_snapshot { proposalRef: "proposal-002", deadline: "2026-05-01T12:00:00Z", snapshotRef: null }
+      fixture open_empty_ref { proposalRef: "", deadline: "2026-04-15T23:59:59Z", snapshotRef: null } -> error
     }
 
     action castVote(session: V, voter: String, choice: String, weight: Float) {
@@ -48,6 +53,10 @@ concept Vote [V] {
       -> not_eligible(voter: String) {
         The voter is not eligible to vote in this session.
       }
+
+      fixture cast_yes { session: "session-001", voter: "alice", choice: "yes", weight: 1.0 }
+      fixture cast_weighted { session: "session-001", voter: "bob", choice: "no", weight: 2.5 }
+      fixture cast_duplicate { session: "session-001", voter: "alice", choice: "no", weight: 1.0 } -> error
     }
 
     action close(session: V) {
@@ -57,6 +66,9 @@ concept Vote [V] {
       -> already_closed(session: V) {
         The session is already closed.
       }
+
+      fixture close_open_session { session: "session-001" }
+      fixture close_missing_session { session: "session-nonexistent" } -> error
     }
 
     action tally(session: V) {
@@ -67,6 +79,9 @@ concept Vote [V] {
       -> not_closed(session: V) {
         The session must be closed before tallying.
       }
+
+      fixture tally_closed_session { session: "session-001" }
+      fixture tally_missing_session { session: "session-nonexistent" } -> error
     }
   }
 

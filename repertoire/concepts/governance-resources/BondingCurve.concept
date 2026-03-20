@@ -24,42 +24,59 @@ concept BondingCurve [BC] {
   }
 
   actions {
-    action create(name: String, curveType: String, parameters: String, reserveToken: String, frictionFee: Float) {
+    action create(curveType: String, params: String, reserveToken: String, bondedToken: String) {
       -> created(curve: BC) {
         A new bonding curve is created with zero supply and zero reserve.
       }
+
+      fixture create_linear { curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }
+      fixture create_missing_type { curveType: "", params: "{}", reserveToken: "ETH", bondedToken: "GOV" } -> error
     }
 
     action buy(curve: BC, buyer: String, reserveAmount: Float) {
-      -> minted(curve: BC, tokensReceived: Float, newPrice: Float, feeCollected: Float) {
+      -> bought(tokensReceived: Float, newPrice: Float) {
         Reserve is deposited. Tokens are minted per the curve formula.
-        Friction fee is deducted and routed to treasury.
       }
+      -> not_found(curve: BC) {
+        The specified bonding curve does not exist.
+      }
+
+      fixture buy_100_eth { curve: "curve-001", buyer: "alice", reserveAmount: 100.0 }
+      fixture buy_nonexistent_curve { curve: "curve-nonexistent", buyer: "alice", reserveAmount: 50.0 } -> error
     }
 
     action sell(curve: BC, seller: String, tokenAmount: Float) {
-      -> burned(curve: BC, reserveReturned: Float, newPrice: Float) {
+      -> sold(reserveReceived: Float, newPrice: Float) {
         Tokens are burned. Reserve is returned per the curve formula.
       }
-      -> insufficient_tokens(seller: String) {
-        The seller does not hold enough tokens.
+      -> not_found(curve: BC) {
+        The specified bonding curve does not exist.
       }
+
+      fixture sell_tokens { curve: "curve-001", seller: "alice", tokenAmount: 50.0 }
+      fixture sell_nonexistent_curve { curve: "curve-nonexistent", seller: "alice", tokenAmount: 10.0 } -> error
     }
 
-    action getPrice(curve: BC) {
-      -> price(curve: BC, currentPrice: Float, supply: Float) {
-        Returns the current price based on supply.
+    action getPrice(curve: BC, amount: Float) {
+      -> price(spotPrice: Float, purchaseCost: Float) {
+        Returns the current spot price and cost to purchase the given amount.
       }
+      -> not_found(curve: BC) {
+        The specified bonding curve does not exist.
+      }
+
+      fixture get_price_10 { curve: "curve-001", amount: 10.0 }
+      fixture get_price_nonexistent { curve: "curve-nonexistent", amount: 1.0 } -> error
     }
   }
 
   example "create-then-sell": {
 
-    after create(name: _, curveType: _, parameters: _, reserveToken: _, frictionFee: _) -> created(curve: bc)
+    after create(curveType: _, params: _, reserveToken: _, bondedToken: _) -> created(curve: bc)
 
-        then buy(curve: bc, buyer: _, reserveAmount: 100.0) -> minted(curve: bc, tokensReceived: _, newPrice: _, feeCollected: _)
+        then buy(curve: bc, buyer: _, reserveAmount: 100.0) -> bought(tokensReceived: _, newPrice: _)
 
-        and  sell(curve: bc, seller: _, tokenAmount: _) -> burned(curve: bc, reserveReturned: _, newPrice: _)
+        and  sell(curve: bc, seller: _, tokenAmount: _) -> sold(reserveReceived: _, newPrice: _)
 
   }
 

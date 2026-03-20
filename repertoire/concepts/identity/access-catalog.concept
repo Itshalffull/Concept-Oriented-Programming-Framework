@@ -36,28 +36,41 @@ concept AccessCatalog [C] {
     action registerRole(entry: C, key: String, label: String,
                         description: String, permissions: list String) {
       -> ok(entry: C) { Store a role definition and its default permission bundle. }
+
+      fixture register_editor_role { entry: "role-001", key: "editor", label: "Editor", description: "Content editor role", permissions: "[\"content.edit\",\"content.publish\"]" }
+      fixture register_empty_role { entry: "", key: "editor", label: "Editor", description: "desc", permissions: "[]" } -> error
     }
 
     action registerResourceAction(entry: C, catalog: String, key: String, label: String) {
       -> ok(entry: C) { Store a named action entry for a resource-action catalog such as schema or node. }
+
+      fixture register_view_action { entry: "action-001", catalog: "schema", key: "view", label: "View content" }
+      fixture register_empty_action { entry: "", catalog: "schema", key: "view", label: "View" } -> error
     }
 
     action listPermissions() {
       -> ok(permissions: list { key: String, label: String, group: String, description: String }) {
         Return all registered permission definitions.
       }
+
+      fixture list_all_perms { }
     }
 
     action listRoles() {
       -> ok(roles: list { key: String, label: String, description: String, permissions: list String }) {
         Return all registered role definitions.
       }
+
+      fixture list_all_roles { }
     }
 
     action listResourceActions(catalog: String) {
       -> ok(actions: list { key: String, label: String }) {
         Return all action definitions for the named resource catalog.
       }
+
+      fixture list_schema_actions { catalog: "schema" }
+      fixture list_empty_catalog { catalog: "" } -> error
     }
   }
 

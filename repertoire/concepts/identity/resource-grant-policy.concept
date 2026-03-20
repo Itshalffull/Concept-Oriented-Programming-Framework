@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ResourceGrantPolicy [G] {
 
@@ -24,11 +25,17 @@ concept ResourceGrantPolicy [G] {
     action setGrant(grant: G, scope: String, resourcePattern: String,
                     actionName: String, roles: list String) {
       -> ok(grant: G) { Store or update the grant for this scope, resource pattern, and action. }
+
+      fixture set_wildcard_view { grant: "schema:*:view", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[\"admin\",\"editor\",\"viewer\"]" }
+      fixture set_empty_grant { grant: "", scope: "schema", resourcePattern: "*", actionName: "view", roles: "[]" } -> error
     }
 
     action getGrant(scope: String, resourcePattern: String, actionName: String) {
       -> ok(grant: G, roles: list String) { Return the exact grant for this scope, resource pattern, and action. }
       -> notfound(message: String) { No exact grant exists for this scope, resource pattern, and action. }
+
+      fixture get_existing_grant { scope: "schema", resourcePattern: "*", actionName: "view" }
+      fixture get_missing_grant { scope: "schema", resourcePattern: "NonExistent", actionName: "delete" } -> error
     }
 
     action resolve(scope: String, resource: String, actionName: String) {

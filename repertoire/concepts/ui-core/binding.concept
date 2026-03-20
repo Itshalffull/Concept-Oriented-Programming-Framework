@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept Binding [B, C] {
 
@@ -32,6 +33,10 @@ concept Binding [B, C] {
         per state field, one command per action.
       }
       -> invalid(message: String) { Mode not recognized or concept unreachable. }
+
+      fixture valid_bind_coupled { binding: "B-1", concept: "Article", mode: "coupled" }
+      fixture valid_bind_rest { binding: "B-2", concept: "User", mode: "rest" }
+      fixture invalid_mode { binding: "B-3", concept: "Article", mode: "websocket" } -> error
     }
 
     action sync(binding: B) {

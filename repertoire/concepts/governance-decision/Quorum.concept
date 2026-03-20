@@ -36,6 +36,9 @@ concept Quorum [Q] {
       -> not_met(totalVotes: Int, required: Int, shortfall: Int) {
         The total votes fall short of the quorum threshold.
       }
+
+      fixture quorum_met { totalVotes: 15, totalEligible: 100 }
+      fixture quorum_not_met { totalVotes: 3, totalEligible: 100 } -> error
     }
 
     action updateThreshold(rule: Q, newType: String, newValue: Float) {
@@ -45,6 +48,9 @@ concept Quorum [Q] {
       -> not_found(rule: Q) {
         The quorum rule does not exist.
       }
+
+      fixture update_to_fractional { rule: "quorum-001", newType: "Fractional", newValue: 0.25 }
+      fixture update_missing_rule { rule: "quorum-nonexistent", newType: "Absolute", newValue: 5.0 } -> error
     }
   }
 

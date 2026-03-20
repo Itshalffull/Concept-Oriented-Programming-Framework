@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Policy [PL] {
 
@@ -29,6 +30,21 @@ concept Policy [PL] {
       -> created(policy: PL) {
         A new policy is created in Active status.
       }
+
+      fixture create_must_policy {
+        attributes: "committee_member"
+        deontic: "Must"
+        aim: "submit_quarterly_report"
+        conditions: "end_of_quarter"
+        orElse: "escalate_to_board"
+        domain: "finance"
+      }
+      fixture create_missing_attributes {
+        attributes: ""
+        deontic: "Must"
+        aim: "review"
+        conditions: "always"
+      } -> error
     }
 
     action evaluate(policy: PL, context: String) {
@@ -44,18 +60,41 @@ concept Policy [PL] {
       -> not_applicable(policy: PL) {
         The policy's conditions do not match the given context.
       }
+
+      fixture evaluate_active_policy {
+        policy: "policy-001"
+        context: "{\"role\":\"committee_member\",\"quarter_end\":true}"
+      }
+      fixture evaluate_unknown_policy {
+        policy: "nonexistent"
+        context: "{}"
+      } -> not_applicable
     }
 
     action suspend(policy: PL) {
       -> suspended(policy: PL) {
         The policy is temporarily inactive and will not be evaluated.
       }
+
+      fixture suspend_active_policy {
+        policy: "policy-001"
+      }
+      fixture suspend_unknown_policy {
+        policy: "nonexistent"
+      } -> error
     }
 
     action repeal(policy: PL) {
       -> repealed(policy: PL) {
         The policy is permanently deactivated.
       }
+
+      fixture repeal_active_policy {
+        policy: "policy-001"
+      }
+      fixture repeal_unknown_policy {
+        policy: "nonexistent"
+      } -> error
     }
 
     action modify(policy: PL, field: String, newValue: String) {
@@ -65,6 +104,17 @@ concept Policy [PL] {
       -> not_found(policy: PL) {
         The policy does not exist.
       }
+
+      fixture modify_aim {
+        policy: "policy-001"
+        field: "aim"
+        newValue: "submit_monthly_report"
+      }
+      fixture modify_unknown_policy {
+        policy: "nonexistent"
+        field: "aim"
+        newValue: "anything"
+      } -> not_found
     }
   }
 

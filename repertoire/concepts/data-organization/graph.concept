@@ -17,21 +17,33 @@ concept Graph [G] {
     action addNode(graph: G, node: String) {
       -> ok() { Node added to the graph. }
       -> notfound() { Graph does not exist. }
+
+      fixture add_node_a { graph: "social-network", node: "alice" }
+      fixture add_node_empty { graph: "", node: "" } -> error
     }
 
     action removeNode(graph: G, node: String) {
       -> ok() { Node removed from the graph. }
       -> notfound() { Graph does not exist. }
+
+      fixture remove_existing_node { graph: "social-network", node: "alice" }
+      fixture remove_nonexistent_node { graph: "social-network", node: "nonexistent" } -> error
     }
 
     action addEdge(graph: G, source: String, target: String) {
       -> ok() { Edge added between source and target nodes. }
       -> notfound() { Graph or referenced node does not exist. }
+
+      fixture add_edge_ab { graph: "social-network", source: "alice", target: "bob" }
+      fixture add_edge_no_graph { graph: "nonexistent-graph", source: "a", target: "b" } -> error
     }
 
     action removeEdge(graph: G, source: String, target: String) {
       -> ok() { Edge removed between source and target nodes. }
       -> notfound() { Graph or referenced edge does not exist. }
+
+      fixture remove_edge_ab { graph: "social-network", source: "alice", target: "bob" }
+      fixture remove_nonexistent_edge { graph: "social-network", source: "x", target: "y" } -> error
     }
 
     action getNeighbors(graph: G, node: String, depth: Int) {
