@@ -155,7 +155,6 @@ describe('BondingCurve functional handler', () => {
     it('fixture "buy_100_eth" -> ok', async () => {
       if (typeof bondingCurveHandler.buy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.buy({ curve: "curve-001", buyer: "alice", reserveAmount: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('BondingCurve functional handler', () => {
     it('fixture "sell_tokens" -> ok', async () => {
       if (typeof bondingCurveHandler.sell !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.sell({ curve: "curve-001", seller: "alice", tokenAmount: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('BondingCurve functional handler', () => {
     it('fixture "get_price_10" -> ok', async () => {
       if (typeof bondingCurveHandler.getPrice !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bondingCurveHandler.create({ curveType: "linear", params: "{\"slope\":0.01}", reserveToken: "ETH", bondedToken: "GOV" }), storage));
       const result = await interpret(bondingCurveHandler.getPrice({ curve: "curve-001", amount: "10.0" }), storage);
       expect(result.variant).toBe('ok');
     });

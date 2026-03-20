@@ -164,8 +164,9 @@ function buildConceptSpec(input: Record<string, unknown>): string {
       const inputStr = Object.entries(f.input)
         .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
         .join(', ');
+      const afterClause = f.after && f.after.length > 0 ? ` after ${f.after.join(', ')}` : '';
       const arrow = f.expectedVariant && f.expectedVariant !== 'ok' ? ` -> ${f.expectedVariant}` : '';
-      lines.push(`      fixture ${f.name} { ${inputStr} }${arrow}`);
+      lines.push(`      fixture ${f.name} { ${inputStr} }${afterClause}${arrow}`);
     }
     lines.push('    }');
     lines.push('');

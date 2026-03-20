@@ -63,7 +63,6 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_verify" -> ok', async () => {
       if (typeof contractHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage));
       const result = await contractHandler.verify({ id: "ct-001" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -91,7 +90,6 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_compose" -> ok', async () => {
       if (typeof contractHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage));
       const result = await contractHandler.compose({ contract_ids: "[\"ct-001\",\"ct-002\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -119,7 +117,6 @@ describe('Contract imperative handler', () => {
     it('fixture "valid_discharge" -> ok', async () => {
       if (typeof contractHandler.discharge !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage));
       const result = await contractHandler.discharge({ id: "ct-001", assumption_ref: "user-exists-before-password" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -147,7 +144,6 @@ describe('Contract imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof contractHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage));
       const result = await contractHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,7 +151,6 @@ describe('Contract imperative handler', () => {
     it('fixture "list_by_source" -> ok', async () => {
       if (typeof contractHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contractHandler.define({ name: "user-password-contract", source_concept: "clef/concept/User", target_concept: "clef/concept/Password", assumptions: "[\"user-exists-before-password\"]", guarantees: "[\"password-hash-nonzero\"]" }, storage));
       const result = await contractHandler.list({ source_concept: "clef/concept/User" }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,7 +155,6 @@ describe('FlowTrace functional handler', () => {
     it('fixture "valid_render" -> ok', async () => {
       if (typeof flowTraceHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage));
       const result = await interpret(flowTraceHandler.render({ trace: {"flowId":"f1","status":"ok","durationMs":"100","root":{"action":"User/register","variant":"ok","durationMs":"50","fields":{},"children":[]}}, options: {} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +162,6 @@ describe('FlowTrace functional handler', () => {
     it('fixture "empty_trace" -> ok', async () => {
       if (typeof flowTraceHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage));
       const result = await interpret(flowTraceHandler.render({ trace: {}, options: {} }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,7 +169,6 @@ describe('FlowTrace functional handler', () => {
     it('fixture "json_render" -> ok', async () => {
       if (typeof flowTraceHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(flowTraceHandler.build({ flowId: "flow-abc-20260301-x7k9" }), storage));
       const result = await interpret(flowTraceHandler.render({ trace: {"flowId":"f2","status":"failed","durationMs":"200","root":{"action":"Auth/login","variant":"error","durationMs":"80","fields":{"message":"invalid credentials"},"children":[]}}, options: {"json":"true"} }), storage);
       expect(result.variant).toBe('ok');
     });

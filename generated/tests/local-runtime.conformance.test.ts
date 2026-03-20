@@ -230,10 +230,6 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "traffic_local" -> ok', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage));
       const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "proc-abc123", weight: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,10 +237,6 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "traffic_no_process" -> ok', async () => {
       if (typeof localRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage));
       const result = await interpret(localRuntimeHandler.setTrafficWeight({ process: "", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,10 +298,6 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "rollback_previous" -> ok', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage));
       const result = await interpret(localRuntimeHandler.rollback({ process: "proc-abc123", previousCommand: "node server.js" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -317,10 +305,6 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "rollback_missing_process" -> ok', async () => {
       if (typeof localRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage));
       const result = await interpret(localRuntimeHandler.rollback({ process: "", previousCommand: "node old.js" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -382,10 +366,6 @@ describe('LocalRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof localRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "ApiServer", command: "node server.js", port: "3000" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.provision({ concept: "Worker", command: "python main.py", port: "8080" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "proc-abc123", command: "node server.js --production" }), storage));
-      await safeInvoke(async () => await interpret(localRuntimeHandler.deploy({ process: "", command: "node app.js" }), storage));
       const result = await interpret(localRuntimeHandler.destroy({ process: "proc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,9 +230,6 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage));
       const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "svc-abc123", weight: "20" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,9 +237,6 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "traffic_no_service" -> ok', async () => {
       if (typeof ecsRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage));
       const result = await interpret(ecsRuntimeHandler.setTrafficWeight({ service: "", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +298,6 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "rollback_previous_td" -> ok', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage));
       const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "td-prev-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,9 +305,6 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "rollback_empty_td" -> ok', async () => {
       if (typeof ecsRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage));
       const result = await interpret(ecsRuntimeHandler.rollback({ service: "svc-abc123", targetTaskDefinition: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -378,9 +366,6 @@ describe('EcsRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof ecsRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "OrderService", cpu: "256", memory: "512", cluster: "prod-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.provision({ concept: "DataPipeline", cpu: "1024", memory: "2048", cluster: "compute-cluster" }), storage));
-      await safeInvoke(async () => await interpret(ecsRuntimeHandler.deploy({ service: "svc-abc123", imageUri: "123456789.dkr.ecr.us-east-1.amazonaws.com/order-service:v2" }), storage));
       const result = await interpret(ecsRuntimeHandler.destroy({ service: "svc-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

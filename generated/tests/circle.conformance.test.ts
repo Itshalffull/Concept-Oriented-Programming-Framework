@@ -162,8 +162,6 @@ describe('Circle functional handler', () => {
     it('fixture "valid_assign" -> ok', async () => {
       if (typeof circleHandler.assignMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.assignMember({ circle: "circle-1", member: "alice", role: "developer" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('Circle functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof circleHandler.removeMember !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.removeMember({ circle: "circle-1", member: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,8 +298,6 @@ describe('Circle functional handler', () => {
     it('fixture "valid_set_links" -> ok', async () => {
       if (typeof circleHandler.setLinks !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.setLinks({ circle: "circle-1", leadLink: "alice", repLink: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,8 +366,6 @@ describe('Circle functional handler', () => {
     it('fixture "valid_dissolve" -> ok', async () => {
       if (typeof circleHandler.dissolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.dissolve({ circle: "circle-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -442,8 +434,6 @@ describe('Circle functional handler', () => {
     it('fixture "valid_jurisdiction" -> ok', async () => {
       if (typeof circleHandler.checkJurisdiction !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Engineering", domain: "software-development", purpose: "Build and ship software" }), storage));
-      await safeInvoke(async () => await interpret(circleHandler.create({ name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "circle-1" }), storage));
       const result = await interpret(circleHandler.checkJurisdiction({ circle: "circle-1", action: "approve-budget" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -87,7 +87,6 @@ describe('Comment functional handler', () => {
     it('fixture "valid_add" -> ok', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('Comment functional handler', () => {
     it('fixture "empty_comment" -> ok', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.addComment({ comment: "", entity: "doc-42", content: "text", author: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -157,7 +155,6 @@ describe('Comment functional handler', () => {
     it('fixture "valid_reply" -> ok', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -165,7 +162,6 @@ describe('Comment functional handler', () => {
     it('fixture "missing_parent" -> ok', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.reply({ comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -296,7 +292,6 @@ describe('Comment functional handler', () => {
     it('fixture "valid_unpublish" -> ok', async () => {
       if (typeof commentHandler.unpublish !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.unpublish({ comment: "c1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -366,7 +361,6 @@ describe('Comment functional handler', () => {
     it('fixture "valid_delete" -> ok', async () => {
       if (typeof commentHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(commentHandler.publish({ comment: "c1" }), storage));
       const result = await interpret(commentHandler.delete({ comment: "c1" }), storage);
       expect(result.variant).toBe('ok');
     });

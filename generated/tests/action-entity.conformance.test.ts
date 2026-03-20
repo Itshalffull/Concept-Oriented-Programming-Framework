@@ -162,8 +162,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.findByConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,8 +169,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "find_empty" -> ok', async () => {
       if (typeof actionEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.findByConcept({ concept: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,8 +230,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "triggering_valid" -> ok', async () => {
       if (typeof actionEntityHandler.triggeringSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.triggeringSyncs({ action: "action-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "invoking_valid" -> ok', async () => {
       if (typeof actionEntityHandler.invokingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.invokingSyncs({ action: "action-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,8 +366,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "impl_valid" -> ok', async () => {
       if (typeof actionEntityHandler.implementations !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.implementations({ action: "action-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,8 +434,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "exposures_valid" -> ok', async () => {
       if (typeof actionEntityHandler.interfaceExposures !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.interfaceExposures({ action: "action-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -514,8 +502,6 @@ describe('ActionEntity functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof actionEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "Article", name: "create", params: "[{\"name\":\"title\",\"type\":\"String\"}]", variantRefs: "[\"ok\",\"error\"]" }), storage));
-      await safeInvoke(async () => await interpret(actionEntityHandler.register({ concept: "User", name: "delete", params: "[]", variantRefs: "[]" }), storage));
       const result = await interpret(actionEntityHandler.get({ action: "action-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

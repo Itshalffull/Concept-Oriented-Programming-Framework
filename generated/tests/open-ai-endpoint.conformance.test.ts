@@ -69,8 +69,6 @@ describe('OpenAiEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof openAiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test-abc123", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: "1536" }, storage));
-      await safeInvoke(async () => await openAiEndpointHandler.register({ name: "chat-gpt4", apiKey: "sk-prod-xyz789", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: "0" }, storage));
       const result = await openAiEndpointHandler.resolve({ name: "embeddings" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('OpenAiEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof openAiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await openAiEndpointHandler.register({ name: "embeddings", apiKey: "sk-test-abc123", model: "text-embedding-3-small", baseUrl: "https://api.openai.com/v1", dimensions: "1536" }, storage));
-      await safeInvoke(async () => await openAiEndpointHandler.register({ name: "chat-gpt4", apiKey: "sk-prod-xyz789", model: "gpt-4", baseUrl: "https://api.openai.com/v1", dimensions: "0" }, storage));
       const result = await openAiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

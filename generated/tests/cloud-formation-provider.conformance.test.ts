@@ -155,8 +155,6 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "preview_existing" -> ok', async () => {
       if (typeof cloudformationProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage));
-      await safeInvoke(async () => await interpret(cloudformationProviderHandler.apply({ stack: "stack-abc123" }), storage));
       const result = await interpret(cloudformationProviderHandler.preview({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,8 +291,6 @@ describe('CloudFormationProvider functional handler', () => {
     it('fixture "teardown_stack" -> ok', async () => {
       if (typeof cloudformationProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cloudformationProviderHandler.generate({ plan: "dp-002-payment-service" }), storage));
-      await safeInvoke(async () => await interpret(cloudformationProviderHandler.apply({ stack: "stack-abc123" }), storage));
       const result = await interpret(cloudformationProviderHandler.teardown({ stack: "stack-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

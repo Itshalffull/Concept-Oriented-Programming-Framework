@@ -189,12 +189,31 @@ action record(stepKey: String, inputHash: String, outputHash: String, determinis
 }
 ```
 
-**Syntax**: `fixture <name> { <key>: <value>, ... } [-> <variant>]`
+**Syntax**: `fixture <name> { <key>: <value>, ... } [after <dep>, ...] [-> <variant>]`
 
 - **name**: camelCase identifier describing the scenario
 - **input object**: `{ key: value, ... }` with JSON-like values (strings, numbers, booleans, arrays, nested objects)
+- **after** (optional): comma-separated list of fixture names that must run first to seed storage. Used when a reader action needs data created by a prior action (e.g., `get` needs `create` to run first)
 - **expected variant** (optional): `-> error`, `-> invalid`, etc. Defaults to `ok` if omitted
 - Fixtures appear after variants but before the action's closing `}`
+
+**Examples with `after`**:
+```
+action register(concept: String, sourceFile: String) {
+  -> ok(handler: H)
+  -> error(message: String)
+  fixture register_article { concept: "Article", sourceFile: "article.handler.ts" }
+}
+
+action get(concept: String) {
+  -> ok(handler: H)
+  -> notfound(message: String)
+  fixture get_article { concept: "Article" } after register_article
+  fixture get_missing { concept: "Nonexistent" } -> error
+}
+```
+
+The test generator resolves the `after` chain transitively — if `fixture_c after fixture_b` and `fixture_b after fixture_a`, all three run in order.
 
 **Fixture values**:
 
@@ -210,6 +229,7 @@ action record(stepKey: String, inputHash: String, outputHash: String, determinis
 **Guidelines**:
 - Every action should have at least one `ok` fixture with realistic inputs
 - Add `-> error` or `-> invalid` fixtures to test negative paths
+- Use `after` to declare dependencies when a fixture needs data from a prior action's fixture (e.g., `get` after `create`, `update` after `register`)
 - Use fixture values that match what the handler actually expects (e.g., JSON strings for params that get `JSON.parse()`d)
 - Fixtures are used by the test generator as seeds for both deterministic and property-based tests
 

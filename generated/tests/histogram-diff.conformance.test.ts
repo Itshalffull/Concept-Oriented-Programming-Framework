@@ -148,7 +148,6 @@ describe('HistogramDiff functional handler', () => {
     it('fixture "diff_text" -> ok', async () => {
       if (typeof histogramDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(histogramDiffHandler.register({  }), storage));
       const result = await interpret(histogramDiffHandler.compute({ contentA: "function foo() {}\nreturn 1;", contentB: "function foo() {}\nreturn 2;" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -156,7 +155,6 @@ describe('HistogramDiff functional handler', () => {
     it('fixture "non_string" -> ok', async () => {
       if (typeof histogramDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(histogramDiffHandler.register({  }), storage));
       const result = await interpret(histogramDiffHandler.compute({ contentA: "123", contentB: "text" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -163,8 +163,6 @@ describe('GitOps functional handler', () => {
     it('fixture "reconciliation_found" -> ok', async () => {
       if (typeof gitOpsHandler.reconciliationStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(gitOpsHandler.emit({ plan: "dp-001", controller: "argocd", repo: "git@github.com:org/deploy.git", path: "envs/prod" }), storage));
-      await safeInvoke(async () => await interpret(gitOpsHandler.emit({ plan: "dp-002", controller: "flux", repo: "git@github.com:org/deploy.git", path: "envs/staging" }), storage));
       const result = await interpret(gitOpsHandler.reconciliationStatus({ manifest: "go-manifest-001" }), storage);
       expect(result.variant).toBe('ok');
     });

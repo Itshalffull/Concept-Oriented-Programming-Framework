@@ -87,7 +87,6 @@ describe('Notification functional handler', () => {
     it('fixture "register_email_channel" -> ok', async () => {
       if (typeof notificationHandler.registerChannel !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.registerChannel({ name: "email", config: "{\"provider\":\"smtp\",\"host\":\"mail.example.com\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -156,7 +155,6 @@ describe('Notification functional handler', () => {
     it('fixture "define_welcome_template" -> ok', async () => {
       if (typeof notificationHandler.defineTemplate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.defineTemplate({ notification: "welcome", template: "Hello {{name}}, welcome to our platform!" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('Notification functional handler', () => {
     it('fixture "unsubscribe_existing" -> ok', async () => {
       if (typeof notificationHandler.unsubscribe !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.unsubscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,7 +360,6 @@ describe('Notification functional handler', () => {
     it('fixture "notify_order_shipped" -> ok', async () => {
       if (typeof notificationHandler.notify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.notify({ notification: "notif-001", user: "user-42", template: "order_shipped", data: "{\"orderId\":\"ORD-789\",\"carrier\":\"FedEx\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -432,7 +428,6 @@ describe('Notification functional handler', () => {
     it('fixture "mark_read_existing" -> ok', async () => {
       if (typeof notificationHandler.markRead !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.markRead({ notification: "notif-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,7 +497,6 @@ describe('Notification functional handler', () => {
     it('fixture "get_unread_valid" -> ok', async () => {
       if (typeof notificationHandler.getUnread !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(notificationHandler.subscribe({ user: "user-42", eventType: "order_shipped", channel: "email" }), storage));
       const result = await interpret(notificationHandler.getUnread({ user: "user-42" }), storage);
       expect(result.variant).toBe('ok');
     });

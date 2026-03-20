@@ -155,8 +155,6 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('fixture "preview_payment" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage));
-      await safeInvoke(async () => await interpret(conceptScaffoldGenHandler.register({  }), storage));
       const result = await interpret(conceptScaffoldGenHandler.preview({ name: "Payment", typeParam: "P", purpose: "Process monetary transactions", stateFields: [{"name":"transactions","type":"set P"}], actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"txn","type":"P"}],"description":"Charge completed."}]}], version: "2", gate: "true", capabilities: ["network"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,8 +162,6 @@ describe('ConceptScaffoldGen functional handler', () => {
     it('fixture "preview_no_name" -> ok', async () => {
       if (typeof conceptScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptScaffoldGenHandler.generate({ name: "UserAccount", typeParam: "U", purpose: "Manage user accounts and authentication", stateFields: [{"name":"users","type":"set U"}], actions: [{"name":"create","params":[{"name":"email","type":"String"}],"variants":[{"name":"ok","params":[{"name":"user","type":"U"}],"description":"User created."}]}], version: "1", gate: "false", capabilities: ["persistent-storage"] }), storage));
-      await safeInvoke(async () => await interpret(conceptScaffoldGenHandler.register({  }), storage));
       const result = await interpret(conceptScaffoldGenHandler.preview({ name: "", typeParam: "X", purpose: "Empty", stateFields: [], actions: [], version: "1", gate: "false", capabilities: [] }), storage);
       expect(result.variant).toBe('ok');
     });

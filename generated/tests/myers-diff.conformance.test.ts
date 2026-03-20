@@ -148,7 +148,6 @@ describe('MyersDiff functional handler', () => {
     it('fixture "diff_text" -> ok', async () => {
       if (typeof myersDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(myersDiffHandler.register({  }), storage));
       const result = await interpret(myersDiffHandler.compute({ contentA: "hello\nworld", contentB: "hello\nearth" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,10 +162,6 @@ describe('DeployScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof deployScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(deployScaffoldGenHandler.generate({ appName: "inventory-service", runtimes: [{"name":"api","type":"node","transport":"http","storage":"sqlite"}], concepts: [{"name":"Product","runtime":"api"}] }), storage));
-      await safeInvoke(async () => await interpret(deployScaffoldGenHandler.generate({ appName: "my-app", runtimes: [], concepts: [] }), storage));
-      await safeInvoke(async () => await interpret(deployScaffoldGenHandler.generate({ appName: "", runtimes: [], concepts: [] }), storage));
-      await safeInvoke(async () => await interpret(deployScaffoldGenHandler.register({  }), storage));
       const result = await interpret(deployScaffoldGenHandler.preview({ appName: "billing-service", runtimes: [{"name":"worker","type":"node","transport":"http","storage":"memory"}], concepts: [] }), storage);
       expect(result.variant).toBe('ok');
     });

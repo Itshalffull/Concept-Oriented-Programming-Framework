@@ -155,8 +155,6 @@ describe('Article functional handler', () => {
     it('fixture "update_ok" -> ok', async () => {
       if (typeof articleHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage));
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }), storage));
       const result = await interpret(articleHandler.update({ article: "art-001", title: "Updated Title", description: "Revised description", body: "Updated body content." }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,8 +224,6 @@ describe('Article functional handler', () => {
     it('fixture "delete_ok" -> ok', async () => {
       if (typeof articleHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage));
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }), storage));
       const result = await interpret(articleHandler.delete({ article: "art-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -297,8 +293,6 @@ describe('Article functional handler', () => {
     it('fixture "get_ok" -> ok', async () => {
       if (typeof articleHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage));
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }), storage));
       const result = await interpret(articleHandler.get({ article: "art-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -368,8 +362,6 @@ describe('Article functional handler', () => {
     it('fixture "list_ok" -> ok', async () => {
       if (typeof articleHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-001", title: "Introduction to Concept Programming", description: "A primer on concept-oriented design", body: "Concept programming separates concerns into independent modules.", author: "alice" }), storage));
-      await safeInvoke(async () => await interpret(articleHandler.create({ article: "art-002", title: "Short Read", description: "Brief article", body: "Content here.", author: "bob" }), storage));
       const result = await interpret(articleHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

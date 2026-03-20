@@ -155,7 +155,6 @@ describe('Proposal functional handler', () => {
     it('fixture "sponsor_pending" -> ok', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.sponsor({ proposal: "proposal-001", sponsorId: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('Proposal functional handler', () => {
     it('fixture "activate_sponsored" -> ok', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.activate({ proposal: "proposal-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('Proposal functional handler', () => {
     it('fixture "advance_to_passed" -> ok', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.advance({ proposal: "proposal-001", newStatus: "Passed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,7 +359,6 @@ describe('Proposal functional handler', () => {
     it('fixture "cancel_draft" -> ok', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage));
       const result = await interpret(proposalHandler.cancel({ proposal: "proposal-001", canceller: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

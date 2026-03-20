@@ -162,8 +162,6 @@ describe('ApprovalCounting functional handler', () => {
     it('fixture "count_approvals" -> ok', async () => {
       if (typeof approvalCountingHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(approvalCountingHandler.configure({ maxApprovals: null, winnerCount: "1" }), storage));
-      await safeInvoke(async () => await interpret(approvalCountingHandler.configure({ maxApprovals: "3", winnerCount: "2" }), storage));
       const result = await interpret(approvalCountingHandler.count({ config: "approval-001", approvalSets: "[{\"voter\":\"alice\",\"approvals\":[\"A\",\"B\"]},{\"voter\":\"bob\",\"approvals\":[\"B\",\"C\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });

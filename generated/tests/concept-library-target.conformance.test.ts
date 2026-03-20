@@ -162,9 +162,6 @@ describe('ConceptLibraryTarget functional handler', () => {
     it('fixture "valid_document" -> ok', async () => {
       if (typeof conceptLibraryTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/concept-library.md\"}" }), storage));
-      await safeInvoke(async () => await interpret(conceptLibraryTargetHandler.generate({ config: "{\"outputPath\":\"output/library.md\",\"projectRoot\":\"/workspace/project\"}" }), storage));
-      await safeInvoke(async () => await interpret(conceptLibraryTargetHandler.generate({ config: "" }), storage));
       const result = await interpret(conceptLibraryTargetHandler.validate({ document: "concept-library-12345" }), storage);
       expect(result.variant).toBe('ok');
     });

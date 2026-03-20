@@ -156,7 +156,6 @@ describe('ZkSyncProvider functional handler', () => {
     it('fixture "poll_existing_provider" -> ok', async () => {
       if (typeof zkSyncProviderHandler.poll !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage));
       const result = await interpret(zkSyncProviderHandler.poll({ provider: "zksync-provider-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('ZkSyncProvider functional handler', () => {
     it('fixture "check_finality_valid" -> ok', async () => {
       if (typeof zkSyncProviderHandler.checkFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage));
       const result = await interpret(zkSyncProviderHandler.checkFinality({ provider: "zksync-provider-1", tx_hash: "0xabc123def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,7 +293,6 @@ describe('ZkSyncProvider functional handler', () => {
     it('fixture "get_proof_valid" -> ok', async () => {
       if (typeof zkSyncProviderHandler.getBatchProof !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(zkSyncProviderHandler.register({ rpc_url: "https://mainnet.era.zksync.io", diamond_proxy: "0x32400084C286CF3E17e7B677ea9583e60a000324" }), storage));
       const result = await interpret(zkSyncProviderHandler.getBatchProof({ provider: "zksync-provider-1", batch_number: "42" }), storage);
       expect(result.variant).toBe('ok');
     });

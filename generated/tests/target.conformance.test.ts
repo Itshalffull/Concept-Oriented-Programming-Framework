@@ -169,8 +169,6 @@ describe('Target functional handler', () => {
     it('fixture "diff_existing" -> ok', async () => {
       if (typeof targetHandler.diff !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "rest", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(targetHandler.generate({ projection: "score-api-projection", targetType: "graphql", config: "{}" }), storage));
       const result = await interpret(targetHandler.diff({ output: "output-rest-score-001" }), storage);
       expect(result.variant).toBe('ok');
     });

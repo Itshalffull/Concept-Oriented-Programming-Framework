@@ -162,9 +162,6 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage));
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.generate({ name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage));
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.register({  }), storage));
       const result = await interpret(derivedScaffoldGenHandler.preview({ name: "Dashboard", typeParams: ["T"], purpose: "Compose analytics widgets", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,9 +169,6 @@ describe('DerivedScaffoldGen functional handler', () => {
     it('fixture "empty_preview" -> ok', async () => {
       if (typeof derivedScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.generate({ name: "TaskBoard", typeParams: ["T"], purpose: "Compose task and board concepts into a unified workflow", composes: [{"name":"Task","typeParams":["T"]}], syncs: ["TaskCreated"], surfaceActions: [{"name":"addTask","params":[{"name":"title","type":"String"}],"matches":{"type":"action","concept":"Task","action":"create"}}], surfaceQueries: [], principle: ["A board organizes tasks into columns"] }), storage));
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.generate({ name: "SimpleComposite", typeParams: ["T"], purpose: "Minimal derived concept", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage));
-      await safeInvoke(async () => await interpret(derivedScaffoldGenHandler.register({  }), storage));
       const result = await interpret(derivedScaffoldGenHandler.preview({ name: "", typeParams: [], purpose: "", composes: [], syncs: [], surfaceActions: [], surfaceQueries: [], principle: [] }), storage);
       expect(result.variant).toBe('ok');
     });

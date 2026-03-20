@@ -169,9 +169,6 @@ describe('GrpcTarget functional handler', () => {
     it('fixture "valid_service" -> ok', async () => {
       if (typeof grpcTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }), storage));
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }), storage));
       const result = await interpret(grpcTargetHandler.validate({ service: "grpc-payment-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,9 +237,6 @@ describe('GrpcTarget functional handler', () => {
     it('fixture "list_payment_rpcs" -> ok', async () => {
       if (typeof grpcTargetHandler.listRpcs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "payment-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "catalog-projection", config: "{\"protoPackage\":\"com.example.catalog\",\"goPackage\":\"github.com/example/catalog\",\"javaPackage\":\"com.example.catalog\"}" }), storage));
-      await safeInvoke(async () => await interpret(grpcTargetHandler.generate({ projection: "tree-projection", config: "{\"protoIncompatible\":\"RecursiveTree\"}" }), storage));
       const result = await interpret(grpcTargetHandler.listRpcs({ concept: "Payment" }), storage);
       expect(result.variant).toBe('ok');
     });

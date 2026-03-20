@@ -87,7 +87,6 @@ describe('SwiftToolchain functional handler', () => {
     it('fixture "resolve_macos" -> ok', async () => {
       if (typeof swiftToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(swiftToolchainHandler.register({  }), storage));
       const result = await interpret(swiftToolchainHandler.resolve({ platform: "macos", versionConstraint: ">=5.10" }), storage);
       expect(result.variant).toBe('ok');
     });

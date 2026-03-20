@@ -237,10 +237,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "traffic_50" -> ok', async () => {
       if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -248,10 +244,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "traffic_negative" -> ok', async () => {
       if (typeof vercelRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.setTrafficWeight({ project: "prj_userservice", weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,10 +305,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "rollback_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "dpl_abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -324,10 +312,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "rollback_missing_deployment" -> ok', async () => {
       if (typeof vercelRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.rollback({ project: "prj_userservice", targetDeploymentId: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -389,10 +373,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "env_vars_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "prj_userservice", envVars: "[{\"key\":\"DATABASE_URL\",\"value\":\"postgres://localhost\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -400,10 +380,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "env_vars_empty_project" -> ok', async () => {
       if (typeof vercelRuntimeHandler.configureEnv !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.configureEnv({ project: "", envVars: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -465,10 +441,6 @@ describe('VercelRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof vercelRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "UserService", teamId: "team_abc123", framework: "nextjs" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.provision({ concept: "PaymentGateway", teamId: "team_xyz", framework: "remix" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_userservice", sourceDirectory: "./dist" }), storage));
-      await safeInvoke(async () => await interpret(vercelRuntimeHandler.deploy({ project: "prj_api", sourceDirectory: "./src" }), storage));
       const result = await interpret(vercelRuntimeHandler.destroy({ project: "prj_userservice" }), storage);
       expect(result.variant).toBe('ok');
     });

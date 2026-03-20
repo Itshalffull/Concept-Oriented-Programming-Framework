@@ -155,8 +155,6 @@ describe('RustBuilder functional handler', () => {
     it('fixture "test_crate" -> ok', async () => {
       if (typeof rustBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(rustBuilderHandler.register({  }), storage));
       const result = await interpret(rustBuilderHandler.test({ build: "rsb-001", toolchainPath: "/usr/local/bin/rustc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('RustBuilder functional handler', () => {
     it('fixture "package_binary" -> ok', async () => {
       if (typeof rustBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rustBuilderHandler.build({ source: "./src/lib.rs", toolchainPath: "/usr/local/bin/rustc", platform: "linux-x86_64", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(rustBuilderHandler.register({  }), storage));
       const result = await interpret(rustBuilderHandler.package({ build: "rsb-001", format: "binary" }), storage);
       expect(result.variant).toBe('ok');
     });

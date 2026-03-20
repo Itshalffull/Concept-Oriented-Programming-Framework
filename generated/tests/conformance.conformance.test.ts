@@ -164,7 +164,6 @@ describe('Conformance functional handler', () => {
     it('fixture "verify_ts" -> ok', async () => {
       if (typeof conformanceHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "typescript", artifactLocation: ".clef-artifacts/ts/password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,7 +171,6 @@ describe('Conformance functional handler', () => {
     it('fixture "verify_rust" -> ok', async () => {
       if (typeof conformanceHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.verify({ suite: "csuite-pwd-001", language: "rust", artifactLocation: ".clef-artifacts/rust/password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +240,6 @@ describe('Conformance functional handler', () => {
     it('fixture "deviation_solidity" -> ok', async () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.registerDeviation({ concept: "password", language: "solidity", requirement: "req-password-003", reason: "Solidity cannot express Option<T> natively" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -250,7 +247,6 @@ describe('Conformance functional handler', () => {
     it('fixture "deviation_swift" -> ok', async () => {
       if (typeof conformanceHandler.registerDeviation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.registerDeviation({ concept: "auth", language: "swift", requirement: "req-auth-002", reason: "Swift throws instead of returning error variant" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,7 +308,6 @@ describe('Conformance functional handler', () => {
     it('fixture "matrix_all" -> ok', async () => {
       if (typeof conformanceHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.matrix({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -320,7 +315,6 @@ describe('Conformance functional handler', () => {
     it('fixture "matrix_filtered" -> ok', async () => {
       if (typeof conformanceHandler.matrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.matrix({ concepts: ["password","auth"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -382,7 +376,6 @@ describe('Conformance functional handler', () => {
     it('fixture "traceability_password" -> ok', async () => {
       if (typeof conformanceHandler.traceability !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.traceability({ concept: "password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -390,7 +383,6 @@ describe('Conformance functional handler', () => {
     it('fixture "traceability_missing" -> ok', async () => {
       if (typeof conformanceHandler.traceability !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conformanceHandler.generate({ concept: "password", specPath: "./specs/password.concept" }), storage));
       const result = await interpret(conformanceHandler.traceability({ concept: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });

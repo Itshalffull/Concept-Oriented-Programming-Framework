@@ -162,8 +162,6 @@ describe('ClaudeSkillsTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof claudeSkillsTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage));
-      await safeInvoke(async () => await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{}" }), storage));
       const result = await interpret(claudeSkillsTargetHandler.validate({ skill: "skill-spec-parser-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('ClaudeSkillsTarget functional handler', () => {
     it('fixture "list_skills_suite" -> ok', async () => {
       if (typeof claudeSkillsTargetHandler.listSkills !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"SpecParser\",\"conceptManifest\":\"{\\\"name\\\":\\\"SpecParser\\\",\\\"purpose\\\":\\\"Parse concept specs\\\",\\\"actions\\\":[]}\"}", config: "{\"progressive\":true}" }), storage));
-      await safeInvoke(async () => await interpret(claudeSkillsTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{}" }), storage));
       const result = await interpret(claudeSkillsTargetHandler.listSkills({ suite: "core" }), storage);
       expect(result.variant).toBe('ok');
     });

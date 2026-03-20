@@ -156,7 +156,6 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "react_delegation" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "react", props: "{\"onclick\":\"handleClick\",\"class\":\"btn\",\"__framework\":\"react\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,7 +163,6 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "unknown_framework_passthrough" -> ok', async () => {
       if (typeof frameworkAdapterHandler.normalize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.normalize({ adapter: "custom-fw", props: "{\"title\":\"Hello\",\"data-id\":\"123\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,7 +238,6 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "mount_component" -> ok', async () => {
       if (typeof frameworkAdapterHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.mount({ renderer: "react-adapter", machine: "todo-machine", target: "#app" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -309,7 +306,6 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "render_valid" -> ok', async () => {
       if (typeof frameworkAdapterHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.render({ adapter: "react-adapter", props: "{\"className\":\"active\",\"onClick\":\"handler\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -378,7 +374,6 @@ describe('FrameworkAdapter functional handler', () => {
     it('fixture "unmount_existing" -> ok', async () => {
       if (typeof frameworkAdapterHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(frameworkAdapterHandler.register({ renderer: "react-adapter", framework: "react", version: "19", normalizer: "reactNormalizer", mountFn: "reactMount" }), storage));
       const result = await interpret(frameworkAdapterHandler.unmount({ renderer: "react-adapter", target: "#app" }), storage);
       expect(result.variant).toBe('ok');
     });

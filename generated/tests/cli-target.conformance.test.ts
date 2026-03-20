@@ -169,9 +169,6 @@ describe('CliTarget functional handler', () => {
     it('fixture "valid_command" -> ok', async () => {
       if (typeof cliTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }), storage));
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }), storage));
       const result = await interpret(cliTargetHandler.validate({ command: "cli-task-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,9 +237,6 @@ describe('CliTarget functional handler', () => {
     it('fixture "list_task_commands" -> ok', async () => {
       if (typeof cliTargetHandler.listCommands !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "task-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "workflow-projection", config: "{\"binaryName\":\"wf\",\"shell\":\"zsh\",\"outputFormats\":[\"json\",\"yaml\"]}" }), storage));
-      await safeInvoke(async () => await interpret(cliTargetHandler.generate({ projection: "data-projection", config: "{\"actionPositionals\":{\"import\":5}}" }), storage));
       const result = await interpret(cliTargetHandler.listCommands({ concept: "Task" }), storage);
       expect(result.variant).toBe('ok');
     });

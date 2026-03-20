@@ -223,9 +223,6 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "create_with_config" -> ok', async () => {
       if (typeof pluginRegistryHandler.createInstance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.createInstance({ plugin: "formatter:markdown-fmt", config: "{\"lineWidth\":80}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,9 +291,6 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "get_formatter_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "formatter" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +298,6 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "get_unknown_defs" -> ok', async () => {
       if (typeof pluginRegistryHandler.getDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.getDefinitions({ type: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -368,9 +359,6 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "alter_formatters" -> ok', async () => {
       if (typeof pluginRegistryHandler.alterDefinitions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.alterDefinitions({ type: "formatter", alterations: "{\"deprecated\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -439,9 +427,6 @@ describe('PluginRegistry functional handler', () => {
     it('fixture "derive_variant" -> ok', async () => {
       if (typeof pluginRegistryHandler.derivePlugins !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.register({ type: "formatter", name: "markdown-fmt", metadata: "{\"outputKind\":\"html\"}" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "formatter" }), storage));
-      await safeInvoke(async () => await interpret(pluginRegistryHandler.discover({ type: "" }), storage));
       const result = await interpret(pluginRegistryHandler.derivePlugins({ plugin: "formatter:markdown-fmt", config: "{\"strict\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });

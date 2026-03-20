@@ -155,8 +155,6 @@ describe('Signature functional handler', () => {
     it('fixture "compile_for_gpt4" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "gpt-4o", examples: [{"input":"What is AI?","output":"Artificial Intelligence"}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,8 +162,6 @@ describe('Signature functional handler', () => {
     it('fixture "compile_no_examples" -> ok', async () => {
       if (typeof signatureHandler.compile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.compile({ signature: "sig-qa-1", model_id: "claude-3", examples: [] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,8 +230,6 @@ describe('Signature functional handler', () => {
     it('fixture "execute_qa" -> ok', async () => {
       if (typeof signatureHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.execute({ signature: "sig-qa-1", model_id: "gpt-4o", inputs: [{"field":"context","value":"The sky is blue."},{"field":"question","value":"What color is the sky?"}] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('Signature functional handler', () => {
     it('fixture "recompile_for_claude" -> ok', async () => {
       if (typeof signatureHandler.recompile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "QA", input_fields: [{"name":"context","type":"String","description":"Source text"},{"name":"question","type":"String","description":"User question"}], output_fields: [{"name":"answer","type":"String","description":"Generated answer"}], instruction: "Answer the question based on the context", module_type: "chain_of_thought" }), storage));
-      await safeInvoke(async () => await interpret(signatureHandler.define({ name: "Empty", input_fields: [], output_fields: [], instruction: "", module_type: "predict" }), storage));
       const result = await interpret(signatureHandler.recompile({ signature: "sig-qa-1", target_model: "claude-3-opus" }), storage);
       expect(result.variant).toBe('ok');
     });

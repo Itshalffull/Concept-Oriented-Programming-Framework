@@ -81,9 +81,6 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "get_user" -> ok', async () => {
       if (typeof grpcProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await grpcProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage));
-      await safeInvoke(async () => await grpcProviderHandler.configure({ name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }, storage));
       const result = await grpcProviderHandler.execute({ channel: "user-service", service: "UserService", method: "GetUser", payload: "{\"id\":42}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -111,9 +108,6 @@ describe('GrpcProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof grpcProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await grpcProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await grpcProviderHandler.configure({ name: "user-service", target: "localhost:50051", protoRef: "user.proto", options: "{}" }, storage));
-      await safeInvoke(async () => await grpcProviderHandler.configure({ name: "auth-service", target: "auth.prod:443", protoRef: "auth.proto", options: "{\"tls\":true}" }, storage));
       const result = await grpcProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

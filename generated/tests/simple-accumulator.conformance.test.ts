@@ -223,9 +223,6 @@ describe('SimpleAccumulator functional handler', () => {
     it('fixture "apply_decay_alice" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.applyDecay !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage));
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.configure({  }), storage));
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" }), storage));
       const result = await interpret(simpleAccumulatorHandler.applyDecay({ config: "acc-001", participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,9 +291,6 @@ describe('SimpleAccumulator functional handler', () => {
     it('fixture "get_alice_score" -> ok', async () => {
       if (typeof simpleAccumulatorHandler.getScore !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.configure({ decayRate: "0.1", cap: "1000.0" }), storage));
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.configure({  }), storage));
-      await safeInvoke(async () => await interpret(simpleAccumulatorHandler.add({ config: "acc-001", participant: "alice", amount: "25.0" }), storage));
       const result = await interpret(simpleAccumulatorHandler.getScore({ config: "acc-001", participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,7 +155,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "get_existing_test" -> ok', async () => {
       if (typeof testEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.get({ name: "User/create conformance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_user_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByEntity({ entity: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,7 +230,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_untested_entity" -> ok', async () => {
       if (typeof testEntityHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByEntity({ entity: "Nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,7 +291,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_user_create_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "create" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,7 +298,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_untested_action" -> ok', async () => {
       if (typeof testEntityHandler.findByAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByAction({ concept: "User", action: "nonexistentAction" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -364,7 +359,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_conformance_tests" -> ok', async () => {
       if (typeof testEntityHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByKind({ kind: "conformance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,7 +366,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "find_unknown_kind" -> ok', async () => {
       if (typeof testEntityHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findByKind({ kind: "nonexistent-kind" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,7 +427,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.findFailing !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.findFailing({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -503,7 +495,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "coverage_user" -> ok', async () => {
       if (typeof testEntityHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.coverageReport({ entity: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -511,7 +502,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "coverage_nonexistent" -> ok', async () => {
       if (typeof testEntityHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.coverageReport({ entity: "Nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -573,7 +563,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.untestedActions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.untestedActions({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -642,7 +631,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof testEntityHandler.untestedInvariants !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.untestedInvariants({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -711,7 +699,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "record_pass" -> ok', async () => {
       if (typeof testEntityHandler.recordResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "pass", duration: "150" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -719,7 +706,6 @@ describe('TestEntity functional handler', () => {
     it('fixture "record_empty_result" -> ok', async () => {
       if (typeof testEntityHandler.recordResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(testEntityHandler.register({ name: "User/create conformance", sourceFile: "tests/user.conformance.test.ts", kind: "conformance", targetEntity: "User" }), storage));
       const result = await interpret(testEntityHandler.recordResult({ test: "test-001", result: "", duration: "0" }), storage);
       expect(result.variant).toBe('ok');
     });

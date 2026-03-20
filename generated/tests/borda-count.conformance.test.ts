@@ -162,8 +162,6 @@ describe('BordaCount functional handler', () => {
     it('fixture "borda_three_voters" -> ok', async () => {
       if (typeof bordaCountHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bordaCountHandler.configure({ pointScheme: "Standard" }), storage));
-      await safeInvoke(async () => await interpret(bordaCountHandler.configure({ pointScheme: "Dowdall" }), storage));
       const result = await interpret(bordaCountHandler.count({ config: "borda-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]},{\"voter\":\"carol\",\"ranking\":[\"A\",\"C\",\"B\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });

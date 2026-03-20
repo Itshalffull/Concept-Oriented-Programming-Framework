@@ -148,7 +148,6 @@ describe('LLMAutomationProvider functional handler', () => {
     it('fixture "summarize_with_gpt4" -> ok', async () => {
       if (typeof llmAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(llmAutomationProviderHandler.register({  }), storage));
       const result = await interpret(llmAutomationProviderHandler.execute({ action_payload: "{\"action\":\"summarize\",\"text\":\"Long document...\"}", model_config: "{\"model\":\"gpt-4\",\"temperature\":0.3}" }), storage);
       expect(result.variant).toBe('ok');
     });

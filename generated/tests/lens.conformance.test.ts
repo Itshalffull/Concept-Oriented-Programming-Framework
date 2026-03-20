@@ -162,8 +162,6 @@ describe('Lens functional handler', () => {
     it('fixture "from_users_relation" -> ok', async () => {
       if (typeof lensHandler.fromRelation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.fromRelation({ lens: "lens-users-rel", relation: "users" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('Lens functional handler', () => {
     it('fixture "compose_valid" -> ok', async () => {
       if (typeof lensHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.compose({ outer: "lens-users-rel", inner: "lens-user-email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,8 +298,6 @@ describe('Lens functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof lensHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.get({ lens: "lens-user-email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,8 +366,6 @@ describe('Lens functional handler', () => {
     it('fixture "decompose_existing" -> ok', async () => {
       if (typeof lensHandler.decompose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.decompose({ lens: "lens-user-email" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -442,8 +434,6 @@ describe('Lens functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof lensHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.validate({ lens: "lens-user-email", conceptSpec: "{\"state\":{\"users\":\"set U\",\"email\":\"U -> String\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -512,8 +502,6 @@ describe('Lens functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof lensHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-user-email", relation: "users", key: "u1", field: "email" }), storage));
-      await safeInvoke(async () => await interpret(lensHandler.create({ lens: "lens-users", relation: "users", key: "", field: "" }), storage));
       const result = await interpret(lensHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

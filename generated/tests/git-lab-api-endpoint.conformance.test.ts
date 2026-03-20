@@ -69,8 +69,6 @@ describe('GitLabApiEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof gitlabApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage));
-      await safeInvoke(async () => await gitlabApiEndpointHandler.register({ name: "gitlab-internal", token: "glpat-internal-token", projectId: "99", baseUrl: "https://git.internal.corp/api/v4" }, storage));
       const result = await gitlabApiEndpointHandler.resolve({ name: "gitlab-api" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('GitLabApiEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof gitlabApiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await gitlabApiEndpointHandler.register({ name: "gitlab-api", token: "glpat-abc123def456", projectId: "12345", baseUrl: "https://gitlab.com/api/v4" }, storage));
-      await safeInvoke(async () => await gitlabApiEndpointHandler.register({ name: "gitlab-internal", token: "glpat-internal-token", projectId: "99", baseUrl: "https://git.internal.corp/api/v4" }, storage));
       const result = await gitlabApiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

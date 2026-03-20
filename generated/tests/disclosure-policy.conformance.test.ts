@@ -155,7 +155,6 @@ describe('DisclosurePolicy functional handler', () => {
     it('fixture "evaluate_active_policy" -> ok', async () => {
       if (typeof disclosurePolicyHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage));
       const result = await interpret(disclosurePolicyHandler.evaluate({ policy: "disclosure-001", event: "budget_vote", requestor: "auditor@example.com" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('DisclosurePolicy functional handler', () => {
     it('fixture "suspend_existing_policy" -> ok', async () => {
       if (typeof disclosurePolicyHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(disclosurePolicyHandler.define({ subject: "budget_report", audience: "public", timing: "Immediate", scope: ["financial","voting"] }), storage));
       const result = await interpret(disclosurePolicyHandler.suspend({ policy: "disclosure-001" }), storage);
       expect(result.variant).toBe('ok');
     });

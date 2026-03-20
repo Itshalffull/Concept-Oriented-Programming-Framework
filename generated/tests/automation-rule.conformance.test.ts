@@ -224,8 +224,6 @@ describe('AutomationRule functional handler', () => {
     it('fixture "disable_existing_rule" -> ok', async () => {
       if (typeof automationRuleHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage));
-      await safeInvoke(async () => await interpret(automationRuleHandler.enable({ rule: "auto-review" }), storage));
       const result = await interpret(automationRuleHandler.disable({ rule: "auto-review" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +293,6 @@ describe('AutomationRule functional handler', () => {
     it('fixture "execute_rule" -> ok', async () => {
       if (typeof automationRuleHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(automationRuleHandler.define({ rule: "auto-review", trigger: "on_save", conditions: "status == draft", actions: "notify_reviewer" }), storage));
-      await safeInvoke(async () => await interpret(automationRuleHandler.enable({ rule: "auto-review" }), storage));
       const result = await interpret(automationRuleHandler.execute({ rule: "auto-review", context: "{\"document\":\"doc-42\",\"status\":\"draft\"}" }), storage);
       expect(result.variant).toBe('ok');
     });

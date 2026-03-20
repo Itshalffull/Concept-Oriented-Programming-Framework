@@ -87,7 +87,6 @@ describe('ProgramCache functional handler', () => {
     it('fixture "lookup_existing" -> ok', async () => {
       if (typeof programCacheHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage));
       const result = await interpret(programCacheHandler.lookup({ programHash: "sha256_abc123", stateHash: "sha256_def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('ProgramCache functional handler', () => {
     it('fixture "invalidate_state" -> ok', async () => {
       if (typeof programCacheHandler.invalidateByState !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage));
       const result = await interpret(programCacheHandler.invalidateByState({ stateHash: "sha256_def456" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('ProgramCache functional handler', () => {
     it('fixture "invalidate_program" -> ok', async () => {
       if (typeof programCacheHandler.invalidateByProgram !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage));
       const result = await interpret(programCacheHandler.invalidateByProgram({ programHash: "sha256_abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,7 +359,6 @@ describe('ProgramCache functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof programCacheHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(programCacheHandler.store({ programHash: "sha256_abc123", stateHash: "sha256_def456", result: "{\"variant\":\"ok\"}" }), storage));
       const result = await interpret(programCacheHandler.stats({  }), storage);
       expect(result.variant).toBe('ok');
     });

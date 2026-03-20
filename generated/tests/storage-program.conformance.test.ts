@@ -62,8 +62,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "get_user" -> ok', async () => {
       if (typeof storageProgramHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.get({ program: "prog-1", relation: "users", key: "u1", bindAs: "user" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,8 +88,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "find_by_criteria" -> ok', async () => {
       if (typeof storageProgramHandler.find !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.find({ program: "prog-1", relation: "users", criteria: "{\"role\":\"admin\"}", bindAs: "admins" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -144,8 +140,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "del_record" -> ok', async () => {
       if (typeof storageProgramHandler.del !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.del({ program: "prog-1", relation: "users", key: "u1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +166,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "branch_conditional" -> ok', async () => {
       if (typeof storageProgramHandler.branch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.branch({ program: "prog-1", condition: "user != null", thenBranch: "prog-then", elseBranch: "prog-else" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -200,8 +192,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "pure_ok" -> ok', async () => {
       if (typeof storageProgramHandler.pure !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.pure({ program: "prog-1", variant: "ok", output: "{\"message\":\"done\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -228,8 +218,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "compose_programs" -> ok', async () => {
       if (typeof storageProgramHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.compose({ first: "prog-a", second: "prog-b", bindAs: "result" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -256,8 +244,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "get_lens_read" -> ok', async () => {
       if (typeof storageProgramHandler.getLens !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.getLens({ program: "prog-1", lens: "users.u1.email", bindAs: "email" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -284,8 +270,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "put_lens_write" -> ok', async () => {
       if (typeof storageProgramHandler.putLens !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.putLens({ program: "prog-1", lens: "users.u1.email", value: "alice@example.com" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,8 +296,6 @@ describe('StorageProgram imperative handler', () => {
     it('fixture "modify_lens" -> ok', async () => {
       if (typeof storageProgramHandler.modifyLens !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await storageProgramHandler.create({ program: "prog-1" }, storage));
-      await safeInvoke(async () => await storageProgramHandler.put({ program: "prog-1", relation: "users", key: "u1", value: "{\"name\":\"Alice\"}" }, storage));
       const result = await storageProgramHandler.modifyLens({ program: "prog-1", lens: "users.u1.name", fn: "toUpperCase" }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,9 +230,6 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.setTrafficWeight({ function: "fn-abc123", aliasWeight: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,9 +298,6 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "rollback_to_v2" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.rollback({ function: "fn-abc123", targetVersion: "2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,9 +366,6 @@ describe('LambdaRuntime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof lambdaRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "UserAuth", memory: "256", timeout: "30", region: "us-east-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.provision({ concept: "ImageProcessor", memory: "1024", timeout: "60", region: "eu-west-1" }), storage));
-      await safeInvoke(async () => await interpret(lambdaRuntimeHandler.deploy({ function: "fn-abc123", artifactLocation: "s3://deploy-bucket/user-auth.zip" }), storage));
       const result = await interpret(lambdaRuntimeHandler.destroy({ function: "fn-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

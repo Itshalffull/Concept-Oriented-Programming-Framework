@@ -156,7 +156,6 @@ describe('ProcessAutomationProvider functional handler', () => {
     it('fixture "execute_valid" -> ok', async () => {
       if (typeof processAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(processAutomationProviderHandler.register({  }), storage));
       const result = await interpret(processAutomationProviderHandler.execute({ action_payload: "{\"input\":\"data\"}", process_spec_id: "spec-001" }), storage);
       expect(result.variant).toBe('ok');
     });

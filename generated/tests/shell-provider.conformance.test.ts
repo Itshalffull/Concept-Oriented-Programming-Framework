@@ -55,7 +55,6 @@ describe('ShellProvider imperative handler', () => {
     it('fixture "echo_hello" -> ok', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await shellProviderHandler.register({  }, storage));
       const result = await shellProviderHandler.execute({ command: "echo", args: "hello", env: "{}", cwd: "/tmp", timeout: "5000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -63,7 +62,6 @@ describe('ShellProvider imperative handler', () => {
     it('fixture "ls_home" -> ok', async () => {
       if (typeof shellProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await shellProviderHandler.register({  }, storage));
       const result = await shellProviderHandler.execute({ command: "ls", args: "-la", env: "{}", cwd: "/home", timeout: "10000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,7 +88,6 @@ describe('ShellProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof shellProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await shellProviderHandler.register({  }, storage));
       const result = await shellProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -148,7 +148,6 @@ describe('ManualResolution functional handler', () => {
     it('fixture "escalate_to_human" -> ok', async () => {
       if (typeof manualResolutionHandler.attemptResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manualResolutionHandler.register({  }), storage));
       const result = await interpret(manualResolutionHandler.attemptResolve({ base: null, v1: "version-alice", v2: "version-bob", context: "legal-document" }), storage);
       expect(result.variant).toBe('ok');
     });

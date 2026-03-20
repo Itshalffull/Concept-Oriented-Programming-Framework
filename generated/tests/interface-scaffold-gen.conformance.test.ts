@@ -162,9 +162,6 @@ describe('InterfaceScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof interfaceScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interfaceScaffoldGenHandler.generate({ name: "commerce-api", targets: ["rest","graphql"], sdks: ["typescript","python"] }), storage));
-      await safeInvoke(async () => await interpret(interfaceScaffoldGenHandler.generate({ name: "my-api", targets: ["rest"], sdks: ["typescript"] }), storage));
-      await safeInvoke(async () => await interpret(interfaceScaffoldGenHandler.register({  }), storage));
       const result = await interpret(interfaceScaffoldGenHandler.preview({ name: "billing-api", targets: ["rest"], sdks: ["typescript"] }), storage);
       expect(result.variant).toBe('ok');
     });

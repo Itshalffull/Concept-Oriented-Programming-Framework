@@ -69,8 +69,6 @@ describe('AlloySolverEndpoint imperative handler', () => {
     it('fixture "check_simple_model" -> ok', async () => {
       if (typeof alloySolverEndpointHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }, storage));
-      await safeInvoke(async () => await alloySolverEndpointHandler.register({ name: "alloy-ci", jarPath: "/usr/share/alloy/alloy6.jar", scope: "10", timeout: "120000", options: "-Xmx4g" }, storage));
       const result = await alloySolverEndpointHandler.check({ name: "alloy-local", model: "sig Node { edges: set Node }", predicate: "run { some Node } for 5" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('AlloySolverEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof alloySolverEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await alloySolverEndpointHandler.register({ name: "alloy-local", jarPath: "/opt/alloy/alloy.jar", scope: "5", timeout: "60000", options: "" }, storage));
-      await safeInvoke(async () => await alloySolverEndpointHandler.register({ name: "alloy-ci", jarPath: "/usr/share/alloy/alloy6.jar", scope: "10", timeout: "120000", options: "-Xmx4g" }, storage));
       const result = await alloySolverEndpointHandler.resolve({ name: "alloy-local" }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,9 +162,6 @@ describe('UILibraryTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof uiLibraryTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/reference/ui-library.md\"}" }), storage));
-      await safeInvoke(async () => await interpret(uiLibraryTargetHandler.generate({ config: "{\"outputPath\":\"docs/ui.md\",\"includeAccessibility\":true,\"includeAffordances\":true}" }), storage));
-      await safeInvoke(async () => await interpret(uiLibraryTargetHandler.generate({ config: "" }), storage));
       const result = await interpret(uiLibraryTargetHandler.validate({ document: "ui-library-001" }), storage);
       expect(result.variant).toBe('ok');
     });

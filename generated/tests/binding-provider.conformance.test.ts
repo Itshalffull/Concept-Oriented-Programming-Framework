@@ -223,8 +223,6 @@ describe('BindingProvider functional handler', () => {
     it('fixture "sync_valid" -> ok', async () => {
       if (typeof bindingProviderHandler.sync !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(bindingProviderHandler.bind({ provider: "bp-1", concept: "Article", mode: "static" }), storage));
       const result = await interpret(bindingProviderHandler.sync({ provider: "bp-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,8 +291,6 @@ describe('BindingProvider functional handler', () => {
     it('fixture "invoke_action" -> ok', async () => {
       if (typeof bindingProviderHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(bindingProviderHandler.bind({ provider: "bp-1", concept: "Article", mode: "static" }), storage));
       const result = await interpret(bindingProviderHandler.invoke({ provider: "bp-1", action: "create", input: "test-input" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,8 +359,6 @@ describe('BindingProvider functional handler', () => {
     it('fixture "unbind_valid" -> ok', async () => {
       if (typeof bindingProviderHandler.unbind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(bindingProviderHandler.initialize({ config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(bindingProviderHandler.bind({ provider: "bp-1", concept: "Article", mode: "static" }), storage));
       const result = await interpret(bindingProviderHandler.unbind({ provider: "bp-1" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -148,7 +148,6 @@ describe('LocalProcess functional handler', () => {
     it('fixture "register_wasm" -> ok', async () => {
       if (typeof localProcessHandler.registerRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localProcessHandler.initialize({  }), storage));
       const result = await interpret(localProcessHandler.registerRuntime({ runtime: "wasm", providerName: "WasmProvider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,7 +217,6 @@ describe('LocalProcess functional handler', () => {
     it('fixture "wasm_inference" -> ok', async () => {
       if (typeof localProcessHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localProcessHandler.initialize({  }), storage));
       const result = await interpret(localProcessHandler.dispatch({ runtime: "wasm", operation: "execute", moduleRef: "image-classifier.wasm", input: "{\"image\": \"base64data\"}", config: "{\"memoryLimit\": 256}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,7 +293,6 @@ describe('LocalProcess functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof localProcessHandler.listRuntimes !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(localProcessHandler.initialize({  }), storage));
       const result = await interpret(localProcessHandler.listRuntimes({  }), storage);
       expect(result.variant).toBe('ok');
     });

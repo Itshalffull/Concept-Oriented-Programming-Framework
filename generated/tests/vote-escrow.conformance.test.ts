@@ -62,7 +62,6 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "lock_full_term" -> ok', async () => {
       if (typeof voteEscrowHandler.lock !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage));
       const result = await voteEscrowHandler.lock({ config: "ve-cfg-001", locker: "alice", amount: "1000.0", lockYears: "4.0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,7 +88,6 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "extend_by_one" -> ok', async () => {
       if (typeof voteEscrowHandler.extendLock !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage));
       const result = await voteEscrowHandler.extendLock({ lock: "lock-001", additionalYears: "1.0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -116,7 +114,6 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "get_weight_alice" -> ok', async () => {
       if (typeof voteEscrowHandler.getWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage));
       const result = await voteEscrowHandler.getWeight({ config: "ve-cfg-001", participant: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -143,7 +140,6 @@ describe('VoteEscrow imperative handler', () => {
     it('fixture "withdraw_expired" -> ok', async () => {
       if (typeof voteEscrowHandler.withdraw !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voteEscrowHandler.configure({ token: "GOV", maxLockYears: "4.0" }, storage));
       const result = await voteEscrowHandler.withdraw({ lock: "lock-expired" }, storage);
       expect(result.variant).toBe('ok');
     });

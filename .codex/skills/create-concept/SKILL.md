@@ -130,18 +130,50 @@ action create(name: String, config: String, tags: list String) {
   fixture missingName { config: "{}" } -> error
   fixture badJson { name: "test", config: "not-json" } -> invalid
 }
+
+action get(name: String) {
+  -> ok(item: T)
+  -> notfound(message: String)
+  fixture get_existing { name: "my-item" } after valid
+  fixture get_missing { name: "nonexistent" } -> error
+}
 ```
+
+The `after` clause declares fixture dependencies — `get_existing` will run `valid` first to seed storage, ensuring the `get` action finds data. Dependencies resolve transitively.
 
 **Fixture rules:**
 1. **At least one `ok` fixture** per action — the happy path with realistic inputs
 2. **Negative fixtures** for each error variant — append `-> error`, `-> invalid`, etc.
-3. **Match what the handler expects** — if the handler calls `JSON.parse(input.config)`, the fixture value must be valid JSON (or intentionally invalid for error fixtures)
-4. **Use realistic values** — not `"test"` or `"foo"`, but values that exercise the handler's real logic
-5. **Cover edge cases the fuzzer can't find** — structured formats (JSON strings, paths, URIs) that random strings will never produce
+3. **Use `after` for reader actions** — if an ok fixture needs existing data, declare `after <writer_fixture>` to run the writer fixture first (e.g., `get` after `create`)
+4. **Match what the handler expects** — if the handler calls `JSON.parse(input.config)`, the fixture value must be valid JSON (or intentionally invalid for error fixtures)
+5. **Use realistic values** — not `"test"` or `"foo"`, but values that exercise the handler's real logic
+6. **Cover edge cases the fuzzer can't find** — structured formats (JSON strings, paths, URIs) that random strings will never produce
 
 **Fixture values support**: strings (`"text"`), numbers (`42`), booleans (`true`/`false`), arrays (`[1, 2]`), nested objects (`{ key: "value" }`), and `none` for null.
 
 See [references/concept-grammar.md](references/concept-grammar.md) for full fixture syntax.
+
+#### How to derive fixtures from an existing handler
+
+When adding fixtures to an existing concept (migration), read the handler implementation to determine correct fixture values:
+
+1. **Read the handler** (`handlers/ts/<concept-name>.handler.ts`) and for each action:
+   - Identify every `input.foo` access — these are the params that matter
+   - Check if any param is parsed: `JSON.parse(input.config)` → fixture must provide valid JSON string
+   - Check if any param is used as array: `input.items.map(...)` → fixture must provide an array, and the spec param type should be `list String` not `String`
+   - Check if any param has `.trim()`, `.split()`, `.includes()` — must be a real string, not an object
+   - Check what values make the handler return `ok` vs `error` — use those for positive/negative fixtures
+
+2. **Check invariant examples** in the spec — if an invariant already has `after create(name: "Alice") -> ok`, reuse `name: "Alice"` in the fixture
+
+3. **Check the conformance test** (`generated/tests/<concept>.conformance.test.ts`) — look at what's failing and why:
+   - `JSON.parse` error → param needs a JSON string fixture
+   - `items.map is not a function` → param needs array fixture AND spec type fix
+   - `notfound` when `ok` expected → the invariant example needs a setup step
+
+4. **Fix param types** if the spec declares `String` but the handler expects `list String`, `Bool`, or a record type — update the param type in the spec to match
+
+5. **Mark the file** with `# @fixtures-added` as the first line after migration
 
 ### Step 5: Write the Operational Principle (Invariants)
 

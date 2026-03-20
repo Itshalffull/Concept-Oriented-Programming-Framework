@@ -162,8 +162,6 @@ describe('NextjsTarget functional handler', () => {
     it('fixture "valid_route" -> ok', async () => {
       if (typeof nextjsTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }), storage));
       const result = await interpret(nextjsTargetHandler.validate({ route: "nextjs-user-route-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('NextjsTarget functional handler', () => {
     it('fixture "list_user_routes" -> ok', async () => {
       if (typeof nextjsTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"User\",\"actions\":[]}}", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(nextjsTargetHandler.generate({ projection: "{\"conceptManifest\":{\"name\":\"Order\",\"actions\":[]}}", config: "{\"basePath\":\"/api/orders\"}" }), storage));
       const result = await interpret(nextjsTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -230,9 +230,6 @@ describe('Runtime functional handler', () => {
     it('fixture "traffic_canary" -> ok', async () => {
       if (typeof runtimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.setTrafficWeight({ instance: "rt-abc123", weight: "25" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,9 +237,6 @@ describe('Runtime functional handler', () => {
     it('fixture "traffic_no_instance" -> ok', async () => {
       if (typeof runtimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.setTrafficWeight({ instance: "", weight: "50" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +298,6 @@ describe('Runtime functional handler', () => {
     it('fixture "rollback_instance" -> ok', async () => {
       if (typeof runtimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.rollback({ instance: "rt-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -375,9 +366,6 @@ describe('Runtime functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof runtimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.destroy({ instance: "rt-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -446,9 +434,6 @@ describe('Runtime functional handler', () => {
     it('fixture "update_endpoint" -> ok', async () => {
       if (typeof runtimeHandler.updateEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.updateEndpoint({ instance: "rt-abc123", endpoint: "https://user-service.vercel.app" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -517,9 +502,6 @@ describe('Runtime functional handler', () => {
     it('fixture "get_endpoint" -> ok', async () => {
       if (typeof runtimeHandler.getEndpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.getEndpoint({ instance: "rt-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -588,9 +570,6 @@ describe('Runtime functional handler', () => {
     it('fixture "configure_deps" -> ok', async () => {
       if (typeof runtimeHandler.configureDependencies !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.configureDependencies({ instance: "rt-abc123", dependencies: "{\"auth\":{\"env\":\"AUTH_URL\",\"url\":\"https://auth.svc:8080\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -659,9 +638,6 @@ describe('Runtime functional handler', () => {
     it('fixture "healthcheck_valid" -> ok', async () => {
       if (typeof runtimeHandler.healthCheck !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "UserService", runtimeType: "ecs-fargate", config: "{\"cpu\":256,\"memory\":512}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.provision({ concept: "WebApp", runtimeType: "vercel", config: "{\"framework\":\"nextjs\"}" }), storage));
-      await safeInvoke(async () => await interpret(runtimeHandler.deploy({ instance: "rt-abc123", artifact: "s3://artifacts/user-v1.zip", version: "1.0.0" }), storage));
       const result = await interpret(runtimeHandler.healthCheck({ instance: "rt-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

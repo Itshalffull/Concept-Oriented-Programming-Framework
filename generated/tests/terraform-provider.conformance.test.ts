@@ -162,9 +162,6 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "preview_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-multi-region-002" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage));
       const result = await interpret(terraformProviderHandler.preview({ workspace: "ws-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,9 +298,6 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "teardown_workspace" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-multi-region-002" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage));
       const result = await interpret(terraformProviderHandler.teardown({ workspace: "ws-prod-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -311,9 +305,6 @@ describe('TerraformProvider functional handler', () => {
     it('fixture "teardown_nonexistent" -> ok', async () => {
       if (typeof terraformProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-001" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.generate({ plan: "dp-multi-region-002" }), storage));
-      await safeInvoke(async () => await interpret(terraformProviderHandler.apply({ workspace: "ws-prod-001" }), storage));
       const result = await interpret(terraformProviderHandler.teardown({ workspace: "" }), storage);
       expect(result.variant).toBe('ok');
     });

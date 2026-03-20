@@ -62,7 +62,6 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "snapshot_block" -> ok', async () => {
       if (typeof tokenBalanceHandler.takeSnapshot !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage));
       const result = await tokenBalanceHandler.takeSnapshot({ config: "tb-cfg-001", blockRef: "18000000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,7 +88,6 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "set_balance_alice" -> ok', async () => {
       if (typeof tokenBalanceHandler.setBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage));
       const result = await tokenBalanceHandler.setBalance({ config: "tb-cfg-001", participant: "alice", balance: "500.0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -116,7 +114,6 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "get_live_balance" -> ok', async () => {
       if (typeof tokenBalanceHandler.getBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage));
       const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -124,7 +121,6 @@ describe('TokenBalance imperative handler', () => {
     it('fixture "get_snapshot_balance" -> ok', async () => {
       if (typeof tokenBalanceHandler.getBalance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await tokenBalanceHandler.configure({ tokenContract: "0xGOV", snapshotBlock: "18000000" }, storage));
       const result = await tokenBalanceHandler.getBalance({ config: "tb-cfg-001", participant: "alice", snapshot: "tb-snap-001" }, storage);
       expect(result.variant).toBe('ok');
     });

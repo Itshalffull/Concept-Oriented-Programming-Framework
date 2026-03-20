@@ -162,9 +162,6 @@ describe('Telemetry functional handler', () => {
     it('fixture "marker_staging" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.deployMarker({ suite: "auth-suite", version: "2.1.0", environment: "staging", status: "started" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,9 +169,6 @@ describe('Telemetry functional handler', () => {
     it('fixture "marker_production" -> ok', async () => {
       if (typeof telemetryHandler.deployMarker !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.deployMarker({ suite: "payments", version: "1.0.0", environment: "production", status: "completed" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,9 +237,6 @@ describe('Telemetry functional handler', () => {
     it('fixture "analyze_5min" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.analyze({ concept: "UserService", window: "300", criteria: "error_rate < 0.05" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -253,9 +244,6 @@ describe('Telemetry functional handler', () => {
     it('fixture "analyze_1hr" -> ok', async () => {
       if (typeof telemetryHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "UserService", endpoint: "http://otel-collector:4317", samplingRate: "0.5" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "PaymentService", endpoint: "https://telemetry.internal:4317", samplingRate: "1.0" }), storage));
-      await safeInvoke(async () => await interpret(telemetryHandler.configure({ concept: "", endpoint: "http://otel:4317", samplingRate: "0.1" }), storage));
       const result = await interpret(telemetryHandler.analyze({ concept: "PaymentService", window: "3600", criteria: "latency_p99 < 500" }), storage);
       expect(result.variant).toBe('ok');
     });

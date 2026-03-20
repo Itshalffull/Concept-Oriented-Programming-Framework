@@ -232,9 +232,6 @@ describe('Surface functional handler', () => {
     it('fixture "resize_desktop" -> ok', async () => {
       if (typeof surfaceHandler.resize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.resize({ surface: "surface-1", width: "1920", height: "1080" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +301,6 @@ describe('Surface functional handler', () => {
     it('fixture "mount_root" -> ok', async () => {
       if (typeof surfaceHandler.mount !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.mount({ surface: "surface-1", tree: "<App />", zone: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -375,9 +369,6 @@ describe('Surface functional handler', () => {
     it('fixture "unmount_root" -> ok', async () => {
       if (typeof surfaceHandler.unmount !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.unmount({ surface: "surface-1", zone: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -447,9 +438,6 @@ describe('Surface functional handler', () => {
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof surfaceHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-1", kind: "browser-dom", mountPoint: "#app" }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.create({ surface: "surface-2", kind: "terminal", mountPoint: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceHandler.attach({ surface: "surface-1", renderer: "react-adapter" }), storage));
       const result = await interpret(surfaceHandler.destroy({ surface: "surface-1" }), storage);
       expect(result.variant).toBe('ok');
     });

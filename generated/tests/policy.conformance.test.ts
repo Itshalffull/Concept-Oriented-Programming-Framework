@@ -155,7 +155,6 @@ describe('Policy functional handler', () => {
     it('fixture "evaluate_active_policy" -> ok', async () => {
       if (typeof policyHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage));
       const result = await interpret(policyHandler.evaluate({ policy: "policy-001", context: "{\"role\":\"committee_member\",\"quarter_end\":true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('Policy functional handler', () => {
     it('fixture "suspend_active_policy" -> ok', async () => {
       if (typeof policyHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage));
       const result = await interpret(policyHandler.suspend({ policy: "policy-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,7 +292,6 @@ describe('Policy functional handler', () => {
     it('fixture "repeal_active_policy" -> ok', async () => {
       if (typeof policyHandler.repeal !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage));
       const result = await interpret(policyHandler.repeal({ policy: "policy-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,7 +360,6 @@ describe('Policy functional handler', () => {
     it('fixture "modify_aim" -> ok', async () => {
       if (typeof policyHandler.modify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(policyHandler.create({ attributes: "committee_member", deontic: "Must", aim: "submit_quarterly_report", conditions: "end_of_quarter", orElse: "escalate_to_board", domain: "finance" }), storage));
       const result = await interpret(policyHandler.modify({ policy: "policy-001", field: "aim", newValue: "submit_monthly_report" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -87,7 +87,6 @@ describe('Generator functional handler', () => {
     it('fixture "with_valid_manifest" -> ok', async () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage));
       const result = await interpret(generatorHandler.plan({ suite: "commerce", interfaceManifest: "{\"targets\":[\"rest\",\"graphql\"],\"concepts\":[\"Order\",\"Product\"],\"outputDir\":\"generated/commerce\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('Generator functional handler', () => {
     it('fixture "no_targets" -> ok', async () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage));
       const result = await interpret(generatorHandler.plan({ suite: "empty-suite", interfaceManifest: "{\"targets\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -110,7 +108,6 @@ describe('Generator functional handler', () => {
     it('fixture "missing_provider" -> ok', async () => {
       if (typeof generatorHandler.plan !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage));
       const result = await interpret(generatorHandler.plan({ suite: "analytics", interfaceManifest: "{\"targets\":[\"custom-unknown\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,7 +237,6 @@ describe('Generator functional handler', () => {
     it('fixture "regenerate_rest_only" -> ok', async () => {
       if (typeof generatorHandler.regenerate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(generatorHandler.generate({ plan: "plan-commerce-12345" }), storage));
       const result = await interpret(generatorHandler.regenerate({ plan: "plan-commerce-12345", targets: ["rest"] }), storage);
       expect(result.variant).toBe('ok');
     });

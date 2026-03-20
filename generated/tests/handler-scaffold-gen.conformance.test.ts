@@ -162,9 +162,6 @@ describe('HandlerScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof handlerScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Order", actions: [{"name":"create","params":[{"name":"title","type":"String"}],"variants":[{"name":"ok","params":[{"name":"item","type":"String"}]},{"name":"error","params":[{"name":"message","type":"String"}]}]}], style: "functional" }), storage));
-      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.generate({ conceptName: "Invoice", actions: [], style: "imperative" }), storage));
-      await safeInvoke(async () => await interpret(handlerScaffoldGenHandler.register({  }), storage));
       const result = await interpret(handlerScaffoldGenHandler.preview({ conceptName: "Payment", actions: [{"name":"charge","params":[{"name":"amount","type":"Int"}],"variants":[{"name":"ok","params":[{"name":"receipt","type":"String"}]}]}] }), storage);
       expect(result.variant).toBe('ok');
     });

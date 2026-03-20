@@ -163,8 +163,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_push" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"push\", \"destination\": \"articles\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +170,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "nav_replace" -> ok', async () => {
       if (typeof platformAdapterHandler.mapNavigation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.mapNavigation({ adapter: "browser-adapter-1", transition: "{ \"type\": \"replace\", \"destination\": \"home\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -251,8 +247,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "zone_persistent" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "persistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -260,8 +254,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "zone_navigated" -> ok', async () => {
       if (typeof platformAdapterHandler.mapZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.mapZone({ adapter: "browser-adapter-1", role: "navigated" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -331,8 +323,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_popstate" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"popstate\" }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -340,8 +330,6 @@ describe('PlatformAdapter functional handler', () => {
     it('fixture "event_hashchange" -> ok', async () => {
       if (typeof platformAdapterHandler.handlePlatformEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "browser-adapter-1", platform: "browser", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(platformAdapterHandler.register({ adapter: "mobile-adapter-1", platform: "mobile", config: "{}" }), storage));
       const result = await interpret(platformAdapterHandler.handlePlatformEvent({ adapter: "browser-adapter-1", event: "{ \"name\": \"hashchange\" }" }), storage);
       expect(result.variant).toBe('ok');
     });

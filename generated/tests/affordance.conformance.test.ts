@@ -163,8 +163,6 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_match" -> ok', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage));
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "approval-detail", interactor: "entity-detail", specificity: "20", conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: "1" }), storage));
       const result = await interpret(affordanceHandler.match({ interactor: "single-choice", context: "{\"optionCount\":4,\"platform\":\"browser\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +170,6 @@ describe('Affordance functional handler', () => {
     it('fixture "entity_match" -> ok', async () => {
       if (typeof affordanceHandler.match !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage));
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "approval-detail", interactor: "entity-detail", specificity: "20", conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: "1" }), storage));
       const result = await interpret(affordanceHandler.match({ interactor: "entity-detail", context: "{\"concept\":\"Approval\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,8 +239,6 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_explain" -> ok', async () => {
       if (typeof affordanceHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage));
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "approval-detail", interactor: "entity-detail", specificity: "20", conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: "1" }), storage));
       const result = await interpret(affordanceHandler.explain({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,8 +308,6 @@ describe('Affordance functional handler', () => {
     it('fixture "valid_remove" -> ok', async () => {
       if (typeof affordanceHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "radio-group", interactor: "single-choice", specificity: "10", conditions: "{\"maxOptions\":8}", bind: "", contractVersion: "1" }), storage));
-      await safeInvoke(async () => await interpret(affordanceHandler.declare({ widget: "approval-detail", interactor: "entity-detail", specificity: "20", conditions: "{\"concept\":\"Approval\"}", bind: "{\"actor\":\"approver\"}", contractVersion: "1" }), storage));
       const result = await interpret(affordanceHandler.remove({  }), storage);
       expect(result.variant).toBe('ok');
     });

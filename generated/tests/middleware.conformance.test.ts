@@ -87,9 +87,6 @@ describe('Middleware functional handler', () => {
     it('fixture "resolve_auth_rest" -> ok', async () => {
       if (typeof middlewareHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage));
       const result = await interpret(middlewareHandler.resolve({ traits: ["auth"], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,9 +94,6 @@ describe('Middleware functional handler', () => {
     it('fixture "resolve_multi_traits" -> ok', async () => {
       if (typeof middlewareHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage));
       const result = await interpret(middlewareHandler.resolve({ traits: ["auth","validation"], target: "grpc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -168,9 +162,6 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_single" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage));
       const result = await interpret(middlewareHandler.inject({ output: "app.get('/api', handler)", middlewares: ["bearer-check"], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -178,9 +169,6 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_multiple" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage));
       const result = await interpret(middlewareHandler.inject({ output: "server.addService(svc)", middlewares: ["auth-interceptor","logging"], target: "grpc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -188,9 +176,6 @@ describe('Middleware functional handler', () => {
     it('fixture "inject_empty" -> ok', async () => {
       if (typeof middlewareHandler.inject !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "auth", target: "rest", implementation: "bearer-check", position: "auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "logging", target: "grpc", implementation: "grpc-logger", position: "before-auth" }), storage));
-      await safeInvoke(async () => await interpret(middlewareHandler.register({ trait: "", target: "rest", implementation: "noop", position: "auth" }), storage));
       const result = await interpret(middlewareHandler.inject({ output: "", middlewares: [], target: "rest" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,8 +155,6 @@ describe('ActionLog functional handler', () => {
     it('fixture "link_records" -> ok', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage));
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage));
       const result = await interpret(actionLogHandler.addEdge({ from: "rec-001", to: "rec-002", sync: "UserToProfile" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,8 +162,6 @@ describe('ActionLog functional handler', () => {
     it('fixture "link_with_different_sync" -> ok', async () => {
       if (typeof actionLogHandler.addEdge !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage));
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage));
       const result = await interpret(actionLogHandler.addEdge({ from: "rec-010", to: "rec-011", sync: "PaymentToInvoice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -227,8 +223,6 @@ describe('ActionLog functional handler', () => {
     it('fixture "existing_flow" -> ok', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage));
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage));
       const result = await interpret(actionLogHandler.query({ flow: "flow-42" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -236,8 +230,6 @@ describe('ActionLog functional handler', () => {
     it('fixture "empty_flow" -> ok', async () => {
       if (typeof actionLogHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-42","concept":"UserAuth","action":"login","type":"completion","variant":"ok"} }), storage));
-      await safeInvoke(async () => await interpret(actionLogHandler.append({ record: {"flow":"flow-99","concept":"Payment","action":"charge","type":"invocation","variant":"pending"} }), storage));
       const result = await interpret(actionLogHandler.query({ flow: "nonexistent-flow" }), storage);
       expect(result.variant).toBe('ok');
     });

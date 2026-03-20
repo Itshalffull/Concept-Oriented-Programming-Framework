@@ -171,9 +171,6 @@ describe('Machine functional handler', () => {
     it('fixture "valid_send" -> ok', async () => {
       if (typeof machineHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage));
-      await safeInvoke(async () => await interpret(machineHandler.spawn({ widget: "dialog", context: "{}" }), storage));
-      await safeInvoke(async () => await interpret(machineHandler.connect({  }), storage));
       const result = await interpret(machineHandler.send({ event: "start" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,9 +309,6 @@ describe('Machine functional handler', () => {
     it('fixture "valid_destroy" -> ok', async () => {
       if (typeof machineHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(machineHandler.spawn({ widget: "dialog", context: "{\"title\":\"Confirm\"}" }), storage));
-      await safeInvoke(async () => await interpret(machineHandler.spawn({ widget: "dialog", context: "{}" }), storage));
-      await safeInvoke(async () => await interpret(machineHandler.connect({  }), storage));
       const result = await interpret(machineHandler.destroy({  }), storage);
       expect(result.variant).toBe('ok');
     });

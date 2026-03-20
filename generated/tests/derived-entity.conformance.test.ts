@@ -162,8 +162,6 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "get_trash" -> ok', async () => {
       if (typeof derivedEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage));
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage));
       const result = await interpret(derivedEntityHandler.get({ name: "Trash" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "find_by_article" -> ok', async () => {
       if (typeof derivedEntityHandler.findByComposedConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage));
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage));
       const result = await interpret(derivedEntityHandler.findByComposedConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,8 +298,6 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "find_by_sync" -> ok', async () => {
       if (typeof derivedEntityHandler.findBySync !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage));
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage));
       const result = await interpret(derivedEntityHandler.findBySync({ syncName: "trash-on-delete" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,8 +366,6 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "tree_valid" -> ok', async () => {
       if (typeof derivedEntityHandler.compositionTree !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage));
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage));
       const result = await interpret(derivedEntityHandler.compositionTree({ entity: "derived-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -442,8 +434,6 @@ describe('DerivedEntity functional handler', () => {
     it('fixture "rollup_valid" -> ok', async () => {
       if (typeof derivedEntityHandler.traceRollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Trash", source: "specs/trash.derived", ast: "{\"composes\":[\"Article\",\"Label\"],\"syncs\":{\"required\":[\"trash-on-delete\"]}}" }), storage));
-      await safeInvoke(async () => await interpret(derivedEntityHandler.register({ name: "Inbox", source: "specs/inbox.derived", ast: "{}" }), storage));
       const result = await interpret(derivedEntityHandler.traceRollup({ entity: "derived-entity-1", flowId: "flow-abc-123" }), storage);
       expect(result.variant).toBe('ok');
     });

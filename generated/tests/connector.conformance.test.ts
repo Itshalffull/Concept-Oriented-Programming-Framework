@@ -162,9 +162,6 @@ describe('Connector functional handler', () => {
     it('fixture "read_posts" -> ok', async () => {
       if (typeof connectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.read({ connectorId: "conn-1", query: "{\"path\":\"/posts\"}", options: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,9 +231,6 @@ describe('Connector functional handler', () => {
     it('fixture "write_records" -> ok', async () => {
       if (typeof connectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.write({ connectorId: "conn-1", data: "[{\"title\":\"Post 1\"}]", options: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,9 +300,6 @@ describe('Connector functional handler', () => {
     it('fixture "test_existing" -> ok', async () => {
       if (typeof connectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-1", protocolId: "rest", config: "{\"baseUrl\":\"https://api.example.com\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.configure({ sourceId: "src-2", protocolId: "sql", config: "{\"connectionString\":\"postgres://localhost/db\"}" }), storage));
-      await safeInvoke(async () => await interpret(connectorHandler.discover({ connectorId: "conn-1" }), storage));
       const result = await interpret(connectorHandler.test({ connectorId: "conn-1" }), storage);
       expect(result.variant).toBe('ok');
     });

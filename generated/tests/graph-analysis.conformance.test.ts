@@ -87,8 +87,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "pagerank_analysis" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -96,8 +94,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "degree_with_config" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,8 +239,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "existing_result" -> ok', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.getResult({ result: "result-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,8 +308,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "for_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -377,8 +369,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "all_algorithms" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -386,8 +376,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "centrality_only" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.listAlgorithms({ category: "centrality" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -449,8 +437,6 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "clear_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" }), storage));
-      await safeInvoke(async () => await interpret(graphAnalysisHandler.register({ algorithm: "spectral", category: "community", provider: "SpectralProvider" }), storage));
       const result = await interpret(graphAnalysisHandler.clearResults({ graph: "{\"nodes\":[\"a\"],\"edges\":[]}" }), storage);
       expect(result.variant).toBe('ok');
     });

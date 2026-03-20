@@ -148,7 +148,6 @@ describe('RecursiveMerge functional handler', () => {
     it('fixture "clean_recursive" -> ok', async () => {
       if (typeof recursiveMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(recursiveMergeHandler.register({  }), storage));
       const result = await interpret(recursiveMergeHandler.execute({ base: "line1\nline2", ours: "line1\nline2", theirs: "line1\nline3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -156,7 +155,6 @@ describe('RecursiveMerge functional handler', () => {
     it('fixture "conflict_recursive" -> ok', async () => {
       if (typeof recursiveMergeHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(recursiveMergeHandler.register({  }), storage));
       const result = await interpret(recursiveMergeHandler.execute({ base: "line1", ours: "lineA", theirs: "lineB" }), storage);
       expect(result.variant).toBe('ok');
     });

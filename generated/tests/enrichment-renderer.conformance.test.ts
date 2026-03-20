@@ -171,8 +171,6 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "valid_render" -> ok', async () => {
       if (typeof enrichmentRendererHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage));
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage));
       const result = await interpret(enrichmentRendererHandler.render({ content: "{\"migration-guide\":{\"heading\":\"Migration Guide\",\"body\":\"Follow these steps...\"}}", format: "skill-md" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -250,8 +248,6 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "list_skill_md" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage));
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage));
       const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "skill-md" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -259,8 +255,6 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "list_empty_format" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listHandlers !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage));
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage));
       const result = await interpret(enrichmentRendererHandler.listHandlers({ format: "nonexistent-format" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -322,8 +316,6 @@ describe('EnrichmentRenderer functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof enrichmentRendererHandler.listPatterns !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "migration-guide", format: "skill-md", order: "75", pattern: "heading-body", template: "{\"heading\":\"Migration Guide\"}" }), storage));
-      await safeInvoke(async () => await interpret(enrichmentRendererHandler.register({ key: "references", format: "skill-md", order: "10", pattern: "list", template: "{\"title\":\"References\"}" }), storage));
       const result = await interpret(enrichmentRendererHandler.listPatterns({  }), storage);
       expect(result.variant).toBe('ok');
     });

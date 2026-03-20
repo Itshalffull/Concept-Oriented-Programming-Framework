@@ -223,8 +223,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "hide_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "false", role_visibility: "admin" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "show_field" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_visibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_visibility({ placement: "fp-001", visible: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "set_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.set_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.set_field_mapping({ placement: "fp-001", mapping: "rich-text-editor" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -365,8 +359,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "clear_existing_mapping" -> ok', async () => {
       if (typeof fieldPlacementHandler.clear_field_mapping !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.clear_field_mapping({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -435,8 +427,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.get({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -505,8 +495,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.delete({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -575,8 +563,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "duplicate_existing" -> ok', async () => {
       if (typeof fieldPlacementHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.duplicate({ placement: "fp-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -645,8 +631,6 @@ describe('FieldPlacement functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof fieldPlacementHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.create({ source_field: "Article.title", formatter: "heading" }), storage));
-      await safeInvoke(async () => await interpret(fieldPlacementHandler.configure({ placement: "fp-001", formatter: "markdown", label_display: "inline" }), storage));
       const result = await interpret(fieldPlacementHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

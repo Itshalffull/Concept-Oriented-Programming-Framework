@@ -87,7 +87,6 @@ describe('TypeScriptToolchain functional handler', () => {
     it('fixture "resolve_node" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptToolchainHandler.register({  }), storage));
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "node", versionConstraint: ">=5.7" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('TypeScriptToolchain functional handler', () => {
     it('fixture "resolve_browser" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptToolchainHandler.register({  }), storage));
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "browser" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -103,7 +101,6 @@ describe('TypeScriptToolchain functional handler', () => {
     it('fixture "resolve_empty_platform" -> ok', async () => {
       if (typeof typeScriptToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptToolchainHandler.register({  }), storage));
       const result = await interpret(typeScriptToolchainHandler.resolve({ platform: "" }), storage);
       expect(result.variant).toBe('ok');
     });

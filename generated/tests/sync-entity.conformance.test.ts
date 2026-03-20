@@ -162,8 +162,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findByConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,8 +169,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_nonexistent" -> ok', async () => {
       if (typeof syncEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findByConcept({ concept: "NonexistentConcept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,8 +230,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_publish_ok" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "publish", variant: "ok" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,8 +237,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_create_any" -> ok', async () => {
       if (typeof syncEntityHandler.findTriggerableBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findTriggerableBy({ action: "create", variant: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,8 +298,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "chain_publish" -> ok', async () => {
       if (typeof syncEntityHandler.chainFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.chainFrom({ action: "publish", variant: "ok", depth: "3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,8 +366,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_dead_ends_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findDeadEnds !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findDeadEnds({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -439,8 +427,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "find_orphans_valid" -> ok', async () => {
       if (typeof syncEntityHandler.findOrphanVariants !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.findOrphanVariants({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,8 +488,6 @@ describe('SyncEntity functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof syncEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "ArticlePublishSync", source: "syncs/article-publish.sync", compiled: "{\"when\":[{\"concept\":\"Article\",\"action\":\"publish\"}],\"then\":[{\"concept\":\"Search\",\"action\":\"index\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(syncEntityHandler.register({ name: "NotificationSync", source: "syncs/notify.sync", compiled: "{}" }), storage));
       const result = await interpret(syncEntityHandler.get({ sync: "sync-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

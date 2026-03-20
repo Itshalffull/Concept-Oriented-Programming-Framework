@@ -155,7 +155,6 @@ describe('QuadraticWeight functional handler', () => {
     it('fixture "compute_hundred" -> ok', async () => {
       if (typeof quadraticWeightHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(quadraticWeightHandler.configure({ baseSource: "token-balance" }), storage));
       const result = await interpret(quadraticWeightHandler.compute({ participant: "alice", balance: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });

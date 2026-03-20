@@ -187,8 +187,6 @@ describe('DeployOrchestrator functional handler', () => {
     it('fixture "deploy_all_production" -> ok', async () => {
       if (typeof deployOrchestratorHandler.deployAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage));
-      await safeInvoke(async () => await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-api/deploy/vercel.deploy.yaml", environment: "staging" }), storage));
       const result = await interpret(deployOrchestratorHandler.deployAll({ projectRoot: "./", environment: "production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -258,8 +256,6 @@ describe('DeployOrchestrator functional handler', () => {
     it('fixture "check_status" -> ok', async () => {
       if (typeof deployOrchestratorHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-web/deploy/vercel.deploy.yaml", environment: "production" }), storage));
-      await safeInvoke(async () => await interpret(deployOrchestratorHandler.deploy({ manifestPath: "./clef-api/deploy/vercel.deploy.yaml", environment: "staging" }), storage));
       const result = await interpret(deployOrchestratorHandler.status({ run: "run-1710000000-abc123" }), storage);
       expect(result.variant).toBe('ok');
     });

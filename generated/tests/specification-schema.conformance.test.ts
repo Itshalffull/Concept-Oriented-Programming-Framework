@@ -71,7 +71,6 @@ describe('SpecificationSchema imperative handler', () => {
     it('fixture "valid_instantiate" -> ok', async () => {
       if (typeof specificationSchemaHandler.instantiate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage));
       const result = await specificationSchemaHandler.instantiate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -107,7 +106,6 @@ describe('SpecificationSchema imperative handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof specificationSchemaHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage));
       const result = await specificationSchemaHandler.validate({ schema_id: "ss-abc123", param_values: "{\"function\":\"transfer\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -135,7 +133,6 @@ describe('SpecificationSchema imperative handler', () => {
     it('fixture "valid_list" -> ok', async () => {
       if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage));
       const result = await specificationSchemaHandler.list_by_category({ category: "smart_contract" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -143,7 +140,6 @@ describe('SpecificationSchema imperative handler', () => {
     it('fixture "empty_category" -> ok', async () => {
       if (typeof specificationSchemaHandler.list_by_category !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage));
       const result = await specificationSchemaHandler.list_by_category({ category: "nonexistent_category" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +159,6 @@ describe('SpecificationSchema imperative handler', () => {
     it('fixture "valid_search" -> ok', async () => {
       if (typeof specificationSchemaHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await specificationSchemaHandler.define({ name: "reentrancy-guard", category: "smart_contract", pattern_type: "absence", template_text: "always (call_depth(${function}) <= 1)", formal_language: "smtlib", parameters: "[{\"name\":\"function\",\"type\":\"String\",\"description\":\"Function to guard\"}]" }, storage));
       const result = await specificationSchemaHandler.search({ query: "reentrancy" }, storage);
       expect(result.variant).toBe('ok');
     });

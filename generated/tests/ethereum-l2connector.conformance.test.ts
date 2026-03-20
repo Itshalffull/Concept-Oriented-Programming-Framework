@@ -87,7 +87,6 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "read_owner" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage));
       const result = await interpret(ethereumL2ConnectorHandler.read({ connector: "eth-l2-1", query: "{\"method\":\"getOwner\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,7 +163,6 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "write_transfer" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage));
       const result = await interpret(ethereumL2ConnectorHandler.write({ connector: "eth-l2-1", data: "{\"method\":\"transfer\",\"args\":[\"0xabc\",100]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,7 +239,6 @@ describe('EthereumL2Connector functional handler', () => {
     it('fixture "test_connected" -> ok', async () => {
       if (typeof ethereumL2ConnectorHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(ethereumL2ConnectorHandler.discover({ connector: "eth-l2-1" }), storage));
       const result = await interpret(ethereumL2ConnectorHandler.test({ connector: "eth-l2-1" }), storage);
       expect(result.variant).toBe('ok');
     });

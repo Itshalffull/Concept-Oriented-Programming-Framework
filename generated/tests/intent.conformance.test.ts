@@ -155,10 +155,6 @@ describe('Intent functional handler', () => {
     it('fixture "update_purpose" -> ok', async () => {
       if (typeof intentHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "authentication" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "" }), storage));
       const result = await interpret(intentHandler.update({ intent: "auth-intent", purpose: "Authenticate and authorize users", operationalPrinciple: "After login, session is valid for 8 hours" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -227,10 +223,6 @@ describe('Intent functional handler', () => {
     it('fixture "verify_existing" -> ok', async () => {
       if (typeof intentHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "authentication" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "" }), storage));
       const result = await interpret(intentHandler.verify({ intent: "auth-intent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -367,10 +359,6 @@ describe('Intent functional handler', () => {
     it('fixture "suggest_from_desc" -> ok', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "authentication" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "" }), storage));
       const result = await interpret(intentHandler.suggestFromDescription({ description: "A system for managing user accounts with login and registration" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -378,10 +366,6 @@ describe('Intent functional handler', () => {
     it('fixture "suggest_empty" -> ok', async () => {
       if (typeof intentHandler.suggestFromDescription !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "auth-intent", target: "UserAuth", purpose: "Authenticate users securely", operationalPrinciple: "After login, session is valid for 24 hours" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.define({ intent: "", target: "UserAuth", purpose: "Test", operationalPrinciple: "Test" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "authentication" }), storage));
-      await safeInvoke(async () => await interpret(intentHandler.discover({ query: "" }), storage));
       const result = await interpret(intentHandler.suggestFromDescription({ description: "" }), storage);
       expect(result.variant).toBe('ok');
     });

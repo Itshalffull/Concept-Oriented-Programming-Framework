@@ -155,8 +155,6 @@ describe('Manifest functional handler', () => {
     it('fixture "remove_existing_dep" -> ok', async () => {
       if (typeof manifestHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
-      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.remove({ project: "my-app", module_id: "lodash" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('Manifest functional handler', () => {
     it('fixture "override_with_pin" -> ok', async () => {
       if (typeof manifestHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
-      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.override({ project: "my-app", module_id: "lodash", replacement_id: null, replacement_source: null, version_pin: "4.17.21" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('Manifest functional handler', () => {
     it('fixture "disable_existing_dep" -> ok', async () => {
       if (typeof manifestHandler.disable !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
-      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.disable({ project: "my-app", module_id: "lodash" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -433,8 +427,6 @@ describe('Manifest functional handler', () => {
     it('fixture "merge_two_manifests" -> ok', async () => {
       if (typeof manifestHandler.merge !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
-      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.merge({ base: "project-base", overlay: "project-overlay" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -503,8 +495,6 @@ describe('Manifest functional handler', () => {
     it('fixture "validate_valid_project" -> ok', async () => {
       if (typeof manifestHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(manifestHandler.add({ project: "my-app", module_id: "lodash", version_range: "^4.17.0", edge_type: "normal", environment: "all", features: [], optional: "false" }), storage));
-      await safeInvoke(async () => await interpret(manifestHandler.enable({ project: "my-app", module_id: "lodash" }), storage));
       const result = await interpret(manifestHandler.validate({ project: "my-app" }), storage);
       expect(result.variant).toBe('ok');
     });

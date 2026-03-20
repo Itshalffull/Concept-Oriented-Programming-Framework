@@ -178,9 +178,6 @@ describe('Elevation functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof elevationHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage));
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-2", level: "3", shadow: "[{ \"y\": 6, \"blur\": 12, \"color\": \"rgba(0,0,0,0.15)\" }]" }), storage));
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-3", level: "0", shadow: "none" }), storage));
       const result = await interpret(elevationHandler.get({ elevation: "W-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -250,9 +247,6 @@ describe('Elevation functional handler', () => {
     it('fixture "scale_from_black" -> ok', async () => {
       if (typeof elevationHandler.generateScale !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-1", level: "1", shadow: "[{ \"y\": 2, \"blur\": 4, \"color\": \"rgba(0,0,0,0.1)\" }]" }), storage));
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-2", level: "3", shadow: "[{ \"y\": 6, \"blur\": 12, \"color\": \"rgba(0,0,0,0.15)\" }]" }), storage));
-      await safeInvoke(async () => await interpret(elevationHandler.define({ elevation: "W-3", level: "0", shadow: "none" }), storage));
       const result = await interpret(elevationHandler.generateScale({ baseColor: "0,0,0" }), storage);
       expect(result.variant).toBe('ok');
     });

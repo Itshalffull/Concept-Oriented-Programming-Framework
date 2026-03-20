@@ -162,9 +162,6 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "test_unit" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.register({  }), storage));
       const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,9 +169,6 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "test_with_invocation" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.register({  }), storage));
       const result = await interpret(typeScriptBuilderHandler.test({ build: "tsb-001", toolchainPath: "/usr/local/bin/tsc", invocation: {"command":"npx vitest run","args":["--reporter=json"],"outputFormat":"vitest-json"}, testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,9 +237,6 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "package_npm" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.register({  }), storage));
       const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "npm" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -253,9 +244,6 @@ describe('TypeScriptBuilder functional handler', () => {
     it('fixture "package_bundle" -> ok', async () => {
       if (typeof typeScriptBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/password", toolchainPath: "/usr/local/bin/tsc", platform: "node-20", config: {"mode":"release"} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.build({ source: "./generated/typescript/ui", toolchainPath: "/usr/local/bin/tsc", platform: "browser", config: {"mode":"debug","features":["tree-shaking"]} }), storage));
-      await safeInvoke(async () => await interpret(typeScriptBuilderHandler.register({  }), storage));
       const result = await interpret(typeScriptBuilderHandler.package({ build: "tsb-001", format: "bundle" }), storage);
       expect(result.variant).toBe('ok');
     });

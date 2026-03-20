@@ -162,8 +162,6 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "valid_resolve_ref" -> ok', async () => {
       if (typeof scopeGraphHandler.resolveReference !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.resolveReference({ graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "valid_visible" -> ok', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-1", scope: "scope-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,8 +237,6 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "visible_no_graph" -> ok', async () => {
       if (typeof scopeGraphHandler.visibleSymbols !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.visibleSymbols({ graph: "scope-graph-999", scope: "scope-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "valid_cross_file" -> ok', async () => {
       if (typeof scopeGraphHandler.resolveCrossFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.resolveCrossFile({ graph: "scope-graph-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,8 +366,6 @@ describe('ScopeGraph functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof scopeGraphHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(scopeGraphHandler.build({ file: "src/empty.ts", tree: "{}" }), storage));
       const result = await interpret(scopeGraphHandler.get({ graph: "scope-graph-1" }), storage);
       expect(result.variant).toBe('ok');
     });

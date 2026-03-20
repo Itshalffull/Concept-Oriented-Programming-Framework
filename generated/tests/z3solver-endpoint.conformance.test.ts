@@ -69,8 +69,6 @@ describe('Z3SolverEndpoint imperative handler', () => {
     it('fixture "solve_sat" -> ok', async () => {
       if (typeof z3SolverEndpointHandler.solve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }, storage));
-      await safeInvoke(async () => await z3SolverEndpointHandler.register({ name: "z3-custom", binaryPath: "/opt/z3/bin/z3", timeout: "60000", options: "-smt2 -T:60" }, storage));
       const result = await z3SolverEndpointHandler.solve({ name: "z3-local", formula: "(declare-const x Int) (assert (> x 0)) (check-sat)", logic: "QF_LIA" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('Z3SolverEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof z3SolverEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await z3SolverEndpointHandler.register({ name: "z3-local", binaryPath: "/usr/bin/z3", timeout: "30000", options: "-smt2" }, storage));
-      await safeInvoke(async () => await z3SolverEndpointHandler.register({ name: "z3-custom", binaryPath: "/opt/z3/bin/z3", timeout: "60000", options: "-smt2 -T:60" }, storage));
       const result = await z3SolverEndpointHandler.resolve({ name: "z3-local" }, storage);
       expect(result.variant).toBe('ok');
     });

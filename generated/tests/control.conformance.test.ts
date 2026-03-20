@@ -155,7 +155,6 @@ describe('Control functional handler', () => {
     it('fixture "interact_slider" -> ok', async () => {
       if (typeof controlHandler.interact !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.interact({ control: "volume-slider", input: "75" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('Control functional handler', () => {
     it('fixture "get_value_existing" -> ok', async () => {
       if (typeof controlHandler.getValue !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.getValue({ control: "volume-slider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,7 +293,6 @@ describe('Control functional handler', () => {
     it('fixture "set_value_existing" -> ok', async () => {
       if (typeof controlHandler.setValue !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.setValue({ control: "volume-slider", value: "100" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -365,7 +362,6 @@ describe('Control functional handler', () => {
     it('fixture "trigger_existing" -> ok', async () => {
       if (typeof controlHandler.triggerAction !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(controlHandler.create({ control: "volume-slider", type: "slider", binding: "audio.volume" }), storage));
       const result = await interpret(controlHandler.triggerAction({ control: "volume-slider" }), storage);
       expect(result.variant).toBe('ok');
     });

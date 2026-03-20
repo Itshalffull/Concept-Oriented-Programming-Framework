@@ -69,8 +69,6 @@ describe('VercelApiEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof vercelApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-prod-abc123", teamId: "team_acme" }, storage));
-      await safeInvoke(async () => await vercelApiEndpointHandler.register({ name: "vercel-personal", apiToken: "vt-dev-xyz789", teamId: "" }, storage));
       const result = await vercelApiEndpointHandler.resolve({ name: "vercel-api" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('VercelApiEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof vercelApiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await vercelApiEndpointHandler.register({ name: "vercel-api", apiToken: "vt-prod-abc123", teamId: "team_acme" }, storage));
-      await safeInvoke(async () => await vercelApiEndpointHandler.register({ name: "vercel-personal", apiToken: "vt-dev-xyz789", teamId: "" }, storage));
       const result = await vercelApiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

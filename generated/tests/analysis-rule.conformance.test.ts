@@ -171,8 +171,6 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "valid_evaluate" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage));
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage));
       const result = await interpret(analysisRuleHandler.evaluate({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,8 +240,6 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "all_rules" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage));
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage));
       const result = await interpret(analysisRuleHandler.evaluateAll({ category: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -251,8 +247,6 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "by_category" -> ok', async () => {
       if (typeof analysisRuleHandler.evaluateAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage));
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage));
       const result = await interpret(analysisRuleHandler.evaluateAll({ category: "dead-code" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,8 +308,6 @@ describe('AnalysisRule functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof analysisRuleHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "dead-variants", engine: "graph-traversal", source: "[{\"match\":\"unused\",\"message\":\"Dead variant detected\"}]", severity: "warning", category: "dead-code" }), storage));
-      await safeInvoke(async () => await interpret(analysisRuleHandler.create({ name: "no-any-type", engine: "pattern-match", source: "[{\"match\":\"any\",\"message\":\"Avoid any type\"}]", severity: "error", category: "convention" }), storage));
       const result = await interpret(analysisRuleHandler.get({  }), storage);
       expect(result.variant).toBe('ok');
     });

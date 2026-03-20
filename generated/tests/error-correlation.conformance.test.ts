@@ -162,8 +162,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_by_concept" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "ConceptEntity:User", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,8 +169,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_by_action_since" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "ActionEntity:User/create", since: "2026-03-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -180,8 +176,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_empty_symbol" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByEntity({ symbol: "", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,8 +237,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_action_errors" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "action-error", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -252,8 +244,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_transport_recent" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "transport-error", since: "2026-02-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -261,8 +251,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "find_empty_kind" -> ok', async () => {
       if (typeof errorCorrelationHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.findByKind({ errorKind: "", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -324,8 +312,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "hotspots_top5" -> ok', async () => {
       if (typeof errorCorrelationHandler.errorHotspots !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.errorHotspots({ since: "", topN: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -333,8 +319,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "hotspots_recent" -> ok', async () => {
       if (typeof errorCorrelationHandler.errorHotspots !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.errorHotspots({ since: "2026-03-01T00:00:00Z", topN: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -396,8 +380,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "root_cause_valid" -> ok', async () => {
       if (typeof errorCorrelationHandler.rootCause !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.rootCause({ error: "error-correlation-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -466,8 +448,6 @@ describe('ErrorCorrelation functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof errorCorrelationHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-456", errorKind: "action-error", message: "Database connection timeout", rawEvent: "{\"concept\":\"User\",\"action\":\"create\",\"stack\":\"Error: timeout\\n    at create (handlers/user.ts:42:10)\"}" }), storage));
-      await safeInvoke(async () => await interpret(errorCorrelationHandler.record({ flowId: "f-789", errorKind: "sync-mismatch", message: "Variant not matched", rawEvent: "{}" }), storage));
       const result = await interpret(errorCorrelationHandler.get({ error: "error-correlation-1" }), storage);
       expect(result.variant).toBe('ok');
     });

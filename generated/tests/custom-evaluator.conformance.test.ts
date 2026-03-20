@@ -156,7 +156,6 @@ describe('CustomEvaluator functional handler', () => {
     it('fixture "evaluate_age_pass" -> ok', async () => {
       if (typeof customEvaluatorHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage));
       const result = await interpret(customEvaluatorHandler.evaluate({ evaluator: "custom-001", context: "{\"age\":21}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,7 +225,6 @@ describe('CustomEvaluator functional handler', () => {
     it('fixture "deregister_existing" -> ok', async () => {
       if (typeof customEvaluatorHandler.deregister !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(customEvaluatorHandler.register({ name: "age_check", source: "{\"op\":\"gte\",\"field\":\"age\",\"value\":18}", language: "JavaScript", sandbox: "true" }), storage));
       const result = await interpret(customEvaluatorHandler.deregister({ evaluator: "custom-001" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,8 +162,6 @@ describe('Signal functional handler', () => {
     it('fixture "valid_read" -> ok', async () => {
       if (typeof signalHandler.read !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.read({ signal: "G-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('Signal functional handler', () => {
     it('fixture "valid_write" -> ok', async () => {
       if (typeof signalHandler.write !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.write({ signal: "G-1", value: "world" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,8 +298,6 @@ describe('Signal functional handler', () => {
     it('fixture "valid_batch" -> ok', async () => {
       if (typeof signalHandler.batch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.batch({ signals: "[{\"signal\":\"G-1\",\"value\":\"a\"},{\"signal\":\"G-2\",\"value\":\"b\"}]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,8 +366,6 @@ describe('Signal functional handler', () => {
     it('fixture "valid_dispose" -> ok', async () => {
       if (typeof signalHandler.dispose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-1", kind: "state", initialValue: "hello" }), storage));
-      await safeInvoke(async () => await interpret(signalHandler.create({ signal: "G-2", kind: "computed", initialValue: "" }), storage));
       const result = await interpret(signalHandler.dispose({ signal: "G-1" }), storage);
       expect(result.variant).toBe('ok');
     });

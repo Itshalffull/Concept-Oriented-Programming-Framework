@@ -162,8 +162,6 @@ describe('OpenaiTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof openaiTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage));
-      await safeInvoke(async () => await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":false}" }), storage));
       const result = await interpret(openaiTargetHandler.validate({ function: "fn-score-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('OpenaiTarget functional handler', () => {
     it('fixture "list_functions_score" -> ok', async () => {
       if (typeof openaiTargetHandler.listFunctions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":true}" }), storage));
-      await safeInvoke(async () => await interpret(openaiTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"actions\\\":[]}\"}", config: "{\"strict\":false}" }), storage));
       const result = await interpret(openaiTargetHandler.listFunctions({ concept: "ScoreApi" }), storage);
       expect(result.variant).toBe('ok');
     });

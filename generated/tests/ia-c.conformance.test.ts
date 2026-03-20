@@ -155,10 +155,6 @@ describe('IaC functional handler', () => {
     it('fixture "preview_plan" -> ok', async () => {
       if (typeof iaCHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage));
       const result = await interpret(iaCHandler.preview({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -166,10 +162,6 @@ describe('IaC functional handler', () => {
     it('fixture "preview_empty" -> ok', async () => {
       if (typeof iaCHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage));
       const result = await interpret(iaCHandler.preview({ plan: "", provider: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -299,10 +291,6 @@ describe('IaC functional handler', () => {
     it('fixture "detect_drift_pulumi" -> ok', async () => {
       if (typeof iaCHandler.detectDrift !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage));
       const result = await interpret(iaCHandler.detectDrift({ provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -371,10 +359,6 @@ describe('IaC functional handler', () => {
     it('fixture "teardown_plan" -> ok', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage));
       const result = await interpret(iaCHandler.teardown({ plan: "dp-001", provider: "pulumi" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -382,10 +366,6 @@ describe('IaC functional handler', () => {
     it('fixture "teardown_empty" -> ok', async () => {
       if (typeof iaCHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.emit({ plan: "", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "dp-001", provider: "pulumi" }), storage));
-      await safeInvoke(async () => await interpret(iaCHandler.apply({ plan: "", provider: "" }), storage));
       const result = await interpret(iaCHandler.teardown({ plan: "", provider: "" }), storage);
       expect(result.variant).toBe('ok');
     });

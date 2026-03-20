@@ -163,8 +163,6 @@ describe('ActionGuide functional handler', () => {
     it('fixture "skill_md_format" -> ok', async () => {
       if (typeof actionGuideHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(actionGuideHandler.define({ concept: "Widget", steps: ["create"], content: "{}" }), storage));
       const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "skill-md" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +170,6 @@ describe('ActionGuide functional handler', () => {
     it('fixture "cli_help_format" -> ok', async () => {
       if (typeof actionGuideHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(actionGuideHandler.define({ concept: "SpecParser", steps: ["parse","validate","emit"], content: "{\"design-principles\":[{\"title\":\"Independence\",\"rule\":\"Parse without external state\"}]}" }), storage));
-      await safeInvoke(async () => await interpret(actionGuideHandler.define({ concept: "Widget", steps: ["create"], content: "{}" }), storage));
       const result = await interpret(actionGuideHandler.render({ workflow: "action-guide-1", format: "cli-help" }), storage);
       expect(result.variant).toBe('ok');
     });

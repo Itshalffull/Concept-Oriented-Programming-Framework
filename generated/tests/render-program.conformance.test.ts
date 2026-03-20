@@ -63,8 +63,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_root_element" -> ok', async () => {
       if (typeof renderProgramHandler.element !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.element({ program: "card-widget", part: "root", role: "container" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -92,8 +90,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_text" -> ok', async () => {
       if (typeof renderProgramHandler.text !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.text({ program: "card-widget", part: "root", content: "Hello World" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -121,8 +117,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_label_prop" -> ok', async () => {
       if (typeof renderProgramHandler.prop !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.prop({ program: "card-widget", name: "label", propType: "string", defaultValue: "Click" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -177,8 +171,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "define_idle_state" -> ok', async () => {
       if (typeof renderProgramHandler.stateDef !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.stateDef({ program: "card-widget", name: "idle", initial: "true" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -206,8 +198,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_click_transition" -> ok', async () => {
       if (typeof renderProgramHandler.transition !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.transition({ program: "card-widget", fromState: "idle", event: "click", toState: "active" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,8 +225,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_aria_label" -> ok', async () => {
       if (typeof renderProgramHandler.aria !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.aria({ program: "card-widget", part: "root", attr: "aria-label", value: "Main card" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -264,8 +252,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "map_enter_key" -> ok', async () => {
       if (typeof renderProgramHandler.keyboard !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.keyboard({ program: "card-widget", key: "Enter", event: "activate" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,8 +279,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "set_focus_trap" -> ok', async () => {
       if (typeof renderProgramHandler.focus !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.focus({ program: "card-widget", strategy: "trap", initialPart: "root" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -322,8 +306,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "compose_badge" -> ok', async () => {
       if (typeof renderProgramHandler.compose !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.compose({ program: "card-widget", widget: "Badge", slot: "header" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -351,8 +333,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "add_primary_token" -> ok', async () => {
       if (typeof renderProgramHandler.token !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.token({ program: "card-widget", path: "palette.primary", fallback: "#000" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -380,8 +360,6 @@ describe('RenderProgram imperative handler', () => {
     it('fixture "seal_program" -> ok', async () => {
       if (typeof renderProgramHandler.pure !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderProgramHandler.create({ program: "card-widget" }, storage));
-      await safeInvoke(async () => await renderProgramHandler.bind({ program: "card-widget", part: "root", attr: "data-value", expr: "props.value" }, storage));
       const result = await renderProgramHandler.pure({ program: "card-widget", output: "CardWidget" }, storage);
       expect(result.variant).toBe('ok');
     });

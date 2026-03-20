@@ -69,8 +69,6 @@ describe('VoyageEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof voyageEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-prod-abc123", model: "voyage-code-3", inputType: "document" }, storage));
-      await safeInvoke(async () => await voyageEndpointHandler.register({ name: "code-query", apiKey: "vk-dev-xyz789", model: "voyage-code-3", inputType: "query" }, storage));
       const result = await voyageEndpointHandler.resolve({ name: "code-search" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('VoyageEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof voyageEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await voyageEndpointHandler.register({ name: "code-search", apiKey: "vk-prod-abc123", model: "voyage-code-3", inputType: "document" }, storage));
-      await safeInvoke(async () => await voyageEndpointHandler.register({ name: "code-query", apiKey: "vk-dev-xyz789", model: "voyage-code-3", inputType: "query" }, storage));
       const result = await voyageEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

@@ -95,9 +95,6 @@ describe('FunctionalHandler imperative handler', () => {
     it('fixture "list_user_handlers" -> ok', async () => {
       if (typeof functionalHandlerHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await functionalHandlerHandler.register({ handler: "handler-user-create", concept: "User", action: "create", purity: "read-write", variants: "[\"ok\",\"error\"]" }, storage));
-      await safeInvoke(async () => await functionalHandlerHandler.register({ handler: "handler-ping", concept: "Ping", action: "ping", purity: "pure", variants: "[\"ok\"]" }, storage));
-      await safeInvoke(async () => await functionalHandlerHandler.build({ handler: "handler-user-create", input: "{\"name\":\"Alice\"}" }, storage));
       const result = await functionalHandlerHandler.list({ concept: "User" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -124,9 +121,6 @@ describe('FunctionalHandler imperative handler', () => {
     it('fixture "validate_consistent" -> ok', async () => {
       if (typeof functionalHandlerHandler.validatePurity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await functionalHandlerHandler.register({ handler: "handler-user-create", concept: "User", action: "create", purity: "read-write", variants: "[\"ok\",\"error\"]" }, storage));
-      await safeInvoke(async () => await functionalHandlerHandler.register({ handler: "handler-ping", concept: "Ping", action: "ping", purity: "pure", variants: "[\"ok\"]" }, storage));
-      await safeInvoke(async () => await functionalHandlerHandler.build({ handler: "handler-user-create", input: "{\"name\":\"Alice\"}" }, storage));
       const result = await functionalHandlerHandler.validatePurity({ handler: "handler-user-create", program: "{\"instructions\":[{\"tag\":\"put\",\"relation\":\"users\",\"key\":\"u1\",\"value\":{}}],\"effects\":{\"reads\":[],\"writes\":[\"users\"]}}" }, storage);
       expect(result.variant).toBe('ok');
     });

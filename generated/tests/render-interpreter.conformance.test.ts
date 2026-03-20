@@ -62,8 +62,6 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "execute_react" -> ok', async () => {
       if (typeof renderInterpreterHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage));
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-svelte", target: "svelte", template: "tmpl" }, storage));
       const result = await renderInterpreterHandler.execute({ interpreter: "interp-react", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}", snapshot: "current" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -91,8 +89,6 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "dry_run_svelte" -> ok', async () => {
       if (typeof renderInterpreterHandler.dryRun !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage));
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-svelte", target: "svelte", template: "tmpl" }, storage));
       const result = await renderInterpreterHandler.dryRun({ interpreter: "interp-svelte", program: "{\"instructions\":[{\"tag\":\"element\",\"part\":\"root\"}]}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -120,8 +116,6 @@ describe('RenderInterpreter imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof renderInterpreterHandler.listTargets !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-react", target: "react", template: "jsx" }, storage));
-      await safeInvoke(async () => await renderInterpreterHandler.register({ interpreter: "interp-svelte", target: "svelte", template: "tmpl" }, storage));
       const result = await renderInterpreterHandler.listTargets({  }, storage);
       expect(result.variant).toBe('ok');
     });

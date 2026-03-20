@@ -155,8 +155,6 @@ describe('Cache functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof cacheHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage));
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage));
       const result = await interpret(cacheHandler.get({ bin: "render", key: "home-page" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('Cache functional handler', () => {
     it('fixture "invalidate_existing" -> ok', async () => {
       if (typeof cacheHandler.invalidate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage));
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage));
       const result = await interpret(cacheHandler.invalidate({ bin: "render", key: "home-page" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('Cache functional handler', () => {
     it('fixture "invalidate_page_tags" -> ok', async () => {
       if (typeof cacheHandler.invalidateByTags !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage));
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage));
       const result = await interpret(cacheHandler.invalidateByTags({ tags: "page,frontpage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('Cache functional handler', () => {
     it('fixture "invalidate_empty_tags" -> ok', async () => {
       if (typeof cacheHandler.invalidateByTags !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "render", key: "home-page", data: "<html>home</html>", tags: "page,frontpage", maxAge: "600" }), storage));
-      await safeInvoke(async () => await interpret(cacheHandler.set({ bin: "", key: "orphan", data: "test", tags: "", maxAge: "0" }), storage));
       const result = await interpret(cacheHandler.invalidateByTags({ tags: "" }), storage);
       expect(result.variant).toBe('ok');
     });

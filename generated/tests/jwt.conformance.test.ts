@@ -155,8 +155,6 @@ describe('JWT functional handler', () => {
     it('fixture "verify_ok" -> ok', async () => {
       if (typeof jwtHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(jwtHandler.generate({ user: "user-alice" }), storage));
-      await safeInvoke(async () => await interpret(jwtHandler.generate({ user: "user-bob" }), storage));
       const result = await interpret(jwtHandler.verify({ token: "valid.token.placeholder" }), storage);
       expect(result.variant).toBe('ok');
     });

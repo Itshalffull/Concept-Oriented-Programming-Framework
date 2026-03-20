@@ -81,9 +81,6 @@ describe('WasmProvider imperative handler', () => {
     it('fixture "call_tokenize" -> ok', async () => {
       if (typeof wasmProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await wasmProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" }, storage));
-      await safeInvoke(async () => await wasmProviderHandler.load({ name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: "131072" }, storage));
       const result = await wasmProviderHandler.execute({ module: "tokenizer", function: "tokenize", args: "[\"hello world\"]" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -111,9 +108,6 @@ describe('WasmProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof wasmProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await wasmProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await wasmProviderHandler.load({ name: "tokenizer", wasmPath: "/modules/tokenizer.wasm", memoryLimit: "65536" }, storage));
-      await safeInvoke(async () => await wasmProviderHandler.load({ name: "parser", wasmPath: "/modules/parser.wasm", memoryLimit: "131072" }, storage));
       const result = await wasmProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

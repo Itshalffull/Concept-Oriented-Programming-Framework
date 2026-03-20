@@ -155,7 +155,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "get_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.get({ theme: "ocean", platform: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "get_by_ocean_file" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.getByFile({ sourceFile: "generated/surface/themes/ocean.css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_ocean_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "ocean" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,7 +298,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_empty_theme" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByTheme !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByTheme({ theme: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,7 +359,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_css_impls" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "css" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -371,7 +366,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "find_unknown_platform" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.findByPlatform !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.findByPlatform({ platform: "unknown-platform" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -433,7 +427,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "resolve_color_primary" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.resolveToken !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.resolveToken({ impl: "impl-001", tokenPath: "palette.primary.500" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -502,7 +495,6 @@ describe('ThemeImplementationEntity functional handler', () => {
     it('fixture "diff_ocean_css" -> ok', async () => {
       if (typeof themeImplementationEntityHandler.diffFromSpec !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeImplementationEntityHandler.register({ theme: "ocean", platform: "css", sourceFile: "generated/surface/themes/ocean.css", ast: "{}" }), storage));
       const result = await interpret(themeImplementationEntityHandler.diffFromSpec({ impl: "impl-001" }), storage);
       expect(result.variant).toBe('ok');
     });

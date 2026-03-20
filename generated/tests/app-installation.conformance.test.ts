@@ -155,8 +155,6 @@ describe('AppInstallation functional handler', () => {
     it('fixture "list_active" -> ok', async () => {
       if (typeof appInstallationHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage));
-      await safeInvoke(async () => await interpret(appInstallationHandler.register({ installation: "", name: "", version: "", status: "", registry: "", concepts: "0", syncs: "0" }), storage));
       const result = await interpret(appInstallationHandler.list({ status: "active" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,8 +162,6 @@ describe('AppInstallation functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof appInstallationHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appInstallationHandler.register({ installation: "core-suite", name: "Core Suite", version: "1.0.0", status: "active", registry: "clef-registry", description: "Core governance concepts", concepts: "12", syncs: "5" }), storage));
-      await safeInvoke(async () => await interpret(appInstallationHandler.register({ installation: "", name: "", version: "", status: "", registry: "", concepts: "0", syncs: "0" }), storage));
       const result = await interpret(appInstallationHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

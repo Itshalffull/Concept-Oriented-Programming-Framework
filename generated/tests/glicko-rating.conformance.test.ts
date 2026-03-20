@@ -155,7 +155,6 @@ describe('GlickoRating functional handler', () => {
     it('fixture "outcome_win" -> ok', async () => {
       if (typeof glickoRatingHandler.recordOutcome !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage));
       const result = await interpret(glickoRatingHandler.recordOutcome({ config: "glicko-001", participant: "alice", opponent: "bob", outcome: "1.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('GlickoRating functional handler', () => {
     it('fixture "decay_30_days" -> ok', async () => {
       if (typeof glickoRatingHandler.applyInactivityDecay !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage));
       const result = await interpret(glickoRatingHandler.applyInactivityDecay({ config: "glicko-001", participant: "alice", daysSinceActive: "30.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('GlickoRating functional handler', () => {
     it('fixture "weight_alice" -> ok', async () => {
       if (typeof glickoRatingHandler.getReliableWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(glickoRatingHandler.configure({ initialRating: "1500.0", initialDeviation: "350.0", initialVolatility: "0.06", inactivityGrowthRate: "30.0" }), storage));
       const result = await interpret(glickoRatingHandler.getReliableWeight({ config: "glicko-001", participant: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

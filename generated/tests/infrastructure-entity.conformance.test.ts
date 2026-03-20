@@ -155,7 +155,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "get_app_storage" -> ok', async () => {
       if (typeof infrastructureEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.get({ name: "AppStorage", kind: "storage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_postgresql_adapters" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "postgresql" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,7 +230,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_unknown_backend" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByBackend !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByBackend({ backend: "unknown-db" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,7 +291,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_article_adapters" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,7 +298,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_unbound_concept" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByConcept({ concept: "Nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -364,7 +359,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_api_runtime" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "api-server" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -372,7 +366,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "find_unknown_runtime" -> ok', async () => {
       if (typeof infrastructureEntityHandler.findByRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.findByRuntime({ runtime: "nonexistent-runtime" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -434,7 +427,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -442,7 +434,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "shared_backend_failure" -> ok', async () => {
       if (typeof infrastructureEntityHandler.sharedBackends !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.sharedBackends({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -504,7 +495,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -512,7 +502,6 @@ describe('InfrastructureEntity functional handler', () => {
     it('fixture "topology_failure" -> ok', async () => {
       if (typeof infrastructureEntityHandler.networkTopology !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(infrastructureEntityHandler.register({ name: "AppStorage", kind: "storage", sourceFile: "adapters/app-storage.ts", backend: "postgresql", config: "{}" }), storage));
       const result = await interpret(infrastructureEntityHandler.networkTopology({  }), storage);
       expect(result.variant).toBe('ok');
     });

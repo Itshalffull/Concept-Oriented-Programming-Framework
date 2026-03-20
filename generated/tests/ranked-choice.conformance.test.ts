@@ -162,8 +162,6 @@ describe('RankedChoice functional handler', () => {
     it('fixture "count_three_candidates" -> ok', async () => {
       if (typeof rankedChoiceHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage));
-      await safeInvoke(async () => await interpret(rankedChoiceHandler.configure({ eliminationMethod: "SingleTransferable", seats: "3" }), storage));
       const result = await interpret(rankedChoiceHandler.count({ config: "rcv-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('RankedChoice functional handler', () => {
     it('fixture "get_round_one" -> ok', async () => {
       if (typeof rankedChoiceHandler.getRoundDetail !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rankedChoiceHandler.configure({ eliminationMethod: "InstantRunoff", seats: "1" }), storage));
-      await safeInvoke(async () => await interpret(rankedChoiceHandler.configure({ eliminationMethod: "SingleTransferable", seats: "3" }), storage));
       const result = await interpret(rankedChoiceHandler.getRoundDetail({ config: "rcv-001", roundNumber: "1" }), storage);
       expect(result.variant).toBe('ok');
     });

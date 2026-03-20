@@ -87,7 +87,6 @@ describe('ChainMonitor functional handler', () => {
     it('fixture "await_finality_valid" -> ok', async () => {
       if (typeof chainMonitorHandler.awaitFinality !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage));
       const result = await interpret(chainMonitorHandler.awaitFinality({ txHash: "0xabc123", level: "confirmations" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('ChainMonitor functional handler', () => {
     it('fixture "on_block_valid" -> ok', async () => {
       if (typeof chainMonitorHandler.onBlock !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(chainMonitorHandler.subscribe({ chainId: "1", rpcUrl: "https://mainnet.infura.io/v3/abc123" }), storage));
       const result = await interpret(chainMonitorHandler.onBlock({ chainId: "1", blockNumber: "19500001", blockHash: "0xdeadbeefcafe" }), storage);
       expect(result.variant).toBe('ok');
     });

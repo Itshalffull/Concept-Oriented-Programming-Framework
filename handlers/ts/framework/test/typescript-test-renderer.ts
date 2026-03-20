@@ -80,46 +80,42 @@ function randomArbs(params: Array<{ name: string; type: string }>): string[] {
 // ── Structural tests (functional only) ──────────────────────
 
 /**
- * Build setup lines that seed storage before ok-fixture tests for reader actions.
- * Executes the ok fixtures of all writer actions (create, register, etc.) so that
- * reader actions find existing data. Returns code lines to insert before the fixture call.
+ * Build a fixture index for resolving `after` references.
+ * Maps fixture name → { action name, fixture } across all actions.
  */
-function buildSetupLines(
-  handlerVar: string,
-  allActions: TestPlanAction[],
-  currentAction: TestPlanAction,
-  style: HandlerStyle,
-): string[] {
-  // Writer action names — actions that create/initialize state
-  const writerNames = new Set([
-    'create', 'register', 'add', 'initialize', 'init', 'insert', 'put',
-    'set', 'open', 'start', 'new', 'setup', 'configure', 'append', 'define',
-    'declare', 'generate', 'issue', 'mint', 'spawn', 'allocate', 'build',
-    'provision', 'enroll', 'subscribe', 'connect', 'bind', 'attach', 'enable',
-    'install', 'load', 'warm', 'discover', 'publish', 'record', 'emit',
-    'store', 'deploy', 'index', 'apply',
-  ]);
-
-  // If this IS a writer action, no setup needed
-  if (writerNames.has(currentAction.name)) return [];
-
-  const lines: string[] = [];
+function buildFixtureIndex(allActions: TestPlanAction[]): Map<string, { actionName: string; fixture: TestPlanFixture }> {
+  const index = new Map<string, { actionName: string; fixture: TestPlanFixture }>();
   for (const a of allActions) {
-    if (!writerNames.has(a.name)) continue;
-    // Run all ok fixtures of writer actions to seed storage.
-    // Wrapped in safeInvoke — if the seed action itself throws, we still
-    // proceed (the reader test may fail with notfound, which is expected).
-    const okFixtures = a.fixtures?.filter(f => f.expectedVariant === 'ok') ?? [];
-    for (const f of okFixtures) {
-      const seedInput = fixtureInputStr(f.input);
-      lines.push(`      await safeInvoke(async () => ${invokeExpr(handlerVar, a.name, seedInput, style)});`);
+    for (const f of a.fixtures ?? []) {
+      index.set(f.name, { actionName: a.name, fixture: f });
     }
-    if (okFixtures.length === 0) {
-      const defInput = defaultInput(a.params);
-      if (defInput) {
-        lines.push(`      await safeInvoke(async () => ${invokeExpr(handlerVar, a.name, defInput, style)});`);
-      }
-    }
+  }
+  return index;
+}
+
+/**
+ * Resolve a fixture's `after` chain into setup code lines.
+ * Recursively resolves transitive dependencies (after chains).
+ */
+function resolveAfterChain(
+  fixture: TestPlanFixture,
+  fixtureIndex: Map<string, { actionName: string; fixture: TestPlanFixture }>,
+  handlerVar: string,
+  style: HandlerStyle,
+  visited = new Set<string>(),
+): string[] {
+  if (!fixture.after || fixture.after.length === 0) return [];
+  const lines: string[] = [];
+  for (const depName of fixture.after) {
+    if (visited.has(depName)) continue; // prevent cycles
+    visited.add(depName);
+    const dep = fixtureIndex.get(depName);
+    if (!dep) continue; // referenced fixture not found
+    // Resolve transitive deps first
+    lines.push(...resolveAfterChain(dep.fixture, fixtureIndex, handlerVar, style, visited));
+    // Then run this dependency
+    const depInput = fixtureInputStr(dep.fixture.input);
+    lines.push(`      ${invokeExpr(handlerVar, dep.actionName, depInput, style)};`);
   }
   return lines;
 }
@@ -197,17 +193,16 @@ function renderStructuralTests(handlerVar: string, action: TestPlanAction, style
 
   // Fixture behavioral tests — each fixture asserts its expected variant
   if (action.fixtures && action.fixtures.length > 0) {
-    const setupCode = allActions ? buildSetupLines(handlerVar, allActions, action, style) : [];
+    const fixtureIndex = allActions ? buildFixtureIndex(allActions) : new Map();
     for (const fixture of action.fixtures) {
       const fInput = fixtureInputStr(fixture.input);
       lines.push(`    it('fixture "${fixture.name}" -> ${fixture.expectedVariant}', async () => {`);
       lines.push(`      if (typeof ${handlerVar}.${action.name} !== 'function') return;`);
       lines.push(`      const storage = createInMemoryStorage();`);
-      // Seed storage for ok fixtures on reader actions
-      if (fixture.expectedVariant === 'ok' && setupCode.length > 0) {
-        for (const line of setupCode) {
-          lines.push(line);
-        }
+      // Run after-chain fixtures to seed storage
+      const afterLines = resolveAfterChain(fixture, fixtureIndex, handlerVar, style);
+      for (const line of afterLines) {
+        lines.push(line);
       }
       lines.push(`      const result = ${invokeExpr(handlerVar, action.name, fInput, style)};`);
       if (fixture.expectedVariant === 'error') {

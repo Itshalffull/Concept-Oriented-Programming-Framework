@@ -148,7 +148,6 @@ describe('PatienceDiff functional handler', () => {
     it('fixture "diff_text" -> ok', async () => {
       if (typeof patienceDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(patienceDiffHandler.register({  }), storage));
       const result = await interpret(patienceDiffHandler.compute({ contentA: "import os\ndef main():\n  pass", contentB: "import os\nimport sys\ndef main():\n  pass" }), storage);
       expect(result.variant).toBe('ok');
     });

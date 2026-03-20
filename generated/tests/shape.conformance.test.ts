@@ -155,8 +155,6 @@ describe('Shape functional handler', () => {
     it('fixture "resolve_button" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "button" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -164,8 +162,6 @@ describe('Shape functional handler', () => {
     it('fixture "resolve_card" -> ok', async () => {
       if (typeof shapeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.resolve({ shapeId: "shape-1", element: "card" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -227,8 +223,6 @@ describe('Shape functional handler', () => {
     it('fixture "radius_chip" -> ok', async () => {
       if (typeof shapeHandler.computeRadius !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "chip" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -236,8 +230,6 @@ describe('Shape functional handler', () => {
     it('fixture "radius_dialog" -> ok', async () => {
       if (typeof shapeHandler.computeRadius !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.computeRadius({ shapeId: "shape-1", element: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -299,8 +291,6 @@ describe('Shape functional handler', () => {
     it('fixture "clip_avatar" -> ok', async () => {
       if (typeof shapeHandler.computeClipPath !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "avatar" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -308,8 +298,6 @@ describe('Shape functional handler', () => {
     it('fixture "clip_badge" -> ok', async () => {
       if (typeof shapeHandler.computeClipPath !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "rounded", config: "{ \"cornerRadius\": 8, \"smoothing\": 0.6 }" }), storage));
-      await safeInvoke(async () => await interpret(shapeHandler.configure({ name: "pill", config: "{ \"cornerRadius\": 9999, \"smoothing\": 1.0 }" }), storage));
       const result = await interpret(shapeHandler.computeClipPath({ shapeId: "shape-1", element: "badge" }), storage);
       expect(result.variant).toBe('ok');
     });

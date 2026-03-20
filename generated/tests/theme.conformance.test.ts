@@ -155,8 +155,6 @@ describe('Theme functional handler', () => {
     it('fixture "extend_dark_compact" -> ok', async () => {
       if (typeof themeHandler.extend !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage));
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage));
       const result = await interpret(themeHandler.extend({ theme: "H-3", base: "H-1", overrides: "{ \"spacing-unit\": 4 }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,8 +224,6 @@ describe('Theme functional handler', () => {
     it('fixture "activate_dark" -> ok', async () => {
       if (typeof themeHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage));
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage));
       const result = await interpret(themeHandler.activate({ theme: "H-1", priority: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -297,8 +293,6 @@ describe('Theme functional handler', () => {
     it('fixture "deactivate_dark" -> ok', async () => {
       if (typeof themeHandler.deactivate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage));
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage));
       const result = await interpret(themeHandler.deactivate({ theme: "H-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -368,8 +362,6 @@ describe('Theme functional handler', () => {
     it('fixture "resolve_dark" -> ok', async () => {
       if (typeof themeHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-1", name: "dark", overrides: "{ \"color-bg\": \"#1a1a1a\", \"color-text\": \"#ffffff\" }" }), storage));
-      await safeInvoke(async () => await interpret(themeHandler.create({ theme: "H-2", name: "light", overrides: "{ \"color-bg\": \"#ffffff\", \"color-text\": \"#111111\" }" }), storage));
       const result = await interpret(themeHandler.resolve({ theme: "H-1" }), storage);
       expect(result.variant).toBe('ok');
     });

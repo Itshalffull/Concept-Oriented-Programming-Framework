@@ -155,9 +155,6 @@ describe('SyncScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof syncScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(syncScaffoldGenHandler.generate({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[{"field":"userId","value":"?userId"}]}], thenBlocks: [] }), storage));
-      await safeInvoke(async () => await interpret(syncScaffoldGenHandler.generate({ name: "SimpleSync", trigger: {"concept":"Order","action":"place"}, conditions: [], effects: [], thenBlocks: [] }), storage));
-      await safeInvoke(async () => await interpret(syncScaffoldGenHandler.register({  }), storage));
       const result = await interpret(syncScaffoldGenHandler.preview({ name: "OnUserCreate", trigger: {"concept":"User","action":"create"}, conditions: [], effects: [{"concept":"Notification","action":"send","params":[]}], thenBlocks: [] }), storage);
       expect(result.variant).toBe('ok');
     });

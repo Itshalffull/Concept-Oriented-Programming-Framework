@@ -87,9 +87,6 @@ describe('Capture functional handler', () => {
     it('fixture "clip_article" -> ok', async () => {
       if (typeof captureHandler.clip !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.clip({ url: "https://example.com/article", mode: "web_article", metadata: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,9 +94,6 @@ describe('Capture functional handler', () => {
     it('fixture "clip_bookmark" -> ok', async () => {
       if (typeof captureHandler.clip !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.clip({ url: "https://news.example.com/story/42", mode: "bookmark", metadata: "{\"tags\":[\"tech\"]}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -168,9 +162,6 @@ describe('Capture functional handler', () => {
     it('fixture "import_csv" -> ok', async () => {
       if (typeof captureHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.import({ file: "contacts.csv", options: "{\"delimiter\":\",\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -178,9 +169,6 @@ describe('Capture functional handler', () => {
     it('fixture "import_pdf" -> ok', async () => {
       if (typeof captureHandler.import !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.import({ file: "whitepaper.pdf", options: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -324,9 +312,6 @@ describe('Capture functional handler', () => {
     it('fixture "detect_existing" -> ok', async () => {
       if (typeof captureHandler.detectChanges !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.detectChanges({ subscriptionId: "sub-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -396,9 +381,6 @@ describe('Capture functional handler', () => {
     it('fixture "mark_existing" -> ok', async () => {
       if (typeof captureHandler.markReady !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "*/30 * * * *", mode: "api_poll" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "rss-blog", schedule: "0 */6 * * *", mode: "rss" }), storage));
-      await safeInvoke(async () => await interpret(captureHandler.subscribe({ sourceId: "src-1", schedule: "invalid", mode: "api_poll" }), storage));
       const result = await interpret(captureHandler.markReady({ itemId: "cap-1" }), storage);
       expect(result.variant).toBe('ok');
     });

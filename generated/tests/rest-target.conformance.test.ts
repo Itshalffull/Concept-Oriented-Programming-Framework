@@ -169,9 +169,6 @@ describe('RestTarget functional handler', () => {
     it('fixture "valid_route" -> ok', async () => {
       if (typeof restTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }), storage));
       const result = await interpret(restTargetHandler.validate({ route: "rest-user-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -179,9 +176,6 @@ describe('RestTarget functional handler', () => {
     it('fixture "missing_route" -> ok', async () => {
       if (typeof restTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }), storage));
       const result = await interpret(restTargetHandler.validate({ route: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,9 +237,6 @@ describe('RestTarget functional handler', () => {
     it('fixture "list_user_routes" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }), storage));
       const result = await interpret(restTargetHandler.listRoutes({ concept: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -253,9 +244,6 @@ describe('RestTarget functional handler', () => {
     it('fixture "empty_concept" -> ok', async () => {
       if (typeof restTargetHandler.listRoutes !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "user-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "order-projection", config: "{\"basePath\":\"/api/v2\",\"framework\":\"fastify\"}" }), storage));
-      await safeInvoke(async () => await interpret(restTargetHandler.generate({ projection: "report-projection", config: "{\"ambiguousActions\":[{\"action\":\"export\",\"reason\":\"maps to both GET and POST\"}]}" }), storage));
       const result = await interpret(restTargetHandler.listRoutes({ concept: "" }), storage);
       expect(result.variant).toBe('ok');
     });

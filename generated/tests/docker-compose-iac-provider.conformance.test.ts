@@ -155,10 +155,6 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "preview_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.generate({ plan: "" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "" }), storage));
       const result = await interpret(dockerComposeIacProviderHandler.preview({ composeFile: "compose-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,10 +291,6 @@ describe('DockerComposeIacProvider functional handler', () => {
     it('fixture "teardown_compose" -> ok', async () => {
       if (typeof dockerComposeIacProviderHandler.teardown !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.generate({ plan: "dp-001" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.generate({ plan: "" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "compose-001" }), storage));
-      await safeInvoke(async () => await interpret(dockerComposeIacProviderHandler.apply({ composeFile: "" }), storage));
       const result = await interpret(dockerComposeIacProviderHandler.teardown({ composeFile: "compose-001" }), storage);
       expect(result.variant).toBe('ok');
     });

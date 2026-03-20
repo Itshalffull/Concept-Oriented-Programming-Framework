@@ -155,8 +155,6 @@ describe('RuntimeProfile functional handler', () => {
     it('fixture "resolve_web" -> ok', async () => {
       if (typeof runtimeProfileHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" }), storage));
-      await safeInvoke(async () => await interpret(runtimeProfileHandler.register({ profile: "R-2", name: "mobile-staging", shellId: "S-2", navigatorId: "N-2", transportId: "P-2", platformAdapterId: "D-2", platform: "mobile", router: "stack", baseUrl: "https://m.example.com", retryPolicy: "{ \"maxRetries\": 1 }", authMode: "" }), storage));
       const result = await interpret(runtimeProfileHandler.resolve({ name: "web-production" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,8 +224,6 @@ describe('RuntimeProfile functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof runtimeProfileHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeProfileHandler.register({ profile: "R-1", name: "web-production", shellId: "S-1", navigatorId: "N-1", transportId: "P-1", platformAdapterId: "D-1", platform: "browser", router: "history", baseUrl: "https://app.example.com", retryPolicy: "{ \"maxRetries\": 3 }", authMode: "oauth" }), storage));
-      await safeInvoke(async () => await interpret(runtimeProfileHandler.register({ profile: "R-2", name: "mobile-staging", shellId: "S-2", navigatorId: "N-2", transportId: "P-2", platformAdapterId: "D-2", platform: "mobile", router: "stack", baseUrl: "https://m.example.com", retryPolicy: "{ \"maxRetries\": 1 }", authMode: "" }), storage));
       const result = await interpret(runtimeProfileHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

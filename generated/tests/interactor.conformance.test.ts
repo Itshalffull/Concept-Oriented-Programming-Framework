@@ -163,8 +163,6 @@ describe('Interactor functional handler', () => {
     it('fixture "field_classify" -> ok', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage));
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage));
       const result = await interpret(interactorHandler.classify({ fieldType: "String", constraints: "{\"cardinality\":\"one\"}", intent: "edit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +170,6 @@ describe('Interactor functional handler', () => {
     it('fixture "entity_classify" -> ok', async () => {
       if (typeof interactorHandler.classify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage));
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage));
       const result = await interpret(interactorHandler.classify({ fieldType: "entity", constraints: "{\"concept\":\"Approval\",\"view\":\"detail\"}", intent: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,8 +239,6 @@ describe('Interactor functional handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof interactorHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage));
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage));
       const result = await interpret(interactorHandler.get({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -314,8 +308,6 @@ describe('Interactor functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof interactorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage));
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage));
       const result = await interpret(interactorHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -323,8 +315,6 @@ describe('Interactor functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof interactorHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "single-choice", category: "selection", properties: "{\"cardinality\":\"one\",\"comparison\":true}" }), storage));
-      await safeInvoke(async () => await interpret(interactorHandler.define({ name: "entity-detail", category: "entity", properties: "{\"dataType\":\"entity\"}" }), storage));
       const result = await interpret(interactorHandler.list({ category: "selection" }), storage);
       expect(result.variant).toBe('ok');
     });

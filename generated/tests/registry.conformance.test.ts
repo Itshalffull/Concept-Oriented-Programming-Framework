@@ -155,7 +155,6 @@ describe('Registry functional handler', () => {
     it('fixture "yank_existing_module" -> ok', async () => {
       if (typeof registryHandler.yank !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.yank({ module: "mod-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('Registry functional handler', () => {
     it('fixture "lookup_existing" -> ok', async () => {
       if (typeof registryHandler.lookup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.lookup({ name: "auth", namespace: "clef", version_range: "^1.0.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('Registry functional handler', () => {
     it('fixture "search_by_keyword" -> ok', async () => {
       if (typeof registryHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.search({ query: "authentication", kind: null, namespace: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,7 +298,6 @@ describe('Registry functional handler', () => {
     it('fixture "search_filtered" -> ok', async () => {
       if (typeof registryHandler.search !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.search({ query: "auth", kind: "concept", namespace: "clef" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -363,7 +359,6 @@ describe('Registry functional handler', () => {
     it('fixture "list_versions_existing" -> ok', async () => {
       if (typeof registryHandler.listVersions !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.listVersions({ name: "auth", namespace: "clef" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -432,7 +427,6 @@ describe('Registry functional handler', () => {
     it('fixture "resolve_existing_capability" -> ok', async () => {
       if (typeof registryHandler.resolveCapability !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryHandler.publish({ name: "auth", namespace: "clef", version: "1.0.0", kind: "concept", artifact_hash: "sha256:abc123def", dependencies: [], metadata: {"description":"Auth concept","license":"MIT","repository":"https://github.com/org/auth","authors":["dev@example.com"],"keywords":["auth","security"]} }), storage));
       const result = await interpret(registryHandler.resolveCapability({ capability: "authentication" }), storage);
       expect(result.variant).toBe('ok');
     });

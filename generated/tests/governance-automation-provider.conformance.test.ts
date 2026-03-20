@@ -155,7 +155,6 @@ describe('GovernanceAutomationProvider functional handler', () => {
     it('fixture "execute_approved" -> ok', async () => {
       if (typeof governanceAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(governanceAutomationProviderHandler.register({  }), storage));
       const result = await interpret(governanceAutomationProviderHandler.execute({ action_payload: "{\"action\":\"transfer\",\"to\":\"0x123\"}", gate_config: "{\"gate\":\"none\"}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +162,6 @@ describe('GovernanceAutomationProvider functional handler', () => {
     it('fixture "execute_quorum_pass" -> ok', async () => {
       if (typeof governanceAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(governanceAutomationProviderHandler.register({  }), storage));
       const result = await interpret(governanceAutomationProviderHandler.execute({ action_payload: "{\"action\":\"upgrade\"}", gate_config: "{\"gate\":\"quorum\",\"required\":3,\"current\":4}" }), storage);
       expect(result.variant).toBe('ok');
     });

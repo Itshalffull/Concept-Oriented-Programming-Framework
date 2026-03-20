@@ -87,7 +87,6 @@ describe('SolidityToolchain functional handler', () => {
     it('fixture "resolve_shanghai" -> ok', async () => {
       if (typeof solidityToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(solidityToolchainHandler.register({  }), storage));
       const result = await interpret(solidityToolchainHandler.resolve({ platform: "shanghai", versionConstraint: ">=0.8.20" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('SolidityToolchain functional handler', () => {
     it('fixture "resolve_cancun" -> ok', async () => {
       if (typeof solidityToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(solidityToolchainHandler.register({  }), storage));
       const result = await interpret(solidityToolchainHandler.resolve({ platform: "cancun" }), storage);
       expect(result.variant).toBe('ok');
     });

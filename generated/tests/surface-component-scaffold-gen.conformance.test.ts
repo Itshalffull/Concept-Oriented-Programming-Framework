@@ -155,9 +155,6 @@ describe('SurfaceComponentScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof surfaceComponentScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage));
-      await safeInvoke(async () => await interpret(surfaceComponentScaffoldGenHandler.generate({ name: "Badge", parts: ["root"], states: ["idle"], events: [], role: "status", requires: null, affordance: null, props: [], compose: [] }), storage));
-      await safeInvoke(async () => await interpret(surfaceComponentScaffoldGenHandler.register({  }), storage));
       const result = await interpret(surfaceComponentScaffoldGenHandler.preview({ name: "Accordion", parts: ["root","item","trigger","content"], states: ["closed","open"], events: ["toggle"], role: "region", requires: null, affordance: null, props: [], compose: [] }), storage);
       expect(result.variant).toBe('ok');
     });

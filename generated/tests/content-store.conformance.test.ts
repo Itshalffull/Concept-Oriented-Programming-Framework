@@ -62,8 +62,6 @@ describe('ContentStore imperative handler', () => {
     it('fixture "retrieve_existing" -> ok', async () => {
       if (typeof contentStoreHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage));
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage));
       const result = await contentStoreHandler.retrieve({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -90,8 +88,6 @@ describe('ContentStore imperative handler', () => {
     it('fixture "verify_valid_hash" -> ok', async () => {
       if (typeof contentStoreHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage));
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage));
       const result = await contentStoreHandler.verify({ hash: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -118,8 +114,6 @@ describe('ContentStore imperative handler', () => {
     it('fixture "gc_with_retained_hashes" -> ok', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage));
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage));
       const result = await contentStoreHandler.gc({ lockfile_hashes: ["hash1","hash2","hash3"] }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -127,8 +121,6 @@ describe('ContentStore imperative handler', () => {
     it('fixture "gc_empty_lockfile" -> ok', async () => {
       if (typeof contentStoreHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage));
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage));
       const result = await contentStoreHandler.gc({ lockfile_hashes: [] }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -148,8 +140,6 @@ describe('ContentStore imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof contentStoreHandler.stats !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "package-contents-v1", media_type: "application/tar+gzip" }, storage));
-      await safeInvoke(async () => await contentStoreHandler.store({ data: "some-data", media_type: "" }, storage));
       const result = await contentStoreHandler.stats({  }, storage);
       expect(result.variant).toBe('ok');
     });

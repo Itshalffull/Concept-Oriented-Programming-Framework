@@ -87,7 +87,6 @@ describe('Treasury functional handler', () => {
     it('fixture "deposit_eth" -> ok', async () => {
       if (typeof treasuryHandler.deposit !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage));
       const result = await interpret(treasuryHandler.deposit({ vault: "dao-treasury", token: "ETH", amount: "100.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -156,7 +155,6 @@ describe('Treasury functional handler', () => {
     it('fixture "withdraw_eth" -> ok', async () => {
       if (typeof treasuryHandler.withdraw !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage));
       const result = await interpret(treasuryHandler.withdraw({ vault: "dao-treasury", token: "ETH", amount: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('Treasury functional handler', () => {
     it('fixture "release_existing" -> ok', async () => {
       if (typeof treasuryHandler.releaseAllocation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(treasuryHandler.allocate({ vault: "dao-treasury", token: "ETH", amount: "25.0", purpose: "developer-grant-q1" }), storage));
       const result = await interpret(treasuryHandler.releaseAllocation({ allocation: "alloc-001" }), storage);
       expect(result.variant).toBe('ok');
     });

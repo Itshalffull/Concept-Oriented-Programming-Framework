@@ -155,9 +155,6 @@ describe('SurfaceThemeScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof surfaceThemeScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceThemeScaffoldGenHandler.generate({ name: "minimal", primaryColor: "200", fontFamily: "system-ui", baseSize: "14", scale: "1.2", secondaryColor: null, borderRadius: "sm", mode: "light", extends: null }), storage));
-      await safeInvoke(async () => await interpret(surfaceThemeScaffoldGenHandler.register({  }), storage));
       const result = await interpret(surfaceThemeScaffoldGenHandler.preview({ name: "corporate", primaryColor: "220", fontFamily: "Inter", baseSize: "16", scale: "1.25", secondaryColor: "180", borderRadius: "md", mode: "both", extends: null }), storage);
       expect(result.variant).toBe('ok');
     });

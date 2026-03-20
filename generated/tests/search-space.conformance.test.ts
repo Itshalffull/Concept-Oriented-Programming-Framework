@@ -62,8 +62,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "tombstone_existing" -> ok', async () => {
       if (typeof searchSpaceHandler.tombstone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.tombstone({ scope_id: "vs-1", provider: "text", entity_id: "article-42" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -71,8 +69,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "tombstone_new" -> ok', async () => {
       if (typeof searchSpaceHandler.tombstone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.tombstone({ scope_id: "vs-2", provider: "text", entity_id: "article-99" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -92,8 +88,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "query_text" -> ok', async () => {
       if (typeof searchSpaceHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.query({ scope_id: "vs-1", provider: "text", query_expr: "concept" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -121,8 +115,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "clear_scope" -> ok', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.clear({ scope_id: "vs-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -130,8 +122,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "clear_empty" -> ok', async () => {
       if (typeof searchSpaceHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.clear({ scope_id: "vs-empty" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -151,8 +141,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "materialize_scope" -> ok', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.materialize({ scope_id: "vs-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -160,8 +148,6 @@ describe('SearchSpace imperative handler', () => {
     it('fixture "materialize_empty" -> ok', async () => {
       if (typeof searchSpaceHandler.materialize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "text", entity_id: "article-42", data: "Concept-oriented programming framework" }, storage));
-      await safeInvoke(async () => await searchSpaceHandler.index({ scope_id: "vs-1", provider: "semantic", entity_id: "article-42", data: "{\"embedding\":[0.1,0.2,0.3]}" }, storage));
       const result = await searchSpaceHandler.materialize({ scope_id: "vs-empty" }, storage);
       expect(result.variant).toBe('ok');
     });

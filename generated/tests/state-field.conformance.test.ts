@@ -162,8 +162,6 @@ describe('StateField functional handler', () => {
     it('fixture "find_article" -> ok', async () => {
       if (typeof stateFieldHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.findByConcept({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('StateField functional handler', () => {
     it('fixture "trace_generated_valid" -> ok', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.traceToGenerated({ field: "state-field-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,8 +237,6 @@ describe('StateField functional handler', () => {
     it('fixture "trace_generated_missing" -> ok', async () => {
       if (typeof stateFieldHandler.traceToGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.traceToGenerated({ field: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('StateField functional handler', () => {
     it('fixture "trace_storage_valid" -> ok', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.traceToStorage({ field: "state-field-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,8 +305,6 @@ describe('StateField functional handler', () => {
     it('fixture "trace_storage_missing" -> ok', async () => {
       if (typeof stateFieldHandler.traceToStorage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.traceToStorage({ field: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,8 +366,6 @@ describe('StateField functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -392,8 +380,6 @@ describe('StateField functional handler', () => {
     it('fixture "get_field" -> ok', async () => {
       if (typeof stateFieldHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "title", typeExpr: "T -> String" }), storage));
-      await safeInvoke(async () => await interpret(stateFieldHandler.register({ concept: "Article", name: "articles", typeExpr: "set T" }), storage));
       const result = await interpret(stateFieldHandler.get({ field: "state-field-1" }), storage);
       expect(result.variant).toBe('ok');
     });

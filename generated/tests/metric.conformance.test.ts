@@ -155,8 +155,6 @@ describe('Metric functional handler', () => {
     it('fixture "update_revenue" -> ok', async () => {
       if (typeof metricHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.update({ metric: "metric-001", value: "150000.0", source: "finance-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('Metric functional handler', () => {
     it('fixture "set_revenue_threshold" -> ok', async () => {
       if (typeof metricHandler.setThreshold !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.setThreshold({ metric: "metric-001", threshold: "100000.0", alertOnBreach: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('Metric functional handler', () => {
     it('fixture "evaluate_existing" -> ok', async () => {
       if (typeof metricHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "quarterly-revenue", unit: "USD", aggregation: "sum" }), storage));
-      await safeInvoke(async () => await interpret(metricHandler.define({ name: "", unit: "", aggregation: "sum" }), storage));
       const result = await interpret(metricHandler.evaluate({ metric: "metric-001" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,7 +155,6 @@ describe('AuditTrail functional handler', () => {
     it('fixture "query_by_actor" -> ok', async () => {
       if (typeof auditTrailHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" }), storage));
       const result = await interpret(auditTrailHandler.query({ eventType: "policy_change", actor: "admin@example.com" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +224,6 @@ describe('AuditTrail functional handler', () => {
     it('fixture "verify_valid_entry" -> ok', async () => {
       if (typeof auditTrailHandler.verifyIntegrity !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(auditTrailHandler.record({ eventType: "policy_change", actor: "admin@example.com", action: "update_rule", details: "Changed voting threshold from 50% to 66%", sourceRef: "policy-42" }), storage));
       const result = await interpret(auditTrailHandler.verifyIntegrity({ entry: "audit-001" }), storage);
       expect(result.variant).toBe('ok');
     });

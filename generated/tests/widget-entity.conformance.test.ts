@@ -162,8 +162,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "get_dialog" -> ok', async () => {
       if (typeof widgetEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.get({ name: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_single_choice" -> ok', async () => {
       if (typeof widgetEntityHandler.findByAffordance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findByAffordance({ interactor: "single-choice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,8 +298,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composing_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposing({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -311,8 +305,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composing_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposing({ widget: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -320,8 +312,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_composing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposing({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -329,8 +319,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_composing_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposing !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposing({ widget: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -392,8 +380,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composed_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -401,8 +387,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "composed_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -410,8 +394,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_composed" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -419,8 +401,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "find_composed_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.findComposedBy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.findComposedBy({ widget: "nonexistent" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -482,8 +462,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "generated_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.generatedComponents({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -491,8 +469,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "generated_missing" -> ok', async () => {
       if (typeof widgetEntityHandler.generatedComponents !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.generatedComponents({ widget: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -554,8 +530,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "audit_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -570,8 +544,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "audit_widget" -> ok', async () => {
       if (typeof widgetEntityHandler.accessibilityAudit !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.accessibilityAudit({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -633,8 +605,6 @@ describe('WidgetEntity functional handler', () => {
     it('fixture "trace_valid" -> ok', async () => {
       if (typeof widgetEntityHandler.traceToConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "dialog", source: "widgets/dialog.widget", ast: "{\"purpose\":\"Modal dialog\",\"anatomy\":[{\"name\":\"overlay\"},{\"name\":\"content\"}],\"accessibility\":{\"role\":\"dialog\",\"focusTrap\":true}}" }), storage));
-      await safeInvoke(async () => await interpret(widgetEntityHandler.register({ name: "button", source: "widgets/button.widget", ast: "{}" }), storage));
       const result = await interpret(widgetEntityHandler.traceToConcept({ widget: "widget-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

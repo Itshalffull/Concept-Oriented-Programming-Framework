@@ -156,7 +156,6 @@ describe('WebhookAutomationProvider functional handler', () => {
     it('fixture "execute_deploy_webhook" -> ok', async () => {
       if (typeof webhookAutomationProviderHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(webhookAutomationProviderHandler.register({  }), storage));
       const result = await interpret(webhookAutomationProviderHandler.execute({ action_payload: "{\"event\":\"deploy\",\"version\":\"1.2.3\"}", webhook_url: "https://hooks.example.com/deploy", method: "POST" }), storage);
       expect(result.variant).toBe('ok');
     });

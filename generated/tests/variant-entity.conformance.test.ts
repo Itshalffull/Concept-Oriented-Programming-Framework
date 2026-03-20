@@ -69,8 +69,6 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "matching_valid" -> ok', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage));
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage));
       const result = await variantEntityHandler.matchingSyncs({ variant: "variant-entity-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -78,8 +76,6 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "matching_missing" -> ok', async () => {
       if (typeof variantEntityHandler.matchingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage));
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage));
       const result = await variantEntityHandler.matchingSyncs({ variant: "nonexistent-id" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -99,8 +95,6 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "dead_check_valid" -> ok', async () => {
       if (typeof variantEntityHandler.isDead !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage));
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage));
       const result = await variantEntityHandler.isDead({ variant: "variant-entity-1" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -127,8 +121,6 @@ describe('VariantEntity imperative handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof variantEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "Article/create", tag: "ok", fields: "[{\"name\":\"article\",\"typeExpr\":\"A\"}]" }, storage));
-      await safeInvoke(async () => await variantEntityHandler.register({ action: "User/login", tag: "invalidCredentials", fields: "[]" }, storage));
       const result = await variantEntityHandler.get({ variant: "variant-entity-1" }, storage);
       expect(result.variant).toBe('ok');
     });

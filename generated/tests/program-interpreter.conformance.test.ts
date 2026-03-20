@@ -69,8 +69,6 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "execute_get_program" -> ok', async () => {
       if (typeof programInterpreterHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage));
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-2", backend: "memory", mode: "dry-run" }, storage));
       const result = await programInterpreterHandler.execute({ interpreter: "interp-1", program: "get(users, u1)", snapshot: "current" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "dryrun_put" -> ok', async () => {
       if (typeof programInterpreterHandler.dryRun !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage));
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-2", backend: "memory", mode: "dry-run" }, storage));
       const result = await programInterpreterHandler.dryRun({ interpreter: "interp-1", program: "put(users, u1, data)", snapshot: "current" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -125,8 +121,6 @@ describe('ProgramInterpreter imperative handler', () => {
     it('fixture "rollback_execution" -> ok', async () => {
       if (typeof programInterpreterHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-1", backend: "memory", mode: "live" }, storage));
-      await safeInvoke(async () => await programInterpreterHandler.register({ interpreter: "interp-2", backend: "memory", mode: "dry-run" }, storage));
       const result = await programInterpreterHandler.rollback({ interpreter: "interp-1", executionId: "exec-abc123" }, storage);
       expect(result.variant).toBe('ok');
     });

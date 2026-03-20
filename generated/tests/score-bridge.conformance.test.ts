@@ -164,7 +164,6 @@ describe('ScoreBridge functional handler', () => {
     it('fixture "valid_query" -> ok', async () => {
       if (typeof scoreBridgeHandler.query !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage));
       const result = await interpret(scoreBridgeHandler.query({ bridge: "bridge-api-example-com", graphql: "{ concepts { conceptName } }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,7 +233,6 @@ describe('ScoreBridge functional handler', () => {
     it('fixture "valid_show" -> ok', async () => {
       if (typeof scoreBridgeHandler.show !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage));
       const result = await interpret(scoreBridgeHandler.show({ bridge: "bridge-api-example-com", kind: "concept", name: "User" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,7 +302,6 @@ describe('ScoreBridge functional handler', () => {
     it('fixture "valid_traverse" -> ok', async () => {
       if (typeof scoreBridgeHandler.traverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage));
       const result = await interpret(scoreBridgeHandler.traverse({ bridge: "bridge-api-example-com", relation: "actions", target: "register" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,7 +371,6 @@ describe('ScoreBridge functional handler', () => {
     it('fixture "valid_disconnect" -> ok', async () => {
       if (typeof scoreBridgeHandler.disconnect !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage));
       const result = await interpret(scoreBridgeHandler.disconnect({ bridge: "bridge-api-example-com" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -444,7 +440,6 @@ describe('ScoreBridge functional handler', () => {
     it('fixture "valid_status" -> ok', async () => {
       if (typeof scoreBridgeHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(scoreBridgeHandler.connect({ endpoint: "https://api.example.com/score", protocol: "http", authToken: "tok_live_abc123" }), storage));
       const result = await interpret(scoreBridgeHandler.status({ bridge: "bridge-api-example-com" }), storage);
       expect(result.variant).toBe('ok');
     });

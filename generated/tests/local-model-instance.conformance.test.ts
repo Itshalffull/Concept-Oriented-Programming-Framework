@@ -69,8 +69,6 @@ describe('LocalModelInstance imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof localModelInstanceHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: "512", dimensions: "768" }, storage));
-      await safeInvoke(async () => await localModelInstanceHandler.register({ name: "unixcoder", runtime: "wasm", modelPath: "/models/unixcoder.wasm", tokenizerPath: "", device: "cpu", maxSequenceLength: "256", dimensions: "768" }, storage));
       const result = await localModelInstanceHandler.resolve({ name: "codebert-base" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('LocalModelInstance imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof localModelInstanceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await localModelInstanceHandler.register({ name: "codebert-base", runtime: "onnx", modelPath: "/models/codebert.onnx", tokenizerPath: "/models/codebert-tokenizer.json", device: "cpu", maxSequenceLength: "512", dimensions: "768" }, storage));
-      await safeInvoke(async () => await localModelInstanceHandler.register({ name: "unixcoder", runtime: "wasm", modelPath: "/models/unixcoder.wasm", tokenizerPath: "", device: "cpu", maxSequenceLength: "256", dimensions: "768" }, storage));
       const result = await localModelInstanceHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

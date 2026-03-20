@@ -779,13 +779,24 @@ class Parser {
           const input = this.parseFixtureObject();
           this.expect('RBRACE');
 
+          // Parse optional after clause: after fixture_a, fixture_b
+          let after: string[] | undefined;
+          if ((this.peek().type === 'KEYWORD' || this.peek().type === 'IDENT') && this.peek().value === 'after') {
+            this.advance(); // consume 'after'
+            after = [this.expectIdent().value];
+            while (this.peek().type === 'COMMA') {
+              this.advance(); // consume ','
+              after.push(this.expectIdent().value);
+            }
+          }
+
           let expectedVariant = 'ok';
           if (this.peek().type === 'ARROW') {
             this.advance();
             expectedVariant = this.expectIdent().value;
           }
 
-          fixtures.push({ name: fixtureName, input, expectedVariant });
+          fixtures.push({ name: fixtureName, input, expectedVariant, ...(after ? { after } : {}) });
           this.skipSeps();
           continue;
         }

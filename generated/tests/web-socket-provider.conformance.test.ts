@@ -81,9 +81,6 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "send_json_message" -> ok', async () => {
       if (typeof webSocketProviderHandler.send !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await webSocketProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage));
       const result = await webSocketProviderHandler.send({ connection: "events", message: "{\"type\":\"subscribe\",\"channel\":\"deploys\"}" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -111,9 +108,6 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "receive_from_events" -> ok', async () => {
       if (typeof webSocketProviderHandler.receive !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await webSocketProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage));
       const result = await webSocketProviderHandler.receive({ connection: "events" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -141,9 +135,6 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "close_events" -> ok', async () => {
       if (typeof webSocketProviderHandler.close !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await webSocketProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage));
       const result = await webSocketProviderHandler.close({ connection: "events" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,9 +162,6 @@ describe('WebSocketProvider imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof webSocketProviderHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await webSocketProviderHandler.register({  }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "events", url: "wss://events.example.com", protocols: "[]" }, storage));
-      await safeInvoke(async () => await webSocketProviderHandler.configure({ name: "chat", url: "wss://chat.example.com/ws", protocols: "[\"graphql-ws\"]" }, storage));
       const result = await webSocketProviderHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

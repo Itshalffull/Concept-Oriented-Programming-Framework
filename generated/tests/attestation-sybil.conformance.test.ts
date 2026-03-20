@@ -155,7 +155,6 @@ describe('AttestationSybil functional handler', () => {
     it('fixture "submit_valid_attestation" -> ok', async () => {
       if (typeof attestationSybilHandler.submitAttestation !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage));
       const result = await interpret(attestationSybilHandler.submitAttestation({ config: "att-sybil-1", candidate: "alice", attestationRef: "att-ref-001", schema: "kyc-basic", attester: "civic-authority", expiresAt: "2027-12-31T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('AttestationSybil functional handler', () => {
     it('fixture "verify_alice" -> ok', async () => {
       if (typeof attestationSybilHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(attestationSybilHandler.configure({ requiredSchema: "kyc-basic", requiredAttester: "civic-authority" }), storage));
       const result = await interpret(attestationSybilHandler.verify({ config: "att-sybil-1", candidate: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -162,8 +162,6 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "get_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(vercelKVProviderHandler.provision({ storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }), storage));
       const result = await interpret(vercelKVProviderHandler.getCredentials({ storeName: "session-cache" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('VercelKVProvider functional handler', () => {
     it('fixture "destroy_session_cache" -> ok', async () => {
       if (typeof vercelKVProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(vercelKVProviderHandler.provision({ storeName: "session-cache", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(vercelKVProviderHandler.provision({ storeName: "rate-limiter", config: "{\"maxSize\": 1024}" }), storage));
       const result = await interpret(vercelKVProviderHandler.destroy({ storeName: "session-cache" }), storage);
       expect(result.variant).toBe('ok');
     });

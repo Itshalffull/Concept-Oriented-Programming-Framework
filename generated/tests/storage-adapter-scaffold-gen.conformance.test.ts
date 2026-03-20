@@ -162,9 +162,6 @@ describe('StorageAdapterScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof storageAdapterScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "sqlite" }), storage));
-      await safeInvoke(async () => await interpret(storageAdapterScaffoldGenHandler.generate({ name: "AppStorage", backend: "postgresql" }), storage));
-      await safeInvoke(async () => await interpret(storageAdapterScaffoldGenHandler.register({  }), storage));
       const result = await interpret(storageAdapterScaffoldGenHandler.preview({ name: "AppStorage", backend: "memory" }), storage);
       expect(result.variant).toBe('ok');
     });

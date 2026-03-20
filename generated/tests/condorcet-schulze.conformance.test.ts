@@ -148,7 +148,6 @@ describe('CondorcetSchulze functional handler', () => {
     it('fixture "condorcet_clear_winner" -> ok', async () => {
       if (typeof condorcetSchulzeHandler.count !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(condorcetSchulzeHandler.configure({  }), storage));
       const result = await interpret(condorcetSchulzeHandler.count({ config: "condorcet-001", rankedBallots: "[{\"voter\":\"alice\",\"ranking\":[\"A\",\"B\",\"C\"]},{\"voter\":\"bob\",\"ranking\":[\"A\",\"C\",\"B\"]},{\"voter\":\"carol\",\"ranking\":[\"B\",\"A\",\"C\"]}]", weights: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -217,7 +216,6 @@ describe('CondorcetSchulze functional handler', () => {
     it('fixture "get_matrix" -> ok', async () => {
       if (typeof condorcetSchulzeHandler.getPairwiseMatrix !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(condorcetSchulzeHandler.configure({  }), storage));
       const result = await interpret(condorcetSchulzeHandler.getPairwiseMatrix({ config: "condorcet-001" }), storage);
       expect(result.variant).toBe('ok');
     });

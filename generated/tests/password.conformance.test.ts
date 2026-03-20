@@ -156,7 +156,6 @@ describe('Password functional handler', () => {
     it('fixture "existing_user" -> ok', async () => {
       if (typeof passwordHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage));
       const result = await interpret(passwordHandler.check({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,7 +225,6 @@ describe('Password functional handler', () => {
     it('fixture "strong_password" -> ok', async () => {
       if (typeof passwordHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage));
       const result = await interpret(passwordHandler.validate({ password: "MyS3cure!Pass" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,7 +232,6 @@ describe('Password functional handler', () => {
     it('fixture "weak_password" -> ok', async () => {
       if (typeof passwordHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(passwordHandler.set({ user: "alice", password: "Str0ngP@ssw0rd!" }), storage));
       const result = await interpret(passwordHandler.validate({ password: "short" }), storage);
       expect(result.variant).toBe('ok');
     });

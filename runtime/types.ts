@@ -233,6 +233,8 @@ export interface FixtureDecl {
   input: Record<string, unknown>;
   /** Expected variant, e.g. 'ok' or 'error'. Defaults to 'ok'. */
   expectedVariant: string;
+  /** Fixture names that must run first to seed storage (e.g. create before get). */
+  after?: string[];
 }
 
 export interface ParamDecl {

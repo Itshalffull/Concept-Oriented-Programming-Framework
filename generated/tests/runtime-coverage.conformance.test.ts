@@ -162,8 +162,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "coverage_actions" -> ok', async () => {
       if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.coverageReport({ kind: "action", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -171,8 +169,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "coverage_variants_since" -> ok', async () => {
       if (typeof runtimeCoverageHandler.coverageReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.coverageReport({ kind: "variant", since: "2026-01-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,8 +237,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "variant_coverage_article" -> ok', async () => {
       if (typeof runtimeCoverageHandler.variantCoverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.variantCoverage({ concept: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -311,8 +305,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "sync_coverage_all" -> ok', async () => {
       if (typeof runtimeCoverageHandler.syncCoverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -320,8 +312,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "sync_coverage_recent" -> ok', async () => {
       if (typeof runtimeCoverageHandler.syncCoverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.syncCoverage({ since: "2026-03-01T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -383,8 +373,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "widget_state_coverage_dialog" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetStateCoverage !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetStateCoverage({ widget: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -453,8 +441,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "lifecycle_dialog" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ widget: "dialog", since: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -462,8 +448,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "lifecycle_since" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetLifecycleReport !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetLifecycleReport({ widget: "button", since: "2026-01-15T00:00:00Z" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -532,8 +516,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "render_trace_valid" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetRenderTrace !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetRenderTrace({ widgetInstance: "dialog-inst-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -602,8 +584,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "comparison_top10" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetComparison !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ since: "", topN: "10" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -611,8 +591,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "comparison_recent" -> ok', async () => {
       if (typeof runtimeCoverageHandler.widgetComparison !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.widgetComparison({ since: "2026-02-01T00:00:00Z", topN: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -674,8 +652,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "dead_variants" -> ok', async () => {
       if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ kind: "variant" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -683,8 +659,6 @@ describe('RuntimeCoverage functional handler', () => {
     it('fixture "dead_syncs" -> ok', async () => {
       if (typeof runtimeCoverageHandler.deadAtRuntime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/action/Article/create", kind: "action", flowId: "flow-001" }), storage));
-      await safeInvoke(async () => await interpret(runtimeCoverageHandler.record({ symbol: "clef/variant/Article/create/ok", kind: "variant", flowId: "flow-002" }), storage));
       const result = await interpret(runtimeCoverageHandler.deadAtRuntime({ kind: "sync" }), storage);
       expect(result.variant).toBe('ok');
     });

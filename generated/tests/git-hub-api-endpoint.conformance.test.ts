@@ -69,8 +69,6 @@ describe('GitHubApiEndpoint imperative handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof githubApiEndpointHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await githubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage));
-      await safeInvoke(async () => await githubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }, storage));
       const result = await githubApiEndpointHandler.resolve({ name: "github-api" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('GitHubApiEndpoint imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof githubApiEndpointHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await githubApiEndpointHandler.register({ name: "github-api", token: "ghp_abc123def456", repository: "acme/webapp" }, storage));
-      await safeInvoke(async () => await githubApiEndpointHandler.register({ name: "ci-status", token: "ghp_ci_token_789", repository: "acme/infra" }, storage));
       const result = await githubApiEndpointHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });

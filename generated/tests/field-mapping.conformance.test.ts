@@ -87,7 +87,6 @@ describe('FieldMapping functional handler', () => {
     it('fixture "map_title" -> ok', async () => {
       if (typeof fieldMappingHandler.map !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage));
       const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "title", destField: "headline", transform: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('FieldMapping functional handler', () => {
     it('fixture "map_body_html" -> ok', async () => {
       if (typeof fieldMappingHandler.map !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage));
       const result = await interpret(fieldMappingHandler.map({ mappingId: "map-1", sourceField: "body_html", destField: "body", transform: "html_to_markdown" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,7 +239,6 @@ describe('FieldMapping functional handler', () => {
     it('fixture "reverse_record" -> ok', async () => {
       if (typeof fieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage));
       const result = await interpret(fieldMappingHandler.reverse({ record: "{\"headline\":\"Hello\",\"body\":\"World\"}", mappingId: "map-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -311,7 +308,6 @@ describe('FieldMapping functional handler', () => {
     it('fixture "discover_schemas" -> ok', async () => {
       if (typeof fieldMappingHandler.autoDiscover !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage));
       const result = await interpret(fieldMappingHandler.autoDiscover({ sourceSchema: "[\"title\",\"body\",\"author\"]", destSchema: "[\"title\",\"body\",\"creator\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -373,7 +369,6 @@ describe('FieldMapping functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof fieldMappingHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fieldMappingHandler.apply({ record: "{\"title\":\"Hello\",\"body_html\":\"<p>World</p>\"}", mappingId: "map-1" }), storage));
       const result = await interpret(fieldMappingHandler.validate({ mappingId: "map-1" }), storage);
       expect(result.variant).toBe('ok');
     });

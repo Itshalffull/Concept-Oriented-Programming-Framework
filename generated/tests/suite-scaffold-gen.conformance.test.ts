@@ -155,9 +155,6 @@ describe('SuiteScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof suiteScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(suiteScaffoldGenHandler.generate({ name: "auth-suite", description: "Authentication and authorization suite", concepts: ["User","Session","Role"] }), storage));
-      await safeInvoke(async () => await interpret(suiteScaffoldGenHandler.generate({ name: "empty-suite", description: "A minimal suite", concepts: [] }), storage));
-      await safeInvoke(async () => await interpret(suiteScaffoldGenHandler.register({  }), storage));
       const result = await interpret(suiteScaffoldGenHandler.preview({ name: "auth-suite", description: "Authentication suite", concepts: ["User","Session"] }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -87,7 +87,6 @@ describe('RustToolchain functional handler', () => {
     it('fixture "resolve_linux" -> ok', async () => {
       if (typeof rustToolchainHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rustToolchainHandler.register({  }), storage));
       const result = await interpret(rustToolchainHandler.resolve({ platform: "x86_64-linux", versionConstraint: ">=1.75" }), storage);
       expect(result.variant).toBe('ok');
     });

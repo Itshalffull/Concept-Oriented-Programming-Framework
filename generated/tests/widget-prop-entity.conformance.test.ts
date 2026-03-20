@@ -155,7 +155,6 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetPropEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage));
       const result = await interpret(widgetPropEntityHandler.findByWidget({ widget: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "trace_prop" -> ok', async () => {
       if (typeof widgetPropEntityHandler.traceToField !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage));
       const result = await interpret(widgetPropEntityHandler.traceToField({ prop: "widget-prop-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('WidgetPropEntity functional handler', () => {
     it('fixture "get_prop" -> ok', async () => {
       if (typeof widgetPropEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetPropEntityHandler.register({ widget: "dialog", name: "closeOnEscape", typeExpr: "Bool", defaultValue: "true" }), storage));
       const result = await interpret(widgetPropEntityHandler.get({ prop: "widget-prop-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

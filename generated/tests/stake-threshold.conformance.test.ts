@@ -62,7 +62,6 @@ describe('StakeThreshold imperative handler', () => {
     it('fixture "deposit_hundred" -> ok', async () => {
       if (typeof stakeThresholdHandler.deposit !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage));
       const result = await stakeThresholdHandler.deposit({ config: "stake-cfg-1", candidate: "alice", amount: "100.0" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,7 +88,6 @@ describe('StakeThreshold imperative handler', () => {
     it('fixture "check_qualified" -> ok', async () => {
       if (typeof stakeThresholdHandler.check !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage));
       const result = await stakeThresholdHandler.check({ config: "stake-cfg-1", candidate: "alice" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -116,7 +114,6 @@ describe('StakeThreshold imperative handler', () => {
     it('fixture "slash_partial" -> ok', async () => {
       if (typeof stakeThresholdHandler.slash !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await stakeThresholdHandler.configure({ minimumStake: "100.0", token: "ETH", lockPeriodDays: "30" }, storage));
       const result = await stakeThresholdHandler.slash({ config: "stake-cfg-1", candidate: "alice", amount: "50.0" }, storage);
       expect(result.variant).toBe('ok');
     });

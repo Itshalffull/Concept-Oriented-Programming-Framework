@@ -169,9 +169,6 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "valid_type" -> ok', async () => {
       if (typeof graphqlTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }), storage));
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }), storage));
       const result = await interpret(graphqlTargetHandler.validate({ type: "graphql-order-12345" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -240,9 +237,6 @@ describe('GraphqlTarget functional handler', () => {
     it('fixture "list_order_operations" -> ok', async () => {
       if (typeof graphqlTargetHandler.listOperations !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "order-projection", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "product-projection", config: "{\"relay\":true,\"federation\":true,\"subscriptions\":true}" }), storage));
-      await safeInvoke(async () => await interpret(graphqlTargetHandler.generate({ projection: "item-projection", config: "{\"federation\":true,\"federationConflict\":true}" }), storage));
       const result = await interpret(graphqlTargetHandler.listOperations({ concept: "Order" }), storage);
       expect(result.variant).toBe('ok');
     });

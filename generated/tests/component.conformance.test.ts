@@ -155,8 +155,6 @@ describe('Component functional handler', () => {
     it('fixture "render_homepage" -> ok', async () => {
       if (typeof componentHandler.render !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.render({ component: "hero-banner", context: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,8 +224,6 @@ describe('Component functional handler', () => {
     it('fixture "place_in_header" -> ok', async () => {
       if (typeof componentHandler.place !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.place({ component: "hero-banner", region: "header" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -297,8 +293,6 @@ describe('Component functional handler', () => {
     it('fixture "set_visible_true" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "true" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -306,8 +300,6 @@ describe('Component functional handler', () => {
     it('fixture "set_visible_false" -> ok', async () => {
       if (typeof componentHandler.setVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.setVisibility({ component: "hero-banner", visible: "false" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -377,8 +369,6 @@ describe('Component functional handler', () => {
     it('fixture "evaluate_homepage" -> ok', async () => {
       if (typeof componentHandler.evaluateVisibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "hero-banner", config: "{ \"type\": \"banner\", \"height\": 400 }" }), storage));
-      await safeInvoke(async () => await interpret(componentHandler.register({ component: "sidebar-nav", config: "{ \"type\": \"navigation\", \"collapsed\": false }" }), storage));
       const result = await interpret(componentHandler.evaluateVisibility({ component: "hero-banner", context: "homepage" }), storage);
       expect(result.variant).toBe('ok');
     });

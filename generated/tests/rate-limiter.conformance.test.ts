@@ -156,7 +156,6 @@ describe('RateLimiter functional handler', () => {
     it('fixture "acquire_tokens" -> ok', async () => {
       if (typeof rateLimiterHandler.acquire !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage));
       const result = await interpret(rateLimiterHandler.acquire({ endpoint: "openai-api", tokens: "5" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,7 +233,6 @@ describe('RateLimiter functional handler', () => {
     it('fixture "release_tokens" -> ok', async () => {
       if (typeof rateLimiterHandler.release !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage));
       const result = await interpret(rateLimiterHandler.release({ endpoint: "openai-api", tokens: "3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,7 +302,6 @@ describe('RateLimiter functional handler', () => {
     it('fixture "get_status" -> ok', async () => {
       if (typeof rateLimiterHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage));
       const result = await interpret(rateLimiterHandler.get({ endpoint: "openai-api" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,7 +371,6 @@ describe('RateLimiter functional handler', () => {
     it('fixture "reset_limiter" -> ok', async () => {
       if (typeof rateLimiterHandler.reset !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(rateLimiterHandler.configure({ endpoint: "openai-api", maxTokens: "100", refillRate: "10", refillIntervalMs: "1000" }), storage));
       const result = await interpret(rateLimiterHandler.reset({ endpoint: "openai-api" }), storage);
       expect(result.variant).toBe('ok');
     });

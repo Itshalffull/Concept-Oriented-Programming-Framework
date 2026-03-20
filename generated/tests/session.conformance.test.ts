@@ -155,7 +155,6 @@ describe('Session functional handler', () => {
     it('fixture "validate_existing" -> ok', async () => {
       if (typeof sessionHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.validate({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('Session functional handler', () => {
     it('fixture "refresh_valid" -> ok', async () => {
       if (typeof sessionHandler.refresh !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.refresh({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('Session functional handler', () => {
     it('fixture "destroy_existing" -> ok', async () => {
       if (typeof sessionHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.destroy({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,7 +359,6 @@ describe('Session functional handler', () => {
     it('fixture "destroy_all_alice" -> ok', async () => {
       if (typeof sessionHandler.destroyAll !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.destroyAll({ userId: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -431,7 +427,6 @@ describe('Session functional handler', () => {
     it('fixture "context_existing" -> ok', async () => {
       if (typeof sessionHandler.getContext !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(sessionHandler.create({ session: "sess-001", userId: "alice", device: "mobile" }), storage));
       const result = await interpret(sessionHandler.getContext({ session: "sess-001" }), storage);
       expect(result.variant).toBe('ok');
     });

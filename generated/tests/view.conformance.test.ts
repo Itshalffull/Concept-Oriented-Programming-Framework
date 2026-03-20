@@ -155,8 +155,6 @@ describe('View functional handler', () => {
     it('fixture "get_existing_view" -> ok', async () => {
       if (typeof viewHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.get({ view: "tasks-table" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('View functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof viewHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.resolve({ view: "tasks-table" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('View functional handler', () => {
     it('fixture "set_controls" -> ok', async () => {
       if (typeof viewHandler.setControls !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setControls({ view: "tasks-table", controls: "{\"create\": true}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -365,8 +359,6 @@ describe('View functional handler', () => {
     it('fixture "set_filter_active" -> ok', async () => {
       if (typeof viewHandler.setFilter !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setFilter({ view: "tasks-table", filter: "status=active" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -374,8 +366,6 @@ describe('View functional handler', () => {
     it('fixture "set_filter_missing_view" -> ok', async () => {
       if (typeof viewHandler.setFilter !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setFilter({ view: "no-such-view", filter: "status=active" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -437,8 +427,6 @@ describe('View functional handler', () => {
     it('fixture "sort_by_date" -> ok', async () => {
       if (typeof viewHandler.setSort !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setSort({ view: "tasks-table", sort: "created_at:desc" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -507,8 +495,6 @@ describe('View functional handler', () => {
     it('fixture "group_by_status" -> ok', async () => {
       if (typeof viewHandler.setGroup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setGroup({ view: "tasks-table", group: "status" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -577,8 +563,6 @@ describe('View functional handler', () => {
     it('fixture "set_fields" -> ok', async () => {
       if (typeof viewHandler.setVisibleFields !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.setVisibleFields({ view: "tasks-table", fields: "[\"title\",\"status\",\"assignee\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -647,8 +631,6 @@ describe('View functional handler', () => {
     it('fixture "switch_to_board" -> ok', async () => {
       if (typeof viewHandler.changeLayout !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.changeLayout({ view: "tasks-table", layout: "board" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -656,8 +638,6 @@ describe('View functional handler', () => {
     it('fixture "change_layout_missing" -> ok', async () => {
       if (typeof viewHandler.changeLayout !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.changeLayout({ view: "no-such-view", layout: "calendar" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -719,8 +699,6 @@ describe('View functional handler', () => {
     it('fixture "duplicate_existing" -> ok', async () => {
       if (typeof viewHandler.duplicate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.duplicate({ view: "tasks-table" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -789,8 +767,6 @@ describe('View functional handler', () => {
     it('fixture "embed_existing" -> ok', async () => {
       if (typeof viewHandler.embed !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "tasks-table", dataSource: "tasks", layout: "table" }), storage));
-      await safeInvoke(async () => await interpret(viewHandler.create({ view: "bad-view", dataSource: "", layout: "table" }), storage));
       const result = await interpret(viewHandler.embed({ view: "tasks-table" }), storage);
       expect(result.variant).toBe('ok');
     });

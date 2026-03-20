@@ -71,7 +71,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_validate" -> ok', async () => {
       if (typeof evidenceHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.validate({ id: "ev-001" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -99,7 +98,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_retrieve" -> ok', async () => {
       if (typeof evidenceHandler.retrieve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.retrieve({ id: "ev-001" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -127,7 +125,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_compare" -> ok', async () => {
       if (typeof evidenceHandler.compare !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.compare({ id_a: "ev-001", id_b: "ev-002" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -155,7 +152,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "valid_minimize" -> ok', async () => {
       if (typeof evidenceHandler.minimize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.minimize({ id: "ev-counter-001" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -191,7 +187,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof evidenceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.list({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -199,7 +194,6 @@ describe('Evidence imperative handler', () => {
     it('fixture "list_by_type" -> ok', async () => {
       if (typeof evidenceHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await evidenceHandler.record({ property_ref: "prop-1", artifact_type: "proof_certificate", content: "(proof-body QED)", solver: "z3" }, storage));
       const result = await evidenceHandler.list({ artifact_type: "proof_certificate" }, storage);
       expect(result.variant).toBe('ok');
     });

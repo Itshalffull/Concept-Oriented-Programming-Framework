@@ -148,7 +148,6 @@ describe('ExternalCall functional handler', () => {
     it('fixture "register_http" -> ok', async () => {
       if (typeof externalCallHandler.registerProtocol !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(externalCallHandler.initialize({  }), storage));
       const result = await interpret(externalCallHandler.registerProtocol({ protocol: "http", providerName: "HttpProvider" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -218,7 +217,6 @@ describe('ExternalCall functional handler', () => {
     it('fixture "http_get" -> ok', async () => {
       if (typeof externalCallHandler.dispatch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(externalCallHandler.initialize({  }), storage));
       const result = await interpret(externalCallHandler.dispatch({ protocol: "http", operation: "GET", endpoint: "https://api.example.com/users", payload: "{}", config: "{\"timeout\": 5000}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,7 +293,6 @@ describe('ExternalCall functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof externalCallHandler.listProtocols !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(externalCallHandler.initialize({  }), storage));
       const result = await interpret(externalCallHandler.listProtocols({  }), storage);
       expect(result.variant).toBe('ok');
     });

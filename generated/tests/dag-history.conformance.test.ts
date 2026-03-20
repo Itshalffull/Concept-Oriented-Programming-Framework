@@ -162,9 +162,6 @@ describe('DAGHistory functional handler', () => {
     it('fixture "ancestors_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.ancestors !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.ancestors({ nodeId: "dag-history-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -233,9 +230,6 @@ describe('DAGHistory functional handler', () => {
     it('fixture "find_common" -> ok', async () => {
       if (typeof dagHistoryHandler.commonAncestor !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.commonAncestor({ a: "dag-history-2", b: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +298,6 @@ describe('DAGHistory functional handler', () => {
     it('fixture "descendants_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.descendants !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.descendants({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -375,9 +366,6 @@ describe('DAGHistory functional handler', () => {
     it('fixture "path_between" -> ok', async () => {
       if (typeof dagHistoryHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.between({ from: "dag-history-1", to: "dag-history-3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -446,9 +434,6 @@ describe('DAGHistory functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof dagHistoryHandler.getNode !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "sha256:abc123", metadata: "{\"author\":\"alice\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: ["dag-history-1"], contentRef: "sha256:def456", metadata: "{\"author\":\"bob\"}" }), storage));
-      await safeInvoke(async () => await interpret(dagHistoryHandler.append({ parents: [], contentRef: "", metadata: "" }), storage));
       const result = await interpret(dagHistoryHandler.getNode({ nodeId: "dag-history-1" }), storage);
       expect(result.variant).toBe('ok');
     });

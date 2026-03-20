@@ -155,7 +155,6 @@ describe('EffectHandler functional handler', () => {
     it('fixture "resolve_http_get" -> ok', async () => {
       if (typeof effectHandlerHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage));
       const result = await interpret(effectHandlerHandler.resolve({ protocol: "http", operation: "GET" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('EffectHandler functional handler', () => {
     it('fixture "list_http" -> ok', async () => {
       if (typeof effectHandlerHandler.listByProtocol !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage));
       const result = await interpret(effectHandlerHandler.listByProtocol({ protocol: "http" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('EffectHandler functional handler', () => {
     it('fixture "deregister_http_get" -> ok', async () => {
       if (typeof effectHandlerHandler.deregister !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(effectHandlerHandler.register({ protocol: "http", operation: "GET" }), storage));
       const result = await interpret(effectHandlerHandler.deregister({ protocol: "http", operation: "GET" }), storage);
       expect(result.variant).toBe('ok');
     });

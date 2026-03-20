@@ -179,8 +179,6 @@ describe('QualitySignal functional handler', () => {
     it('fixture "latest_unit" -> ok', async () => {
       if (typeof qualitySignalHandler.latest !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage));
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage));
       const result = await interpret(qualitySignalHandler.latest({ target_symbol: "clef/concept/Password", dimension: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -258,8 +256,6 @@ describe('QualitySignal functional handler', () => {
     it('fixture "rollup_single" -> ok', async () => {
       if (typeof qualitySignalHandler.rollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage));
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage));
       const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -267,8 +263,6 @@ describe('QualitySignal functional handler', () => {
     it('fixture "rollup_multiple" -> ok', async () => {
       if (typeof qualitySignalHandler.rollup !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage));
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage));
       const result = await interpret(qualitySignalHandler.rollup({ target_symbols: ["clef/concept/Password","clef/concept/Auth"], dimensions: ["unit","formal"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -338,8 +332,6 @@ describe('QualitySignal functional handler', () => {
     it('fixture "explain_all_dims" -> ok', async () => {
       if (typeof qualitySignalHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage));
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage));
       const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Password" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -347,8 +339,6 @@ describe('QualitySignal functional handler', () => {
     it('fixture "explain_filtered" -> ok', async () => {
       if (typeof qualitySignalHandler.explain !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Password", dimension: "unit", status: "pass", severity: "gate", summary: "All 42 unit tests passed" }), storage));
-      await safeInvoke(async () => await interpret(qualitySignalHandler.record({ target_symbol: "clef/concept/Auth", dimension: "formal", status: "pass", severity: "gate", artifact_path: "/reports/auth-proof.json", artifact_hash: "sha256-abc123", run_ref: "run-77" }), storage));
       const result = await interpret(qualitySignalHandler.explain({ target_symbol: "clef/concept/Auth", dimensions: ["unit","conformance"] }), storage);
       expect(result.variant).toBe('ok');
     });

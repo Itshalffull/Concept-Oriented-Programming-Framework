@@ -171,8 +171,6 @@ describe('Shell functional handler', () => {
     it('fixture "assign_host_to_primary" -> ok', async () => {
       if (typeof shellHandler.assignToZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage));
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage));
       const result = await interpret(shellHandler.assignToZone({ shell: "S-1", zone: "primary", ref: "host-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,8 +240,6 @@ describe('Shell functional handler', () => {
     it('fixture "adapt_new_layout" -> ok', async () => {
       if (typeof shellHandler.adapt !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage));
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage));
       const result = await interpret(shellHandler.adapt({ shell: "S-1", config: "{ \"zones\": [{ \"name\": \"main\", \"role\": \"navigated\" }, { \"name\": \"drawer\", \"role\": \"persistent\" }] }" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -321,8 +317,6 @@ describe('Shell functional handler', () => {
     it('fixture "clear_primary_zone" -> ok', async () => {
       if (typeof shellHandler.clearZone !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage));
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage));
       const result = await interpret(shellHandler.clearZone({ shell: "S-1", zone: "primary" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -392,8 +386,6 @@ describe('Shell functional handler', () => {
     it('fixture "push_modal" -> ok', async () => {
       if (typeof shellHandler.pushOverlay !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage));
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage));
       const result = await interpret(shellHandler.pushOverlay({ shell: "S-1", ref: "modal-confirm-delete" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -463,8 +455,6 @@ describe('Shell functional handler', () => {
     it('fixture "pop_existing" -> ok', async () => {
       if (typeof shellHandler.popOverlay !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-1", zones: "{ \"zones\": [{ \"name\": \"primary\", \"role\": \"navigated\" }, { \"name\": \"sidebar\", \"role\": \"persistent\" }] }" }), storage));
-      await safeInvoke(async () => await interpret(shellHandler.initialize({ shell: "S-2", zones: "[\"main\"]" }), storage));
       const result = await interpret(shellHandler.popOverlay({ shell: "S-1" }), storage);
       expect(result.variant).toBe('ok');
     });

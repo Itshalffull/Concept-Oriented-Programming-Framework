@@ -155,7 +155,6 @@ describe('ReputationWeight functional handler', () => {
     it('fixture "compute_linear" -> ok', async () => {
       if (typeof reputationWeightHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(reputationWeightHandler.configure({ scalingFunction: "linear", cap: "100.0" }), storage));
       const result = await interpret(reputationWeightHandler.compute({ config: "rw-cfg-001", participant: "alice", reputationScore: "50.0" }), storage);
       expect(result.variant).toBe('ok');
     });

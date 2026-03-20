@@ -162,9 +162,6 @@ describe('TransportAdapterScaffoldGen functional handler', () => {
     it('fixture "preview_http" -> ok', async () => {
       if (typeof transportAdapterScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(transportAdapterScaffoldGenHandler.generate({ name: "ApiTransport", protocol: "http" }), storage));
-      await safeInvoke(async () => await interpret(transportAdapterScaffoldGenHandler.generate({ name: "RealtimeTransport", protocol: "websocket" }), storage));
-      await safeInvoke(async () => await interpret(transportAdapterScaffoldGenHandler.register({  }), storage));
       const result = await interpret(transportAdapterScaffoldGenHandler.preview({ name: "ApiTransport", protocol: "http" }), storage);
       expect(result.variant).toBe('ok');
     });

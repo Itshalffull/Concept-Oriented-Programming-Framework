@@ -162,9 +162,6 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "test_unit" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,9 +169,6 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "test_with_invocation" -> ok', async () => {
       if (typeof swiftBuilderHandler.test !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.test({ build: "swb-abc123", toolchainPath: "/usr/bin/swiftc", invocation: {"command":"swift test","args":["--parallel"],"outputFormat":"swift-test-json","configFile":"Package.swift"}, testType: "unit" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -243,9 +237,6 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "package_framework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "framework" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -253,9 +244,6 @@ describe('SwiftBuilder functional handler', () => {
     it('fixture "package_xcframework" -> ok', async () => {
       if (typeof swiftBuilderHandler.package !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/auth", toolchainPath: "/usr/bin/swiftc", platform: "linux-arm64", config: {"mode":"release","features":["logging"]} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.build({ source: "./generated/swift/session", toolchainPath: "/usr/bin/swiftc", platform: "macos-arm64", config: {"mode":"debug"} }), storage));
-      await safeInvoke(async () => await interpret(swiftBuilderHandler.register({  }), storage));
       const result = await interpret(swiftBuilderHandler.package({ build: "swb-abc123", format: "xcframework" }), storage);
       expect(result.variant).toBe('ok');
     });

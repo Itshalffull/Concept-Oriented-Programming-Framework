@@ -155,7 +155,6 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "vouch_alice_for_bob" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.addVouch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage));
       const result = await interpret(socialGraphVerificationHandler.addVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "revoke_existing_vouch" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.revokeVouch !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage));
       const result = await interpret(socialGraphVerificationHandler.revokeVouch({ config: "sg-cfg-1", voucher: "alice", candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('SocialGraphVerification functional handler', () => {
     it('fixture "verify_well_connected" -> ok', async () => {
       if (typeof socialGraphVerificationHandler.verify !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(socialGraphVerificationHandler.configure({ minimumVouchers: "3", trustAlgorithm: "count" }), storage));
       const result = await interpret(socialGraphVerificationHandler.verify({ config: "sg-cfg-1", candidate: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });

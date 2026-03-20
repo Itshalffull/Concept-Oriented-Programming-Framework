@@ -62,8 +62,6 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "query_system_time" -> ok', async () => {
       if (typeof temporalVersionHandler.asOf !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage));
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage));
       const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: null }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -71,8 +69,6 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "query_both_times" -> ok', async () => {
       if (typeof temporalVersionHandler.asOf !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage));
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage));
       const result = await temporalVersionHandler.asOf({ systemTime: "2025-06-15T12:00:00Z", validTime: "2025-01-01T00:00:00Z" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -99,8 +95,6 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "between_system" -> ok', async () => {
       if (typeof temporalVersionHandler.between !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage));
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage));
       const result = await temporalVersionHandler.between({ start: "2025-01-01T00:00:00Z", end: "2025-12-31T23:59:59Z", dimension: "system" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -127,8 +121,6 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof temporalVersionHandler.current !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage));
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage));
       const result = await temporalVersionHandler.current({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -148,8 +140,6 @@ describe('TemporalVersion imperative handler', () => {
     it('fixture "supersede_existing" -> ok', async () => {
       if (typeof temporalVersionHandler.supersede !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "sha256:abc123def456", validFrom: "2025-01-01T00:00:00Z", validTo: null, metadata: "{\"author\":\"alice\"}" }, storage));
-      await safeInvoke(async () => await temporalVersionHandler.record({ contentHash: "", validFrom: null, validTo: null, metadata: "" }, storage));
       const result = await temporalVersionHandler.supersede({ versionId: "temporal-version-1", contentHash: "sha256:newcontent789" }, storage);
       expect(result.variant).toBe('ok');
     });

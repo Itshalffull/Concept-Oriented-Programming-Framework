@@ -163,8 +163,6 @@ describe('AbiDecoderFieldMapping functional handler', () => {
     it('fixture "reverse_valid" -> ok', async () => {
       if (typeof abiDecoderFieldMappingHandler.reverse !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(abiDecoderFieldMappingHandler.apply({ data: "0x00000001", mapper: "abi-map-1", contract: "0xAbC123" }), storage));
-      await safeInvoke(async () => await interpret(abiDecoderFieldMappingHandler.register({ contract_abi: "[{\"type\":\"function\",\"name\":\"balanceOf\"}]", entity_schema: "TokenBalance", field_rules: "{\"balance\":\"balanceOf.output[0]\"}" }), storage));
       const result = await interpret(abiDecoderFieldMappingHandler.reverse({ data: "{\"owner\":\"0xAbC123\",\"amount\":100}", mapper: "abi-map-1" }), storage);
       expect(result.variant).toBe('ok');
     });

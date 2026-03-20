@@ -54,6 +54,7 @@ interface TestPlanFixture {
   name: string;
   input: Record<string, unknown>;
   expectedVariant: string;
+  after?: string[];
 }
 
 interface TestPlanAction {
@@ -166,6 +167,7 @@ function buildTestPlan(
       name: (f.name as string) || '',
       input: (f.input as Record<string, unknown>) || {},
       expectedVariant: (f.expectedVariant as string) || 'ok',
+      ...(f.after ? { after: f.after as string[] } : {}),
     })),
   }));
 

@@ -223,9 +223,6 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "set_canary_weight" -> ok', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage));
       const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "25" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -233,9 +230,6 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "set_invalid_weight" -> ok', async () => {
       if (typeof k8sRuntimeHandler.setTrafficWeight !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage));
       const result = await interpret(k8sRuntimeHandler.setTrafficWeight({ deployment: "dep-001", weight: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -297,9 +291,6 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "rollback_to_rev1" -> ok', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage));
       const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -307,9 +298,6 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "rollback_empty_rev" -> ok', async () => {
       if (typeof k8sRuntimeHandler.rollback !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage));
       const result = await interpret(k8sRuntimeHandler.rollback({ deployment: "dep-001", targetRevision: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -371,9 +359,6 @@ describe('K8sRuntime functional handler', () => {
     it('fixture "destroy_deployment" -> ok', async () => {
       if (typeof k8sRuntimeHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.provision({ concept: "UserService", namespace: "default", cluster: "prod-us-east", replicas: "3" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "registry.io/user-service:v1.2.0" }), storage));
-      await safeInvoke(async () => await interpret(k8sRuntimeHandler.deploy({ deployment: "dep-001", imageUri: "" }), storage));
       const result = await interpret(k8sRuntimeHandler.destroy({ deployment: "dep-001" }), storage);
       expect(result.variant).toBe('ok');
     });

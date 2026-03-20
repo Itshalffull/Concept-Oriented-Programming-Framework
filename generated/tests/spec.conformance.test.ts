@@ -162,8 +162,6 @@ describe('Spec functional handler', () => {
     it('fixture "valid_document" -> ok', async () => {
       if (typeof specHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(specHandler.emit({ projections: ["user","order"], format: "openapi", config: "{\"kit\":\"commerce\",\"version\":\"1.0.0\"}" }), storage));
-      await safeInvoke(async () => await interpret(specHandler.emit({ projections: ["notification"], format: "asyncapi", config: "{}" }), storage));
       const result = await interpret(specHandler.validate({ document: "spec-openapi-commerce-12345" }), storage);
       expect(result.variant).toBe('ok');
     });

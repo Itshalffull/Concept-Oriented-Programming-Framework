@@ -155,7 +155,6 @@ describe('ViewportProvider functional handler', () => {
     it('fixture "observe_desktop" -> ok', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "1920", height: "1080" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -163,7 +162,6 @@ describe('ViewportProvider functional handler', () => {
     it('fixture "observe_mobile" -> ok', async () => {
       if (typeof viewportProviderHandler.observe !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.observe({ provider: "vp-1", width: "375", height: "812" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,7 +223,6 @@ describe('ViewportProvider functional handler', () => {
     it('fixture "get_breakpoint_valid" -> ok', async () => {
       if (typeof viewportProviderHandler.getBreakpoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.getBreakpoint({ provider: "vp-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,7 +291,6 @@ describe('ViewportProvider functional handler', () => {
     it('fixture "set_breakpoints_custom" -> ok', async () => {
       if (typeof viewportProviderHandler.setBreakpoints !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(viewportProviderHandler.initialize({ config: "{}" }), storage));
       const result = await interpret(viewportProviderHandler.setBreakpoints({ provider: "vp-1", breakpoints: "sm:480,md:768,lg:1024" }), storage);
       expect(result.variant).toBe('ok');
     });

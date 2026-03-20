@@ -230,9 +230,6 @@ describe('StorageProvider functional handler', () => {
     it('fixture "get_creds" -> ok', async () => {
       if (typeof storageProviderHandler.getCredentials !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage));
-      await safeInvoke(async () => await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage));
       const result = await interpret(storageProviderHandler.getCredentials({ store: "session-kv" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -301,9 +298,6 @@ describe('StorageProvider functional handler', () => {
     it('fixture "destroy_valid" -> ok', async () => {
       if (typeof storageProviderHandler.destroy !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "session-kv", storageType: "vercel-kv", conceptName: "Session", config: "{}" }), storage));
-      await safeInvoke(async () => await interpret(storageProviderHandler.provision({ storeName: "user-table", storageType: "dynamodb", conceptName: "User", config: "{\"region\":\"us-east-1\"}" }), storage));
-      await safeInvoke(async () => await interpret(storageProviderHandler.configure({ store: "session-kv", settings: "{\"ttl\": 3600}" }), storage));
       const result = await interpret(storageProviderHandler.destroy({ store: "session-kv" }), storage);
       expect(result.variant).toBe('ok');
     });

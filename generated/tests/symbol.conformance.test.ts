@@ -69,8 +69,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_resolve" -> ok', async () => {
       if (typeof symbolHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.resolve({ symbolString: "clef/concept/Order" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,8 +95,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_functions" -> ok', async () => {
       if (typeof symbolHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.findByKind({ kind: "function", namespace: "ts/function/src/handlers" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -106,8 +102,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_all_concepts" -> ok', async () => {
       if (typeof symbolHandler.findByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.findByKind({ kind: "concept", namespace: "" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -127,8 +121,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_in_file" -> ok', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.findByFile({ file: "src/handlers/user.ts" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -136,8 +128,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "find_in_empty_file" -> ok', async () => {
       if (typeof symbolHandler.findByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.findByFile({ file: "src/empty.ts" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -157,8 +147,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_rename" -> ok', async () => {
       if (typeof symbolHandler.rename !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.rename({ symbol: "symbol-1", newName: "updateUser" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -185,8 +173,6 @@ describe('Symbol imperative handler', () => {
     it('fixture "valid_get" -> ok', async () => {
       if (typeof symbolHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "ts/function/src/handlers/user.ts/createUser", kind: "function", displayName: "createUser", definingFile: "src/handlers/user.ts" }, storage));
-      await safeInvoke(async () => await symbolHandler.register({ symbolString: "clef/concept/Order", kind: "concept", displayName: "Order", definingFile: "specs/order.concept" }, storage));
       const result = await symbolHandler.get({ symbol: "symbol-1" }, storage);
       expect(result.variant).toBe('ok');
     });

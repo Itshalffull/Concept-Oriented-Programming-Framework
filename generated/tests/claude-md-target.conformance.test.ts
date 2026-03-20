@@ -162,8 +162,6 @@ describe('ClaudeMdTarget functional handler', () => {
     it('fixture "validate_valid" -> ok', async () => {
       if (typeof claudeMdTargetHandler.validate !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage));
-      await safeInvoke(async () => await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }), storage));
       const result = await interpret(claudeMdTargetHandler.validate({ document: "claude-md-001" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('ClaudeMdTarget functional handler', () => {
     it('fixture "preview_full" -> ok', async () => {
       if (typeof claudeMdTargetHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"ScoreApi\",\"conceptManifest\":\"{\\\"name\\\":\\\"ScoreApi\\\",\\\"purpose\\\":\\\"Score management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"MyProject\",\"outputPath\":\"CLAUDE.md\"}" }), storage));
-      await safeInvoke(async () => await interpret(claudeMdTargetHandler.generate({ projection: "{\"conceptName\":\"Agent\",\"conceptManifest\":\"{\\\"name\\\":\\\"Agent\\\",\\\"purpose\\\":\\\"Agent management\\\",\\\"actions\\\":[]}\"}", config: "{\"projectName\":\"Test\",\"conventions\":[\"Use kebab-case\"]}" }), storage));
       const result = await interpret(claudeMdTargetHandler.preview({ config: "{\"projectName\":\"TestProject\"}" }), storage);
       expect(result.variant).toBe('ok');
     });

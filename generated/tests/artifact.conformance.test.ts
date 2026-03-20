@@ -223,9 +223,6 @@ describe('Artifact functional handler', () => {
     it('fixture "resolve_existing" -> ok', async () => {
       if (typeof artifactHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "", location: "", concept: "", language: "", platform: "" }), storage));
       const result = await interpret(artifactHandler.resolve({ hash: "sha256-00000abcdef0" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -294,9 +291,6 @@ describe('Artifact functional handler', () => {
     it('fixture "gc_old_artifacts" -> ok', async () => {
       if (typeof artifactHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "", location: "", concept: "", language: "", platform: "" }), storage));
       const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "3" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +298,6 @@ describe('Artifact functional handler', () => {
     it('fixture "gc_negative_keep" -> ok', async () => {
       if (typeof artifactHandler.gc !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(artifactHandler.build({ concept: "User", spec: "user.concept", implementation: "user.handler.ts", deps: [] }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "sha256-00000abcdef0", location: "artifacts/sha256-00000abcdef0", concept: "User", language: "typescript", platform: "linux-x86_64" }), storage));
-      await safeInvoke(async () => await interpret(artifactHandler.store({ hash: "", location: "", concept: "", language: "", platform: "" }), storage));
       const result = await interpret(artifactHandler.gc({ olderThan: "2025-01-01T00:00:00Z", keepVersions: "-1" }), storage);
       expect(result.variant).toBe('ok');
     });

@@ -155,7 +155,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "get_article" -> ok', async () => {
       if (typeof conceptEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.get({ name: "Article" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "find_persistent_storage" -> ok', async () => {
       if (typeof conceptEntityHandler.findByCapability !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.findByCapability({ capability: "persistent-storage" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "find_governance_suite" -> ok', async () => {
       if (typeof conceptEntityHandler.findBySuite !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.findBySuite({ suite: "governance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,7 +359,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "artifacts_for_article" -> ok', async () => {
       if (typeof conceptEntityHandler.generatedArtifacts !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.generatedArtifacts({ entity: "concept-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -431,7 +427,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "syncs_for_article" -> ok', async () => {
       if (typeof conceptEntityHandler.participatingSyncs !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.participatingSyncs({ entity: "concept-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -500,7 +495,6 @@ describe('ConceptEntity functional handler', () => {
     it('fixture "compatible_concepts" -> ok', async () => {
       if (typeof conceptEntityHandler.checkCompatibility !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(conceptEntityHandler.register({ name: "Article", source: "specs/article.concept", ast: "{}" }), storage));
       const result = await interpret(conceptEntityHandler.checkCompatibility({ a: "concept-entity-1", b: "concept-entity-2" }), storage);
       expect(result.variant).toBe('ok');
     });

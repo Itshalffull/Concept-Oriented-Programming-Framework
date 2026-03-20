@@ -162,8 +162,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "find_dialog" -> ok', async () => {
       if (typeof widgetStateEntityHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.findByWidget({ widget: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,8 +230,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "reachable_valid" -> ok', async () => {
       if (typeof widgetStateEntityHandler.reachableFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ widgetState: "widget-state-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -241,8 +237,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "reachable_missing" -> ok', async () => {
       if (typeof widgetStateEntityHandler.reachableFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.reachableFrom({ widgetState: "nonexistent-id" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,8 +298,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "unreachable_dialog" -> ok', async () => {
       if (typeof widgetStateEntityHandler.unreachableStates !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ widget: "dialog" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -313,8 +305,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "unreachable_empty" -> ok', async () => {
       if (typeof widgetStateEntityHandler.unreachableStates !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.unreachableStates({ widget: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,8 +366,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "trace_open_event" -> ok', async () => {
       if (typeof widgetStateEntityHandler.traceEvent !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.traceEvent({ widget: "dialog", event: "open" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -446,8 +434,6 @@ describe('WidgetStateEntity functional handler', () => {
     it('fixture "get_valid" -> ok', async () => {
       if (typeof widgetStateEntityHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "closed", initial: "true" }), storage));
-      await safeInvoke(async () => await interpret(widgetStateEntityHandler.register({ widget: "dialog", name: "open", initial: "false" }), storage));
       const result = await interpret(widgetStateEntityHandler.get({ widgetState: "widget-state-entity-1" }), storage);
       expect(result.variant).toBe('ok');
     });

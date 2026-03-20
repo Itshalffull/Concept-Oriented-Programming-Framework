@@ -163,8 +163,6 @@ describe('DevServer functional handler', () => {
     it('fixture "valid_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.stop({ session: "dev-server-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,8 +170,6 @@ describe('DevServer functional handler', () => {
     it('fixture "nonexistent_stop" -> ok', async () => {
       if (typeof devServerHandler.stop !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.stop({ session: "dev-server-999" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -235,8 +231,6 @@ describe('DevServer functional handler', () => {
     it('fixture "running_status" -> ok', async () => {
       if (typeof devServerHandler.status !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "3000", watchDirs: ["./specs","./syncs"] }), storage));
-      await safeInvoke(async () => await interpret(devServerHandler.start({ port: "8080", watchDirs: ["./handlers"] }), storage));
       const result = await interpret(devServerHandler.status({ session: "dev-server-1" }), storage);
       expect(result.variant).toBe('ok');
     });

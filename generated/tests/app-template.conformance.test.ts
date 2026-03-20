@@ -87,7 +87,6 @@ describe('AppTemplate functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.list({ category: null }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -95,7 +94,6 @@ describe('AppTemplate functional handler', () => {
     it('fixture "list_by_category" -> ok', async () => {
       if (typeof appTemplateHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.list({ category: "content" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -157,7 +155,6 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_detail" -> ok', async () => {
       if (typeof appTemplateHandler.detail !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.detail({ name: "social" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -226,7 +223,6 @@ describe('AppTemplate functional handler', () => {
     it('fixture "valid_customize" -> ok', async () => {
       if (typeof appTemplateHandler.customize !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(appTemplateHandler.register({ name: "my-custom", description: "Custom app template", category: "tool", modules: "[\"User\",\"ContentNode\"]", syncs: "[]" }), storage));
       const result = await interpret(appTemplateHandler.customize({ template: "social", add: "[\"Graph\"]", remove: "[\"Favorite\"]", features: "{}" }), storage);
       expect(result.variant).toBe('ok');
     });

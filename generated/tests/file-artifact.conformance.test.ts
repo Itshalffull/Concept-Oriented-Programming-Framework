@@ -155,8 +155,6 @@ describe('FileArtifact functional handler', () => {
     it('fixture "set_provenance" -> ok', async () => {
       if (typeof fileArtifactHandler.setProvenance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage));
       const result = await interpret(fileArtifactHandler.setProvenance({ artifact: "artifact-1", spec: "user.concept", generator: "clef-gen" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('FileArtifact functional handler', () => {
     it('fixture "find_source" -> ok', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage));
       const result = await interpret(fileArtifactHandler.findByRole({ role: "source" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -234,8 +230,6 @@ describe('FileArtifact functional handler', () => {
     it('fixture "find_empty_role" -> ok', async () => {
       if (typeof fileArtifactHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage));
       const result = await interpret(fileArtifactHandler.findByRole({ role: "" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -297,8 +291,6 @@ describe('FileArtifact functional handler', () => {
     it('fixture "find_generated" -> ok', async () => {
       if (typeof fileArtifactHandler.findGeneratedFrom !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage));
       const result = await interpret(fileArtifactHandler.findGeneratedFrom({ spec: "user.concept" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -367,8 +359,6 @@ describe('FileArtifact functional handler', () => {
     it('fixture "get_artifact" -> ok', async () => {
       if (typeof fileArtifactHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "src/handler.ts", role: "source", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(fileArtifactHandler.register({ node: "", role: "source", language: "typescript" }), storage));
       const result = await interpret(fileArtifactHandler.get({ artifact: "artifact-1" }), storage);
       expect(result.variant).toBe('ok');
     });

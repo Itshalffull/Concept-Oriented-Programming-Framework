@@ -232,9 +232,6 @@ describe('Layout functional handler', () => {
     it('fixture "nest_child" -> ok', async () => {
       if (typeof layoutHandler.nest !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-2", name: "dashboard-grid", kind: "grid" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage));
       const result = await interpret(layoutHandler.nest({ parent: "layout-1", child: "layout-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -304,9 +301,6 @@ describe('Layout functional handler', () => {
     it('fixture "responsive_overrides" -> ok', async () => {
       if (typeof layoutHandler.setResponsive !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-2", name: "dashboard-grid", kind: "grid" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage));
       const result = await interpret(layoutHandler.setResponsive({ layout: "layout-1", breakpoints: "{\"sm\":{\"kind\":\"stack\",\"direction\":\"column\"},\"lg\":{\"kind\":\"sidebar\"}}" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -376,9 +370,6 @@ describe('Layout functional handler', () => {
     it('fixture "remove_existing" -> ok', async () => {
       if (typeof layoutHandler.remove !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-1", name: "main-sidebar", kind: "sidebar" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.create({ layout: "layout-2", name: "dashboard-grid", kind: "grid" }), storage));
-      await safeInvoke(async () => await interpret(layoutHandler.configure({ layout: "layout-1", config: "{\"direction\":\"row\",\"gap\":\"space-4\",\"columns\":\"1fr 2fr\"}" }), storage));
       const result = await interpret(layoutHandler.remove({ layout: "layout-1" }), storage);
       expect(result.variant).toBe('ok');
     });

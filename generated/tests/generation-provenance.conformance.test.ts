@@ -62,7 +62,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "get_known_file" -> ok', async () => {
       if (typeof generationProvenanceHandler.getByFile !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.getByFile({ outputFile: "handlers/ts/article.handler.ts" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -89,7 +88,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_scaffold_gen_files" -> ok', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.findByGenerator({ generator: "HandlerScaffoldGen" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -97,7 +95,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_unknown_gen" -> ok', async () => {
       if (typeof generationProvenanceHandler.findByGenerator !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.findByGenerator({ generator: "NonexistentGen" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -117,7 +114,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_article_outputs" -> ok', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/app/article.concept" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -125,7 +121,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "find_no_outputs" -> ok', async () => {
       if (typeof generationProvenanceHandler.findBySource !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.findBySource({ sourceSpec: "specs/nonexistent.concept" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -145,7 +140,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "chain_handler" -> ok', async () => {
       if (typeof generationProvenanceHandler.generationChain !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.generationChain({ outputFile: "handlers/ts/article.handler.ts" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -172,7 +166,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof generationProvenanceHandler.staleFiles !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.staleFiles({  }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -199,7 +192,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "impact_scaffold_change" -> ok', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "HandlerScaffoldGen" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -207,7 +199,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "impact_unknown_gen" -> ok', async () => {
       if (typeof generationProvenanceHandler.impactOfGeneratorChange !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.impactOfGeneratorChange({ generator: "NonexistentGen" }, storage);
       expect(result.variant).toBe('ok');
     });
@@ -227,7 +218,6 @@ describe('GenerationProvenance imperative handler', () => {
     it('fixture "check_generated_file" -> ok', async () => {
       if (typeof generationProvenanceHandler.isGenerated !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await generationProvenanceHandler.record({ outputFile: "handlers/ts/article.handler.ts", generator: "HandlerScaffoldGen", sourceSpec: "specs/app/article.concept", sourceSpecKind: "concept", config: "{}" }, storage));
       const result = await generationProvenanceHandler.isGenerated({ file: "handlers/ts/article.handler.ts" }, storage);
       expect(result.variant).toBe('ok');
     });

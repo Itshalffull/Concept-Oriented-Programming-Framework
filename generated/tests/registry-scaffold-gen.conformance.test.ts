@@ -162,8 +162,6 @@ describe('RegistryScaffoldGen functional handler', () => {
     it('fixture "valid_preview" -> ok', async () => {
       if (typeof registryScaffoldGenHandler.preview !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(registryScaffoldGenHandler.generate({ deployManifest: "deploys/production.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage));
-      await safeInvoke(async () => await interpret(registryScaffoldGenHandler.register({  }), storage));
       const result = await interpret(registryScaffoldGenHandler.preview({ deployManifest: "deploys/staging.deploy.yaml", outputPath: "generated/kernel-registry.ts", language: "typescript" }), storage);
       expect(result.variant).toBe('ok');
     });

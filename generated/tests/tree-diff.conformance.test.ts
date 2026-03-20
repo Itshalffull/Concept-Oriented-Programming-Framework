@@ -148,7 +148,6 @@ describe('TreeDiff functional handler', () => {
     it('fixture "diff_json" -> ok', async () => {
       if (typeof treeDiffHandler.compute !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(treeDiffHandler.register({  }), storage));
       const result = await interpret(treeDiffHandler.compute({ contentA: "{\"name\":\"alice\"}", contentB: "{\"name\":\"bob\"}" }), storage);
       expect(result.variant).toBe('ok');
     });

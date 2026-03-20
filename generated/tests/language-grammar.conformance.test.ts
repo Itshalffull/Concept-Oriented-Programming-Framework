@@ -155,7 +155,6 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "resolve_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.resolve({ fileExtension: ".ts" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -224,7 +223,6 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "resolve_mime_ts" -> ok', async () => {
       if (typeof languageGrammarHandler.resolveByMime !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.resolveByMime({ mimeType: "text/typescript" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -293,7 +291,6 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "get_grammar" -> ok', async () => {
       if (typeof languageGrammarHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.get({ grammar: "grammar-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -362,7 +359,6 @@ describe('LanguageGrammar functional handler', () => {
     it('fixture "valid" -> ok', async () => {
       if (typeof languageGrammarHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(languageGrammarHandler.register({ name: "typescript", extensions: "[\".ts\",\".tsx\"]", parserWasmPath: "tree-sitter-typescript.wasm", nodeTypes: "{}" }), storage));
       const result = await interpret(languageGrammarHandler.list({  }), storage);
       expect(result.variant).toBe('ok');
     });

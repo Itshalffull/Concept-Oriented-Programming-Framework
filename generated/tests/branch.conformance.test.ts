@@ -155,8 +155,6 @@ describe('Branch functional handler', () => {
     it('fixture "advance_head" -> ok', async () => {
       if (typeof branchHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.advance({ branch: "branch-1", newNode: "dag-history-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -225,8 +223,6 @@ describe('Branch functional handler', () => {
     it('fixture "delete_existing" -> ok', async () => {
       if (typeof branchHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.delete({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -295,8 +291,6 @@ describe('Branch functional handler', () => {
     it('fixture "protect_main" -> ok', async () => {
       if (typeof branchHandler.protect !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.protect({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -365,8 +359,6 @@ describe('Branch functional handler', () => {
     it('fixture "set_upstream_main" -> ok', async () => {
       if (typeof branchHandler.setUpstream !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.setUpstream({ branch: "branch-2", upstream: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -435,8 +427,6 @@ describe('Branch functional handler', () => {
     it('fixture "find_divergence" -> ok', async () => {
       if (typeof branchHandler.divergencePoint !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.divergencePoint({ b1: "branch-1", b2: "branch-2" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -505,8 +495,6 @@ describe('Branch functional handler', () => {
     it('fixture "archive_old" -> ok', async () => {
       if (typeof branchHandler.archive !== 'function') return;
       const storage = createInMemoryStorage();
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "feature/auth", fromNode: "dag-history-1" }), storage));
-      await safeInvoke(async () => await interpret(branchHandler.create({ name: "", fromNode: "dag-history-1" }), storage));
       const result = await interpret(branchHandler.archive({ branch: "branch-1" }), storage);
       expect(result.variant).toBe('ok');
     });
