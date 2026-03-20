@@ -38,6 +38,10 @@ concept KindSystem [K] {
         Kind with this name already registered. Returns existing ref.
         Idempotent — not an error.
       }
+
+      fixture define_source { name: "ConceptDSL", category: "source" }
+      fixture define_model { name: "ConceptAST", category: "model" }
+      fixture define_artifact { name: "TypeScriptFiles", category: "artifact" }
     }
 
     action connect(from: K, to: K, relation: String, transformName: option String) {

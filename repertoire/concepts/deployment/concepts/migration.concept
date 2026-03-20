@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept Migration [M] {
 
@@ -37,6 +38,11 @@ concept Migration [M] {
       -> incompatible(concept: String, reason: String) {
         Breaking change with no declared migration path.
       }
+
+      fixture plan_upgrade { concept: "UserProfile", fromVersion: 1, toVersion: 3 }
+      fixture plan_single_step { concept: "Session", fromVersion: 2, toVersion: 3 }
+      fixture plan_same_version { concept: "Auth", fromVersion: 1, toVersion: 1 } -> error
+      fixture plan_downgrade { concept: "Auth", fromVersion: 3, toVersion: 1 } -> error
     }
 
     action expand(migration: M) {

@@ -154,6 +154,9 @@ concept Runtime [I] {
       -> degraded(instance: I, latencyMs: Int) {
         Responding but above latency threshold.
       }
+
+      fixture healthcheck_valid { instance: "rt-abc123" }
+      fixture healthcheck_missing { instance: "" } -> error
     }
   }
 
