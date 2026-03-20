@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept ScopeGraph [C] {
 
@@ -31,6 +32,10 @@ concept ScopeGraph [C] {
       -> unsupportedLanguage(language: String) {
         No scope provider available for this language.
       }
+
+      fixture valid_build { file: "src/handlers/article.ts", tree: "{\"language\":\"typescript\",\"nodes\":[{\"type\":\"declaration\",\"name\":\"createArticle\",\"declKind\":\"function\"}]}" }
+      fixture build_empty_tree { file: "src/empty.ts", tree: "{}" }
+      fixture build_invalid_tree { file: "src/bad.ts", tree: "not-json" } -> error
     }
 
     action resolveReference(graph: C, scope: String, name: String) {
@@ -46,6 +51,9 @@ concept ScopeGraph [C] {
         Multiple declarations match this name in scope.
         Symbols returned as serialized JSON array.
       }
+
+      fixture valid_resolve_ref { graph: "scope-graph-1", scope: "scope-1", name: "createArticle" }
+      fixture resolve_ref_unknown { graph: "scope-graph-999", scope: "scope-1", name: "unknown" } -> error
     }
 
     action visibleSymbols(graph: C, scope: String) {
@@ -53,6 +61,9 @@ concept ScopeGraph [C] {
         Return all symbols visible from a given scope, including
         inherited and imported names. Results as serialized JSON array.
       }
+
+      fixture valid_visible { graph: "scope-graph-1", scope: "scope-1" }
+      fixture visible_no_graph { graph: "scope-graph-999", scope: "scope-1" } -> error
     }
 
     action resolveCrossFile(graph: C) {
@@ -63,6 +74,9 @@ concept ScopeGraph [C] {
       -> noUnresolved() {
         All references in this graph are already resolved.
       }
+
+      fixture valid_cross_file { graph: "scope-graph-1" }
+      fixture cross_file_no_graph { graph: "scope-graph-999" } -> error
     }
 
     action get(graph: C) {
@@ -72,6 +86,9 @@ concept ScopeGraph [C] {
       -> notfound() {
         Graph does not exist.
       }
+
+      fixture valid_get { graph: "scope-graph-1" }
+      fixture get_nonexistent { graph: "scope-graph-999" } -> error
     }
   }
 

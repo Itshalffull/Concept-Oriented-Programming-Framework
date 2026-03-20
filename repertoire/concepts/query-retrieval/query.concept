@@ -53,6 +53,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture subscribe_parsed { query: "q-001" }
+      fixture subscribe_missing { query: "q-nonexistent" } -> error
     }
 
     action addFilter(query: Q, filter: String) {
@@ -62,6 +65,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture add_status_filter { query: "q-001", filter: "status = 'active'" }
+      fixture add_filter_missing { query: "q-nonexistent", filter: "status = 'active'" } -> error
     }
 
     action addSort(query: Q, sort: String) {
@@ -71,6 +77,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture add_date_sort { query: "q-001", sort: "createdAt DESC" }
+      fixture add_sort_missing { query: "q-nonexistent", sort: "name ASC" } -> error
     }
 
     action setScope(query: Q, scope: String) {
@@ -80,6 +89,9 @@ concept Query [Q] {
       -> notfound(query: Q) {
         No query registered with this identifier.
       }
+
+      fixture set_org_scope { query: "q-001", scope: "organization/acme" }
+      fixture set_scope_missing { query: "q-nonexistent", scope: "global" } -> error
     }
   }
 

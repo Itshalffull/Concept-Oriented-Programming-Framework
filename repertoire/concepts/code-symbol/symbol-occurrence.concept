@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SymbolOccurrence [O] {
 
@@ -32,6 +33,9 @@ concept SymbolOccurrence [O] {
         Role is a comma-separated list of: definition, reference,
         import, export, write, read.
       }
+
+      fixture valid_record_def { symbol: "clef/concept/Article", file: "specs/article.concept", startRow: 2, startCol: 8, endRow: 2, endCol: 15, startByte: 30, endByte: 37, role: "definition" }
+      fixture valid_record_ref { symbol: "clef/concept/Article", file: "src/handlers/article.ts", startRow: 5, startCol: 12, endRow: 5, endCol: 19, startByte: 100, endByte: 107, role: "reference" }
     }
 
     action findDefinitions(symbol: String) {
@@ -42,6 +46,9 @@ concept SymbolOccurrence [O] {
       -> noDefinitions() {
         No definition occurrences found for this symbol.
       }
+
+      fixture valid_find_defs { symbol: "clef/concept/Article" }
+      fixture find_defs_no_results { symbol: "clef/concept/NonExistent" } -> error
     }
 
     action findReferences(symbol: String, roleFilter: String) {
@@ -52,6 +59,10 @@ concept SymbolOccurrence [O] {
       -> noReferences() {
         No references found for this symbol.
       }
+
+      fixture valid_find_refs { symbol: "clef/concept/Article", roleFilter: "" }
+      fixture find_refs_filtered { symbol: "clef/concept/Article", roleFilter: "reference" }
+      fixture find_refs_no_results { symbol: "clef/concept/NonExistent", roleFilter: "" } -> error
     }
 
     action findAtPosition(file: String, row: Int, col: Int) {
@@ -61,6 +72,9 @@ concept SymbolOccurrence [O] {
       -> noSymbolAtPosition() {
         No symbol found at this position.
       }
+
+      fixture valid_find_at_pos { file: "specs/article.concept", row: 2, col: 10 }
+      fixture find_at_empty_pos { file: "src/empty.ts", row: 1, col: 1 } -> error
     }
 
     action findInFile(file: String) {
@@ -68,6 +82,9 @@ concept SymbolOccurrence [O] {
         Return all symbol occurrences in a file.
         Results as serialized JSON array.
       }
+
+      fixture valid_find_in_file { file: "specs/article.concept" }
+      fixture find_in_empty_file { file: "src/no-symbols.ts" }
     }
   }
 

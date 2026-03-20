@@ -99,6 +99,9 @@ concept Symbol [S] {
       -> notfound() {
         Symbol does not exist.
       }
+
+      fixture valid_get { symbol: "symbol-1" }
+      fixture get_nonexistent { symbol: "symbol-999" } -> error
     }
   }
 

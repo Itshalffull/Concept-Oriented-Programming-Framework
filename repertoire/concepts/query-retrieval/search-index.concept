@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(2)
 concept SearchIndex [I] {
 
@@ -22,6 +23,9 @@ concept SearchIndex [I] {
       -> exists(index: I) {
         An index with this identifier already exists.
       }
+
+      fixture create_articles_index { index: "articles", config: "{\"backend\":\"memory\",\"analyzer\":\"standard\"}" }
+      fixture create_duplicate_index { index: "articles", config: "{}" } -> error
     }
 
     action indexItem(index: I, item: String, data: String) {
@@ -32,6 +36,9 @@ concept SearchIndex [I] {
       -> notfound(index: I) {
         No index registered with this identifier.
       }
+
+      fixture index_article { index: "articles", item: "doc-1", data: "Introduction to functional programming" }
+      fixture index_missing_index { index: "nonexistent", item: "doc-1", data: "Test data" } -> error
     }
 
     action removeItem(index: I, item: String) {
@@ -42,6 +49,9 @@ concept SearchIndex [I] {
       -> notfound(index: I) {
         No index registered with this identifier.
       }
+
+      fixture remove_existing_item { index: "articles", item: "doc-1" }
+      fixture remove_from_missing_index { index: "nonexistent", item: "doc-1" } -> error
     }
 
     action search(index: I, query: String) {
@@ -52,6 +62,9 @@ concept SearchIndex [I] {
       -> notfound(index: I) {
         No index registered with this identifier.
       }
+
+      fixture search_functional { index: "articles", query: "functional programming" }
+      fixture search_missing_index { index: "nonexistent", query: "test" } -> error
     }
 
     action addProcessor(index: I, processor: String) {
@@ -62,6 +75,9 @@ concept SearchIndex [I] {
       -> notfound(index: I) {
         No index registered with this identifier.
       }
+
+      fixture add_lowercase_processor { index: "articles", processor: "lowercase" }
+      fixture add_processor_missing_index { index: "nonexistent", processor: "trim" } -> error
     }
 
     action reindex(index: I) {
@@ -72,6 +88,9 @@ concept SearchIndex [I] {
       -> notfound(index: I) {
         No index registered with this identifier.
       }
+
+      fixture reindex_existing { index: "articles" }
+      fixture reindex_missing { index: "nonexistent" } -> error
     }
   }
 

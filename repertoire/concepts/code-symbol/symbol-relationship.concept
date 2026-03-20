@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept SymbolRelationship [R] {
 
@@ -31,6 +32,10 @@ concept SymbolRelationship [R] {
       -> alreadyExists(existing: R) {
         This relationship already exists.
       }
+
+      fixture valid_add { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" }
+      fixture add_extends { source: "ts/class/AdminHandler", target: "ts/class/UserHandler", kind: "extends" }
+      fixture add_duplicate { source: "ts/class/UserHandler", target: "ts/interface/IHandler", kind: "implements" } -> error
     }
 
     action findFrom(source: String, kind: String) {
@@ -38,6 +43,9 @@ concept SymbolRelationship [R] {
         Find all relationships from a source symbol, optionally
         filtered by kind. Results as serialized JSON array.
       }
+
+      fixture find_from_source { source: "ts/class/UserHandler", kind: "implements" }
+      fixture find_from_all_kinds { source: "ts/class/UserHandler", kind: "" }
     }
 
     action findTo(target: String, kind: String) {
@@ -45,6 +53,9 @@ concept SymbolRelationship [R] {
         Find all relationships targeting a symbol, optionally
         filtered by kind. Results as serialized JSON array.
       }
+
+      fixture find_to_target { target: "ts/interface/IHandler", kind: "implements" }
+      fixture find_to_all_kinds { target: "ts/interface/IHandler", kind: "" }
     }
 
     action transitiveClosure(start: String, kind: String, direction: String) {
@@ -53,6 +64,9 @@ concept SymbolRelationship [R] {
         a starting symbol. Direction is "forward" or "backward".
         Returns reachable symbols and paths as serialized JSON.
       }
+
+      fixture forward_closure { start: "ts/class/BaseHandler", kind: "extends", direction: "forward" }
+      fixture backward_closure { start: "ts/class/AdminHandler", kind: "extends", direction: "backward" }
     }
 
     action get(relationship: R) {
@@ -62,6 +76,9 @@ concept SymbolRelationship [R] {
       -> notfound() {
         Relationship does not exist.
       }
+
+      fixture valid_get { relationship: "symbol-relationship-1" }
+      fixture get_nonexistent { relationship: "symbol-relationship-999" } -> error
     }
   }
 

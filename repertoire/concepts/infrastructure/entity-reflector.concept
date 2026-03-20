@@ -1,3 +1,4 @@
+# @fixtures-added
 @version(1)
 concept EntityReflector [P] {
 
@@ -26,6 +27,8 @@ concept EntityReflector [P] {
         for discovered artifacts. Returns counts of newly created
         and already-existing (skipped) entries.
       }
+
+      fixture valid_reflect { }
     }
 
     action reflectProvider(provider_name: String) {
@@ -35,6 +38,9 @@ concept EntityReflector [P] {
       -> notfound(message: String) {
         No provider registered with this name.
       }
+
+      fixture valid_reflect_provider { provider_name: "concept" }
+      fixture reflect_unknown_provider { provider_name: "nonexistent-provider" } -> error
     }
 
     action registerProvider(provider_name: String) {
@@ -45,6 +51,9 @@ concept EntityReflector [P] {
       -> already_registered() {
         A provider with this name already exists.
       }
+
+      fixture valid_register { provider_name: "widget" }
+      fixture register_duplicate { provider_name: "concept" } -> error
     }
 
     action status() {
